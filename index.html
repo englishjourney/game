@@ -55,7 +55,7 @@
         // 1. Configuração Supabase
         const supabaseUrl = 'https://zepwighojobqqslntxxo.supabase.co';
         const supabaseAnonKey = 'sb_publishable_LFOgH8xV8dz-lBYPYYiqJw_328iNsq3';
-        const supabase = supabaseUrl && supabaseAnonKey ? supabase.createClient(supabaseUrl, supabaseAnonKey) : null;
+        const supabaseClient = supabaseUrl && supabaseAnonKey ? supabase.createClient(supabaseUrl, supabaseAnonKey) : null;
 
         // 2. Carregar texto.txt
         fetch('texto.txt')
@@ -75,7 +75,7 @@
             };
 
             if (supabase) {
-                const { error } = await supabase.from('dados').insert([data]);
+                const { error } = await supabaseClient.from('dados').insert([data]);
                 
                 if (error) {
                     alert('Erro ao salvar: ' + error.message);
