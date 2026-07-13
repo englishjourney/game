@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desenrola Brasil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col items-center p-6">
+
+    <div class="mb-8">
+        <img src="logo.png" alt="Logo" class="h-20 w-auto">
+    </div>
+
+    <main class="bg-white p-8 rounded-xl shadow-lg w-full max-w-lg">
+        <h1 class="text-3xl font-bold mb-6 text-gray-900">Verificar descontos disponíveis</h1>
+
+        <div id="content" class="prose prose-gray mb-8">
+            </div>
+
+        <form id="cadastroForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium">CPF ou CNPJ</label>
+                <input type="text" id="cpf_cnpj" required pattern="^(\d{11}|\d{14})$" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 outline-none">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium">WhatsApp (para novos descontos)</label>
+                <input type="text" id="whatsapp" required 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 outline-none">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium">E-mail (para novos descontos)</label>
+                <input type="email" id="email" required 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 outline-none">
+            </div>
+
+            <button type="submit" class="w-full bg-gray-800 text-white p-3 rounded-lg font-semibold hover:bg-gray-700 transition">
+                Enviar
+            </button>
+        </form>
+
+        <div id="resultado" class="hidden mt-6 p-4 bg-gray-100 rounded-lg text-center">
+            <p class="text-lg font-semibold">Valor gerado: <span id="valorGerado"></span></p>
+            <a href="https://desenrolabrasil-verificardescontos.github.io/saibamais" target="_blank" 
+               class="block mt-4 text-blue-600 underline font-medium">Saiba mais</a>
+        </div>
+    </main>
+
+    <script>
+        // 1. Configuração Supabase
+        const supabaseUrl = 'https://zepwighojobqqslntxxo.supabase.co';
+        const supabaseAnonKey = 'sb_publishable_LFOgH8xV8dz-lBYPYYiqJw_328iNsq3';
+        const supabase = supabaseUrl && supabaseAnonKey ? supabase.createClient(supabaseUrl, supabaseAnonKey) : null;
+
+        // 2. Carregar texto.txt
+        fetch('texto.txt')
+            .then(response => response.text())
+            .then(markdown => {
+                document.getElementById('content').innerHTML = marked.parse(markdown);
+            });
+
+        // 3. Lógica do Formulário
+        document.getElementById('cadastroForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const data = {
+                cpf_cnpj: document.getElementById('cpf_cnpj').value,
+                whatsapp: document.getElementById('whatsapp').value,
+                email: document.getElementById('email').value
+            };
+
+            if (supabase) {
+                const { error } = await supabase.from('dados').insert([data]);
+                
+                if (error) {
+                    alert('Erro ao salvar: ' + error.message);
+                    return;
+                }
+            } else {
+                console.warn('Supabase não configurado. Simulando envio.');
+            }
+
+            // Exibir resultado aleatório
+            const valor = (Math.random() * 1000).toFixed(2);
+            document.getElementById('valorGerado').innerText = `R$ ${valor}`;
+            document.getElementById('resultado').classList.remove('hidden');
+            document.getElementById('cadastroForm').classList.add('hidden');
+        });
+    </script>
+</body>
+</html>
