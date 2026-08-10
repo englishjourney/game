@@ -1,10 +1,13 @@
 // main.js
-import { getSession, clearSession } from './auth.js';
-// import { loadMissions } from './missions.js'; (Futuro)
+import { getSession, clearSession } from 'auth.js';
+import { openProfile } from 'profile.js';
 
 document.addEventListener("DOMContentLoaded", () => {
     const session = getSession();
-
+    
+document.getElementById('btn-avatar').addEventListener('click', () => {
+    openProfile();
+});
     if (session) {
         // Usuário logado
         document.getElementById('auth-screen').classList.add('hidden');
