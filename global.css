@@ -1,0 +1,87 @@
+/* ================= VARIÁVEIS GLOBAIS ================= */
+:root {
+    --bg-color: #2c254a;
+    --panel-bg: #39395f;
+    --border-radius: 16px;
+    --primary-color: #ffcc00;
+    --text-color: #ffffff;
+    --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-main);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hidden { display: none !important; }
+.screen-container { width: 100%; height: 100%; padding: 20px; }
+
+/* ================= LOGIN E CADASTRO ================= */
+.auth-box {
+    background-color: var(--panel-bg);
+    border: 4px solid #4a4a75;
+    border-radius: var(--border-radius);
+    padding: 30px;
+    max-width: 400px;
+    margin: 10vh auto;
+    text-align: center;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+.auth-box input, .auth-box select {
+    width: 100%; padding: 12px; margin: 10px 0;
+    border-radius: 8px; border: 2px solid #2c254a;
+    background: #50507a; color: white; outline: none;
+}
+
+.btn-primary {
+    background: linear-gradient(180deg, #ffde40 0%, #f39c12 100%);
+    color: #333; font-weight: bold; font-size: 1.2rem;
+    border: 3px solid #b87308; border-radius: 12px;
+    padding: 10px 20px; cursor: pointer;
+    box-shadow: 0 4px 0 #b87308; transition: transform 0.1s;
+}
+
+.btn-primary:active { transform: translateY(4px); box-shadow: none; }
+.btn-text { background: none; border: none; color: #00d2ff; cursor: pointer; text-decoration: underline; }
+
+/* ================= INTERFACE PRINCIPAL ================= */
+.app-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 20px; background: rgba(57, 57, 95, 0.8);
+    border-radius: var(--border-radius); margin-bottom: 20px;
+}
+
+#user-avatar { width: 50px; height: 50px; border-radius: 50%; border: 3px solid var(--primary-color); cursor: pointer; }
+
+.menu-options { display: flex; flex-direction: column; gap: 15px; align-items: center; }
+
+.menu-btn {
+    width: 80%; max-width: 300px; padding: 15px;
+    background-color: #5b5b8c; border: 4px solid #7575a3;
+    border-radius: 20px; color: white; font-size: 1.5rem; font-weight: bold;
+    cursor: pointer; text-transform: uppercase;
+}
+
+/* ================= JANELAS (DIALOG) ================= */
+.fullscreen-dialog {
+    width: 90vw; height: 90vh; margin: auto;
+    background: var(--panel-bg); border: 6px solid #5b5b8c;
+    border-radius: 24px; color: white;
+}
+
+.fullscreen-dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
+.dialog-wrapper { position: relative; padding: 20px; height: 100%; }
+.btn-close {
+    position: absolute; top: 10px; right: 10px;
+    background: #e74c3c; color: white; border: 3px solid #c0392b;
+    border-radius: 50%; width: 40px; height: 40px;
+    font-weight: bold; cursor: pointer;
+}
