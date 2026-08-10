@@ -1,0 +1,51 @@
+/* Sobrescrevendo variáveis para o tema High School */
+:root {
+    --bg-color: #05050a; /* Fundo quase preto */
+    --panel-bg: rgba(10, 15, 30, 0.85); /* Fundo translúcido azul escuro */
+    --border-radius: 4px; /* Bordas mais retas */
+    --primary-color: #00e1ff; /* Neon Cyan */
+}
+
+/* Alterando o estilo das caixas e painéis */
+.auth-box, .fullscreen-dialog, .app-header {
+    background-color: var(--panel-bg);
+    border: 2px solid #005a8c;
+    box-shadow: 0 0 15px rgba(0, 168, 255, 0.3), inset 0 0 10px rgba(0, 168, 255, 0.1);
+    border-radius: var(--border-radius);
+    position: relative;
+}
+
+/* Efeito tecnológico nos cantos (opcional, simulando a imagem) */
+.auth-box::before, .fullscreen-dialog::before {
+    content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border: 1px solid var(--primary-color); z-index: -1;
+    filter: blur(2px);
+}
+
+/* Entradas de texto */
+.auth-box input, .auth-box select {
+    background: rgba(0, 0, 0, 0.5); border: 1px solid #005a8c; color: var(--primary-color);
+}
+.auth-box input::placeholder { color: #005a8c; }
+
+/* Botões - Estilo Painel de Sistema */
+.btn-primary, .menu-btn {
+    background: rgba(0, 20, 40, 0.8);
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    box-shadow: 0 0 5px var(--primary-color);
+    border-radius: 0;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-family: 'Courier New', Courier, monospace; /* Fonte mais "sistema" */
+}
+
+.btn-primary:active, .menu-btn:active {
+    transform: scale(0.98); background: var(--primary-color); color: black; box-shadow: none;
+}
+
+/* Avatar e Fechar */
+#user-avatar { border: 2px solid var(--primary-color); border-radius: 0; }
+.btn-close {
+    background: transparent; color: var(--primary-color); border: 1px solid var(--primary-color); border-radius: 0;
+}
