@@ -1,5 +1,5 @@
 // main.js
-import { getSession, clearSession } from './auth.js';
+import { getSession, clearSession, handleRegister, handleLogin } from './auth.js';
 import { openProfile } from './profile.js';
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -7,15 +7,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Controle de exibição (Logado vs Deslogado)
     if (session) {
-        // Usuário logado
         document.getElementById('auth-screen').classList.add('hidden');
         document.getElementById('app-screen').classList.remove('hidden');
         applyTheme(session.serie);
     } else {
-        // Usuário não logado
         document.getElementById('auth-screen').classList.remove('hidden');
         document.getElementById('app-screen').classList.add('hidden');
     }
+
+    // ==========================================
+    // ESCUTADORES DE EVENTO DOS FORMULÁRIOS
+    // ==========================================
+    const registerForm = document.getElementById('register-form');
+    if (registerForm) registerForm.addEventListener('submit', handleRegister);
+
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) loginForm.addEventListener('submit', handleLogin);
 
     // Event listener do Avatar (Perfil)
     document.getElementById('btn-avatar').addEventListener('click', () => {
@@ -36,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Lógica do botão de Sair
     document.getElementById('btn-logout').addEventListener('click', () => {
         clearSession();
-        window.location.reload(); // Recarrega a página para voltar ao login
+        window.location.reload(); 
     });
 
     // Lógica do Dialog (Janelas)
@@ -51,11 +58,9 @@ function applyTheme(serie) {
     const logoImg = document.getElementById('app-logo');
 
     if (isHighSchool) {
-        // Carrega o CSS do Ensino Médio e muda a logo
         themeStyle.href = 'style.css';
         logoImg.src = 'logorpg.png';
     } else {
-        // Mantém o padrão (Fundamental)
         themeStyle.href = '';
         logoImg.src = 'logoarcade.png';
     }
