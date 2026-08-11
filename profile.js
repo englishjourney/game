@@ -1,6 +1,9 @@
 // profile.js
 import { getSession } from './auth.js';
-// import { supabase } from './supabaseClient.js'; // Descomente quando configurar o DB
+import { supabase } from './supabaseClient.js'; 
+
+// Cole aqui a URL do seu Web App do Apps Script
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1m7UMNrUqSTkq6ahL8pcEPJOXTKISRBtiZU-lh3TbXSRUMjZCfI-DqJzgjBJYZvMh/exec";
 
 // 1. Configurações de Classes e Ranks
 const classesMap = {
@@ -13,11 +16,11 @@ const classesMap = {
     "Witch": "߷",
     "Summoner": "֍",
     "Warrior": "࿇",
-    "Fairy": "࿓",
+    "Fairy": "ΐ",
     "Miner": "፨"
 };
 
-// Escala progressiva de pontos (ajuste os valores conforme achar melhor para o balanço do jogo)
+// Escala progressiva de pontos
 const ranksScale = [
     { name: "Dirt", min: 0 },
     { name: "Wood", min: 300 },
@@ -40,7 +43,7 @@ function getRankByScore(score) {
         if (score >= ranksScale[i].min) {
             currentRank = ranksScale[i];
         } else {
-            break; // Se o score for menor que o mínimo do próximo rank, para o loop
+            break;
         }
     }
     return currentRank.name;
@@ -54,15 +57,10 @@ export async function openProfile() {
     const modalContent = document.getElementById('modal-content');
     const modal = document.getElementById('content-modal');
     
-    // Mostra um "Carregando" enquanto busca no Supabase
     modalContent.innerHTML = `<h2 style="text-align:center;">Carregando perfil...</h2>`;
     modal.showModal();
 
     try {
-        // =========================================================
-        // AQUI ENTRA A BUSCA NO SUPABASE (Exemplo de como seria)
-        // =========================================================
-        /*
         const { data, error } = await supabase
             .from('users')
             .select('username, score, stars, hearts, class, avatar_url')
@@ -70,42 +68,38 @@ export async function openProfile() {
             .single();
             
         if (error) throw error;
-        */
 
-        // DADOS MOCKADOS (Remova e use o data acima quando conectar o Supabase)
-        const data = {
-            username: session.username,
-            score: 1250, // Exemplo
-            stars: 7,
-            hearts: 3,
-            class: "Explorer", // Pode vir null no primeiro acesso
-            avatar_url: document.getElementById('user-avatar').src // Pega a imagem atual
+        // Tratamento de valores nulos
+        const userData = {
+            username: data.username,
+            score: data.score || 0,
+            stars: data.stars || 0,
+            hearts: data.hearts !== null && data.hearts !== undefined ? data.hearts : 3,
+            class: data.class || null,
+            avatar_url: data.avatar_url || "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcS-55RgG38bJTopB10KrZknHMZMf94R5cEbUh8ZqWe8wiBmCyJE"
         };
 
         // Cálculos
-        const userRank = getRankByScore(data.score);
-        const shieldImg = `shields/${userRank.toLowerCase().replace(" ", "")}.png`; // Ex: lapis lazuli -> lapislazuli.png
+        const userRank = getRankByScore(userData.score);
+        const shieldImg = `shields/${userRank.toLowerCase().replace(" ", "")}.png`; 
         
-        // Gera HTML das estrelas
         let starsHTML = '';
-        for (let i = 0; i < data.stars; i++) {
+        for (let i = 0; i < userData.stars; i++) {
             starsHTML += `<img src="star.png" alt="Star" class="profile-star-icon">`;
         }
 
-        // Gera HTML dos corações (máximo 3)
         let heartsHTML = '';
         for (let i = 0; i < 3; i++) {
-            if (i < data.hearts) {
+            if (i < userData.hearts) {
                 heartsHTML += `<span class="heart-icon active">❤️</span>`;
             } else {
                 heartsHTML += `<span class="heart-icon empty">🖤</span>`;
             }
         }
 
-        // Monta as opções do Select de Classe
-        let classOptions = `<option value="" disabled ${!data.class ? 'selected' : ''}>Escolha sua Classe</option>`;
+        let classOptions = `<option value="" disabled ${!userData.class ? 'selected' : ''}>Escolha sua Classe</option>`;
         for (const [className, symbol] of Object.entries(classesMap)) {
-            const isSelected = data.class === className ? 'selected' : '';
+            const isSelected = userData.class === className ? 'selected' : '';
             classOptions += `<option value="${className}" ${isSelected}>${symbol} ${className}</option>`;
         }
 
@@ -115,16 +109,16 @@ export async function openProfile() {
                 <!-- Coluna Esquerda: Avatar -->
                 <div class="profile-left">
                     <div class="avatar-wrapper">
-                        <img src="${data.avatar_url}" id="profile-modal-avatar" alt="Avatar">
+                        <img src="${userData.avatar_url}" id="profile-modal-avatar" alt="Avatar">
                     </div>
                     <button id="btn-edit-avatar" class="btn-small">Editar Imagem</button>
-                    <!-- Input oculto para upload (vamos integrar com o Apps Script depois) -->
+                    <!-- Input oculto para upload -->
                     <input type="file" id="avatar-upload-input" class="hidden" accept="image/png, image/jpeg">
                 </div>
 
                 <!-- Coluna Direita: Dados -->
                 <div class="profile-right">
-                    <h2 class="profile-username">${data.username}</h2>
+                    <h2 class="profile-username">${userData.username}</h2>
                     
                     <div class="profile-stats-grid">
                         <div class="stat-card rank-card">
@@ -137,7 +131,7 @@ export async function openProfile() {
 
                         <div class="stat-card score-card">
                             <span class="stat-label">Score (XP)</span>
-                            <span class="stat-value">${data.score}</span>
+                            <span class="stat-value">${userData.score}</span>
                         </div>
                     </div>
 
@@ -148,7 +142,7 @@ export async function openProfile() {
                         </div>
                         
                         <div class="item-group">
-                            <span class="stat-label">Stars (${data.stars})</span>
+                            <span class="stat-label">Stars (${userData.stars})</span>
                             <div class="stars-container">${starsHTML || '<span style="font-size: 0.8rem;">Nenhuma estrela ainda</span>'}</div>
                         </div>
                     </div>
@@ -163,19 +157,85 @@ export async function openProfile() {
             </div>
         `;
 
-        // 5. Adiciona Event Listeners aos novos elementos
+        // 5. Adiciona Event Listeners
 
-        // Listener para mudar de classe e salvar no banco
+        // Mudança de Classe
         document.getElementById('class-select').addEventListener('change', async (e) => {
             const newClass = e.target.value;
-            // AQUI: Adicionar código para fazer o UPDATE da classe no Supabase
-            console.log(`Classe alterada para: ${newClass}`);
+            const { error: updateError } = await supabase
+                .from('users')
+                .update({ class: newClass })
+                .eq('username', session.username);
+
+            if (updateError) {
+                alert("Erro ao salvar a classe.");
+                console.error(updateError);
+                return;
+            }
             alert(`Sua classe agora é ${classesMap[newClass]} ${newClass}!`);
         });
 
-        // Listener para o botão de editar avatar (preparando para o Apps Script)
+        // Clique no botão "Editar Imagem" aciona o input file oculto
         document.getElementById('btn-edit-avatar').addEventListener('click', () => {
             document.getElementById('avatar-upload-input').click();
+        });
+
+        // Quando o aluno escolhe um arquivo de imagem
+        document.getElementById('avatar-upload-input').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            modalContent.innerHTML += `<div id="uploading-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;justify-content:center;align-items:center;color:white;font-size:1.5rem;z-index:99;">Enviando imagem para o Drive...</div>`;
+
+            // Converte a imagem para Base64
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async () => {
+                const base64Image = reader.result;
+
+                try {
+                    // Envia para o Web App do Apps Script
+                    const response = await fetch(APPS_SCRIPT_URL, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            type: "avatar_upload",
+                            image: base64Image,
+                            mimeType: file.type,
+                            filename: `${session.username}_avatar.${file.type.split('/')[1]}`
+                        })
+                    });
+
+                    const result = await response.json();
+                    if (!result.success) throw new Error(result.error);
+
+                    const newAvatarUrl = result.url;
+
+                    // Salva o link do Google Drive na tabela users do Supabase
+                    const { error: dbError } = await supabase
+                        .from('users')
+                        .update({ avatar_url: newAvatarUrl })
+                        .eq('username', session.username);
+
+                    if (dbError) throw dbError;
+
+                    // Atualiza a imagem na tela em tempo real (tanto no modal quanto no cabeçalho principal)
+                    document.getElementById('profile-modal-avatar').src = newAvatarUrl;
+                    const mainAvatar = document.getElementById('user-avatar');
+                    if (mainAvatar) mainAvatar.src = newAvatarUrl;
+
+                    alert("Avatar atualizado com sucesso!");
+                    
+                    // Remove o aviso de carregamento
+                    const overlay = document.getElementById('uploading-overlay');
+                    if (overlay) overlay.remove();
+
+                } catch (err) {
+                    console.error("Erro no upload:", err);
+                    alert("Erro ao enviar a imagem. Verifique o console.");
+                    const overlay = document.getElementById('uploading-overlay');
+                    if (overlay) overlay.remove();
+                }
+            };
         });
 
     } catch (error) {
