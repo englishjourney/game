@@ -1,6 +1,6 @@
 // main.js
-import { getSession, clearSession } from ./'auth.js';
-import { openProfile } from ./'profile.js';
+import { getSession, clearSession } from './auth.js';
+import { openProfile } from './profile.js';
 
 document.addEventListener("DOMContentLoaded", () => {
     const session = getSession();
