@@ -1,6 +1,7 @@
 // profile.js
 import { getSession } from './auth.js';
 import { supabase } from './supabaseClient.js'; 
+import { runWithLoader } from './loader.js'; // <-- IMPORTANDO O LOADER
 
 // Cole aqui a URL do seu Web App do Apps Script
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHXT2Mf61oX0d_zxLG7_jLLutG20Ez1o0k8mPP0Cr7aSIDMeREOpaGpr-WA4u3m72p/exec";
@@ -16,7 +17,7 @@ const classesMap = {
     "Witch": "߷",
     "Summoner": "֍",
     "Warrior": "࿇",
-    "Fairy": "ΐ",
+    "Fairy": "ΐ",
     "Miner": "፨"
 };
 
@@ -57,15 +58,19 @@ export async function openProfile() {
     const modalContent = document.getElementById('modal-content');
     const modal = document.getElementById('content-modal');
     
-    modalContent.innerHTML = `<h2 style="text-align:center;">Carregando perfil...</h2>`;
+    // Deixa o modal limpo enquanto o loader global aparece
+    modalContent.innerHTML = ``;
     modal.showModal();
 
     try {
-        const { data, error } = await supabase
-            .from('users')
-            .select('username, score, stars, hearts, class, avatar_url')
-            .eq('username', session.username)
-            .single();
+        // Busca dos dados envolvida no LOADER
+        const { data, error } = await runWithLoader(async () => {
+            return await supabase
+                .from('users')
+                .select('username, score, stars, hearts, class, avatar_url')
+                .eq('username', session.username)
+                .single();
+        });
             
         if (error) throw error;
 
@@ -159,20 +164,25 @@ export async function openProfile() {
 
         // 5. Adiciona Event Listeners
 
-        // Mudança de Classe
+        // Mudança de Classe (com LOADER)
         document.getElementById('class-select').addEventListener('change', async (e) => {
             const newClass = e.target.value;
-            const { error: updateError } = await supabase
-                .from('users')
-                .update({ class: newClass })
-                .eq('username', session.username);
+            
+            try {
+                await runWithLoader(async () => {
+                    const { error: updateError } = await supabase
+                        .from('users')
+                        .update({ class: newClass })
+                        .eq('username', session.username);
 
-            if (updateError) {
+                    if (updateError) throw updateError;
+                });
+                
+                alert(`Sua classe agora é ${classesMap[newClass]} ${newClass}!`);
+            } catch (err) {
                 alert("Erro ao salvar a classe.");
-                console.error(updateError);
-                return;
+                console.error(err);
             }
-            alert(`Sua classe agora é ${classesMap[newClass]} ${newClass}!`);
         });
 
         // Clique no botão "Editar Imagem" aciona o input file oculto
@@ -180,12 +190,10 @@ export async function openProfile() {
             document.getElementById('avatar-upload-input').click();
         });
 
-        // Quando o aluno escolhe um arquivo de imagem
+        // Quando o aluno escolhe um arquivo de imagem (com LOADER)
         document.getElementById('avatar-upload-input').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
-            modalContent.innerHTML += `<div id="uploading-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;justify-content:center;align-items:center;color:white;font-size:1.5rem;z-index:99;">Enviando imagem para o Drive...</div>`;
 
             // Converte a imagem para Base64
             const reader = new FileReader();
@@ -194,46 +202,46 @@ export async function openProfile() {
                 const base64Image = reader.result;
 
                 try {
-                    // Envia para o Web App do Apps Script
-                    const response = await fetch(APPS_SCRIPT_URL, {
-                        method: "POST",
-                        body: JSON.stringify({
-                            type: "avatar_upload",
-                            image: base64Image,
-                            mimeType: file.type,
-                            filename: `${session.username}_avatar.${file.type.split('/')[1]}`
-                        })
+                    // Tudo que demora (enviar pro script e atualizar banco) dentro do LOADER
+                    await runWithLoader(async () => {
+                        // Envia para o Web App do Apps Script
+                        const response = await fetch(APPS_SCRIPT_URL, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "text/plain;charset=utf-8" // AVISO CORS
+                            },
+                            body: JSON.stringify({
+                                type: "avatar_upload",
+                                image: base64Image,
+                                mimeType: file.type,
+                                filename: `${session.username}_avatar.${file.type.split('/')[1]}`
+                            })
+                        });
+
+                        const result = await response.json();
+                        if (!result.success) throw new Error(result.error);
+
+                        const newAvatarUrl = result.url;
+
+                        // Salva o link do Google Drive na tabela users do Supabase
+                        const { error: dbError } = await supabase
+                            .from('users')
+                            .update({ avatar_url: newAvatarUrl })
+                            .eq('username', session.username);
+
+                        if (dbError) throw dbError;
+
+                        // Atualiza a imagem na tela em tempo real
+                        document.getElementById('profile-modal-avatar').src = newAvatarUrl;
+                        const mainAvatar = document.getElementById('user-avatar');
+                        if (mainAvatar) mainAvatar.src = newAvatarUrl;
                     });
 
-                    const result = await response.json();
-                    if (!result.success) throw new Error(result.error);
-
-                    const newAvatarUrl = result.url;
-
-                    // Salva o link do Google Drive na tabela users do Supabase
-                    const { error: dbError } = await supabase
-                        .from('users')
-                        .update({ avatar_url: newAvatarUrl })
-                        .eq('username', session.username);
-
-                    if (dbError) throw dbError;
-
-                    // Atualiza a imagem na tela em tempo real (tanto no modal quanto no cabeçalho principal)
-                    document.getElementById('profile-modal-avatar').src = newAvatarUrl;
-                    const mainAvatar = document.getElementById('user-avatar');
-                    if (mainAvatar) mainAvatar.src = newAvatarUrl;
-
                     alert("Avatar atualizado com sucesso!");
-                    
-                    // Remove o aviso de carregamento
-                    const overlay = document.getElementById('uploading-overlay');
-                    if (overlay) overlay.remove();
 
                 } catch (err) {
                     console.error("Erro no upload:", err);
                     alert("Erro ao enviar a imagem. Verifique o console.");
-                    const overlay = document.getElementById('uploading-overlay');
-                    if (overlay) overlay.remove();
                 }
             };
         });
