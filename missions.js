@@ -1,6 +1,7 @@
 // missions.js
 import { supabase } from './supabaseClient.js';
 import { getSession } from './auth.js';
+import { runWithLoader } from './loader.js'; // <-- IMPORTANDO O LOADER INTELIGENTE
 
 export async function openMissions() {
     const session = getSession();
@@ -9,15 +10,18 @@ export async function openMissions() {
     const modalContent = document.getElementById('modal-content');
     const modal = document.getElementById('content-modal');
     
-    modalContent.innerHTML = `<h2 class="loading-title">Carregando Mapa de Missões...</h2>`;
+    // Limpa o conteúdo antes de abrir
+    modalContent.innerHTML = ``;
     modal.showModal();
 
     try {
-        // Busca missões ordenadas pelo ID (ordem de progressão)
-        const { data: missions, error } = await supabase
-            .from('missions')
-            .select('*')
-            .order('id', { ascending: true });
+        // Busca missões usando o NOVO LOADER que criamos
+        const { data: missions, error } = await runWithLoader(async () => {
+            return await supabase
+                .from('missions')
+                .select('*')
+                .order('id', { ascending: true });
+        });
 
         if (error) throw error;
 
@@ -27,6 +31,9 @@ export async function openMissions() {
         for (let i = 0; i < missions.length; i++) {
             const mission = missions[i];
             const missionNumber = i + 1;
+            
+            // Pega o nome da missão (ou coloca um texto padrão se vier vazio)
+            const missionName = mission.mission_name || "Missão Secreta";
             
             // Verifica se o usuário atual completou ou falhou
             const isDone = mission.done && mission.done.includes(session.username);
@@ -40,7 +47,7 @@ export async function openMissions() {
                 mapHTML += `
                     <div class="mission-node ${alignClass}">
                         <div class="mission-circle success">✓</div>
-                        <span class="mission-label">Missão ${missionNumber} completa</span>
+                        <span class="mission-label">Missão ${missionNumber}: ${missionName} (Completa)</span>
                     </div>
                 `;
             } else if (isFailed) {
@@ -48,7 +55,7 @@ export async function openMissions() {
                 mapHTML += `
                     <div class="mission-node ${alignClass}">
                         <div class="mission-circle fail">✗</div>
-                        <span class="mission-label">Missão ${missionNumber} não completa</span>
+                        <span class="mission-label">Missão ${missionNumber}: ${missionName} (Não completa)</span>
                     </div>
                 `;
             } else {
@@ -56,7 +63,7 @@ export async function openMissions() {
                 mapHTML += `
                     <div class="mission-node active-mission ${alignClass}">
                         <div class="mission-frame-wrapper">
-                            <h3 class="active-title">Missão ${missionNumber} - VALENDO!</h3>
+                            <h3 class="active-title">Missão ${missionNumber}: ${missionName} - VALENDO!</h3>
                             <iframe src="${mission.mission_link}?embedded=true" width="100%" height="500" frameborder="0" marginheight="0" marginwidth="0">Carregando...</iframe>
                         </div>
                     </div>
@@ -76,7 +83,8 @@ export async function openMissions() {
 
         // Rola automaticamente para o final da tela (onde está a missão atual valendo)
         setTimeout(() => {
-            document.querySelector('.dialog-wrapper').scrollTo({ top: 9999, behavior: 'smooth' });
+            const wrapper = document.querySelector('.dialog-wrapper') || modal;
+            wrapper.scrollTo({ top: 9999, behavior: 'smooth' });
         }, 300);
 
     } catch (err) {
