@@ -1,6 +1,7 @@
 // main.js
 import { getSession, clearSession, handleRegister, handleLogin } from './auth.js';
 import { openProfile } from './profile.js';
+import { openMissions } from './missions.js'; // <-- ADICIONADO AQUI
 
 document.addEventListener("DOMContentLoaded", () => {
     const session = getSession();
@@ -46,9 +47,16 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.reload(); 
     });
 
-    // Lógica do Dialog (Janelas)
+    // ==========================================
+    // LÓGICA DO DIALOG (JANELAS) - CORRIGIDA
+    // ==========================================
     const modal = document.getElementById('content-modal');
-    document.getElementById('btn-missions').addEventListener('click', () => modal.showModal());
+    
+    // Antes estava apenas abrindo o modal vazio/antigo. Agora chama a função correta!
+    document.getElementById('btn-missions').addEventListener('click', () => {
+        openMissions();
+    });
+    
     document.getElementById('btn-close-modal').addEventListener('click', () => modal.close());
 });
 
