@@ -53,17 +53,16 @@ body {
 .btn-text { background: none; border: none; color: #00d2ff; cursor: pointer; text-decoration: underline; }
 
 /* ================= INTERFACE PRINCIPAL ================= */
-/* ================= INTERFACE PRINCIPAL ================= */
 .app-header {
     display: flex; 
     justify-content: flex-end; /* Empurra o perfil para a direita */
     align-items: center;
     padding: 10px 20px; 
-    background: rgba(57, 57, 95, 0.8);
+    background: transparent; /* Cabeçalho 100% transparente */
     border-radius: var(--border-radius); 
     margin-bottom: 20px;
-    position: relative; /* Necessário para centralizar a logo */
-    min-height: 80px; /* Altura fixa para não quebrar a tela */
+    position: relative; 
+    min-height: 200px; /* Aumentado para acomodar a logo nova */
     z-index: 10;
 }
 
@@ -71,37 +70,35 @@ body {
 .logo-container {
     position: absolute;
     left: 50%;
-    transform: translateX(-50%); /* Crava o centro da logo no centro da tela */
+    transform: translateX(-50%); 
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 80px; /* Limite de altura */
+    height: 200px; /* Aumentado para 200px */
 }
 
 .logo-container img {
-    max-height: 100%; /* Respeita os 60px do container */
+    max-height: 100%; 
     width: auto;
     object-fit: contain;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); /* Sombra para dar destaque */
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); 
 }
 
 /* ================= FUNDOS ANIMADOS (Fundamental) ================= */
 .background-anim {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
-    z-index: -2; /* Fica atrás de tudo */
+    z-index: -2; 
     background-color: var(--bg-color);
-    /* Desenha estrelas de 5 pontas usando SVG direto no CSS (amarelas e brancas) */
     background-image:
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffcc00' width='24' height='24'%3E%3Cpath d='M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z'/%3E%3C/svg%3E"),
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff' width='12' height='12'%3E%3Cpath d='M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z'/%3E%3C/svg%3E");
     background-repeat: repeat, repeat;
     background-position: 0 0, 50px 50px;
-    background-size: 250px 250px, 180px 180px; /* Distância entre as estrelas */
-    animation: floatStars 30s linear infinite; /* Movimento lento e contínuo */
+    background-size: 250px 250px, 180px 180px; 
+    animation: floatStars 30s linear infinite; 
 }
 
-/* Estrela Cadente */
 .shooting-star {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
@@ -119,7 +116,7 @@ body {
     border-radius: 50%;
     box-shadow: 0 0 10px rgba(255,255,255,0.8);
     transform: rotate(-45deg);
-    animation: meteor 7s linear infinite; /* Passa a cada 7 segundos */
+    animation: meteor 7s linear infinite; 
 }
 
 @keyframes floatStars {
@@ -250,11 +247,9 @@ body {
     border-radius: 12px;
 }
 
-/* Corações */
 .heart-icon { font-size: 1.5rem; }
 .heart-icon.empty { opacity: 0.5; filter: grayscale(100%); }
 
-/* Estrelas */
 .stars-container {
     display: flex;
     flex-wrap: wrap;
@@ -262,11 +257,10 @@ body {
     max-width: 250px;
 }
 .profile-star-icon {
-    width: 20px; /* Tamanho pequeno solicitado */
+    width: 20px; 
     height: 20px;
 }
 
-/* Dropdown de Classe */
 .class-dropdown {
     width: 100%;
     padding: 12px;
@@ -279,7 +273,6 @@ body {
 }
 .class-dropdown:focus { outline: none; }
 
-/* Adaptação para celular (se a tela for estreita) */
 @media (max-width: 768px) {
     .profile-layout {
         flex-direction: column;
@@ -300,7 +293,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9999;
+    z-index: 999999; /* Z-index no topo absoluto */
     backdrop-filter: blur(3px);
 }
 
