@@ -3,7 +3,7 @@ import { getSession } from './auth.js';
 import { supabase } from './supabaseClient.js'; 
 
 // Cole aqui a URL do seu Web App do Apps Script
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1m7UMNrUqSTkq6ahL8pcEPJOXTKISRBtiZU-lh3TbXSRUMjZCfI-DqJzgjBJYZvMh/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHXT2Mf61oX0d_zxLG7_jLLutG20Ez1o0k8mPP0Cr7aSIDMeREOpaGpr-WA4u3m72p/exec";
 
 // 1. Configurações de Classes e Ranks
 const classesMap = {
