@@ -6,8 +6,8 @@
     --primary-color: #00e1ff; /* Neon Cyan */
 }
 
-/* Alterando o estilo das caixas e painéis */
-.auth-box, .fullscreen-dialog, .app-header {
+/* Alterando o estilo das caixas e painéis (Removido o .app-header daqui para não herdar borda/fundo) */
+.auth-box, .fullscreen-dialog {
     background-color: var(--panel-bg);
     border: 2px solid #005a8c;
     box-shadow: 0 0 15px rgba(0, 168, 255, 0.3), inset 0 0 10px rgba(0, 168, 255, 0.1);
@@ -44,8 +44,12 @@
     transform: scale(0.98); background: var(--primary-color); color: black; box-shadow: none;
 }
 
-/* Avatar e Fechar */
-#user-avatar { border: 2px solid var(--primary-color); border-radius: 0; }
+/* Avatar circular garantido e Fechar */
+#user-avatar { 
+    border: 2px solid var(--primary-color); 
+    border-radius: 50%; /* Modificado de 0 para 50% garantindo que seja circular */
+}
+
 .btn-close {
     background: transparent; color: var(--primary-color); border: 1px solid var(--primary-color); border-radius: 0;
 }
@@ -89,7 +93,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9999;
+    z-index: 999999; /* Z-index no topo absoluto */
 }
 
 .loader-system-box {
