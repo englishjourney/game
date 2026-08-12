@@ -81,3 +81,46 @@
         transform: scale(1.1); /* Faz um leve zoom */
     }
 }
+
+#global-loader {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(5, 5, 10, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loader-system-box {
+    background: rgba(0, 15, 30, 0.95);
+    border: 2px solid var(--primary-color);
+    border-radius: 4px;
+    padding: 25px 40px;
+    text-align: center;
+    box-br: 0 0 20px rgba(0, 225, 255, 0.4);
+    box-shadow: 0 0 20px rgba(0, 225, 255, 0.3), inset 0 0 10px rgba(0, 225, 255, 0.2);
+}
+
+.loader-system-box p {
+    color: var(--primary-color);
+    font-family: 'Courier New', Courier, monospace;
+    letter-spacing: 2px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.tech-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(0, 225, 255, 0.2);
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    margin: 0 auto 15px auto;
+    animation: spinTech 0.8s linear infinite;
+}
+
+@keyframes spinTech {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
