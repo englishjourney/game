@@ -420,3 +420,15 @@ body {
     font-size: 24px;
     font-weight: 900;
 }
+/* --- CORREÇÃO DO BOTÃO DE FECHAR (X) --- */
+.close-btn, .modal-close, #content-modal button, .dialog-close {
+    position: relative;
+    z-index: 99999 !important;
+    cursor: pointer;
+}
+
+/* Se o seu modal usar a tag nativa <dialog>, garante que a camada interna respeite o topo */
+#content-modal {
+    position: relative;
+    z-index: 9999;
+}
