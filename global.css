@@ -8,7 +8,11 @@
     --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+}
 
 body {
     background-color: var(--bg-color);
@@ -35,22 +39,43 @@ body {
     box-shadow: 0 10px 20px rgba(0,0,0,0.5);
 }
 
-.auth-box input, .auth-box select {
-    width: 100%; padding: 12px; margin: 10px 0;
-    border-radius: 8px; border: 2px solid #2c254a;
-    background: #50507a; color: white; outline: none;
+.auth-box input, 
+.auth-box select {
+    width: 100%; 
+    padding: 12px; 
+    margin: 10px 0;
+    border-radius: 8px; 
+    border: 2px solid #2c254a;
+    background: #50507a; 
+    color: white; 
+    outline: none;
 }
 
 .btn-primary {
     background: linear-gradient(180deg, #ffde40 0%, #f39c12 100%);
-    color: #333; font-weight: bold; font-size: 1.2rem;
-    border: 3px solid #b87308; border-radius: 12px;
-    padding: 10px 20px; cursor: pointer;
-    box-shadow: 0 4px 0 #b87308; transition: transform 0.1s;
+    color: #333; 
+    font-weight: bold; 
+    font-size: 1.2rem;
+    border: 3px solid #b87308; 
+    border-radius: 12px;
+    padding: 10px 20px; 
+    cursor: pointer;
+    box-shadow: 0 4px 0 #b87308; 
+    transition: transform 0.1s;
 }
 
-.btn-primary:active { transform: translateY(4px); box-shadow: none; }
-.btn-text { background: none; border: none; color: #00d2ff; cursor: pointer; text-decoration: underline; }
+.btn-primary:active { 
+    transform: translateY(4px); 
+    box-shadow: none; 
+}
+
+.btn-text { 
+    background: none; 
+    border: none; 
+    color: #00d2ff; 
+    cursor: pointer; 
+    text-decoration: underline; 
+}
 
 /* ================= INTERFACE PRINCIPAL ================= */
 .app-header {
@@ -84,7 +109,7 @@ body {
     filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); 
 }
 
-/* ================= FUNDOS ANIMADOS (Fundamental) ================= */
+/* ================= FUNDOS ANIMADOS ================= */
 .background-anim {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
@@ -130,32 +155,54 @@ body {
     100% { transform: translate(-100vw, 100vh) rotate(-45deg); opacity: 0; }
 }
 
-#user-avatar { width: 50px; height: 50px; border-radius: 50%; border: 3px solid var(--primary-color); cursor: pointer; }
+#user-avatar { 
+    width: 50px; 
+    height: 50px; 
+    border-radius: 50%; 
+    border: 3px solid var(--primary-color); 
+    cursor: pointer; 
+}
 
-.menu-options { display: flex; flex-direction: column; gap: 15px; align-items: center; }
+.menu-options { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px; 
+    align-items: center; 
+}
 
 .menu-btn {
-    width: 80%; max-width: 300px; padding: 15px;
-    background-color: #5b5b8c; border: 4px solid #7575a3;
-    border-radius: 20px; color: white; font-size: 1.5rem; font-weight: bold;
-    cursor: pointer; text-transform: uppercase;
+    width: 80%; 
+    max-width: 300px; 
+    padding: 15px;
+    background-color: #5b5b8c; 
+    border: 4px solid #7575a3;
+    border-radius: 20px; 
+    color: white; 
+    font-size: 1.5rem; 
+    font-weight: bold;
+    cursor: pointer; 
+    text-transform: uppercase;
 }
 
 /* ================= JANELAS (DIALOG) ================= */
 .fullscreen-dialog {
     width: 90vw; height: 90vh; margin: auto;
-    background: var(--panel-bg); border: 6px solid #5b5b8c;
-    border-radius: 24px; color: white;
+    background: var(--panel-bg); 
+    border: 6px solid #5b5b8c;
+    border-radius: 24px; 
+    color: white;
 }
 
 .fullscreen-dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
 .dialog-wrapper { position: relative; padding: 20px; height: 100%; }
+
 .btn-close {
     position: absolute; top: 10px; right: 10px;
     background: #e74c3c; color: white; border: 3px solid #c0392b;
     border-radius: 50%; width: 40px; height: 40px;
     font-weight: bold; cursor: pointer;
 }
+
 /* ================= TELA DE PERFIL ================= */
 .profile-layout {
     display: flex;
@@ -286,6 +333,7 @@ body {
     }
 }
 
+/* ================= LOADER ================= */
 #global-loader {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
@@ -293,7 +341,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 999999; /* Z-index no topo absoluto */
+    z-index: 999999; 
     backdrop-filter: blur(3px);
 }
 
@@ -317,9 +365,7 @@ body {
     100% { transform: translateY(-10px) scale(1.2); }
 }
 
-
-/* --- MAPA DE MISSÕES: FUNDAMENTAL (Estilo Lúdico) --- */
-
+/* ================= MAPA DE MISSÕES ================= */
 .mission-map-container {
     position: relative;
     display: flex;
@@ -329,7 +375,7 @@ body {
     gap: 15px;
 }
 
-/* O Caminho (Mais grosso e colorido) */
+/* O Caminho */
 .mission-map-container::before {
     content: '';
     position: absolute;
@@ -358,7 +404,7 @@ body {
 .mission-node:nth-child(4n+3) { transform: translateX(50px); }
 .mission-node:nth-child(4n+4) { transform: translateX(0px); }
 
-/* Bolinha da Missão (Estilo Botão 3D) */
+/* Bolinha da Missão */
 .mission-node .circle {
     width: 55px;
     height: 55px;
@@ -404,7 +450,6 @@ body {
     50% { transform: translateY(-8px); box-shadow: 0 14px 10px rgba(0,0,0,0.15); }
 }
 
-/* Área do Formulário */
 .active-mission-wrapper {
     margin-top: 40px;
     padding: 20px;
@@ -413,6 +458,7 @@ body {
     border-radius: 25px;
     box-shadow: 0 10px 20px rgba(0,0,0,0.1);
 }
+
 .active-mission-wrapper .active-title {
     text-align: center;
     color: var(--primary-color, #FF9800);
@@ -420,23 +466,27 @@ body {
     font-size: 24px;
     font-weight: 900;
 }
-/* --- CORREÇÃO DO BOTÃO DE FECHAR (X) --- */
-.close-btn, .modal-close, #content-modal button, .dialog-close {
+
+/* ================= CORREÇÕES GERAIS DE MODAL ================= */
+.close-btn, 
+.modal-close, 
+#content-modal button, 
+.dialog-close {
     position: relative;
     z-index: 99999 !important;
     cursor: pointer;
 }
 
-/* Se o seu modal usar a tag nativa <dialog>, garante que a camada interna respeite o topo */
 #content-modal {
     position: relative;
     z-index: 9999;
 }
 
-/* --- RANKING E PROFILE CARD: FUNDAMENTAL --- */
+/* ================= RANKING E PROFILE CARD ================= */
 .ranking-container {
     padding: 10px;
 }
+
 .ranking-title {
     text-align: center;
     color: var(--primary-color, #FF9800);
@@ -444,11 +494,13 @@ body {
     font-size: 24px;
     font-weight: 900;
 }
+
 .ranking-list {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
+
 .ranking-item {
     display: flex;
     align-items: center;
@@ -459,12 +511,14 @@ body {
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     border: 2px solid #eee;
 }
+
 .ranking-pos {
     font-weight: 900;
     font-size: 16px;
     min-width: 50px;
     color: #333;
 }
+
 .ranking-username {
     flex-grow: 1;
     font-weight: bold;
@@ -473,9 +527,11 @@ body {
     text-decoration: underline;
     margin: 0 10px;
 }
+
 .ranking-username:hover {
     opacity: 0.8;
 }
+
 .ranking-info {
     font-size: 13px;
     color: #666;
@@ -484,6 +540,7 @@ body {
     padding: 3px 8px;
     border-radius: 8px;
 }
+
 .ranking-score {
     font-weight: 900;
     color: #2e7d32;
@@ -492,7 +549,7 @@ body {
     border-radius: 10px;
 }
 
-/* Profile Card Dialog (Fundamental) */
+/* Dialog do Cartão de Perfil */
 .profile-card-dialog {
     background: transparent;
     border: none;
@@ -501,9 +558,11 @@ body {
     max-width: 400px;
     width: 90%;
 }
+
 .profile-card-dialog::backdrop {
     background: rgba(0, 0, 0, 0.6);
 }
+
 .profile-card-wrapper {
     background: white;
     border-radius: 20px;
@@ -512,6 +571,7 @@ body {
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     border: 4px solid var(--primary-color, #FF9800);
 }
+
 .profile-card-close {
     position: absolute;
     top: 15px;
@@ -530,25 +590,30 @@ body {
     justify-content: center;
     z-index: 10;
 }
+
 .profile-card-close:hover {
     opacity: 0.8;
 }
+
 .vertical-profile-card {
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
 }
+
 .card-username {
     font-size: 22px;
     color: var(--primary-color, #FF9800);
     margin-bottom: 15px;
     font-weight: 900;
 }
+
 .card-avatar-container {
     position: relative;
     margin-bottom: 20px;
 }
+
 .card-avatar {
     width: 100px;
     height: 100px;
@@ -557,6 +622,7 @@ body {
     border: 4px solid var(--primary-color, #FF9800);
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
+
 .card-rank-emblem {
     position: absolute;
     bottom: 0;
@@ -568,6 +634,7 @@ body {
     padding: 2px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
+
 .card-class-symbol {
     position: absolute;
     bottom: 0;
@@ -579,12 +646,14 @@ body {
     padding: 2px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
+
 .card-stats {
     display: flex;
     flex-direction: column;
     gap: 10px;
     width: 100%;
 }
+
 .stat-item {
     background: #f9f9f9;
     padding: 10px 15px;
@@ -595,11 +664,12 @@ body {
     font-size: 15px;
     border: 1px solid #ddd;
 }
+
 .stat-icon {
     font-size: 18px;
 }
 
-/* --- TELA CHEIA PARA RANK E CLASSE (PROFILE CARD) --- */
+/* Interações e Preview em Tela Cheia */
 .card-rank-emblem, 
 .card-class-symbol {
     cursor: pointer;
@@ -611,7 +681,6 @@ body {
     transform: scale(1.2);
 }
 
-/* Estado de Tela Cheia ao Clicar */
 .card-rank-emblem.fullscreen-preview,
 .card-class-symbol.fullscreen-preview {
     position: fixed !important;
@@ -631,12 +700,11 @@ body {
     align-items: center !important;
     justify-content: center !important;
     object-fit: contain !important;
-    font-size: 35vw !important; /* Expande o símbolo de texto no meio da tela */
+    font-size: 35vw !important; 
     color: #ffffff !important;
     transform: none !important;
 }
 
-/* --- CONTAINER E LABEL DA CLASSE NO CARD --- */
 .card-class-container {
     position: absolute;
     bottom: -12px;
@@ -645,21 +713,6 @@ body {
     flex-direction: column;
     align-items: center;
     z-index: 2;
-}
-
-.card-class-symbol {
-    width: 32px;
-    height: 32px;
-    background: #ffffff;
-    color: #1a1a1a;
-    border-radius: 50%;
-    padding: 2px;
-    border: 1px solid #ccc;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
 }
 
 .card-class-name {
@@ -677,9 +730,7 @@ body {
     letter-spacing: 0.5px;
 }
 
-/* =========================================
-   SUPER STARS MODAL - GLOBAL (CANDY CRUSH)
-   ========================================= */
+/* ================= SUPER STARS MODAL ================= */
 .superstar-dialog {
     border: none;
     border-radius: 20px;
