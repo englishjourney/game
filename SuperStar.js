@@ -5,6 +5,8 @@ import { openProfileCard } from './profileCard.js';
 
 export async function openSuperStars() {
     let modal = document.getElementById('superstar-modal');
+    
+    // 1. CRIAÇÃO DO MODAL (Só ocorre uma vez)
     if (!modal) {
         modal = document.createElement('dialog');
         modal.id = 'superstar-modal';
@@ -19,11 +21,12 @@ export async function openSuperStars() {
         `;
         document.body.appendChild(modal);
 
+        // Fecha ao clicar no botão X
         modal.querySelector('#close-superstar').addEventListener('click', () => {
             modal.close();
         });
 
-        // Fecha ao clicar fora da janela
+        // Fecha ao clicar fora da janela (no backdrop)
         modal.addEventListener('click', (e) => {
             const rect = modal.getBoundingClientRect();
             if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
@@ -33,7 +36,12 @@ export async function openSuperStars() {
     }
 
     const contentDiv = modal.querySelector('#superstar-content');
-    modal.showModal();
+    
+    // CORREÇÃO 1: Evita o erro "The element already has an 'open' attribute"
+    if (!modal.open) {
+        modal.showModal();
+    }
+    
     contentDiv.innerHTML = `<p style="text-align:center;">Buscando os melhores...</p>`;
 
     try {
@@ -46,6 +54,7 @@ export async function openSuperStars() {
         });
 
         if (error) throw error;
+        
         if (!users || users.length === 0) {
             contentDiv.innerHTML = `<p style="text-align:center;">Nenhum jogador encontrado.</p>`;
             return;
@@ -57,14 +66,18 @@ export async function openSuperStars() {
         users.forEach(user => {
             if (!user.serie || !user.team) return; // Pula usuários sem série ou turma
 
-            if (!superStarsData[user.serie]) {
-                superStarsData[user.serie] = {};
+            // CORREÇÃO 2: Garante que a série seja tratada como string para dar 'match' com o serieOrder
+            const serieStr = String(user.serie).trim();
+            const teamStr = String(user.team).trim().toUpperCase();
+
+            if (!superStarsData[serieStr]) {
+                superStarsData[serieStr] = {};
             }
 
             // Como a lista já veio ordenada do maior pro menor, 
             // o primeiro de cada turma que aparecer será o maior score.
-            if (!superStarsData[user.serie][user.team]) {
-                superStarsData[user.serie][user.team] = user;
+            if (!superStarsData[serieStr][teamStr]) {
+                superStarsData[serieStr][teamStr] = user;
             }
         });
 
@@ -81,10 +94,14 @@ export async function openSuperStars() {
 
         serieOrder.forEach(serieNum => {
             const turmas = superStarsData[serieNum];
+            
             if (turmas && Object.keys(turmas).length > 0) {
+                // Se a série não tiver nome mapeado, usa a própria chave como fallback
+                const tituloSerie = serieNames[serieNum] || `Série ${serieNum}`;
+                
                 html += `
                     <div class="superstar-section">
-                        <h3 class="superstar-grade-title">${serieNames[serieNum]}</h3>
+                        <h3 class="superstar-grade-title">${tituloSerie}</h3>
                         <div class="superstar-list">
                 `;
 
@@ -101,7 +118,7 @@ export async function openSuperStars() {
                             <div class="superstar-team-badge">${serieNum}${team}</div>
                             <div class="superstar-avatar-container">
                                 <img src="${avatar}" alt="Avatar" class="superstar-avatar">
-                                <img src="${rankImage}" alt="Rank" class="superstar-rank-mini">
+                                <img src="${rankImage}" alt="Rank" class="superstar-rank-mini" onerror="this.style.display='none'">
                             </div>
                             <div class="superstar-info">
                                 <span class="superstar-username">${topPlayer.username}</span>
@@ -119,21 +136,29 @@ export async function openSuperStars() {
         });
 
         if (html === '') {
-            contentDiv.innerHTML = `<p style="text-align:center;">Nenhuma estrela encontrada no momento.</p>`;
+            contentDiv.innerHTML = `<p style="text-align:center; color: #333;">Nenhuma estrela encontrada para as séries cadastradas.</p>`;
         } else {
             contentDiv.innerHTML = html;
 
+            // Adiciona o evento de clique nos cards
             const cards = contentDiv.querySelectorAll('.superstar-card');
             cards.forEach(card => {
                 card.addEventListener('click', (e) => {
-                    e.stopPropagation(); // <-- ISSO É A MÁGICA: Impede o clique de fechar o modal na mesma hora
+                    e.stopPropagation(); // Impede o clique de fechar o modal
                     const username = card.getAttribute('data-username');
-                    openProfileCard(username);
+                    
+                    // CORREÇÃO 3: Try/Catch caso o Profile Card falhe e evitar que a tela quebre
+                    try {
+                        openProfileCard(username);
+                    } catch (err) {
+                        console.error("Erro ao abrir perfil:", err);
+                        alert("Não foi possível abrir o perfil no momento.");
+                    }
                 });
             });
         }
     } catch (err) {
-        console.error(err);
-        contentDiv.innerHTML = `<p style="text-align:center;">Erro ao carregar as Super Stars.</p>`;
+        console.error("Erro na busca de SuperStars:", err);
+        contentDiv.innerHTML = `<p style="text-align:center; color: red;">Erro ao carregar as Super Stars.</p>`;
     }
 }
