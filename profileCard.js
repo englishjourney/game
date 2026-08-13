@@ -53,8 +53,6 @@ export async function openProfileCard(username) {
         const stars = data.stars || 0;
         const rank = data.rank || 'dirt'; // Pega da coluna 'rank' do banco
         const hearts = data.hearts || 5;
-       const rank = data.rank || 'dirt'; 
-        const hearts = data.hearts || 5;
 
         // Mapeia a classe para o símbolo correspondente (use 'userClass' e não 'class')
         const classSymbols = {
