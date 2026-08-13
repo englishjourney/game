@@ -615,3 +615,44 @@
     color: #ffffff !important;
     transform: none !important;
 }
+
+/* --- CONTAINER E LABEL DA CLASSE NO CARD --- */
+.card-class-container {
+    position: absolute;
+    bottom: -12px;
+    left: -15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 2;
+}
+
+.card-class-symbol {
+    width: 32px;
+    height: 32px;
+    background: #ffffff;
+    color: #1a1a1a;
+    border-radius: 50%;
+    padding: 2px;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.card-class-name {
+    font-size: 9px;
+    font-weight: 800;
+    color: #222;
+    background: #ffffff;
+    padding: 1px 5px;
+    border-radius: 4px;
+    margin-top: 2px;
+    white-space: nowrap;
+    border: 1px solid #ddd;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
