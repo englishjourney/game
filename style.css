@@ -468,12 +468,16 @@
 
 /* Profile Card Dialog (Ensino Médio) */
 .profile-card-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     background: transparent;
     border: none;
-    padding: 0;
     border-radius: 12px;
-    max-width: 400px;
-    width: 90%;
+   width: 320px; /* Largura fixa típica de um card mobile/vertical */
+    max-width: 90vw; /* Garante que não vaze em telas muito pequenas */
+    padding: 20px;
 }
 .profile-card-dialog::backdrop {
     background: rgba(0, 0, 0, 0.8);
@@ -512,7 +516,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: center;
+    width: 100%;
 }
 .card-username {
     font-size: 20px;
