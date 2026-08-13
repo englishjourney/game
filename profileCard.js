@@ -67,17 +67,18 @@ export async function openProfileCard(username) {
         const rankClean = rank.toLowerCase().trim();
         const rankEmblem = `shields/${rankClean}.png`;
 
-        contentDiv.innerHTML = `
+       contentDiv.innerHTML = `
             <div class="vertical-profile-card">
                 <h2 class="card-username">${data.username}</h2>
                 
                 <div class="card-avatar-container">
                     <img src="${avatar}" alt="Avatar" class="card-avatar">
                     ${rankEmblem ? `<img src="${rankEmblem}" alt="Patente ${rank}" class="card-rank-emblem" title="Patente: ${rank}">` : ''}
+                    
+                    <!-- SEM o container extra! O texto vai junto com o símbolo -->
                     ${symbolDisplay ? `
-                        <div class="card-class-container">
-                            <div class="card-class-symbol" title="Classe: ${userClass}">${symbolDisplay}</div>
-                            <span class="card-class-name">${userClass}</span>
+                        <div class="card-class-symbol" title="Classe: ${userClass}">
+                            ${symbolDisplay} <span class="card-class-name" style="font-family: sans-serif; font-size: 0.4em; display: block;">${userClass}</span>
                         </div>
                     ` : ''}
                 </div>
