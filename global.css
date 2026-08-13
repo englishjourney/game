@@ -676,3 +676,151 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+
+/* =========================================
+   SUPER STARS MODAL - GLOBAL (CANDY CRUSH)
+   ========================================= */
+.superstar-dialog {
+    border: none;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    width: 90%;
+    max-width: 500px;
+    padding: 0;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.superstar-dialog::backdrop {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(5px);
+}
+
+.superstar-wrapper {
+    padding: 20px;
+    position: relative;
+}
+
+.superstar-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #ff4b4b;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #cc0000;
+    transition: transform 0.1s;
+}
+
+.superstar-close:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #cc0000;
+}
+
+.superstar-title {
+    text-align: center;
+    color: #fff;
+    text-shadow: 2px 2px 0 #ff4b4b;
+    font-size: 28px;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+.superstar-subtitle {
+    text-align: center;
+    color: #555;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.superstar-section {
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 15px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.superstar-grade-title {
+    color: #ff4b4b;
+    border-bottom: 3px dashed #ff4b4b;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+}
+
+.superstar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.superstar-card {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 10px;
+    border-radius: 15px;
+    border: 2px solid #fecfef;
+    box-shadow: 0 4px 0 #e0a6d0;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.superstar-card:active {
+    transform: scale(0.97);
+}
+
+.superstar-team-badge {
+    background: #ffd700;
+    color: #d2691e;
+    font-weight: 900;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 18px;
+    margin-right: 15px;
+}
+
+.superstar-avatar-container {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    margin-right: 15px;
+}
+
+.superstar-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid #ff4b4b;
+    object-fit: cover;
+}
+
+.superstar-rank-mini {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    width: 25px;
+    height: 25px;
+}
+
+.superstar-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.superstar-username {
+    font-weight: 800;
+    color: #333;
+    font-size: 16px;
+}
+
+.superstar-score {
+    color: #ff4b4b;
+    font-weight: bold;
+    font-size: 14px;
+}
