@@ -76,7 +76,15 @@ export async function openProfileCard(username) {
                     ${rankEmblem ? `<img src="${rankEmblem}" alt="Patente ${rank}" class="card-rank-emblem" title="Patente: ${rank}">` : ''}
                     ${classSymbol ? `<img src="${classSymbol}" alt="Classe" class="card-class-symbol" title="Símbolo da Classe">` : ''}
                 </div>
-
+contentDiv.innerHTML = `
+            <div class="vertical-profile-card">
+                <h2 class="card-username">${data.username}</h2>
+                
+                <div class="card-avatar-container">
+                    <img src="${avatar}" alt="Avatar" class="card-avatar">
+                    ${rankEmblem ? `<img src="${rankEmblem}" alt="Patente ${rank}" class="card-rank-emblem" title="Patente: ${rank}">` : ''}
+                    ${symbolDisplay ? `<div class="card-class-symbol" title="Classe: ${userClass}">${symbolDisplay}</div>` : ''}
+                </div>
                 <div class="card-stats">
                     <div class="stat-item"><span class="stat-icon">🏆</span> Score: <strong>${score}</strong></div>
                     <div class="stat-item"><span class="stat-icon">⭐</span> Estrelas: <strong>${stars}</strong></div>
