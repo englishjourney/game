@@ -4,7 +4,7 @@ import { supabase } from './supabaseClient.js';
 import { runWithLoader } from './loader.js'; // <-- IMPORTANDO O LOADER
 
 // Cole aqui a URL do seu Web App do Apps Script
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwzsxn9IjQJH9WQcU31ZvigAnOIgB8VEk93UZpcQAUqcdj2SIb9lxgUFdf-4RGMucfr/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzu6uSem0N8vSoi9Bx3XkV-gY02YLea_SFHOW36Wy2bS0Pdiu-ihPGf_8keBOabGPU/exec";
 
 // 1. Configurações de Classes e Ranks
 const classesMap = {
