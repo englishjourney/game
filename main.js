@@ -2,7 +2,8 @@
 import { getSession, clearSession, handleRegister, handleLogin } from './auth.js';
 import { openProfile } from './profile.js';
 import { openMissions } from './missions.js';
-import { openRanking } from './rank.js'; // <-- ADICIONADO AQUI
+import { openRanking } from './rank.js';
+import { openSuperStars } from './SuperStar.js';
 
 document.addEventListener("DOMContentLoaded", () => {
     const session = getSession();
@@ -61,6 +62,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Adicionado o listener para o Ranking
     document.getElementById('btn-ranking').addEventListener('click', () => {
         openRanking();
+    });
+
+    // Adicionado o listener para os Super Stars
+    document.getElementById('btn-superstars').addEventListener('click', () => {
+        openSuperStars();
     });
     
     document.getElementById('btn-close-modal').addEventListener('click', () => modal.close());
