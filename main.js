@@ -1,7 +1,8 @@
 // main.js
 import { getSession, clearSession, handleRegister, handleLogin } from './auth.js';
 import { openProfile } from './profile.js';
-import { openMissions } from './missions.js'; // <-- ADICIONADO AQUI
+import { openMissions } from './missions.js';
+import { openRanking } from './rank.js'; // <-- ADICIONADO AQUI
 
 document.addEventListener("DOMContentLoaded", () => {
     const session = getSession();
@@ -55,6 +56,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Antes estava apenas abrindo o modal vazio/antigo. Agora chama a função correta!
     document.getElementById('btn-missions').addEventListener('click', () => {
         openMissions();
+    });
+
+    // Adicionado o listener para o Ranking
+    document.getElementById('btn-ranking').addEventListener('click', () => {
+        openRanking();
     });
     
     document.getElementById('btn-close-modal').addEventListener('click', () => modal.close());
