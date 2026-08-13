@@ -123,6 +123,155 @@
     margin: 0 auto 15px auto;
     animation: spinTech 0.8s linear infinite;
 }
+/* =========================================
+   MAPA DE MISSÕES - ESTILO SAGA (GAMIFICADO)
+   ========================================= */
+
+/* Container Principal com fundo imersivo */
+.mission-map-container {
+    display: flex;
+    flex-direction: column;
+    padding: 50px 10px;
+    background: linear-gradient(to bottom, #1a1a2e, #16213e, #0f3460); /* Fundo noturno/tech */
+    border-radius: 20px;
+    position: relative;
+    overflow-x: hidden;
+    min-height: 500px;
+}
+
+/* A Trilha Central (Caminho tracejado) */
+.mission-map-container::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.4),
+      rgba(255, 255, 255, 0.4) 20px,
+      transparent 20px,
+      transparent 40px
+    );
+    z-index: 1;
+    border-radius: 10px;
+}
+
+/* Cada Ponto (Fase) no mapa */
+.mission-node {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    margin-bottom: -10px; /* Cria proximidade entre as fases */
+    transition: transform 0.3s ease;
+}
+
+/* Intercalando Esquerda e Direita (Zigue-Zague) */
+.mission-node.align-left {
+    align-self: flex-start;
+    align-items: flex-end; 
+    padding-right: 40px;
+}
+
+.mission-node.align-right {
+    align-self: flex-end;
+    align-items: flex-start; 
+    padding-left: 40px;
+}
+
+/* O Circulo (Botão da Fase) com efeito 3D */
+.mission-circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    color: white;
+    font-weight: bold;
+    border: 4px solid #fff;
+    box-shadow: inset 0 -6px 0 rgba(0,0,0,0.3), 0 10px 15px rgba(0,0,0,0.5); /* Efeito 3D */
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+/* Fase Concluída (Brilho Azul/Roxo estilo imagem) */
+.mission-circle.success {
+    background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+    border-color: #e0f7fa;
+    box-shadow: inset 0 -6px 0 rgba(0,0,0,0.2), 0 0 25px rgba(0, 210, 255, 0.8);
+}
+
+/* Fase Falhada (Vermelho) */
+.mission-circle.fail {
+    background: linear-gradient(135deg, #ff4b2b, #ff416c);
+    border-color: #ffebee;
+    filter: saturate(0.8);
+}
+
+/* Fase Ativa (Marcador "Você está aqui") */
+.mission-circle.active-circle {
+    background: linear-gradient(135deg, #fceabb, #f8b500); /* Dourado */
+    border-color: #fff;
+    animation: bounce-pulse 1.5s infinite;
+}
+
+/* Texto abaixo de cada fase */
+.mission-label {
+    margin-top: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    color: #fff;
+    font-weight: 600;
+    text-align: center;
+    max-width: 150px;
+    line-height: 1.2;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* Configuração especial para a Fase Ativa onde fica o Iframe */
+.mission-node.active-mission {
+    width: 100%;
+    align-self: center;
+    align-items: center;
+    padding: 0 20px;
+    margin-top: 20px;
+}
+
+.mission-frame-wrapper {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 16px;
+    padding: 20px;
+    width: 100%;
+    max-width: 700px;
+    box-shadow: 0 10px 40px rgba(248, 181, 0, 0.5);
+    border: 3px solid #f8b500;
+    margin-top: 20px;
+    position: relative;
+    z-index: 3;
+}
+
+.active-title {
+    text-align: center;
+    color: #1a1a2e;
+    margin-bottom: 15px;
+    font-weight: 800;
+    font-size: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Animação do Avatar/Ponto atual pulando */
+@keyframes bounce-pulse {
+    0%, 100% { transform: translateY(0) scale(1); box-shadow: inset 0 -6px 0 rgba(0,0,0,0.2), 0 0 15px rgba(248, 181, 0, 0.4); }
+    50% { transform: translateY(-10px) scale(1.05); box-shadow: inset 0 -6px 0 rgba(0,0,0,0.2), 0 0 30px rgba(248, 181, 0, 0.9); }
+}
 
 @keyframes spinTech {
     0% { transform: rotate(0deg); }
