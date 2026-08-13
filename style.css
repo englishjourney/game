@@ -773,3 +773,27 @@
     transition: transform 0.2s;
     /* Se for o global.css, deixe as bordas rosinhas/brancas. Se for o style.css, deixe as neon. */
 }
+/* Garante que os modais (dialog) fiquem estritamente no meio da tela */
+dialog.superstar-dialog,
+dialog.profile-card-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0; /* Remove qualquer margem automática que possa estar bugando */
+    
+    /* Configurações visuais extras para não ficar grudado na borda no celular */
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto; 
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Fundo escuro atrás do modal (opcional, mas fica ótimo) */
+dialog.superstar-dialog::backdrop,
+dialog.profile-card-dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px); /* Faz um efeitinho de desfoque no fundo */
+}
