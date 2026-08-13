@@ -73,7 +73,7 @@ export async function openProfileCard(username) {
                 
                 <div class="card-avatar-container">
                     <img src="${avatar}" alt="Avatar" class="card-avatar">
-                    ${rankEmblem ? `<img src="${rankEmblem}" alt="Patente ${userRank}" class="card-rank-emblem" title="Patente: ${userRank}">` : ''}
+                    ${rankEmblem ? `<img src="${rankEmblem}" alt="Patente ${rank}" class="card-rank-emblem" title="Patente: ${rank}">` : ''}
                     ${symbolDisplay ? `
                         <div class="card-class-container">
                             <div class="card-class-symbol" title="Classe: ${userClass}">${symbolDisplay}</div>
