@@ -85,6 +85,18 @@ export async function openProfileCard(username) {
                 </div>
             </div>
         `;
+        // Lógica de Tela Cheia para o Rank e o Símbolo da Classe
+        const rankImg = contentDiv.querySelector('.card-rank-emblem');
+        const classSym = contentDiv.querySelector('.card-class-symbol');
+
+        [rankImg, classSym].forEach(el => {
+            if (el) {
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Evita fechar o card acidentalmente
+                    el.classList.toggle('fullscreen-preview');
+                });
+            }
+        });
     } catch (err) {
         console.error(err);
         contentDiv.innerHTML = `<p style="text-align:center;">Erro ao carregar o perfil.</p>`;
