@@ -568,14 +568,16 @@ body {
     padding: 2px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
-/* Ajuste para garantir que o símbolo da classe (texto) apareça corretamente */
 .card-class-symbol {
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px; /* Ajuste o tamanho conforme necessário */
-    color: #333; /* Cor do símbolo */
-    background: white !important; /* Fundo branco para destacar */
+    position: absolute;
+    bottom: 0;
+    left: -10px;
+    width: 35px;
+    height: 35px;
+    background: white;
+    border-radius: 50%;
+    padding: 2px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 .card-stats {
     display: flex;
