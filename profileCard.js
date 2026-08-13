@@ -53,15 +53,17 @@ export async function openProfileCard(username) {
         const stars = data.stars || 0;
         const rank = data.rank || 'dirt'; // Pega da coluna 'rank' do banco
         const hearts = data.hearts || 5;
-        // Mapeia a classe para o símbolo correspondente
+       const rank = data.rank || 'dirt'; 
+        const hearts = data.hearts || 5;
+
+        // Mapeia a classe para o símbolo correspondente (use 'userClass' e não 'class')
         const classSymbols = {
             "Archer": "፠", "Explorer": "᪥", "Builder": "ᚙ", "Farmer": "࿊",
             "Redstone Engineer": "᪣", "Wizard": "߷", "Witch": "߷",
             "Summoner": "֍", "Warrior": "࿇", "Fairy": "ΐ", "Miner": "፨"
         };
-        const userClass = data.class || '';
+        const userClass = data.class || ''; // <-- GARANTA QUE ESTÁ USANDO 'userClass'
         const symbolDisplay = classSymbols[userClass] || '';
-        const classSymbol = data.class_symbol || '';
 
         // Mapeia o nome do rank para o arquivo de escudo correspondente na pasta shields
         const rankClean = rank.toLowerCase().trim();
@@ -74,17 +76,9 @@ export async function openProfileCard(username) {
                 <div class="card-avatar-container">
                     <img src="${avatar}" alt="Avatar" class="card-avatar">
                     ${rankEmblem ? `<img src="${rankEmblem}" alt="Patente ${rank}" class="card-rank-emblem" title="Patente: ${rank}">` : ''}
-                    ${classSymbol ? `<img src="${classSymbol}" alt="Classe" class="card-class-symbol" title="Símbolo da Classe">` : ''}
-                </div>
-contentDiv.innerHTML = `
-            <div class="vertical-profile-card">
-                <h2 class="card-username">${data.username}</h2>
-                
-                <div class="card-avatar-container">
-                    <img src="${avatar}" alt="Avatar" class="card-avatar">
-                    ${rankEmblem ? `<img src="${rankEmblem}" alt="Patente ${rank}" class="card-rank-emblem" title="Patente: ${rank}">` : ''}
                     ${symbolDisplay ? `<div class="card-class-symbol" title="Classe: ${userClass}">${symbolDisplay}</div>` : ''}
                 </div>
+
                 <div class="card-stats">
                     <div class="stat-item"><span class="stat-icon">🏆</span> Score: <strong>${score}</strong></div>
                     <div class="stat-item"><span class="stat-icon">⭐</span> Estrelas: <strong>${stars}</strong></div>
