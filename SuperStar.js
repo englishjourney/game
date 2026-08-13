@@ -123,10 +123,10 @@ export async function openSuperStars() {
         } else {
             contentDiv.innerHTML = html;
 
-            // Adiciona o evento de clique para abrir o card de perfil
             const cards = contentDiv.querySelectorAll('.superstar-card');
             cards.forEach(card => {
-                card.addEventListener('click', () => {
+                card.addEventListener('click', (e) => {
+                    e.stopPropagation(); // <-- ISSO É A MÁGICA: Impede o clique de fechar o modal na mesma hora
                     const username = card.getAttribute('data-username');
                     openProfileCard(username);
                 });
