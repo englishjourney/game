@@ -53,6 +53,14 @@ export async function openProfileCard(username) {
         const stars = data.stars || 0;
         const rank = data.rank || 'dirt'; // Pega da coluna 'rank' do banco
         const hearts = data.hearts || 5;
+        // Mapeia a classe para o símbolo correspondente
+        const classSymbols = {
+            "Archer": "፠", "Explorer": "᪥", "Builder": "ᚙ", "Farmer": "࿊",
+            "Redstone Engineer": "᪣", "Wizard": "߷", "Witch": "߷",
+            "Summoner": "֍", "Warrior": "࿇", "Fairy": "ΐ", "Miner": "፨"
+        };
+        const userClass = data.class || '';
+        const symbolDisplay = classSymbols[userClass] || '';
         const classSymbol = data.class_symbol || '';
 
         // Mapeia o nome do rank para o arquivo de escudo correspondente na pasta shields
