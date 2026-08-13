@@ -34,6 +34,8 @@ function getEmbedUrl(url) {
     return finalUrl;
 }
 
+// missions.js (mantenha os imports e a função getEmbedUrl no topo)
+
 export async function openMissions() {
     const session = getSession();
     if (!session) return;
@@ -41,7 +43,7 @@ export async function openMissions() {
     const modalContent = document.getElementById('modal-content');
     const modal = document.getElementById('content-modal');
     
-    modalContent.innerHTML = ``;
+    modalContent.innerHTML = `<h3 style="text-align:center; color: var(--primary-color);">Carregando Mapa...</h3>`;
     modal.showModal();
 
     try {
@@ -55,15 +57,12 @@ export async function openMissions() {
         if (error) throw error;
 
         if (!missions || missions.length === 0) {
-            modalContent.innerHTML = `
-                <div style="text-align:center; padding: 20px;">
-                    <h2 style="color: var(--primary-color);">Nenhuma missão encontrada!</h2>
-                    <p style="color: white; margin-top: 10px;">Verifique se você já cadastrou missões no Supabase.</p>
-                </div>`;
+            modalContent.innerHTML = `<h2 style="text-align:center; color: var(--primary-color);">Nenhuma missão encontrada!</h2>`;
             return; 
         }
 
         let mapHTML = `<div class="mission-map-container">`;
+        let activeMissionHTML = ""; // Formulário ficará guardado aqui
         let activeFound = false;
 
         const getAsArray = (fieldData) => {
@@ -82,54 +81,70 @@ export async function openMissions() {
         for (let i = 0; i < missions.length; i++) {
             const mission = missions[i];
             const missionNumber = i + 1;
-            const missionName = mission.mission_name || "Missão Secreta";
+            const missionName = mission.mission_name || mission.title || "Missão Secreta";
             
             const doneList = getAsArray(mission.done);
             const failList = getAsArray(mission.fail);
 
             const isDone = doneList.includes(session.username);
             const isFailed = failList.includes(session.username);
-            
-            const alignClass = i % 2 === 0 ? "align-left" : "align-right";
 
             if (isDone) {
                 mapHTML += `
-                    <div class="mission-node ${alignClass}">
-                        <div class="mission-circle success">✓</div>
-                        <span class="mission-label">Missão ${missionNumber}: ${missionName} (Completa)</span>
+                    <div class="mission-node done" title="${missionName}">
+                        <div class="circle">✓</div>
+                        <span class="label">${missionNumber}</span>
                     </div>
                 `;
             } else if (isFailed) {
                 mapHTML += `
-                    <div class="mission-node ${alignClass}">
-                        <div class="mission-circle fail">✗</div>
-                        <span class="mission-label">Missão ${missionNumber}: ${missionName} (Não completa)</span>
+                    <div class="mission-node fail" title="${missionName}">
+                        <div class="circle">✗</div>
+                        <span class="label">${missionNumber}</span>
                     </div>
                 `;
             } else {
-                // Aqui usamos a nova função getEmbedUrl() para formatar o link limpo
-                const safeUrl = getEmbedUrl(mission.mission_link);
-
-                mapHTML += `
-                    <div class="mission-node active-mission ${alignClass}">
-                        <div class="mission-frame-wrapper">
-                            <h3 class="active-title">Missão ${missionNumber}: ${missionName} - VALENDO!</h3>
+                // Primeira missão não feita e não falha vira a ESTRELA (Ativa)
+                if (!activeFound) {
+                    mapHTML += `
+                        <div class="mission-node active" title="${missionName}">
+                            <div class="circle">★</div>
+                            <span class="label">${missionNumber}</span>
+                        </div>
+                    `;
+                    
+                    const safeUrl = getEmbedUrl(mission.mission_link);
+                    
+                    // Constrói o formulário abaixo do mapa
+                    activeMissionHTML = `
+                        <div class="active-mission-wrapper">
+                            <h3 class="active-title">Missão ${missionNumber}: ${missionName}</h3>
                             <iframe src="${safeUrl}" width="100%" height="500" frameborder="0" marginheight="0" marginwidth="0">Carregando...</iframe>
                         </div>
-                    </div>
-                `;
-                activeFound = true;
-                break; 
+                    `;
+                    activeFound = true;
+                } else {
+                    // Missões futuras viram cadeados (ou apenas ficam em cinza)
+                    mapHTML += `
+                        <div class="mission-node locked" title="${missionName}">
+                            <div class="circle">🔒</div>
+                            <span class="label">${missionNumber}</span>
+                        </div>
+                    `;
+                }
             }
         }
 
+        mapHTML += `</div>`; // Fecha o mapa
+
         if (!activeFound) {
-            mapHTML += `<h2 style="text-align:center; color: var(--primary-color); margin-top: 20px;">Incrível! Você concluiu todas as missões disponíveis!</h2>`;
+            activeMissionHTML = `<h2 style="text-align:center; color: var(--primary-color); margin-top: 30px;">Incrível! Você concluiu todas as missões!</h2>`;
         }
 
-        mapHTML += `</div>`; 
-        modalContent.innerHTML = mapHTML;
+        // Renderiza o mapa por cima e o formulário por baixo
+        modalContent.innerHTML = mapHTML + activeMissionHTML;
 
+        // Rola até o final para o aluno ver o formulário
         setTimeout(() => {
             const wrapper = document.querySelector('.dialog-wrapper') || modal;
             wrapper.scrollTo({ top: 9999, behavior: 'smooth' });
