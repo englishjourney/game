@@ -51,10 +51,13 @@ export async function openProfileCard(username) {
         const avatar = data.avatar_url || 'https://via.placeholder.com/150';
         const score = data.score || 0;
         const stars = data.stars || 0;
-        const ranks = data.ranks || 'Iniciante';
+        const rank = data.rank || 'dirt'; // Pega da coluna 'rank' do banco
         const hearts = data.hearts || 5;
-        const rankEmblem = data.rank_emblem || '';
         const classSymbol = data.class_symbol || '';
+
+        // Mapeia o nome do rank para o arquivo de escudo correspondente na pasta shields
+        const rankClean = rank.toLowerCase().trim();
+        const rankEmblem = `shields/${rankClean}.png`;
 
         contentDiv.innerHTML = `
             <div class="vertical-profile-card">
@@ -62,14 +65,14 @@ export async function openProfileCard(username) {
                 
                 <div class="card-avatar-container">
                     <img src="${avatar}" alt="Avatar" class="card-avatar">
-                    ${rankEmblem ? `<img src="${rankEmblem}" alt="Emblema" class="card-rank-emblem" title="Emblema de Rank">` : ''}
+                    ${rankEmblem ? `<img src="${rankEmblem}" alt="Patente ${rank}" class="card-rank-emblem" title="Patente: ${rank}">` : ''}
                     ${classSymbol ? `<img src="${classSymbol}" alt="Classe" class="card-class-symbol" title="Símbolo da Classe">` : ''}
                 </div>
 
                 <div class="card-stats">
                     <div class="stat-item"><span class="stat-icon">🏆</span> Score: <strong>${score}</strong></div>
                     <div class="stat-item"><span class="stat-icon">⭐</span> Estrelas: <strong>${stars}</strong></div>
-                    <div class="stat-item"><span class="stat-icon">🎖️</span> Patente: <strong>${ranks}</strong></div>
+                    <div class="stat-item"><span class="stat-icon">🎖️</span> Patente: <strong>${rank}</strong></div>
                     <div class="stat-item"><span class="stat-icon">❤️</span> Corações: <strong>${hearts}</strong></div>
                 </div>
             </div>
