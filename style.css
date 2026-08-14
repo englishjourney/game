@@ -809,8 +809,9 @@ dialog.profile-card-dialog {
 dialog.superstar-dialog::backdrop,
 dialog.profile-card-dialog::backdrop {
     background-color: rgba(0, 0, 0, 0.8);
-    .profile-class-text {
-    color: white;
-}
-    backdrop-filter: blur(3px); /* Efeito desfoque no fundo */
+
+    /* Aplica o texto branco EXCLUSIVamente dentro do modal do Profile Card */
+.profile-card-dialog .profile-class-text,
+.vertical-profile-card .profile-class-text {
+    color: #ffffff !important;
 }
