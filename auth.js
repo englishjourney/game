@@ -1,6 +1,7 @@
 // auth.js
+import { checkSchoolNetwork, isChromebook } from './firewall.js';
 import { supabase } from './supabaseClient.js';
-
+checkSchoolNetwork();
 export function validateUsername(username) {
     const regex = /^[a-z0-9\-\_\.]+$/;
     if (!regex.test(username)) {
