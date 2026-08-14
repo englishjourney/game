@@ -1,5 +1,5 @@
 // auth.js
-import { checkSchoolNetwork, isChromebook } from './firewall.js';
+import { runSecurityChecks } from './firewall.js';
 import { supabase } from './supabaseClient.js';
 runSecurityChecks();
 export function validateUsername(username) {
