@@ -73,15 +73,16 @@ export async function openProfileCard(username) {
                 
                 <div class="card-avatar-container">
                     <img src="${avatar}" alt="Avatar" class="card-avatar">
+                    
+                    <!-- Imagem do Rank solta -->
                     ${rankEmblem ? `<img src="${rankEmblem}" alt="Patente ${rank}" class="card-rank-emblem" title="Patente: ${rank}">` : ''}
                     
-                    <!-- SEM o container extra! O texto vai junto com o símbolo -->
-                    ${symbolDisplay ? `
-                        <div class="card-class-symbol" title="Classe: ${userClass}">
-                            ${symbolDisplay} <span class="card-class-name" style="font-family: sans-serif; font-size: 0.4em; display: block;">${userClass}</span>
-                        </div>
-                    ` : ''}
+                    <!-- Símbolo da Classe solto (sem container em volta) -->
+                    ${symbolDisplay ? `<div class="card-class-symbol" title="Classe: ${userClass}">${symbolDisplay}</div>` : ''}
                 </div>
+
+                <!-- Nome da classe exibido de forma limpa abaixo do avatar -->
+                ${userClass ? `<div class="profile-class-text">Classe: ${userClass}</div>` : ''}
 
                 <div class="card-stats">
                     <div class="stat-item"><span class="stat-icon">🏆</span> Score: <strong>${score}</strong></div>
