@@ -469,13 +469,17 @@
 /* Profile Card Dialog (Ensino Médio) */
 .profile-card-dialog {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    /* NOVAS REGRAS DE CENTRALIZAÇÃO (sem transform) */
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    
     background: transparent;
     border: none;
     border-radius: 12px;
-   width: 320px; /* Largura fixa típica de um card mobile/vertical */
+    width: 320px; /* Largura fixa típica de um card mobile/vertical */
     max-width: 90vw; /* Garante que não vaze em telas muito pequenas */
     padding: 20px;
 }
@@ -785,6 +789,26 @@ dialog.profile-card-dialog {
     left: 50%;
     transform: translate(-50%, -50%);
     margin: 0; /* Remove qualquer margem automática que possa estar bugando */
+    
+    /* Configurações visuais extras para não ficar grudado na borda no celular */
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto; 
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Garante que os modais (dialog) fiquem estritamente no meio da tela */
+dialog.superstar-dialog,
+dialog.profile-card-dialog {
+    position: fixed;
+    /* NOVAS REGRAS DE CENTRALIZAÇÃO (sem transform) */
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto; 
     
     /* Configurações visuais extras para não ficar grudado na borda no celular */
     max-width: 90vw;
