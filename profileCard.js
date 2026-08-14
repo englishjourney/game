@@ -104,16 +104,20 @@ export async function openProfileCard(username) {
                 el.addEventListener('click', (e) => {
                     e.stopPropagation(); 
                     
-                    // Cria uma tela escura solta direto no body do site
-                    const overlay = document.createElement('div');
+                    // ALTERAÇÃO AQUI: Cria um elemento <dialog> ao invés de <div>
+                    const overlay = document.createElement('dialog');
                     overlay.style.position = 'fixed';
                     overlay.style.top = '0';
                     overlay.style.left = '0';
                     overlay.style.width = '100vw';
                     overlay.style.height = '100vh';
-                    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.9)'; // Fundo super escuro
-                    overlay.style.zIndex = '9999999'; // Por cima de TUDO
-                    overlay.style.display = 'flex';
+                    overlay.style.maxWidth = '100vw'; // Necessário no dialog
+                    overlay.style.maxHeight = '100vh'; // Necessário no dialog
+                    overlay.style.margin = '0'; // Tira as margens padrão do dialog
+                    overlay.style.padding = '0'; // Tira o espaçamento padrão
+                    overlay.style.border = 'none'; // Sem borda
+                    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)'; // Fundo super escuro
+                    overlay.style.display = 'flex'; // Exibe as coisas no centro
                     overlay.style.alignItems = 'center';
                     overlay.style.justifyContent = 'center';
                     overlay.style.cursor = 'zoom-out';
@@ -140,13 +144,17 @@ export async function openProfileCard(username) {
                         clone.style.textShadow = '0 0 20px rgba(255, 255, 255, 0.2)';
                     }
 
-                    // Cola a imagem na tela escura e exibe
+                    // Cola a imagem no dialog e adiciona ao site
                     overlay.appendChild(clone);
                     document.body.appendChild(overlay);
 
+                    // ALTERAÇÃO AQUI: Abre o overlay nativamente no Top Layer
+                    overlay.showModal();
+
                     // Clica em qualquer lugar para sumir com tudo
                     overlay.addEventListener('click', () => {
-                        overlay.remove();
+                        overlay.close(); // Fecha o dialog
+                        overlay.remove(); // Remove o html do site
                     });
                 });
             }
