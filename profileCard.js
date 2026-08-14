@@ -51,23 +51,23 @@ export async function openProfileCard(username) {
         const avatar = data.avatar_url || 'https://via.placeholder.com/150';
         const score = data.score || 0;
         const stars = data.stars || 0;
-        const rank = data.rank || 'dirt'; // Pega da coluna 'rank' do banco
+        const rank = data.rank || 'dirt'; 
         const hearts = data.hearts || 5;
 
-        // Mapeia a classe para o símbolo correspondente (use 'userClass' e não 'class')
+        // Mapeia a classe para o símbolo correspondente
         const classSymbols = {
             "Archer": "፠", "Explorer": "᪥", "Builder": "ᚙ", "Farmer": "࿊",
             "Redstone Engineer": "᪣", "Wizard": "߷", "Witch": "߷",
             "Summoner": "֍", "Warrior": "࿇", "Fairy": "ΐ", "Miner": "፨"
         };
-        const userClass = data.class || ''; // <-- GARANTA QUE ESTÁ USANDO 'userClass'
+        const userClass = data.class || ''; 
         const symbolDisplay = classSymbols[userClass] || '';
 
-        // Mapeia o nome do rank para o arquivo de escudo correspondente na pasta shields
+        // Mapeia o nome do rank para o arquivo de escudo correspondente
         const rankClean = rank.toLowerCase().trim();
         const rankEmblem = `shields/${rankClean}.png`;
 
-       contentDiv.innerHTML = `
+        contentDiv.innerHTML = `
             <div class="vertical-profile-card">
                 <h2 class="card-username">${data.username}</h2>
                 
@@ -81,7 +81,7 @@ export async function openProfileCard(username) {
                     ${symbolDisplay ? `<div class="card-class-symbol" title="Classe: ${userClass}">${symbolDisplay}</div>` : ''}
                 </div>
 
-                <!-- Nome da classe exibido de forma limpa abaixo do avatar -->
+                <!-- Nome da classe limpo abaixo do avatar -->
                 ${userClass ? `<div class="profile-class-text">Classe: ${userClass}</div>` : ''}
 
                 <div class="card-stats">
@@ -92,15 +92,62 @@ export async function openProfileCard(username) {
                 </div>
             </div>
         `;
-        // Lógica de Tela Cheia para o Rank e o Símbolo da Classe
+        
+        // ========================================================
+        // TELA CHEIA MÁGICA: Totalmente solta e independente do cartão!
+        // ========================================================
         const rankImg = contentDiv.querySelector('.card-rank-emblem');
         const classSym = contentDiv.querySelector('.card-class-symbol');
 
         [rankImg, classSym].forEach(el => {
             if (el) {
                 el.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Evita fechar o card acidentalmente
-                    el.classList.toggle('fullscreen-preview');
+                    e.stopPropagation(); 
+                    
+                    // Cria uma tela escura solta direto no body do site
+                    const overlay = document.createElement('div');
+                    overlay.style.position = 'fixed';
+                    overlay.style.top = '0';
+                    overlay.style.left = '0';
+                    overlay.style.width = '100vw';
+                    overlay.style.height = '100vh';
+                    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.9)'; // Fundo super escuro
+                    overlay.style.zIndex = '9999999'; // Por cima de TUDO
+                    overlay.style.display = 'flex';
+                    overlay.style.alignItems = 'center';
+                    overlay.style.justifyContent = 'center';
+                    overlay.style.cursor = 'zoom-out';
+                    
+                    // Clona a imagem/símbolo clicado
+                    const clone = el.cloneNode(true);
+                    
+                    // A mágica: apaga as classes do cartão pra não herdar molduras!
+                    clone.className = ''; 
+                    
+                    if (clone.tagName === 'IMG') {
+                        // Se for a imagem do Rank
+                        clone.style.maxWidth = '80vw';
+                        clone.style.maxHeight = '80vh';
+                        clone.style.objectFit = 'contain';
+                        clone.style.filter = 'drop-shadow(0 0 30px rgba(0,0,0,0.5))';
+                    } else {
+                        // Se for o símbolo da classe em texto (O Builder das 3 bolinhas)
+                        clone.style.fontSize = '40vw'; // Fica Gigante
+                        clone.style.color = '#ffffff'; // Branco para destacar no fundo preto
+                        clone.style.background = 'transparent'; // Arranca qualquer cor de fundo
+                        clone.style.border = 'none'; // Arranca bordas
+                        clone.style.boxShadow = 'none';
+                        clone.style.textShadow = '0 0 20px rgba(255, 255, 255, 0.2)';
+                    }
+
+                    // Cola a imagem na tela escura e exibe
+                    overlay.appendChild(clone);
+                    document.body.appendChild(overlay);
+
+                    // Clica em qualquer lugar para sumir com tudo
+                    overlay.addEventListener('click', () => {
+                        overlay.remove();
+                    });
                 });
             }
         });
