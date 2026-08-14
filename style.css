@@ -469,7 +469,6 @@
 /* Profile Card Dialog (Ensino Médio) */
 .profile-card-dialog {
     position: fixed;
-    /* NOVAS REGRAS DE CENTRALIZAÇÃO (sem transform) */
     top: 0;
     bottom: 0;
     left: 0;
@@ -599,7 +598,6 @@
     transform: scale(1.2);
 }
 
-/* Estado de Tela Cheia ao Clicar */
 /* Estado de Tela Cheia ao Clicar (Emblema e Classe) */
 .card-rank-emblem.fullscreen-preview,
 .card-class-symbol.fullscreen-preview {
@@ -679,16 +677,12 @@
     color: #e0e0e0;
     inset: 0; /* Atalho para top: 0, bottom: 0, left: 0, right: 0 */
     margin: auto;
-    width: fit-content; /* Diz ao navegador para usar apenas o tamanho necessário */
+    width: fit-content;
     height: fit-content; 
     
-    /* Configurações visuais extras para não ficar grudado na borda no celular */
     max-width: 90vw;
     max-height: 90vh;
     overflow-y: auto; 
-    border-radius: 12px;
-    border: none;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .superstar-dialog::backdrop {
@@ -774,7 +768,6 @@
     font-family: 'Courier New', Courier, monospace;
 }
 
-/* Substitua as classes antigas por estas: */
 .superstar-list {
     display: flex;
     flex-direction: column;
@@ -788,44 +781,22 @@
     width: 100%;
     max-width: 350px; /* Evita que o cartão fique gigante e mantém ele no centro */
     justify-content: flex-start; /* Mantém a foto e o texto alinhados à esquerda dentro do cartão */
-    
-    /* Mantenha o background, padding, bordas e box-shadow do tema que você já colou antes! */
     padding: 10px;
     border-radius: 15px;
     cursor: pointer;
     transition: transform 0.2s;
-    /* Se for o global.css, deixe as bordas rosinhas/brancas. Se for o style.css, deixe as neon. */
-}
-/* Garante que os modais (dialog) fiquem estritamente no meio da tela */
-dialog.superstar-dialog,
-dialog.profile-card-dialog {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    margin: 0; /* Remove qualquer margem automática que possa estar bugando */
-    
-    /* Configurações visuais extras para não ficar grudado na borda no celular */
-    max-width: 90vw;
-    max-height: 90vh;
-    overflow-y: auto; 
-    border-radius: 12px;
-    border: none;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
-/* Garante que os modais (dialog) fiquem estritamente no meio da tela */
+/* Garante que os modais (dialog) fiquem estritamente no meio da tela (sem bugs de transform) */
 dialog.superstar-dialog,
 dialog.profile-card-dialog {
     position: fixed;
-    /* NOVAS REGRAS DE CENTRALIZAÇÃO (sem transform) */
     top: 0;
     bottom: 0;
     left: 0;
     right: 0;
     margin: auto; 
     
-    /* Configurações visuais extras para não ficar grudado na borda no celular */
     max-width: 90vw;
     max-height: 90vh;
     overflow-y: auto; 
@@ -834,9 +805,9 @@ dialog.profile-card-dialog {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
-/* Fundo escuro atrás do modal (opcional, mas fica ótimo) */
+/* Fundo escuro atrás do modal */
 dialog.superstar-dialog::backdrop,
 dialog.profile-card-dialog::backdrop {
-    background-color: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(3px); /* Faz um efeitinho de desfoque no fundo */
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(3px); /* Efeito desfoque no fundo */
 }
