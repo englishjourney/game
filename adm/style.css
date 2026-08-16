@@ -1,0 +1,92 @@
+:root {
+    --bg-dark: #0f172a;
+    --bg-card: #1e293b;
+    --primary: #38bdf8;
+    --primary-hover: #0284c7;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border: #334155;
+    --danger: #ef4444;
+    --success: #22c55e;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; }
+
+.hidden { display: none !important; }
+
+/* Login */
+#login-container { display: flex; justify-content: center; align-items: center; height: 100vh; }
+#login-form { background: var(--bg-card); padding: 30px; border-radius: 12px; text-align: center; width: 300px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5); }
+#login-form h2 { margin-bottom: 20px; color: var(--primary); }
+#login-form input { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: white; }
+#login-form button { width: 100%; padding: 10px; border-radius: 6px; border: none; background: var(--primary); color: #000; font-weight: bold; cursor: pointer; }
+#login-error { color: var(--danger); margin-top: 10px; font-size: 0.9em; }
+
+/* Layout Geral */
+header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border); background: var(--bg-card); }
+header h1 { color: var(--primary); font-size: 1.5rem; }
+.header-controls { display: flex; align-items: center; gap: 20px; }
+
+nav { display: flex; gap: 10px; padding: 10px 20px; background: var(--bg-card); border-bottom: 1px solid var(--border); }
+.nav-btn { background: transparent; color: var(--text-muted); border: none; padding: 10px 15px; cursor: pointer; font-size: 1rem; border-bottom: 2px solid transparent; }
+.nav-btn.active, .nav-btn:hover { color: var(--primary); border-bottom-color: var(--primary); }
+
+main { padding: 20px; }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+
+/* Botões Gerais */
+button { cursor: pointer; border-radius: 6px; font-weight: 500; transition: opacity 0.2s; border: none; padding: 8px 16px; }
+button:hover { opacity: 0.9; }
+.btn-primary { background: var(--primary); color: #000; }
+.btn-secondary { background: var(--border); color: white; }
+.btn-danger { background: var(--danger); color: white; }
+.btn-small { padding: 4px 8px; font-size: 0.8rem; }
+
+/* Switch (Toggle) */
+.switch-container { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
+.switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border); transition: .4s; border-radius: 20px; }
+.slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--success); }
+input:checked + .slider:before { transform: translateX(20px); }
+
+/* Dashboard - Busca e Cards */
+.search-bar { position: relative; margin-bottom: 30px; }
+#global-search { width: 100%; max-width: 600px; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: white; font-size: 1rem; }
+#search-results { position: absolute; top: 100%; left: 0; width: 100%; max-width: 600px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; margin-top: 5px; max-height: 300px; overflow-y: auto; z-index: 10; }
+.search-item { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.search-item:hover { background: var(--border); }
+
+.grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+.schedule-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 15px; }
+.schedule-card h3 { color: var(--primary); margin-bottom: 10px; font-size: 1.1rem; text-transform: uppercase; }
+.schedule-card ul { list-style: none; padding-left: 5px; }
+.schedule-card li { font-size: 0.9rem; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+/* Planner & Missions Cards */
+.cards-container { display: flex; flex-direction: column; gap: 15px; }
+.data-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: flex-start; }
+.data-card-info { flex: 1; }
+.data-card-info p { margin-bottom: 4px; font-size: 0.9rem; color: var(--text-muted); }
+.data-card-info strong { color: var(--text-main); }
+.data-card-actions { display: flex; gap: 8px; }
+
+/* Users Tabela */
+.team-section { margin-bottom: 30px; background: var(--bg-card); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+.team-header { background: var(--border); padding: 10px 15px; font-weight: bold; color: var(--primary); }
+.users-table { width: 100%; border-collapse: collapse; }
+.users-table th, .users-table td { padding: 10px 15px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+.users-table th { color: var(--text-muted); font-weight: normal; }
+.users-table tr:last-child td { border-bottom: none; }
+.editable-input { width: 50px; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 4px; border-radius: 4px; text-align: center; }
+
+/* Modais */
+dialog { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); border-radius: 12px; padding: 20px; width: 90%; max-width: 500px; margin: auto; }
+dialog::backdrop { background: rgba(0,0,0,0.7); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+.form-grid label { display: flex; flex-direction: column; font-size: 0.9rem; color: var(--text-muted); }
+.form-grid .full-width { grid-column: 1 / -1; }
+.form-grid input, .form-grid textarea, .form-grid select { margin-top: 5px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: white; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
