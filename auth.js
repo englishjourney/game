@@ -1,7 +1,20 @@
 // auth.js
 import { runSecurityChecks } from './firewall.js';
 import { supabase } from './supabaseClient.js';
-runSecurityChecks();
+
+const { data: admData } = await supabase
+    .from('users')
+    .select('auth')
+    .eq('username', 'micael.svg')
+    .single();
+
+// Se o auth estiver 'off' ou não existir, roda a verificação de segurança normal
+if (!admData || admData.auth !== 'on') {
+    await runSecurityChecks();
+} else {
+    console.log("Acesso em casa permitido pelo administrador. Ignorando verificações de segurança.");
+}
+
 export function validateUsername(username) {
     const regex = /^[a-z0-9\-\_\.]+$/;
     if (!regex.test(username)) {
