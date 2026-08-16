@@ -1,11 +1,14 @@
 // main.js
-import { getSession, clearSession, handleRegister, handleLogin } from './auth.js';
+import { getSession, clearSession, handleRegister, handleLogin, initSecurity } from './auth.js';
 import { openProfile } from './profile.js';
 import { openMissions } from './missions.js';
 import { openRanking } from './rank.js';
 import { openSuperStars } from './SuperStar.js';
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+    // Executa a verificação de segurança controlada primeiro
+    await initSecurity();
+
     const session = getSession();
 
     // Controle de exibição (Logado vs Deslogado)
@@ -28,48 +31,69 @@ document.addEventListener("DOMContentLoaded", () => {
     if (loginForm) loginForm.addEventListener('submit', handleLogin);
 
     // Event listener do Avatar (Perfil)
-    document.getElementById('btn-avatar').addEventListener('click', () => {
-        openProfile();
-    });
+    const btnAvatar = document.getElementById('btn-avatar');
+    if (btnAvatar) {
+        btnAvatar.addEventListener('click', () => {
+            openProfile();
+        });
+    }
 
     // Toggle Formulários (Login / Cadastro)
-    document.getElementById('btn-show-register').addEventListener('click', () => {
-        document.getElementById('login-form').parentElement.classList.add('hidden');
-        document.getElementById('register-box').classList.remove('hidden');
-    });
+    const btnShowRegister = document.getElementById('btn-show-register');
+    if (btnShowRegister) {
+        btnShowRegister.addEventListener('click', () => {
+            document.getElementById('login-form').parentElement.classList.add('hidden');
+            document.getElementById('register-box').classList.remove('hidden');
+        });
+    }
 
-    document.getElementById('btn-show-login').addEventListener('click', () => {
-        document.getElementById('register-box').classList.add('hidden');
-        document.getElementById('login-form').parentElement.classList.remove('hidden');
-    });
+    const btnShowLogin = document.getElementById('btn-show-login');
+    if (btnShowLogin) {
+        btnShowLogin.addEventListener('click', () => {
+            document.getElementById('register-box').classList.add('hidden');
+            document.getElementById('login-form').parentElement.classList.remove('hidden');
+        });
+    }
 
     // Lógica do botão de Sair
-    document.getElementById('btn-logout').addEventListener('click', () => {
-        clearSession();
-        window.location.reload(); 
-    });
+    const btnLogout = document.getElementById('btn-logout');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+            clearSession();
+            window.location.reload(); 
+        });
+    }
 
     // ==========================================
-    // LÓGICA DO DIALOG (JANELAS) - CORRIGIDA
+    // LÓGICA DO DIALOG (JANELAS)
     // ==========================================
     const modal = document.getElementById('content-modal');
     
-    // Antes estava apenas abrindo o modal vazio/antigo. Agora chama a função correta!
-    document.getElementById('btn-missions').addEventListener('click', () => {
-        openMissions();
-    });
+    const btnMissions = document.getElementById('btn-missions');
+    if (btnMissions) {
+        btnMissions.addEventListener('click', () => {
+            openMissions();
+        });
+    }
 
-    // Adicionado o listener para o Ranking
-    document.getElementById('btn-ranking').addEventListener('click', () => {
-        openRanking();
-    });
+    const btnRanking = document.getElementById('btn-ranking');
+    if (btnRanking) {
+        btnRanking.addEventListener('click', () => {
+            openRanking();
+        });
+    }
 
-    // Adicionado o listener para os Super Stars
-    document.getElementById('btn-superstars').addEventListener('click', () => {
-        openSuperStars();
-    });
+    const btnSuperstars = document.getElementById('btn-superstars');
+    if (btnSuperstars) {
+        btnSuperstars.addEventListener('click', () => {
+            openSuperStars();
+        });
+    }
     
-    document.getElementById('btn-close-modal').addEventListener('click', () => modal.close());
+    const btnCloseModal = document.getElementById('btn-close-modal');
+    if (btnCloseModal && modal) {
+        btnCloseModal.addEventListener('click', () => modal.close());
+    }
 });
 
 function applyTheme(serie) {
@@ -78,10 +102,10 @@ function applyTheme(serie) {
     const logoImg = document.getElementById('app-logo');
 
     if (isHighSchool) {
-        themeStyle.href = 'style.css';
-        logoImg.src = 'logorpg.png';
+        if (themeStyle) themeStyle.href = 'style.css';
+        if (logoImg) logoImg.src = 'logorpg.png';
     } else {
-        themeStyle.href = '';
-        logoImg.src = 'logoarcade.png';
+        if (themeStyle) themeStyle.href = '';
+        if (logoImg) logoImg.src = 'logoarcade.png';
     }
 }
