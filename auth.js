@@ -83,14 +83,14 @@ export async function handleRegister(event) {
                 {
                     name: name,
                     username: username,
-                    psswd: psswd, // Salvando a senha (Lembrete: em projetos comerciais reais, senhas devem ser criptografadas)
+                    psswd: psswd, 
                     serie: serie,
                     team: team,
-                    score: 0,          // Valor inicial
-                    stars: 0,          // Valor inicial
-                    hearts: 3,         // Valor inicial
-                    class: null,       // Ainda não escolheu
-                    rank: 'Dirt',      // Rank inicial
+                    score: 0,          
+                    stars: 0,          
+                    hearts: 3,         
+                    class: null,       
+                    rank: 'Dirt',      
                     avatar_url: 'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcS-55RgG38bJTopB10KrZknHMZMf94R5cEbUh8ZqWe8wiBmCyJE'
                 }
             ]);
@@ -138,3 +138,44 @@ export async function handleLogin(event) {
         alert("Ocorreu um erro ao tentar fazer login.");
     }
 }
+
+// ==========================================
+// INICIALIZAÇÃO DA PÁGINA E EVENTOS (FORA DAS FUNÇÕES)
+// ==========================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Checa se já existe uma sessão ativa ao carregar a página
+    const currentSession = getSession();
+    
+    if (currentSession) {
+        // Se tem sessão, esconde o login e mostra o App
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('app-screen').classList.remove('hidden');
+        
+        console.log(`Usuário logado: ${currentSession.username}`);
+    } else {
+        // Se não tem sessão, garante que a tela de login está visível
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('app-screen').classList.add('hidden');
+    }
+
+    // 2. Conecta os formulários às funções
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
+
+    const registerForm = document.getElementById('register-form');
+    if (registerForm) {
+        registerForm.addEventListener('submit', handleRegister);
+    }
+    
+    // 3. Conecta o botão de sair (Logout)
+    const btnLogout = document.getElementById('btn-logout');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+            clearSession();
+            window.location.reload(); 
+        });
+    }
+});
