@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prof. Mica - Planejamentos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- TELA DE LOGIN ADM -->
+    <div id="login-container">
+        <form id="login-form">
+            <h2>Acesso Administrativo</h2>
+            <input type="password" id="adm-password" placeholder="Senha do micael.svg" required>
+            <button type="submit">Entrar</button>
+            <div id="login-error"></div>
+        </form>
+    </div>
+
+    <!-- PAINEL ADM (Oculto inicialmente) -->
+    <div id="adm-panel" class="hidden">
+        <header>
+            <h1>Prof. Mica - Planejamentos</h1>
+            <div class="header-controls">
+                <label class="switch-container">
+                    <span>Permitir acesso em casa</span>
+                    <label class="switch">
+                        <input type="checkbox" id="home-access-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                </label>
+                <button id="btn-logout" class="btn-danger">Sair</button>
+            </div>
+        </header>
+
+        <nav>
+            <button class="nav-btn active" data-target="dashboard-section">Dashboard</button>
+            <button class="nav-btn" data-target="planner-section">Planejamentos</button>
+            <button class="nav-btn" data-target="users-section">Usuários</button>
+            <button class="nav-btn" data-target="missions-section">Missões</button>
+        </nav>
+
+        <main>
+            <!-- DASHBOARD SECTION -->
+            <section id="dashboard-section" class="content-section active">
+                <div class="search-bar">
+                    <input type="text" id="global-search" placeholder="Pesquisar usuários, aulas ou horários...">
+                    <div id="search-results" class="hidden"></div>
+                </div>
+
+                <h2>Horários (Próximos 7 dias)</h2>
+                <div id="schedule-container" class="grid-container">
+                    <!-- Preenchido via JS -->
+                </div>
+            </section>
+
+            <!-- PLANNER SECTION -->
+            <section id="planner-section" class="content-section hidden">
+                <div class="section-header">
+                    <h2>Aulas Planejadas</h2>
+                    <button id="btn-add-plan" class="btn-primary">+ Nova Aula</button>
+                </div>
+                <div id="planner-list" class="cards-container">
+                    <!-- Preenchido via JS -->
+                </div>
+            </section>
+
+            <!-- USERS SECTION -->
+            <section id="users-section" class="content-section hidden">
+                <h2>Gerenciamento de Alunos</h2>
+                <div id="users-container">
+                    <!-- Preenchido via JS -->
+                </div>
+            </section>
+
+            <!-- MISSIONS SECTION -->
+            <section id="missions-section" class="content-section hidden">
+                 <div class="section-header">
+                    <h2>Missões</h2>
+                    <button id="btn-add-mission" class="btn-primary">+ Nova Missão</button>
+                </div>
+                <div id="missions-list" class="cards-container">
+                    <!-- Preenchido via JS -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL PLANNER -->
+    <dialog id="planner-modal">
+        <form id="planner-form">
+            <h3 id="planner-modal-title">Adicionar Aula</h3>
+            <input type="hidden" id="plan-id">
+            <div class="form-grid">
+                <label>Dia da Semana: <input type="text" id="plan-day" required></label>
+                <label>Data: <input type="text" id="plan-date" required></label>
+                <label>Hora: <input type="text" id="plan-time" required></label>
+                <label>Série: <input type="text" id="plan-serie" required></label>
+                <label>Turma: <input type="text" id="plan-team" required></label>
+                <label>Duração: <input type="text" id="plan-duration"></label>
+                <label class="full-width">Habilidades BNCC: <textarea id="plan-skills" rows="3"></textarea></label>
+                <label class="full-width">Atividades: <textarea id="plan-activities" rows="4" required></textarea></label>
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn-primary">Salvar</button>
+                <button type="button" class="btn-secondary" onclick="document.getElementById('planner-modal').close()">Cancelar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- MODAL MISSIONS -->
+    <dialog id="mission-modal">
+        <form id="mission-form">
+            <h3 id="mission-modal-title">Adicionar Missão</h3>
+            <input type="hidden" id="mission-id">
+            <div class="form-grid">
+                <label class="full-width">Nome da Missão: <input type="text" id="mission-name" required></label>
+                <label class="full-width">Link: <input type="text" id="mission-link"></label>
+                <label>Score Recompensa: <input type="number" id="mission-score" required></label>
+                <label>Concluída (Done): 
+                    <select id="mission-done">
+                        <option value="false">Não</option>
+                        <option value="true">Sim</option>
+                    </select>
+                </label>
+                <label>Falha (Fail): 
+                     <select id="mission-fail">
+                        <option value="false">Não</option>
+                        <option value="true">Sim</option>
+                    </select>
+                </label>
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn-primary">Salvar</button>
+                <button type="button" class="btn-secondary" onclick="document.getElementById('mission-modal').close()">Cancelar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Ponto de entrada do JS -->
+    <script type="module" src="main.js"></script>
+</body>
+</html>
