@@ -1,47 +1,52 @@
-// Vocabulário de Saúde expandido (Doenças, Medicações, Tratamentos/Procedimentos)
-const vocabularyList = [
-    { word: 'Asthma', category: 'disease' },
-    { word: 'Diabetes', category: 'disease' },
-    { word: 'Hypertension', category: 'disease' },
-    { word: 'Flu', category: 'disease' },
-    { word: 'Cancer', category: 'disease' },
-    { word: 'Arthritis', category: 'disease' },
-    { word: 'Antibiotic', category: 'medication' },
-    { word: 'Ibuprofen', category: 'medication' },
-    { word: 'Paracetamol', category: 'medication' },
-    { word: 'Vaccine', category: 'medication' },
-    { word: 'Insulin', category: 'medication' },
-    { word: 'Antihistamine', category: 'medication' },
-    { word: 'Surgery', category: 'treatment' },
-    { word: 'X-Ray', category: 'treatment' },
-    { word: 'Blood Test', category: 'treatment' },
-    { word: 'MRI', category: 'treatment' },
-    { word: 'Biopsy', category: 'treatment' },
-    { word: 'Ultrasound', category: 'treatment' }
-];
+let gameSlots = [null, null, null, null];
 
-let mainDeck = [];
-let totalCardsInGame = 0;
-
-function initDeck() {
-    // Clona e embaralha o array de palavras
-    mainDeck = [...vocabularyList];
-    mainDeck.sort(() => Math.random() - 0.5);
-    totalCardsInGame = mainDeck.length;
-    updateDeckUI();
+function initSlots() {
+    // Coloca 3 cartas e deixa 1 vazio, conforme regra solicitada
+    for(let i = 0; i < 3; i++) {
+        gameSlots[i] = drawCard();
+        renderCardInSlot(i, gameSlots[i]);
+    }
+    gameSlots[3] = null;
+    renderCardInSlot(3, null);
 }
 
-function drawCard() {
-    if (mainDeck.length === 0) return null;
-    const card = mainDeck.pop();
-    updateDeckUI();
-    return card;
-}
-
-function updateDeckUI() {
-    document.getElementById('deck-count').innerText = mainDeck.length;
-    if(mainDeck.length === 0) {
-        document.getElementById('deck').style.opacity = '0.5';
-        document.getElementById('deck').style.cursor = 'default';
+function renderCardInSlot(index, cardData) {
+    const slotEl = document.getElementById(`slot-${index}`);
+    slotEl.innerHTML = ''; // Limpa o slot
+    
+    if (cardData) {
+        const cardEl = document.createElement('div');
+        cardEl.className = 'card';
+        cardEl.innerText = cardData.word;
+        cardEl.dataset.category = cardData.category;
+        cardEl.id = `card-${cardData.word.replace(/\s+/g, '-')}`;
+        cardEl.draggable = true;
+        
+        // Evento de Drag
+        cardEl.addEventListener('dragstart', handleDragStart);
+        
+        slotEl.appendChild(cardEl);
     }
 }
+
+// Quando o jogador clica no baralho, ele tenta preencher os slots vazios
+window.fillEmptySlots = function() {
+    if (mainDeck.length === 0) return;
+    
+    let filledAny = false;
+    for(let i = 0; i < 4; i++) {
+        const slotEl = document.getElementById(`slot-${i}`);
+        // Se o slot estiver vazio no DOM
+        if (slotEl.children.length === 0) {
+            const newCard = drawCard();
+            if (newCard) {
+                renderCardInSlot(i, newCard);
+                filledAny = true;
+            }
+        }
+    }
+    
+    if(!filledAny && mainDeck.length > 0) {
+        alert("Não há slots vazios! Tente mover as cartas para os stacks corretos primeiro.");
+    }
+};
