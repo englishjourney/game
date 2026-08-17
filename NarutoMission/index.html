@@ -1,55 +1,72 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Naruto's Health Game</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<div id="game-board">
-    <div id="start-screen">
-        <h2>Naruto's Health Mission</h2>
-        <p>Forme 3 pilhas separando as cartas de Doenças, Medicações e Tratamentos.</p>
-        <button id="btn-start">Iniciar Game</button>
-        <p id="msg-error" style="color: red; display: none;">Você já realizou esta missão!</p>
+    <!-- Tela de Autenticação / Início -->
+    <div id="auth-screen" class="screen active">
+        <h1>Naruto's Health Game</h1>
+        <p>Organize o vocabulário médico nos stacks corretos para ganhar 10 pontos!</p>
+        <div class="input-group">
+            <input type="text" id="username-input" placeholder="Digite seu nome de usuário">
+            <button id="start-btn">Iniciar Game</button>
+        </div>
+        <p id="auth-msg" class="error-msg"></p>
     </div>
 
-    <div id="game-area" style="display: none;">
-        <div class="header">
-            <span id="player-name"></span>
-            <span id="timer">Tempo: 02:00</span>
-        </div>
+    <!-- Tela do Jogo -->
+    <div id="game-screen" class="screen">
+        <header>
+            <h2>Missão de Saúde - Jogador: <span id="current-username"></span></h2>
+            <button id="giveup-btn">Desistir da Missão</button>
+        </header>
 
-        <div class="top-row">
-            <!-- Baralho Principal -->
-            <div class="deck-area">
-                <div id="main-deck" class="card card-back">Deck</div>
-                <div id="waste-pile" class="pile"></div>
+        <div class="board">
+            <!-- Linha Superior: Baralho e Stacks Alvo -->
+            <div class="top-row">
+                <div class="deck-container">
+                    <h3>Baralho</h3>
+                    <div id="deck" onclick="fillEmptySlots()">
+                        <span id="deck-count">0</span> cartas
+                    </div>
+                </div>
+
+                <div class="targets-container">
+                    <div class="target-stack" data-target-category="disease" id="target-diseases">
+                        <h3>Doenças</h3>
+                    </div>
+                    <div class="target-stack" data-target-category="medication" id="target-medications">
+                        <h3>Medicações</h3>
+                    </div>
+                    <div class="target-stack" data-target-category="treatment" id="target-treatments">
+                        <h3>Tratamentos</h3>
+                    </div>
+                </div>
             </div>
 
-            <!-- Stacks de Destino (Fundações) -->
-            <div class="foundations">
-                <div id="stack-disease" class="pile foundation" data-type="disease">Diseases</div>
-                <div id="stack-medication" class="pile foundation" data-type="medication">Medications</div>
-                <div id="stack-treatment" class="pile foundation" data-type="treatment">Treatments</div>
+            <!-- Linha Inferior: 4 Slots Centrais -->
+            <div class="bottom-row">
+                <h3>Slots de Jogo</h3>
+                <div class="slots-container">
+                    <div class="slot" id="slot-0" data-slot-index="0"></div>
+                    <div class="slot" id="slot-1" data-slot-index="1"></div>
+                    <div class="slot" id="slot-2" data-slot-index="2"></div>
+                    <div class="slot" id="slot-3" data-slot-index="3"></div>
+                </div>
             </div>
-        </div>
-
-        <!-- Slots Centrais (Tableau) -->
-        <div class="bottom-row">
-            <div id="slot-1" class="pile slot"></div>
-            <div id="slot-2" class="pile slot"></div>
-            <div id="slot-3" class="pile slot"></div>
-            <div id="slot-4" class="pile slot"></div>
         </div>
     </div>
-</div>
 
-<!-- Scripts na ordem correta -->
-<script src="stack.js"></script>
-<script src="slots.js"></script>
-<script src="mainGame.js"></script>
+    <!-- Scripts -->
+    <script src="stack.js"></script>
+    <script src="slots.js"></script>
+    <script src="mainGame.js"></script>
 </body>
 </html>
