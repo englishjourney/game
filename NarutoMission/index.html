@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naruto's Health Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="game-board">
+    <div id="start-screen">
+        <h2>Naruto's Health Mission</h2>
+        <p>Forme 3 pilhas separando as cartas de Doenças, Medicações e Tratamentos.</p>
+        <button id="btn-start">Iniciar Game</button>
+        <p id="msg-error" style="color: red; display: none;">Você já realizou esta missão!</p>
+    </div>
+
+    <div id="game-area" style="display: none;">
+        <div class="header">
+            <span id="player-name"></span>
+            <span id="timer">Tempo: 02:00</span>
+        </div>
+
+        <div class="top-row">
+            <!-- Baralho Principal -->
+            <div class="deck-area">
+                <div id="main-deck" class="card card-back">Deck</div>
+                <div id="waste-pile" class="pile"></div>
+            </div>
+
+            <!-- Stacks de Destino (Fundações) -->
+            <div class="foundations">
+                <div id="stack-disease" class="pile foundation" data-type="disease">Diseases</div>
+                <div id="stack-medication" class="pile foundation" data-type="medication">Medications</div>
+                <div id="stack-treatment" class="pile foundation" data-type="treatment">Treatments</div>
+            </div>
+        </div>
+
+        <!-- Slots Centrais (Tableau) -->
+        <div class="bottom-row">
+            <div id="slot-1" class="pile slot"></div>
+            <div id="slot-2" class="pile slot"></div>
+            <div id="slot-3" class="pile slot"></div>
+            <div id="slot-4" class="pile slot"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts na ordem correta -->
+<script src="stack.js"></script>
+<script src="slots.js"></script>
+<script src="mainGame.js"></script>
+</body>
+</html>
