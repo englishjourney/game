@@ -1,17 +1,18 @@
+// missions.js
 import { supabase } from '../supabaseClient.js';
 
 export function initMissions() {
     loadMissions();
 
+    // Botão de adicionar missão
     document.getElementById('btn-add-mission').addEventListener('click', () => {
         document.getElementById('mission-form').reset();
         document.getElementById('mission-id').value = '';
-        document.getElementById('mission-done').value = 'false';
-        document.getElementById('mission-fail').value = 'false';
         document.getElementById('mission-modal-title').textContent = 'Adicionar Missão';
         document.getElementById('mission-modal').showModal();
     });
 
+    // Salvar missão (Criar ou Editar)
     document.getElementById('mission-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -19,15 +20,17 @@ export function initMissions() {
         const missionData = {
             mission_name: document.getElementById('mission-name').value,
             mission_link: document.getElementById('mission-link').value,
-            mission_score: parseInt(document.getElementById('mission-score').value) || 0,
-            done: document.getElementById('mission-done').value === 'true',
-            fail: document.getElementById('mission-fail').value === 'true'
+            mission_score: parseInt(document.getElementById('mission-score').value) || 0
         };
 
         let result;
         if (id) {
+            // Se tem ID, apenas atualiza o nome, link e score
             result = await supabase.from('missions').update(missionData).eq('id', id);
         } else {
+            // Se é nova missão, define como não concluída e não falha por padrão
+            missionData.done = false;
+            missionData.fail = false;
             result = await supabase.from('missions').insert([missionData]);
         }
 
@@ -40,6 +43,7 @@ export function initMissions() {
     });
 }
 
+// Carregar lista de missões
 async function loadMissions() {
     const container = document.getElementById('missions-list');
     container.innerHTML = 'Carregando...';
@@ -70,13 +74,12 @@ async function loadMissions() {
     `).join('');
 }
 
+// Função global para abrir modal de edição
 window.editMission = (m) => {
     document.getElementById('mission-id').value = m.id;
     document.getElementById('mission-name').value = m.mission_name || '';
     document.getElementById('mission-link').value = m.mission_link || '';
     document.getElementById('mission-score').value = m.mission_score || 0;
-    document.getElementById('mission-done').value = m.done ? 'true' : 'false';
-    document.getElementById('mission-fail').value = m.fail ? 'true' : 'false';
     
     document.getElementById('mission-modal-title').textContent = 'Editar Missão';
     document.getElementById('mission-modal').showModal();
