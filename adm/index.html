@@ -109,17 +109,15 @@
     </dialog>
 
     <!-- MODAL MISSIONS -->
-   <dialog id="mission-modal">
-    <form id="mission-form">
-        <h3 id="mission-modal-title">Adicionar Missão</h3>
-        <input type="hidden" id="mission-id">
-        <div class="form-grid">
-            <label class="full-width">Nome da Missão: <input type="text" id="mission-name" required></label>
-            <label class="full-width">Link: <input type="text" id="mission-link"></label>
-            <label>Score Recompensa: <input type="number" id="mission-score" required></label>
-        </div>
-    </form>
-</dialog>
+    <dialog id="mission-modal">
+        <form id="mission-form">
+            <h3 id="mission-modal-title">Adicionar Missão</h3>
+            <input type="hidden" id="mission-id">
+            <div class="form-grid">
+                <label class="full-width">Nome da Missão: <input type="text" id="mission-name" required></label>
+                <label class="full-width">Link: <input type="text" id="mission-link"></label>
+                <label>Score Recompensa: <input type="number" id="mission-score" required></label>
+            </div>
             <div class="modal-actions">
                 <button type="submit" class="btn-primary">Salvar</button>
                 <button type="button" class="btn-secondary" onclick="document.getElementById('mission-modal').close()">Cancelar</button>
