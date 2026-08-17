@@ -1,49 +1,47 @@
-// Vocabulário categorizado
-const vocab = [
-    // Doenças
-    { word: "Diarrhea", type: "disease" }, { word: "Headache", type: "disease" },
-    { word: "Stomach ache", type: "disease" }, { word: "Backache", type: "disease" },
-    { word: "Depression", type: "disease" }, { word: "Anxiety", type: "disease" },
-    { word: "Tachycardia", type: "disease" }, { word: "Sadness", type: "disease" },
-    { word: "Stress", type: "disease" }, { word: "Fever", type: "disease" },
-    { word: "Cough", type: "disease" },
-    // Medicações
-    { word: "Dipyrone", type: "medication" }, { word: "Aspirin", type: "medication" },
-    { word: "Medicine", type: "medication" }, { word: "Syrup", type: "medication" },
-    { word: "Antibiotics", type: "medication" }, { word: "Painkiller", type: "medication" },
-    // Tratamentos / Procedimentos
-    { word: "Plenty of water", type: "treatment" }, { word: "Doctor", type: "treatment" },
-    { word: "Rest", type: "treatment" }, { word: "Surgery", type: "treatment" },
-    { word: "Bandage", type: "treatment" }, { word: "Injection", type: "treatment" }
+// Vocabulário de Saúde expandido (Doenças, Medicações, Tratamentos/Procedimentos)
+const vocabularyList = [
+    { word: 'Asthma', category: 'disease' },
+    { word: 'Diabetes', category: 'disease' },
+    { word: 'Hypertension', category: 'disease' },
+    { word: 'Flu', category: 'disease' },
+    { word: 'Cancer', category: 'disease' },
+    { word: 'Arthritis', category: 'disease' },
+    { word: 'Antibiotic', category: 'medication' },
+    { word: 'Ibuprofen', category: 'medication' },
+    { word: 'Paracetamol', category: 'medication' },
+    { word: 'Vaccine', category: 'medication' },
+    { word: 'Insulin', category: 'medication' },
+    { word: 'Antihistamine', category: 'medication' },
+    { word: 'Surgery', category: 'treatment' },
+    { word: 'X-Ray', category: 'treatment' },
+    { word: 'Blood Test', category: 'treatment' },
+    { word: 'MRI', category: 'treatment' },
+    { word: 'Biopsy', category: 'treatment' },
+    { word: 'Ultrasound', category: 'treatment' }
 ];
 
-const Stack = {
-    deck: [],
-    waste: [],
+let mainDeck = [];
+let totalCardsInGame = 0;
 
-    init() {
-        this.deck = this.shuffle([...vocab]);
-        this.waste = [];
-    },
+function initDeck() {
+    // Clona e embaralha o array de palavras
+    mainDeck = [...vocabularyList];
+    mainDeck.sort(() => Math.random() - 0.5);
+    totalCardsInGame = mainDeck.length;
+    updateDeckUI();
+}
 
-    shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
-    },
+function drawCard() {
+    if (mainDeck.length === 0) return null;
+    const card = mainDeck.pop();
+    updateDeckUI();
+    return card;
+}
 
-    drawCard() {
-        if (this.deck.length === 0) {
-            // Se o deck acabou, volta o waste para o deck
-            if (this.waste.length === 0) return null;
-            this.deck = this.waste.reverse();
-            this.waste = [];
-            return "reset";
-        }
-        const card = this.deck.pop();
-        this.waste.push(card);
-        return card;
+function updateDeckUI() {
+    document.getElementById('deck-count').innerText = mainDeck.length;
+    if(mainDeck.length === 0) {
+        document.getElementById('deck').style.opacity = '0.5';
+        document.getElementById('deck').style.cursor = 'default';
     }
-};
+}
