@@ -2,7 +2,9 @@
 const { createClient } = window.supabase;
 const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Alterado para supabaseClient para evitar conflito com window.supabase
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const MISSION_NAME = "Naruto's health game";
 let currentUser = "";
@@ -24,7 +26,7 @@ document.getElementById('start-btn').addEventListener('click', async () => {
     
     try {
         // Busca os dados da Missão
-        const { data: missionData, error: missionErr } = await supabase
+        const { data: missionData, error: missionErr } = await supabaseClient
             .from('missions')
             .select('*')
             .eq('mission_name', MISSION_NAME)
@@ -40,14 +42,14 @@ document.getElementById('start-btn').addEventListener('click', async () => {
         }
 
         // Verifica se o usuário existe na tabela users, se não, cria.
-        const { data: userData } = await supabase
+        const { data: userData } = await supabaseClient
             .from('users')
             .select('*')
             .eq('username', userInput)
             .single();
 
         if (!userData) {
-            await supabase.from('users').insert({ username: userInput, score: 0 });
+            await supabaseClient.from('users').insert({ username: userInput, score: 0 });
         }
 
         // Sucesso: Iniciar Game
@@ -131,7 +133,7 @@ document.getElementById('giveup-btn').addEventListener('click', async () => {
 async function handleGameEnd(isWin) {
     try {
         // Busca o estado atualizado da missão
-        const { data: missionData } = await supabase
+        const { data: missionData } = await supabaseClient
             .from('missions')
             .select('*')
             .eq('mission_name', MISSION_NAME)
@@ -140,20 +142,20 @@ async function handleGameEnd(isWin) {
         if (isWin) {
             // == VITÓRIA ==
             // 1. Atualizar Score do User (+10)
-            const { data: userData } = await supabase
+            const { data: userData } = await supabaseClient
                 .from('users')
                 .select('score')
                 .eq('username', currentUser)
                 .single();
                 
             const newScore = (userData.score || 0) + 10;
-            await supabase.from('users').update({ score: newScore }).eq('username', currentUser);
+            await supabaseClient.from('users').update({ score: newScore }).eq('username', currentUser);
 
             // 2. Adicionar na lista 'done'
             let doneList = missionData.done ? missionData.done.split(',') : [];
             if (!doneList.includes(currentUser)) {
                 doneList.push(currentUser);
-                await supabase.from('missions').update({ done: doneList.join(',') }).eq('mission_name', MISSION_NAME);
+                await supabaseClient.from('missions').update({ done: doneList.join(',') }).eq('mission_name', MISSION_NAME);
             }
             alert(`Você ganhou 10 pontos! Seu novo score é: ${newScore}`);
             
@@ -163,7 +165,7 @@ async function handleGameEnd(isWin) {
             let failList = missionData.fail ? missionData.fail.split(',') : [];
             if (!failList.includes(currentUser)) {
                 failList.push(currentUser);
-                await supabase.from('missions').update({ fail: failList.join(',') }).eq('mission_name', MISSION_NAME);
+                await supabaseClient.from('missions').update({ fail: failList.join(',') }).eq('mission_name', MISSION_NAME);
             }
             alert("Você não concluiu a missão. Seu nome foi registrado na lista de falhas.");
         }
