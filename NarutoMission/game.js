@@ -7,6 +7,10 @@ const vocabularyList = [
     { word: 'Hypertension', category: 'disease' },
     { word: 'Flu', category: 'disease' },
     { word: 'Cancer', category: 'disease' },
+    { word: 'Diarrhea', category: 'disease' },
+    { word: 'Headache', category: 'disease' },
+    { word: 'Backache', category: 'disease' },
+    { word: 'Stomach ache', category: 'disease' },
     { word: 'Arthritis', category: 'disease' },
     { word: 'Antibiotic', category: 'medication' },
     { word: 'Ibuprofen', category: 'medication' },
@@ -14,10 +18,11 @@ const vocabularyList = [
     { word: 'Vaccine', category: 'medication' },
     { word: 'Insulin', category: 'medication' },
     { word: 'Antihistamine', category: 'medication' },
+    { word: 'Dipyrone', category: 'medication' },
     { word: 'Surgery', category: 'treatment' },
     { word: 'X-Ray', category: 'treatment' },
     { word: 'Blood Test', category: 'treatment' },
-    { word: 'MRI', category: 'treatment' },
+    { word: 'Magnetic resonance', category: 'treatment' },
     { word: 'Biopsy', category: 'treatment' },
     { word: 'Ultrasound', category: 'treatment' }
 ];
