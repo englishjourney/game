@@ -263,34 +263,43 @@
         async function registerWin(user) {
             try {
                 // 1. Atualizar a tabela de missões (coluna done)
-                const { data: missionData } = await supabaseClient
+                const { data: missionData, error: missionError } = await supabaseClient
                     .from('missions')
                     .select('done')
                     .eq('id', MISSION_ID)
                     .single();
                 
-                let doneArray = missionData?.done ? missionData.done.split(',') : [];
-                if (!doneArray.includes(user)) {
-                    doneArray.push(user);
-                    await supabaseClient
-                        .from('missions')
-                        .update({ done: doneArray.join(',') })
-                        .eq('id', MISSION_ID);
+                if (!missionError && missionData) {
+                    let doneArray = missionData.done ? missionData.done.split(',') : [];
+                    if (!doneArray.includes(user)) {
+                        doneArray.push(user);
+                        await supabaseClient
+                            .from('missions')
+                            .update({ done: doneArray.join(',') })
+                            .eq('id', MISSION_ID);
+                    }
                 }
 
-                // 2. Atualizar o score do usuário (adicionar 12 pontos)
-                const { data: userData } = await supabaseClient
+                // 2. Atualizar o score do usuário (Forçando soma matemática)
+                const { data: userData, error: userError } = await supabaseClient
                     .from('users')
                     .select('score')
                     .eq('username', user)
                     .single();
 
-                let currentScore = userData?.score ? parseInt(userData.score) : 0;
-                
-                await supabaseClient
-                    .from('users')
-                    .update({ score: currentScore + 12 })
-                    .eq('username', user);
+                if (!userError && userData) {
+                    // Number() força a conversão do texto "30" para o número real 30.
+                    // O || 0 garante que se o campo estiver vazio ou nulo, ele inicie com zero.
+                    let currentScore = Number(userData.score) || 0;
+                    
+                    // Soma matemática estrita
+                    let newScore = currentScore + 12;
+                    
+                    await supabaseClient
+                        .from('users')
+                        .update({ score: newScore })
+                        .eq('username', user);
+                }
 
             } catch (err) {
                 console.error("Erro ao salvar vitória no Supabase:", err);
