@@ -203,7 +203,7 @@
         <button onclick="location.reload()">Jogar Novamente</button>
     </div>
 
-   <script>
+  <script>
         // Supabase Configuration
         const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
@@ -231,84 +231,93 @@
 
         // --- DATABASE FUNCTIONS ---
 
-        async function registerFail(user) {
+        async function updateMissionRecord(user, targetColumn) {
             try {
-                // 1. Busca o registro da missão pelo mission_name
-                const { data: missionRow, error: fetchError } = await supabaseClient
+                // 1. Busca a linha na tabela missions pelo mission_name
+                let { data: rows, error: fetchError } = await supabaseClient
                     .from('missions')
                     .select('*')
-                    .eq('mission_name', MISSION_NAME)
-                    .single();
-                
-                let failStr = missionRow?.fail || "";
-                let failsArray = failStr.split(',').map(s => s.trim()).filter(s => s !== "");
-                
-                failsArray.push(user);
-                
-                if (fetchError && fetchError.code === 'PGRST116') {
-                    // Se não existir a linha da missão, cria uma nova
-                    await supabaseClient
-                        .from('missions')
-                        .insert({ 
-                            mission_name: MISSION_NAME, 
-                            fail: failsArray.join(','),
-                            done: "" 
-                        });
+                    .eq('mission_name', MISSION_NAME);
+
+                if (fetchError) {
+                    console.error("Erro ao buscar missão:", fetchError);
+                    return;
+                }
+
+                let currentRecord = rows && rows.length > 0 ? rows[0] : null;
+
+                // 2. Pega o valor atual da coluna alvo (done ou fail)
+                let columnStr = currentRecord ? (currentRecord[targetColumn] || "") : "";
+                let columnArray = columnStr.split(',').map(s => s.trim()).filter(s => s !== "");
+
+                // Para a coluna 'done', evita duplicar o mesmo usuário. Para 'fail', pode registrar a falha.
+                if (targetColumn === 'done') {
+                    if (!columnArray.includes(user)) {
+                        columnArray.push(user);
+                    }
                 } else {
-                    // Atualiza a linha existente buscando pelo mission_name
-                    await supabaseClient
+                    columnArray.push(user);
+                }
+
+                let newValuesString = columnArray.join(',');
+
+                if (currentRecord) {
+                    // 3A. Se a linha já existe, atualiza usando o mission_name como filtro
+                    let updatePayload = {};
+                    updatePayload[targetColumn] = newValuesString;
+
+                    const { error: updateError } = await supabaseClient
                         .from('missions')
-                        .update({ fail: failsArray.join(',') })
+                        .update(updatePayload)
                         .eq('mission_name', MISSION_NAME);
+
+                    if (updateError) {
+                        console.error(`Erro ao atualizar a coluna ${targetColumn}:`, updateError);
+                    } else {
+                        console.log(`Sucesso ao atualizar ${targetColumn} para ${user}`);
+                    }
+                } else {
+                    // 3B. Se a linha não existe, cria uma nova linha na tabela
+                    let insertPayload = {
+                        mission_name: MISSION_NAME,
+                        done: targetColumn === 'done' ? newValuesString : "",
+                        fail: targetColumn === 'fail' ? newValuesString : ""
+                    };
+
+                    const { error: insertError } = await supabaseClient
+                        .from('missions')
+                        .insert(insertPayload);
+
+                    if (insertError) {
+                        console.error(`Erro ao inserir nova linha na missão:`, insertError);
+                    } else {
+                        console.log(`Sucesso ao criar registro e salvar ${targetColumn} para ${user}`);
+                    }
                 }
 
             } catch (err) {
-                console.error("Erro ao salvar falha no Supabase:", err);
+                console.error("Erro crítico na função updateMissionRecord:", err);
             }
         }
 
+        async function registerFail(user) {
+            await updateMissionRecord(user, 'fail');
+        }
+
         async function registerWin(user) {
+            // 1. Atualiza a lista de concluídos (done) na tabela missions
+            await updateMissionRecord(user, 'done');
+
+            // 2. Atualiza o score do usuário na tabela users (+12 pontos)
             try {
-                // 1. Busca o registro da missão pelo mission_name
-                const { data: missionRow, error: fetchError } = await supabaseClient
-                    .from('missions')
-                    .select('*')
-                    .eq('mission_name', MISSION_NAME)
-                    .single();
-                
-                let doneStr = missionRow?.done || "";
-                let doneArray = doneStr.split(',').map(s => s.trim()).filter(s => s !== "");
-                
-                if (!doneArray.includes(user)) {
-                    doneArray.push(user);
-                }
-
-                if (fetchError && fetchError.code === 'PGRST116') {
-                    // Se não existir a linha da missão, cria uma nova
-                    await supabaseClient
-                        .from('missions')
-                        .insert({ 
-                            mission_name: MISSION_NAME, 
-                            done: doneArray.join(','),
-                            fail: missionRow?.fail || "" 
-                        });
-                } else {
-                    // Atualiza a linha existente buscando pelo mission_name
-                    await supabaseClient
-                        .from('missions')
-                        .update({ done: doneArray.join(',') })
-                        .eq('mission_name', MISSION_NAME);
-                }
-
-                // 2. Atualizar o score do usuário (soma correta de 12 pontos com tratamento de texto)
                 const { data: userData, error: userError } = await supabaseClient
                     .from('users')
                     .select('score')
                     .eq('username', user)
                     .single();
 
-                if (!userError) {
-                    let currentScoreStr = userData?.score || "0";
+                if (!userError && userData) {
+                    let currentScoreStr = userData.score || "0";
                     let currentScore = Number(currentScoreStr);
                     if (isNaN(currentScore)) currentScore = 0;
                     
@@ -319,9 +328,8 @@
                         .update({ score: String(newScore) })
                         .eq('username', user);
                 }
-
             } catch (err) {
-                console.error("Erro ao salvar vitória no Supabase:", err);
+                console.error("Erro ao atualizar o score do usuário:", err);
             }
         }
 
