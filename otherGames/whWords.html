@@ -207,7 +207,9 @@
         // Supabase Configuration
         const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Criando a variável com outro nome para evitar conflito com a global 'window.supabase'
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // Game Data
         const MISSION_ID = 1; // ID genérico para a linha da missão na tabela missions
@@ -234,21 +236,21 @@
         async function registerFail(user) {
             try {
                 // Busca as falhas atuais
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('missions')
                     .select('fail')
                     .eq('id', MISSION_ID)
                     .single();
                 
-                if (error && error.code !== 'PGRST116') throw error; // Ignora erro se não encontrar linha ainda, trata no if abaixo
+                if (error && error.code !== 'PGRST116') throw error; 
 
                 let failsArray = data?.fail ? data.fail.split(',') : [];
                 
-                // Adiciona usuário se não estiver na lista (ou pode repetir, mas filtrado é mais limpo)
+                // Adiciona usuário se não estiver na lista
                 failsArray.push(user);
                 
                 // Atualiza o banco
-                await supabase
+                await supabaseClient
                     .from('missions')
                     .update({ fail: failsArray.join(',') })
                     .eq('id', MISSION_ID);
@@ -261,7 +263,7 @@
         async function registerWin(user) {
             try {
                 // 1. Atualizar a tabela de missões (coluna done)
-                const { data: missionData } = await supabase
+                const { data: missionData } = await supabaseClient
                     .from('missions')
                     .select('done')
                     .eq('id', MISSION_ID)
@@ -270,14 +272,14 @@
                 let doneArray = missionData?.done ? missionData.done.split(',') : [];
                 if (!doneArray.includes(user)) {
                     doneArray.push(user);
-                    await supabase
+                    await supabaseClient
                         .from('missions')
                         .update({ done: doneArray.join(',') })
                         .eq('id', MISSION_ID);
                 }
 
                 // 2. Atualizar o score do usuário (adicionar 12 pontos)
-                const { data: userData } = await supabase
+                const { data: userData } = await supabaseClient
                     .from('users')
                     .select('score')
                     .eq('username', user)
@@ -285,7 +287,7 @@
 
                 let currentScore = userData?.score ? parseInt(userData.score) : 0;
                 
-                await supabase
+                await supabaseClient
                     .from('users')
                     .update({ score: currentScore + 12 })
                     .eq('username', user);
