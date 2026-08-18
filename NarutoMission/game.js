@@ -242,6 +242,7 @@ document.getElementById('giveup-btn').addEventListener('click', async () => {
 
 async function handleGameEnd(isWin) {
     try {
+        // Busca o estado atualizado da missão
         const { data: missionData } = await supabaseClient
             .from('missions')
             .select('*')
@@ -249,15 +250,21 @@ async function handleGameEnd(isWin) {
             .single();
 
         if (isWin) {
+            // == VITÓRIA ==
+            // 1. Atualizar Score do User (+10)
             const { data: userData } = await supabaseClient
                 .from('users')
                 .select('score')
                 .eq('username', currentUser)
                 .single();
                 
-            const newScore = (userData.score || 0) + 10;
+            // CORREÇÃO: Forçar a transformação do score atual para NÚMERO (Number)
+            const scoreAtual = Number(userData.score) || 0;
+            const newScore = scoreAtual + 10;
+            
             await supabaseClient.from('users').update({ score: newScore }).eq('username', currentUser);
 
+            // 2. Adicionar na lista 'done'
             let doneList = missionData.done ? missionData.done.split(',') : [];
             if (!doneList.includes(currentUser)) {
                 doneList.push(currentUser);
@@ -266,6 +273,8 @@ async function handleGameEnd(isWin) {
             alert(`Você ganhou 10 pontos! Seu novo score é: ${newScore}`);
             
         } else {
+            // == DERROTA / DESISTÊNCIA ==
+            // Adicionar na lista 'fail'
             let failList = missionData.fail ? missionData.fail.split(',') : [];
             if (!failList.includes(currentUser)) {
                 failList.push(currentUser);
@@ -274,7 +283,9 @@ async function handleGameEnd(isWin) {
             alert("Você não concluiu a missão. Seu nome foi registrado na lista de falhas.");
         }
 
+        // Retorna para a tela de login
         window.location.reload();
+
     } catch (error) {
         console.error("Erro ao atualizar banco no final do jogo:", error);
         alert("Ocorreu um erro ao salvar o progresso.");
