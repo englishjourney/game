@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WH-Words Battle Royale</title>
+    <!-- Supabase SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Teko:wght@500;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Teko', sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: radial-gradient(circle at center, #2e302f, #0d0e0d);
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .active {
+            display: flex;
+        }
+
+        h1 {
+            font-size: 5rem;
+            color: #ff9800;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0px #000, 0 0 20px #ff9800;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            padding: 10px 20px;
+            font-size: 1.5rem;
+            font-family: 'Teko', sans-serif;
+            border: 2px solid #ff9800;
+            border-radius: 5px;
+            background: #222;
+            color: #fff;
+            margin-bottom: 20px;
+            width: 300px;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 40px;
+            font-size: 2rem;
+            font-family: 'Teko', sans-serif;
+            border: none;
+            border-radius: 5px;
+            background: #ff9800;
+            color: #000;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: all 0.2s;
+            box-shadow: 0 0 15px rgba(255, 152, 0, 0.5);
+        }
+
+        button:hover {
+            background: #e65100;
+            transform: scale(1.05);
+        }
+
+        /* Game Screen Elements */
+        #game-area {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .hud {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .level-text {
+            font-size: 2rem;
+            color: #4caf50;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .sentence {
+            font-size: 3.5rem;
+            margin-top: 10px;
+            text-shadow: 2px 2px 5px #000;
+            background: rgba(0, 0, 0, 0.5);
+            display: inline-block;
+            padding: 10px 30px;
+            border-radius: 10px;
+            border: 1px solid #ff9800;
+        }
+
+        .blank {
+            color: #ff9800;
+            border-bottom: 4px solid #ff9800;
+            display: inline-block;
+            width: 80px;
+        }
+
+        /* Flying Word Bubbles */
+        .bubble {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            background: radial-gradient(circle, #ff9800, #b23c00);
+            border: 3px solid #fff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 2rem;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 0 20px rgba(255, 152, 0, 0.8), inset 0 0 15px rgba(0,0,0,0.5);
+            transition: transform 0.1s;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .bubble:active {
+            transform: scale(0.9);
+        }
+
+        /* End Screens */
+        #game-over-screen {
+            background-color: rgba(200, 0, 0, 0.9);
+        }
+        
+        #win-screen {
+            background-color: rgba(0, 150, 0, 0.9);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen active">
+        <h1>WH-Words Battle Royale</h1>
+        <p style="font-size: 1.5rem; margin-bottom: 20px;">Atire nas palavras certas para completar as missões!</p>
+        <input type="text" id="username" placeholder="Digite seu Nickname" autocomplete="off">
+        <button onclick="startGame()">Entrar na Partida</button>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen">
+        <div id="game-area">
+            <div class="hud">
+                <div class="level-text" id="level-indicator">Level 1 / 6</div>
+                <div class="sentence" id="sentence-display"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="screen">
+        <h1 style="color: #fff; text-shadow: 2px 2px 0px #000;">ELIMINADO!</h1>
+        <h2>Você errou a palavra...</h2>
+        <p style="font-size: 1.5rem; margin-bottom: 20px;">Sua falha foi registrada no banco de dados.</p>
+        <button onclick="location.reload()">Tentar Novamente</button>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="win-screen" class="screen">
+        <h1 style="color: #fff; text-shadow: 2px 2px 0px #000;">BOOYAH!</h1>
+        <h2>Missão Concluída!</h2>
+        <p style="font-size: 1.5rem; margin-bottom: 20px;">Você ganhou +12 pontos de score no banco de dados!</p>
+        <button onclick="location.reload()">Jogar Novamente</button>
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Game Data
+        const MISSION_ID = 1; // ID genérico para a linha da missão na tabela missions
+        let username = "";
+        let currentLevel = 0;
+        let animationId;
+        let bubbles = [];
+        let lastSpawn = 0;
+        let gameActive = false;
+
+        const levels = [
+            { sentence: "<span class='blank'>____</span> knocked you down? Was it a sniper?", answer: "Who" },
+            { sentence: "<span class='blank'>____</span> weapons do you have in your backpack?", answer: "What" },
+            { sentence: "<span class='blank'>____</span> is the enemy hiding? Inside the house?", answer: "Where" },
+            { sentence: "<span class='blank'>____</span> is the safe zone shrinking? In 10 seconds?", answer: "When" },
+            { sentence: "<span class='blank'>____</span> did you rush alone without the squad?!", answer: "Why" },
+            { sentence: "<span class='blank'>____</span> many medkits do you have left?", answer: "How" }
+        ];
+
+        const allWords = ["Who", "What", "Where", "When", "Why", "How"];
+
+        // --- DATABASE FUNCTIONS ---
+
+        async function registerFail(user) {
+            try {
+                // Busca as falhas atuais
+                const { data, error } = await supabase
+                    .from('missions')
+                    .select('fail')
+                    .eq('id', MISSION_ID)
+                    .single();
+                
+                if (error && error.code !== 'PGRST116') throw error; // Ignora erro se não encontrar linha ainda, trata no if abaixo
+
+                let failsArray = data?.fail ? data.fail.split(',') : [];
+                
+                // Adiciona usuário se não estiver na lista (ou pode repetir, mas filtrado é mais limpo)
+                failsArray.push(user);
+                
+                // Atualiza o banco
+                await supabase
+                    .from('missions')
+                    .update({ fail: failsArray.join(',') })
+                    .eq('id', MISSION_ID);
+
+            } catch (err) {
+                console.error("Erro ao salvar falha no Supabase:", err);
+            }
+        }
+
+        async function registerWin(user) {
+            try {
+                // 1. Atualizar a tabela de missões (coluna done)
+                const { data: missionData } = await supabase
+                    .from('missions')
+                    .select('done')
+                    .eq('id', MISSION_ID)
+                    .single();
+                
+                let doneArray = missionData?.done ? missionData.done.split(',') : [];
+                if (!doneArray.includes(user)) {
+                    doneArray.push(user);
+                    await supabase
+                        .from('missions')
+                        .update({ done: doneArray.join(',') })
+                        .eq('id', MISSION_ID);
+                }
+
+                // 2. Atualizar o score do usuário (adicionar 12 pontos)
+                const { data: userData } = await supabase
+                    .from('users')
+                    .select('score')
+                    .eq('username', user)
+                    .single();
+
+                let currentScore = userData?.score ? parseInt(userData.score) : 0;
+                
+                await supabase
+                    .from('users')
+                    .update({ score: currentScore + 12 })
+                    .eq('username', user);
+
+            } catch (err) {
+                console.error("Erro ao salvar vitória no Supabase:", err);
+            }
+        }
+
+        // --- GAME LOGIC ---
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startGame() {
+            const input = document.getElementById('username');
+            if (input.value.trim() === "") {
+                alert("Por favor, digite um Nickname para jogar!");
+                return;
+            }
+            username = input.value.trim();
+            switchScreen('game-screen');
+            currentLevel = 0;
+            loadLevel();
+            gameActive = true;
+            requestAnimationFrame(gameLoop);
+        }
+
+        function loadLevel() {
+            document.getElementById('level-indicator').innerText = `Level ${currentLevel + 1} / ${levels.length}`;
+            document.getElementById('sentence-display').innerHTML = levels[currentLevel].sentence;
+        }
+
+        function spawnBubble() {
+            const container = document.getElementById('game-area');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            // 40% de chance de spawnar a palavra correta para garantir jogabilidade fluida
+            const spawnCorrect = Math.random() < 0.4;
+            const word = spawnCorrect 
+                ? levels[currentLevel].answer 
+                : allWords[Math.floor(Math.random() * allWords.length)];
+
+            const el = document.createElement('div');
+            el.className = 'bubble';
+            el.innerText = word;
+            
+            // Posição inicial: Eixo X aleatório (evitando as bordas), Eixo Y abaixo da tela
+            const x = Math.random() * (width - 150) + 25;
+            const y = height + 50;
+            
+            // Física: Velocidade X levemente aleatória, Velocidade Y forte para cima
+            const vx = (Math.random() - 0.5) * 6;
+            const vy = -12 - Math.random() * 6; 
+
+            el.onmousedown = () => handleBubbleClick(word);
+
+            container.appendChild(el);
+            bubbles.push({ el, x, y, vx, vy, word });
+        }
+
+        function handleBubbleClick(clickedWord) {
+            if (!gameActive) return;
+
+            const correctWord = levels[currentLevel].answer;
+            
+            if (clickedWord === correctWord) {
+                // Acertou
+                clearBubbles();
+                currentLevel++;
+                
+                if (currentLevel >= levels.length) {
+                    triggerWin();
+                } else {
+                    loadLevel();
+                }
+            } else {
+                // Errou
+                triggerGameOver();
+            }
+        }
+
+        function clearBubbles() {
+            bubbles.forEach(b => b.el.remove());
+            bubbles = [];
+        }
+
+        function triggerGameOver() {
+            gameActive = false;
+            cancelAnimationFrame(animationId);
+            switchScreen('game-over-screen');
+            registerFail(username);
+        }
+
+        function triggerWin() {
+            gameActive = false;
+            cancelAnimationFrame(animationId);
+            switchScreen('win-screen');
+            registerWin(username);
+        }
+
+        function gameLoop(timestamp) {
+            if (!gameActive) return;
+
+            if (!lastSpawn) lastSpawn = timestamp;
+            
+            // Spawna uma nova bolha a cada 900ms
+            if (timestamp - lastSpawn > 900) {
+                spawnBubble();
+                lastSpawn = timestamp;
+            }
+
+            const container = document.getElementById('game-area');
+            const height = container.clientHeight;
+
+            // Atualiza física de cada bolha de trás para frente
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                let b = bubbles[i];
+                
+                b.vy += 0.25; // Gravidade
+                b.x += b.vx;
+                b.y += b.vy;
+                
+                b.el.style.left = b.x + 'px';
+                b.el.style.top = b.y + 'px';
+
+                // Se a bolha cair muito abaixo da tela, remove da memória
+                if (b.y > height + 200) {
+                    b.el.remove();
+                    bubbles.splice(i, 1);
+                }
+            }
+
+            animationId = requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+</html>
