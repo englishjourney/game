@@ -203,15 +203,14 @@
         <button onclick="location.reload()">Jogar Novamente</button>
     </div>
 
-    <script>
+   <script>
         // Supabase Configuration
         const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
         
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Game Data
-        const MISSION_ID = 1; // ID da missão no banco (se o seu ID for texto tipo UUID, mude para '1')
+        const MISSION_NAME = "WH- Words battle royale";
         let username = "";
         let currentLevel = 0;
         let animationId;
@@ -234,95 +233,95 @@
 
         async function registerFail(user) {
             try {
-                const { data: missionData, error } = await supabaseClient
+                // 1. Busca o registro da missão pelo mission_name
+                const { data: missionRow, error: fetchError } = await supabaseClient
                     .from('missions')
-                    .select('fail')
-                    .eq('id', MISSION_ID)
+                    .select('*')
+                    .eq('mission_name', MISSION_NAME)
                     .single();
                 
-                if (error && error.code !== 'PGRST116') {
-                    console.error("Erro ao buscar falhas:", error);
+                let failStr = missionRow?.fail || "";
+                let failsArray = failStr.split(',').map(s => s.trim()).filter(s => s !== "");
+                
+                failsArray.push(user);
+                
+                if (fetchError && fetchError.code === 'PGRST116') {
+                    // Se não existir a linha da missão, cria uma nova
+                    await supabaseClient
+                        .from('missions')
+                        .insert({ 
+                            mission_name: MISSION_NAME, 
+                            fail: failsArray.join(','),
+                            done: "" 
+                        });
                 } else {
-                    // Tratamento seguro para textos nulos ou vazios
-                    let failStr = missionData?.fail || "";
-                    let failsArray = failStr.split(',').map(s => s.trim()).filter(s => s !== "");
-                    
-                    failsArray.push(user);
-                    
+                    // Atualiza a linha existente buscando pelo mission_name
                     await supabaseClient
                         .from('missions')
                         .update({ fail: failsArray.join(',') })
-                        .eq('id', MISSION_ID);
+                        .eq('mission_name', MISSION_NAME);
                 }
+
             } catch (err) {
-                console.error("Erro geral ao salvar falha:", err);
+                console.error("Erro ao salvar falha no Supabase:", err);
             }
         }
 
         async function registerWin(user) {
             try {
-                // 1. Atualizar a tabela de missões (coluna done)
-                const { data: missionData, error: missionError } = await supabaseClient
+                // 1. Busca o registro da missão pelo mission_name
+                const { data: missionRow, error: fetchError } = await supabaseClient
                     .from('missions')
-                    .select('done')
-                    .eq('id', MISSION_ID)
+                    .select('*')
+                    .eq('mission_name', MISSION_NAME)
                     .single();
                 
-                if (missionError && missionError.code !== 'PGRST116') {
-                    console.error("Erro ao buscar missão:", missionError);
-                } else {
-                    // Tratamento seguro contra null ou strings vazias
-                    let doneStr = missionData?.done || "";
-                    let doneArray = doneStr.split(',').map(s => s.trim()).filter(s => s !== "");
-                    
-                    // Só adiciona se o usuário ainda não estiver na lista de concluintes
-                    if (!doneArray.includes(user)) {
-                        doneArray.push(user);
-                        
-                        const { error: updateMissionError } = await supabaseClient
-                            .from('missions')
-                            .update({ done: doneArray.join(',') })
-                            .eq('id', MISSION_ID);
-                            
-                        if (updateMissionError) console.error("Erro ao atualizar coluna done:", updateMissionError);
-                    }
+                let doneStr = missionRow?.done || "";
+                let doneArray = doneStr.split(',').map(s => s.trim()).filter(s => s !== "");
+                
+                if (!doneArray.includes(user)) {
+                    doneArray.push(user);
                 }
 
-                // 2. Atualizar o score do usuário (Prevenindo erro de concatenação)
+                if (fetchError && fetchError.code === 'PGRST116') {
+                    // Se não existir a linha da missão, cria uma nova
+                    await supabaseClient
+                        .from('missions')
+                        .insert({ 
+                            mission_name: MISSION_NAME, 
+                            done: doneArray.join(','),
+                            fail: missionRow?.fail || "" 
+                        });
+                } else {
+                    // Atualiza a linha existente buscando pelo mission_name
+                    await supabaseClient
+                        .from('missions')
+                        .update({ done: doneArray.join(',') })
+                        .eq('mission_name', MISSION_NAME);
+                }
+
+                // 2. Atualizar o score do usuário (soma correta de 12 pontos com tratamento de texto)
                 const { data: userData, error: userError } = await supabaseClient
                     .from('users')
                     .select('score')
                     .eq('username', user)
                     .single();
 
-                if (userError && userError.code !== 'PGRST116') {
-                    console.error("Erro ao buscar usuário:", userError);
-                } else {
-                    // Pega o score antigo (garante que não seja null)
+                if (!userError) {
                     let currentScoreStr = userData?.score || "0";
-                    
-                    // Força a transformação para Número Real (Matemática)
                     let currentScore = Number(currentScoreStr);
+                    if (isNaN(currentScore)) currentScore = 0;
                     
-                    // Se por acaso tinha alguma letra ou texto inválido no banco, zera a conta
-                    if (isNaN(currentScore)) {
-                        currentScore = 0;
-                    }
-                    
-                    // Faz a SOMA matemática correta
                     let newScore = currentScore + 12;
                     
-                    // Salva de volta convertendo forçadamente para String (Texto)
-                    const { error: updateUserError } = await supabaseClient
+                    await supabaseClient
                         .from('users')
                         .update({ score: String(newScore) })
                         .eq('username', user);
-                        
-                    if (updateUserError) console.error("Erro ao atualizar score:", updateUserError);
                 }
 
             } catch (err) {
-                console.error("Erro geral ao salvar vitória no Supabase:", err);
+                console.error("Erro ao salvar vitória no Supabase:", err);
             }
         }
 
@@ -339,7 +338,7 @@
                 alert("Por favor, digite um Nickname para jogar!");
                 return;
             }
-            username = input.value.trim(); // O trim garante que não haverá espaços no nome
+            username = input.value.trim();
             switchScreen('game-screen');
             currentLevel = 0;
             loadLevel();
