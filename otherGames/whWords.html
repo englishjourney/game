@@ -208,11 +208,10 @@
         const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
         
-        // Criando a variável com outro nome para evitar conflito com a global 'window.supabase'
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // Game Data
-        const MISSION_ID = 1; // ID genérico para a linha da missão na tabela missions
+        const MISSION_ID = 1; // ID da missão no banco (se o seu ID for texto tipo UUID, mude para '1')
         let username = "";
         let currentLevel = 0;
         let animationId;
@@ -235,28 +234,28 @@
 
         async function registerFail(user) {
             try {
-                // Busca as falhas atuais
-                const { data, error } = await supabaseClient
+                const { data: missionData, error } = await supabaseClient
                     .from('missions')
                     .select('fail')
                     .eq('id', MISSION_ID)
                     .single();
                 
-                if (error && error.code !== 'PGRST116') throw error; 
-
-                let failsArray = data?.fail ? data.fail.split(',') : [];
-                
-                // Adiciona usuário se não estiver na lista
-                failsArray.push(user);
-                
-                // Atualiza o banco
-                await supabaseClient
-                    .from('missions')
-                    .update({ fail: failsArray.join(',') })
-                    .eq('id', MISSION_ID);
-
+                if (error && error.code !== 'PGRST116') {
+                    console.error("Erro ao buscar falhas:", error);
+                } else {
+                    // Tratamento seguro para textos nulos ou vazios
+                    let failStr = missionData?.fail || "";
+                    let failsArray = failStr.split(',').map(s => s.trim()).filter(s => s !== "");
+                    
+                    failsArray.push(user);
+                    
+                    await supabaseClient
+                        .from('missions')
+                        .update({ fail: failsArray.join(',') })
+                        .eq('id', MISSION_ID);
+                }
             } catch (err) {
-                console.error("Erro ao salvar falha no Supabase:", err);
+                console.error("Erro geral ao salvar falha:", err);
             }
         }
 
@@ -269,40 +268,61 @@
                     .eq('id', MISSION_ID)
                     .single();
                 
-                if (!missionError && missionData) {
-                    let doneArray = missionData.done ? missionData.done.split(',') : [];
+                if (missionError && missionError.code !== 'PGRST116') {
+                    console.error("Erro ao buscar missão:", missionError);
+                } else {
+                    // Tratamento seguro contra null ou strings vazias
+                    let doneStr = missionData?.done || "";
+                    let doneArray = doneStr.split(',').map(s => s.trim()).filter(s => s !== "");
+                    
+                    // Só adiciona se o usuário ainda não estiver na lista de concluintes
                     if (!doneArray.includes(user)) {
                         doneArray.push(user);
-                        await supabaseClient
+                        
+                        const { error: updateMissionError } = await supabaseClient
                             .from('missions')
                             .update({ done: doneArray.join(',') })
                             .eq('id', MISSION_ID);
+                            
+                        if (updateMissionError) console.error("Erro ao atualizar coluna done:", updateMissionError);
                     }
                 }
 
-                // 2. Atualizar o score do usuário (Forçando soma matemática)
+                // 2. Atualizar o score do usuário (Prevenindo erro de concatenação)
                 const { data: userData, error: userError } = await supabaseClient
                     .from('users')
                     .select('score')
                     .eq('username', user)
                     .single();
 
-                if (!userError && userData) {
-                    // Number() força a conversão do texto "30" para o número real 30.
-                    // O || 0 garante que se o campo estiver vazio ou nulo, ele inicie com zero.
-                    let currentScore = Number(userData.score) || 0;
+                if (userError && userError.code !== 'PGRST116') {
+                    console.error("Erro ao buscar usuário:", userError);
+                } else {
+                    // Pega o score antigo (garante que não seja null)
+                    let currentScoreStr = userData?.score || "0";
                     
-                    // Soma matemática estrita
+                    // Força a transformação para Número Real (Matemática)
+                    let currentScore = Number(currentScoreStr);
+                    
+                    // Se por acaso tinha alguma letra ou texto inválido no banco, zera a conta
+                    if (isNaN(currentScore)) {
+                        currentScore = 0;
+                    }
+                    
+                    // Faz a SOMA matemática correta
                     let newScore = currentScore + 12;
                     
-                    await supabaseClient
+                    // Salva de volta convertendo forçadamente para String (Texto)
+                    const { error: updateUserError } = await supabaseClient
                         .from('users')
-                        .update({ score: newScore })
+                        .update({ score: String(newScore) })
                         .eq('username', user);
+                        
+                    if (updateUserError) console.error("Erro ao atualizar score:", updateUserError);
                 }
 
             } catch (err) {
-                console.error("Erro ao salvar vitória no Supabase:", err);
+                console.error("Erro geral ao salvar vitória no Supabase:", err);
             }
         }
 
@@ -319,7 +339,7 @@
                 alert("Por favor, digite um Nickname para jogar!");
                 return;
             }
-            username = input.value.trim();
+            username = input.value.trim(); // O trim garante que não haverá espaços no nome
             switchScreen('game-screen');
             currentLevel = 0;
             loadLevel();
@@ -337,7 +357,6 @@
             const width = container.clientWidth;
             const height = container.clientHeight;
             
-            // 40% de chance de spawnar a palavra correta para garantir jogabilidade fluida
             const spawnCorrect = Math.random() < 0.4;
             const word = spawnCorrect 
                 ? levels[currentLevel].answer 
@@ -347,11 +366,9 @@
             el.className = 'bubble';
             el.innerText = word;
             
-            // Posição inicial: Eixo X aleatório (evitando as bordas), Eixo Y abaixo da tela
             const x = Math.random() * (width - 150) + 25;
             const y = height + 50;
             
-            // Física: Velocidade X levemente aleatória, Velocidade Y forte para cima
             const vx = (Math.random() - 0.5) * 6;
             const vy = -12 - Math.random() * 6; 
 
@@ -367,7 +384,6 @@
             const correctWord = levels[currentLevel].answer;
             
             if (clickedWord === correctWord) {
-                // Acertou
                 clearBubbles();
                 currentLevel++;
                 
@@ -377,7 +393,6 @@
                     loadLevel();
                 }
             } else {
-                // Errou
                 triggerGameOver();
             }
         }
@@ -406,7 +421,6 @@
 
             if (!lastSpawn) lastSpawn = timestamp;
             
-            // Spawna uma nova bolha a cada 900ms
             if (timestamp - lastSpawn > 900) {
                 spawnBubble();
                 lastSpawn = timestamp;
@@ -415,18 +429,16 @@
             const container = document.getElementById('game-area');
             const height = container.clientHeight;
 
-            // Atualiza física de cada bolha de trás para frente
             for (let i = bubbles.length - 1; i >= 0; i--) {
                 let b = bubbles[i];
                 
-                b.vy += 0.25; // Gravidade
+                b.vy += 0.25; 
                 b.x += b.vx;
                 b.y += b.vy;
                 
                 b.el.style.left = b.x + 'px';
                 b.el.style.top = b.y + 'px';
 
-                // Se a bolha cair muito abaixo da tela, remove da memória
                 if (b.y > height + 200) {
                     b.el.remove();
                     bubbles.splice(i, 1);
