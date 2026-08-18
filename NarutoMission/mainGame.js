@@ -148,7 +148,10 @@ async function handleGameEnd(isWin) {
                 .eq('username', currentUser)
                 .single();
                 
-            const newScore = (userData.score || 0) + 10;
+            // CORREÇÃO: Forçar a transformação do score atual para NÚMERO (Number)
+            const scoreAtual = Number(userData.score) || 0;
+            const newScore = scoreAtual + 10;
+            
             await supabaseClient.from('users').update({ score: newScore }).eq('username', currentUser);
 
             // 2. Adicionar na lista 'done'
