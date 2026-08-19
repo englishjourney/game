@@ -15,8 +15,8 @@
         }
 
         body {
-            background-color: #F4F9FF; /* Clean pastel blue background */
-            color: #1B2A47; /* Dark indigo/blue text */
+            background-color: #F4F9FF;
+            color: #1B2A47;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -36,7 +36,7 @@
         }
 
         h1, h2 {
-            color: #283593; /* Indigo */
+            color: #283593;
             margin-bottom: 15px;
         }
 
@@ -62,7 +62,7 @@
         }
 
         button {
-            background-color: #A3C6E5; /* Pastel blue */
+            background-color: #A3C6E5;
             color: #1B2A47;
             border: none;
             padding: 12px 24px;
@@ -240,11 +240,8 @@
     </div>
 
     <script>
-        // Supabase Configuration
         const supabaseUrl = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
         const supabaseKey = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
-        
-        // Corrigido de 'supabase' para 'supabaseClient' para evitar conflito com a biblioteca global
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         let username = '';
@@ -252,14 +249,13 @@
         let timerInterval;
         let currentQuestionIndex = 0;
 
-        // Game Data
         const questions = [
             {
                 type: 'image',
                 src: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh0oH0ut9GrLBnu1DYYcVU4PXhfPuH4zEDSa-AHUHMXvfr6BUvy24-B1IbxX6DcuFHC_CAJkHvNlql6wvnbMUH0bdey9CmgJcAcFCS9_qklDXZaobxqw_ptVa42Gn6vtLOqaBHexxUf-0k/s1600/digitalizar0002.jpg',
                 q: "What is the text title?",
                 options: ["Prickly City", "Prickly City By Scott Stantis", "Uclick for UFS"],
-                answer: 0 // Index of correct option
+                answer: 0
             },
             {
                 type: 'pdf',
@@ -302,7 +298,6 @@
             showScreen('game-screen');
             renderQuestion();
             
-            // Start Global Timer
             timerInterval = setInterval(() => {
                 timeLeft--;
                 let min = Math.floor(timeLeft / 60);
@@ -371,11 +366,17 @@
             }
         }
 
+        // Função nextLevel adicionada globalmente para evitar o erro de referência
+        function nextLevel() {
+            currentQuestionIndex++;
+            showScreen('game-screen');
+            renderQuestion();
+        }
+
         async function saveProgressAndWin() {
             showScreen('loading-screen');
 
             try {
-                // 1. Update score in users table (+15)
                 const { data: userData, error: userError } = await supabaseClient
                     .from('users')
                     .select('score')
@@ -392,7 +393,6 @@
                     .update({ score: currentScore + 15 })
                     .eq('username', username);
 
-                // 2. Add user to done column in missions table
                 const { data: missionData, error: missionError } = await supabaseClient
                     .from('missions')
                     .select('done')
