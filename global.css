@@ -472,7 +472,7 @@ body {
 .modal-close, 
 #content-modal button, 
 .dialog-close {
-    position: relative;
+    position: sticky;
     z-index: 99999 !important;
     cursor: pointer;
 }
