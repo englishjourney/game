@@ -243,7 +243,9 @@
         // Supabase Configuration
         const supabaseUrl = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
         const supabaseKey = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Corrigido de 'supabase' para 'supabaseClient' para evitar conflito com a biblioteca global
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         let username = '';
         let timeLeft = 60;
@@ -321,11 +323,9 @@
 
             const mediaContainer = document.getElementById('media-container');
             
-            // Load media only if type changed or it's the first question to avoid reloading PDF
             if (currentQuestionIndex === 0) {
                 mediaContainer.innerHTML = `<img src="${q.src}" alt="Text Image">`;
             } else if (currentQuestionIndex === 1) {
-                // Load PDF for the first time
                 mediaContainer.innerHTML = `<embed src="${q.src}" type="application/pdf" width="100%" height="400px" />`;
             }
 
@@ -344,7 +344,6 @@
         function checkAnswer(selectedIndex, btnElement) {
             const q = questions[currentQuestionIndex];
             
-            // Disable buttons temporarily
             const allBtns = document.querySelectorAll('.option-btn');
             allBtns.forEach(b => b.style.pointerEvents = 'none');
 
@@ -353,18 +352,14 @@
                 
                 setTimeout(() => {
                     if (currentQuestionIndex === 0) {
-                        // Success on Skimming
                         showScreen('intermission-screen');
                     } else if (currentQuestionIndex < questions.length - 1) {
-                        // Next Scanning question
                         currentQuestionIndex++;
                         renderQuestion();
                     } else {
-                        // Game Won!
                         clearInterval(timerInterval);
                         saveProgressAndWin();
                     }
-                    // Re-enable buttons for next step if it stays in game screen
                     allBtns.forEach(b => b.style.pointerEvents = 'auto');
                 }, 800);
             } else {
@@ -376,18 +371,12 @@
             }
         }
 
-        function nextLevel() {
-            currentQuestionIndex++;
-            showScreen('game-screen');
-            renderQuestion();
-        }
-
         async function saveProgressAndWin() {
             showScreen('loading-screen');
 
             try {
                 // 1. Update score in users table (+15)
-                const { data: userData, error: userError } = await supabase
+                const { data: userData, error: userError } = await supabaseClient
                     .from('users')
                     .select('score')
                     .eq('username', username)
@@ -398,13 +387,13 @@
                     currentScore = Number(userData.score);
                 }
                 
-                await supabase
+                await supabaseClient
                     .from('users')
                     .update({ score: currentScore + 15 })
                     .eq('username', username);
 
                 // 2. Add user to done column in missions table
-                const { data: missionData, error: missionError } = await supabase
+                const { data: missionData, error: missionError } = await supabaseClient
                     .from('missions')
                     .select('done')
                     .eq('mission_name', 'Skimming and Scanning')
@@ -412,7 +401,6 @@
 
                 let newDoneStr = username;
                 if (missionData && missionData.done) {
-                    // Check if it's already an array or a comma-separated string
                     if (Array.isArray(missionData.done)) {
                         newDoneStr = [...missionData.done, username];
                     } else {
@@ -420,7 +408,7 @@
                     }
                 }
 
-                await supabase
+                await supabaseClient
                     .from('missions')
                     .update({ done: newDoneStr })
                     .eq('mission_name', 'Skimming and Scanning');
@@ -429,7 +417,6 @@
 
             } catch (err) {
                 console.error("Database Error: ", err);
-                // Even if DB fails, show win screen to not frustrate the user
                 alert("Houve um pequeno erro ao salvar, mas você concluiu com sucesso!");
                 showScreen('win-screen');
             }
