@@ -67,6 +67,8 @@ async function loadPlanners() {
             </div>
             <div class="data-card-actions">
                 <button class="btn-small btn-secondary" onclick='window.editPlanner(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Editar</button>
+                <!-- BOTÃO EXCLUIR ADICIONADO AQUI -->
+                <button class="btn-small" style="background-color: #ff4444; color: white; border: none;" onclick='window.deletePlanner("${p.id}")'>Excluir</button>
             </div>
         </div>
     `).join('');
@@ -85,4 +87,22 @@ window.editPlanner = (p) => {
     
     document.getElementById('planner-modal-title').textContent = 'Editar Aula';
     document.getElementById('planner-modal').showModal();
+};
+
+// FUNÇÃO DE EXCLUSÃO ADICIONADA AQUI
+window.deletePlanner = async (id) => {
+    // Confirmação para evitar exclusões acidentais
+    if (!confirm('Tem certeza que deseja excluir esta aula? Esta ação não pode ser desfeita.')) {
+        return; 
+    }
+
+    // Exclui a linha do Supabase usando o ID
+    const { error } = await supabase.from('planner').delete().eq('id', id);
+
+    if (error) {
+        alert('Erro ao excluir a aula: ' + error.message);
+    } else {
+        // Recarrega a lista para mostrar a exclusão na hora
+        loadPlanners();
+    }
 };
