@@ -192,7 +192,7 @@
         <!-- Start Screen -->
         <div id="start-screen" class="screen active">
             <h1>Skimming & Scanning</h1>
-            <p>Welcome! In this game, you will test your quick reading skills. You only have <strong>1 minute</strong> to complete the mission!</p>
+            <p>Welcome! In this game, you will test your quick reading skills. You only have <strong>1 minute</strong> for the first part and <strong>1.5 minutes</strong> for each scanning question!</p>
             <input type="text" id="username" placeholder="Enter your username..." autocomplete="off">
             <br>
             <button onclick="startGame()">Start Game</button>
@@ -212,7 +212,7 @@
         <div id="intermission-screen" class="screen">
             <h2>Parabéns pela leitura skimming!</h2>
             <p>Você encontrou a informação principal do texto rapidamente.</p>
-            <p>Agora prepare-se para a leitura de Scanning no próximo texto.</p>
+            <p>Agora prepare-se para a leitura de Scanning no próximo texto (1 minuto e meio).</p>
             <button onclick="nextLevel()">Continuar</button>
         </div>
 
@@ -233,7 +233,7 @@
         <!-- Game Over Screen -->
         <div id="game-over-screen" class="screen">
             <h2 style="color: #D32F2F;">Tempo Esgotado! ⏱️</h2>
-            <p>O tempo de 1 minuto acabou. Tente novamente para melhorar sua agilidade de leitura.</p>
+            <p>O tempo acabou. Tente novamente para melhorar sua agilidade de leitura.</p>
             <button onclick="location.reload()">Recomeçar</button>
         </div>
 
@@ -297,19 +297,37 @@
             
             showScreen('game-screen');
             renderQuestion();
+            startTimerForCurrentQuestion();
+        }
+
+        function startTimerForCurrentQuestion() {
+            clearInterval(timerInterval);
             
+            // 60 segundos (1 min) para a primeira questão (skimming), 90 segundos (1.5 min) para cada questão de scanning
+            if (currentQuestionIndex === 0) {
+                timeLeft = 60;
+            } else {
+                timeLeft = 90;
+            }
+
+            updateTimerDisplay();
+
             timerInterval = setInterval(() => {
                 timeLeft--;
-                let min = Math.floor(timeLeft / 60);
-                let sec = timeLeft % 60;
-                document.getElementById('timer').innerText = 
-                    `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+                updateTimerDisplay();
                 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
                     showScreen('game-over-screen');
                 }
             }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            let min = Math.floor(timeLeft / 60);
+            let sec = timeLeft % 60;
+            document.getElementById('timer').innerText = 
+                `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
         }
 
         function renderQuestion() {
@@ -320,7 +338,7 @@
             
             if (currentQuestionIndex === 0) {
                 mediaContainer.innerHTML = `<img src="${q.src}" alt="Text Image">`;
-            } else if (currentQuestionIndex === 1) {
+            } else {
                 mediaContainer.innerHTML = `<embed src="${q.src}" type="application/pdf" width="100%" height="400px" />`;
             }
 
@@ -351,6 +369,7 @@
                     } else if (currentQuestionIndex < questions.length - 1) {
                         currentQuestionIndex++;
                         renderQuestion();
+                        startTimerForCurrentQuestion();
                     } else {
                         clearInterval(timerInterval);
                         saveProgressAndWin();
@@ -366,11 +385,11 @@
             }
         }
 
-        // Função nextLevel adicionada globalmente para evitar o erro de referência
         function nextLevel() {
             currentQuestionIndex++;
             showScreen('game-screen');
             renderQuestion();
+            startTimerForCurrentQuestion();
         }
 
         async function saveProgressAndWin() {
