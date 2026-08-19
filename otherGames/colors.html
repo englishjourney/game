@@ -1,0 +1,251 @@
+<script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
+        
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const MISSION_NAME = "Colors battle royale"; // Nome atualizado da missão
+        let username = "";
+        let currentLevel = 0;
+        let animationId;
+        let bubbles = [];
+        let lastSpawn = 0;
+        let gameActive = false;
+
+        // Novos níveis focados nas 10 cores solicitadas
+        const levels = [
+            { sentence: "Find the <span class='blank'>Red</span> circle!", answer: "Red" },
+            { sentence: "Find the <span class='blank'>Green</span> circle!", answer: "Green" },
+            { sentence: "Find the <span class='blank'>Blue</span> circle!", answer: "Blue" },
+            { sentence: "Find the <span class='blank'>White</span> circle!", answer: "White" },
+            { sentence: "Find the <span class='blank'>Yellow</span> circle!", answer: "Yellow" },
+            { sentence: "Find the <span class='blank'>Brown</span> circle!", answer: "Brown" },
+            { sentence: "Find the <span class='blank'>Gray</span> circle!", answer: "Gray" },
+            { sentence: "Find the <span class='blank'>Black</span> circle!", answer: "Black" },
+            { sentence: "Find the <span class='blank'>Orange</span> circle!", answer: "Orange" },
+            { sentence: "Find the <span class='blank'>Purple</span> circle!", answer: "Purple" }
+        ];
+
+        const allColors = ["Red", "Green", "Blue", "White", "Yellow", "Brown", "Gray", "Black", "Orange", "Purple"];
+
+        // --- DATABASE FUNCTIONS ---
+
+        async function registerFail(user) {
+            try {
+                const { data: missionRow, error: fetchError } = await supabaseClient
+                    .from('missions')
+                    .select('*')
+                    .eq('mission_name', MISSION_NAME)
+                    .single();
+                
+                let failStr = missionRow?.fail || "";
+                let failsArray = failStr.split(',').map(s => s.trim()).filter(s => s !== "");
+                
+                failsArray.push(user);
+                
+                if (fetchError && fetchError.code === 'PGRST116') {
+                    await supabaseClient
+                        .from('missions')
+                        .insert({ 
+                            mission_name: MISSION_NAME, 
+                            fail: failsArray.join(','),
+                            done: "" 
+                        });
+                } else {
+                    await supabaseClient
+                        .from('missions')
+                        .update({ fail: failsArray.join(',') })
+                        .eq('mission_name', MISSION_NAME);
+                }
+
+            } catch (err) {
+                console.error("Erro ao salvar falha no Supabase:", err);
+            }
+        }
+
+        async function registerWin(user) {
+            try {
+                const { data: missionRow, error: fetchError } = await supabaseClient
+                    .from('missions')
+                    .select('*')
+                    .eq('mission_name', MISSION_NAME)
+                    .single();
+                
+                let doneStr = missionRow?.done || "";
+                let doneArray = doneStr.split(',').map(s => s.trim()).filter(s => s !== "");
+                
+                if (!doneArray.includes(user)) {
+                    doneArray.push(user);
+                }
+
+                if (fetchError && fetchError.code === 'PGRST116') {
+                    await supabaseClient
+                        .from('missions')
+                        .insert({ 
+                            mission_name: MISSION_NAME, 
+                            done: doneArray.join(','),
+                            fail: missionRow?.fail || "" 
+                        });
+                } else {
+                    await supabaseClient
+                        .from('missions')
+                        .update({ done: doneArray.join(',') })
+                        .eq('mission_name', MISSION_NAME);
+                }
+
+                const { data: userData, error: userError } = await supabaseClient
+                    .from('users')
+                    .select('score')
+                    .eq('username', user)
+                    .single();
+
+                if (!userError) {
+                    let currentScoreStr = userData?.score || "0";
+                    let currentScore = Number(currentScoreStr);
+                    if (isNaN(currentScore)) currentScore = 0;
+                    
+                    let newScore = currentScore + 12;
+                    
+                    await supabaseClient
+                        .from('users')
+                        .update({ score: String(newScore) })
+                        .eq('username', user);
+                }
+
+            } catch (err) {
+                console.error("Erro ao salvar vitória no Supabase:", err);
+            }
+        }
+
+        // --- GAME LOGIC ---
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startGame() {
+            const input = document.getElementById('username');
+            if (input.value.trim() === "") {
+                alert("Por favor, digite um Nickname para jogar!");
+                return;
+            }
+            username = input.value.trim();
+            switchScreen('game-screen');
+            currentLevel = 0;
+            loadLevel();
+            gameActive = true;
+            requestAnimationFrame(gameLoop);
+        }
+
+        function loadLevel() {
+            document.getElementById('level-indicator').innerText = `Level ${currentLevel + 1} / ${levels.length}`;
+            document.getElementById('sentence-display').innerHTML = levels[currentLevel].sentence;
+        }
+
+        function spawnBubble() {
+            const container = document.getElementById('game-area');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            const spawnCorrect = Math.random() < 0.4;
+            const colorName = spawnCorrect 
+                ? levels[currentLevel].answer 
+                : allColors[Math.floor(Math.random() * allColors.length)];
+
+            const el = document.createElement('div');
+            el.className = 'bubble';
+            
+            // Define a cor de fundo do CSS baseado no nome da cor
+            el.style.backgroundColor = colorName.toLowerCase();
+            
+            // Adiciona borda preta ou branca caso a cor gerada suma no fundo da tela
+            if(colorName === "White") el.style.border = "3px solid #000";
+            if(colorName === "Black") el.style.border = "3px solid #fff";
+            
+            // Sem palavras dentro, círculo limpo
+            el.innerText = "";
+            
+            const x = Math.random() * (width - 150) + 25;
+            const y = height + 50;
+            
+            const vx = (Math.random() - 0.5) * 6;
+            const vy = -12 - Math.random() * 6; 
+
+            el.onmousedown = () => handleBubbleClick(colorName);
+
+            container.appendChild(el);
+            bubbles.push({ el, x, y, vx, vy, colorName });
+        }
+
+        function handleBubbleClick(clickedColor) {
+            if (!gameActive) return;
+
+            const correctColor = levels[currentLevel].answer;
+            
+            if (clickedColor === correctColor) {
+                clearBubbles();
+                currentLevel++;
+                
+                if (currentLevel >= levels.length) {
+                    triggerWin();
+                } else {
+                    loadLevel();
+                }
+            } else {
+                triggerGameOver();
+            }
+        }
+
+        function clearBubbles() {
+            bubbles.forEach(b => b.el.remove());
+            bubbles = [];
+        }
+
+        function triggerGameOver() {
+            gameActive = false;
+            cancelAnimationFrame(animationId);
+            switchScreen('game-over-screen');
+            registerFail(username);
+        }
+
+        function triggerWin() {
+            gameActive = false;
+            cancelAnimationFrame(animationId);
+            switchScreen('win-screen');
+            registerWin(username);
+        }
+
+        function gameLoop(timestamp) {
+            if (!gameActive) return;
+
+            if (!lastSpawn) lastSpawn = timestamp;
+            
+            if (timestamp - lastSpawn > 900) {
+                spawnBubble();
+                lastSpawn = timestamp;
+            }
+
+            const container = document.getElementById('game-area');
+            const height = container.clientHeight;
+
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                let b = bubbles[i];
+                
+                b.vy += 0.25; 
+                b.x += b.vx;
+                b.y += b.vy;
+                
+                b.el.style.left = b.x + 'px';
+                b.el.style.top = b.y + 'px';
+
+                if (b.y > height + 200) {
+                    b.el.remove();
+                    bubbles.splice(i, 1);
+                }
+            }
+
+            animationId = requestAnimationFrame(gameLoop);
+        }
+    </script>
