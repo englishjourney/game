@@ -392,7 +392,7 @@
 }
 /* --- CORREÇÃO DO BOTÃO DE FECHAR (X) --- */
 .close-btn, .modal-close, #content-modal button, .dialog-close {
-    position: relative;
+    position: sticky;
     z-index: 99999 !important;
     cursor: pointer;
 }
