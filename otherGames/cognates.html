@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>False Cognates Challenge</title>
+    <!-- Supabase SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Teko:wght@500;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Teko', sans-serif;
+            background-color: #121212;
+            color: #fff;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: radial-gradient(circle at center, #1f2421, #0b0d0c);
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .active {
+            display: flex;
+        }
+
+        h1 {
+            font-size: 5rem;
+            color: #4caf50;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0px #000, 0 0 20px #4caf50;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            padding: 10px 20px;
+            font-size: 1.5rem;
+            font-family: 'Teko', sans-serif;
+            border: 2px solid #4caf50;
+            border-radius: 5px;
+            background: #222;
+            color: #fff;
+            margin-bottom: 20px;
+            width: 300px;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 40px;
+            font-size: 2rem;
+            font-family: 'Teko', sans-serif;
+            border: none;
+            border-radius: 5px;
+            background: #4caf50;
+            color: #000;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: all 0.2s;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+        }
+
+        button:hover {
+            background: #388e3c;
+            transform: scale(1.05);
+            color: #fff;
+        }
+
+        /* Game Elements */
+        .hud {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            font-size: 2rem;
+            color: #ff9800;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .card-container {
+            background: #1e1e1e;
+            border: 4px solid #4caf50;
+            border-radius: 15px;
+            width: 400px;
+            height: 220px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 4rem;
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            margin-bottom: 30px;
+            text-transform: capitalize;
+            letter-spacing: 2px;
+        }
+
+        .buttons-area {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn-cognato {
+            background: #2196f3;
+            box-shadow: 0 0 15px rgba(33, 150, 243, 0.5);
+        }
+        .btn-cognato:hover {
+            background: #1565c0;
+        }
+
+        .btn-false {
+            background: #f44336;
+            box-shadow: 0 0 15px rgba(244, 67, 54, 0.5);
+        }
+        .btn-false:hover {
+            background: #c62828;
+        }
+
+        /* End Screens */
+        #game-over-screen {
+            background-color: rgba(200, 0, 0, 0.95);
+        }
+        
+        #win-screen {
+            background-color: rgba(0, 150, 0, 0.95);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen active">
+        <h1>False Cognates</h1>
+        <p style="font-size: 1.5rem; margin-bottom: 20px;">Acerte pelo menos 10 palavras para vencer!</p>
+        <input type="text" id="username" placeholder="Digite seu Nickname" autocomplete="off">
+        <button onclick="startGame()">Entrar na Partida</button>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen">
+        <div class="hud">
+            <div id="score-display">Pontos: 0</div>
+            <div id="progress-display">Palavra: 1 / 15</div>
+        </div>
+
+        <div class="card-container" id="word-card">Loading...</div>
+
+        <div class="buttons-area">
+            <button class="btn-cognato" onclick="answerCard(true)">Cognato</button>
+            <button class="btn-false" onclick="answerCard(false)">Falso Cognato</button>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="screen">
+        <h1 style="color: #fff;">FALOU NA MISSAO!</h1>
+        <h2 id="final-score-fail">Você fez menos de 10 pontos.</h2>
+        <p style="font-size: 1.5rem; margin-bottom: 20px;">Sua falha foi registrada na base de dados.</p>
+        <button onclick="location.reload()">Tentar Novamente</button>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="win-screen" class="screen">
+        <h1 style="color: #fff;">MISSÃO CONCLUÍDA!</h1>
+        <h2 id="final-score-win">Você venceu o desafio!</h2>
+        <p style="font-size: 1.5rem; margin-bottom: 20px;">Sua pontuação foi somada ao score com sucesso!</p>
+        <button onclick="location.reload()">Jogar Novamente</button>
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
+        
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const MISSION_NAME = "False cognates";
+
+        let username = "";
+        let score = 0;
+        let currentIndex = 0;
+        let shuffledCards = [];
+
+        // Pool de palavras misturadas baseada na aula
+        const masterList = [
+            // Cognatos (True = true)
+            { word: "actor", isCognate: true },
+            { word: "animal", isCognate: true },
+            { word: "area", isCognate: true },
+            { word: "bank", isCognate: true },
+            { word: "base", isCognate: true },
+            { word: "capital", isCognate: true },
+            { word: "chocolate", isCognate: true },
+            { word: "comedy", isCognate: true },
+            { word: "control", isCognate: true },
+            { word: "culture", isCognate: true },
+            { word: "different", isCognate: true },
+            { word: "director", isCognate: true },
+            { word: "doctor", isCognate: true },
+            { word: "family", isCognate: true },
+            { word: "important", isCognate: true },
+            { word: "modern", isCognate: true },
+            { word: "music", isCognate: true },
+            { word: "problem", isCognate: true },
+            { word: "radio", isCognate: true },
+            { word: "simple", isCognate: true },
+            
+            // Falsos Cognatos (False = false)
+            { word: "actually", isCognate: false },
+            { word: "assist", isCognate: false },
+            { word: "attend", isCognate: false },
+            { word: "cabinet", isCognate: false },
+            { word: "college", isCognate: false },
+            { word: "eventually", isCognate: false },
+            { word: "exquisite", isCognate: false },
+            { word: "fabric", isCognate: false },
+            { word: "idiom", isCognate: false },
+            { word: "intoxicated", isCognate: false },
+            { word: "jar", isCognate: false },
+            { word: "library", isCognate: false },
+            { word: "lunch", isCognate: false },
+            { word: "magazine", isCognate: false },
+            { word: "notice", isCognate: false },
+            { word: "novel", isCognate: false },
+            { word: "parent", isCognate: false },
+            { word: "policy", isCognate: false },
+            { word: "pretend", isCognate: false },
+            { word: "push", isCognate: false },
+            { word: "pull", isCognate: false },
+            { word: "realize", isCognate: false },
+            { word: "resume", isCognate: false },
+            { word: "sensible", isCognate: false },
+            { word: "tax", isCognate: false }
+        ];
+
+        // --- DATABASE FUNCTIONS ---
+
+        async function updateMissionRecord(user, targetColumn) {
+            try {
+                let { data: rows, error: fetchError } = await supabaseClient
+                    .from('missions')
+                    .select('*')
+                    .eq('mission_name', MISSION_NAME);
+
+                if (fetchError) {
+                    console.error("Erro ao buscar missão:", fetchError);
+                    return;
+                }
+
+                let currentRecord = rows && rows.length > 0 ? rows[0] : null;
+                let columnStr = currentRecord ? (currentRecord[targetColumn] || "") : "";
+                let columnArray = columnStr.split(',').map(s => s.trim()).filter(s => s !== "");
+
+                if (targetColumn === 'done') {
+                    if (!columnArray.includes(user)) {
+                        columnArray.push(user);
+                    }
+                } else {
+                    columnArray.push(user);
+                }
+
+                let newValuesString = columnArray.join(',');
+
+                if (currentRecord) {
+                    let updatePayload = {};
+                    updatePayload[targetColumn] = newValuesString;
+
+                    await supabaseClient
+                        .from('missions')
+                        .update(updatePayload)
+                        .eq('mission_name', MISSION_NAME);
+                } else {
+                    let insertPayload = {
+                        mission_name: MISSION_NAME,
+                        done: targetColumn === 'done' ? newValuesString : "",
+                        fail: targetColumn === 'fail' ? newValuesString : ""
+                    };
+
+                    await supabaseClient
+                        .from('missions')
+                        .insert(insertPayload);
+                }
+            } catch (err) {
+                console.error("Erro crítico na função updateMissionRecord:", err);
+            }
+        }
+
+        async function registerFail(user) {
+            await updateMissionRecord(user, 'fail');
+        }
+
+        async function registerWin(user, earnedScore) {
+            await updateMissionRecord(user, 'done');
+
+            try {
+                const { data: userData, error: userError } = await supabaseClient
+                    .from('users')
+                    .select('score')
+                    .eq('username', user)
+                    .single();
+
+                if (!userError && userData) {
+                    let currentScoreStr = userData.score || "0";
+                    let currentScore = Number(currentScoreStr);
+                    if (isNaN(currentScore)) currentScore = 0;
+                    
+                    let newScore = currentScore + earnedScore;
+                    
+                    await supabaseClient
+                        .from('users')
+                        .update({ score: String(newScore) })
+                        .eq('username', user);
+                }
+            } catch (err) {
+                console.error("Erro ao atualizar o score do usuário:", err);
+            }
+        }
+
+        // --- GAME LOGIC ---
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startGame() {
+            const input = document.getElementById('username');
+            if (input.value.trim() === "") {
+                alert("Por favor, digite um Nickname para jogar!");
+                return;
+            }
+            username = input.value.trim();
+            score = 0;
+            currentIndex = 0;
+            
+            // Embaralha e pega 15 palavras por partida
+            shuffledCards = [...masterList].sort(() => Math.random() - 0.5).slice(0, 15);
+
+            switchScreen('game-screen');
+            loadCard();
+        }
+
+        function loadCard() {
+            if (currentIndex >= shuffledCards.length) {
+                endGame();
+                return;
+            }
+
+            document.getElementById('score-display').innerText = `Pontos: ${score}`;
+            document.getElementById('progress-display').innerText = `Palavra: ${currentIndex + 1} / ${shuffledCards.length}`;
+            document.getElementById('word-card').innerText = shuffledCards[currentIndex].word;
+        }
+
+        function answerCard(playerChoice) {
+            const currentCard = shuffledCards[currentIndex];
+
+            if (playerChoice === currentCard.isCognate) {
+                score += 1; // 1 ponto por acerto
+            }
+
+            currentIndex++;
+            loadCard();
+        }
+
+        async function endGame() {
+            if (score >= 10) {
+                // Venceu (fez 10 pontos ou mais)
+                switchScreen('win-screen');
+                document.getElementById('final-score-win').innerText = `Você fez ${score} pontos e venceu!`;
+                await registerWin(username, score);
+            } else {
+                // Falhou (menos de 10 pontos)
+                switchScreen('game-over-screen');
+                document.getElementById('final-score-fail').innerText = `Você fez apenas ${score} pontos (Mínimo: 10).`;
+                await registerFail(username);
+            }
+        }
+    </script>
+</body>
+</html>
