@@ -1,4 +1,4 @@
-/// missions.js
+// missions.js
 import { supabase } from './supabaseClient.js';
 import { getSession } from './auth.js';
 import { runWithLoader } from './loader.js'; 
@@ -33,8 +33,6 @@ function getEmbedUrl(url) {
 
     return finalUrl;
 }
-
-// missions.js (mantenha os imports e a função getEmbedUrl no topo)
 
 export async function openMissions() {
     const session = getSession();
@@ -106,8 +104,12 @@ export async function openMissions() {
             } else {
                 // Primeira missão não feita e não falha vira a ESTRELA (Ativa)
                 if (!activeFound) {
+                    
+                    // === ALTERAÇÃO: Adicionado onclick e cursor pointer para agir como âncora ===
                     mapHTML += `
-                        <div class="mission-node active" title="${missionName}">
+                        <div class="mission-node active" title="${missionName}" 
+                             onclick="document.getElementById('active-mission-form').scrollIntoView({behavior: 'smooth'})" 
+                             style="cursor: pointer;">
                             <div class="circle">★</div>
                             <span class="label">${missionNumber}</span>
                         </div>
@@ -115,16 +117,16 @@ export async function openMissions() {
                     
                     const safeUrl = getEmbedUrl(mission.mission_link);
                     
-                    // Constrói o formulário abaixo do mapa
+                    // === ALTERAÇÃO: Adicionado ID 'active-mission-form' para a âncora funcionar ===
                     activeMissionHTML = `
-                        <div class="active-mission-wrapper">
+                        <div id="active-mission-form" class="active-mission-wrapper" style="margin-top: 40px;">
                             <h3 class="active-title">Missão ${missionNumber}: ${missionName}</h3>
                             <iframe src="${safeUrl}" width="100%" height="500" frameborder="0" marginheight="0" marginwidth="0">Carregando...</iframe>
                         </div>
                     `;
                     activeFound = true;
                 } else {
-                    // Missões futuras viram cadeados (ou apenas ficam em cinza)
+                    // Missões futuras viram cadeados
                     mapHTML += `
                         <div class="mission-node locked" title="${missionName}">
                             <div class="circle">🔒</div>
@@ -144,10 +146,12 @@ export async function openMissions() {
         // Renderiza o mapa por cima e o formulário por baixo
         modalContent.innerHTML = mapHTML + activeMissionHTML;
 
-        // Rola até o final para o aluno ver o formulário
+        // Rola até o final automaticamente ao abrir (mantido como estava, mas agora mais suave)
         setTimeout(() => {
-            const wrapper = document.querySelector('.dialog-wrapper') || modal;
-            wrapper.scrollTo({ top: 9999, behavior: 'smooth' });
+            const formElement = document.getElementById('active-mission-form');
+            if (formElement) {
+                formElement.scrollIntoView({ behavior: 'smooth' });
+            }
         }, 300);
 
     } catch (err) {
