@@ -1,11 +1,209 @@
-<script>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colors Battle Royale</title>
+    <!-- Supabase SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Teko:wght@500;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Teko', sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: radial-gradient(circle at center, #2e302f, #0d0e0d);
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .active {
+            display: flex;
+        }
+
+        h1 {
+            font-size: 5rem;
+            color: #ff9800;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0px #000, 0 0 20px #ff9800;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            padding: 10px 20px;
+            font-size: 1.5rem;
+            font-family: 'Teko', sans-serif;
+            border: 2px solid #ff9800;
+            border-radius: 5px;
+            background: #222;
+            color: #fff;
+            margin-bottom: 20px;
+            width: 300px;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 40px;
+            font-size: 2rem;
+            font-family: 'Teko', sans-serif;
+            border: none;
+            border-radius: 5px;
+            background: #ff9800;
+            color: #000;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: all 0.2s;
+            box-shadow: 0 0 15px rgba(255, 152, 0, 0.5);
+        }
+
+        button:hover {
+            background: #e65100;
+            transform: scale(1.05);
+        }
+
+        /* Game Screen Elements */
+        #game-area {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .hud {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .level-text {
+            font-size: 2rem;
+            color: #4caf50;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .sentence {
+            font-size: 3.5rem;
+            margin-top: 10px;
+            text-shadow: 2px 2px 5px #000;
+            background: rgba(0, 0, 0, 0.5);
+            display: inline-block;
+            padding: 10px 30px;
+            border-radius: 10px;
+            border: 1px solid #ff9800;
+        }
+
+        .blank {
+            color: #fff;
+            text-transform: uppercase;
+            border-bottom: 4px solid #fff;
+            display: inline-block;
+            padding: 0 5px;
+        }
+
+        /* Flying Color Bubbles */
+        .bubble {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2), inset 0 0 20px rgba(0,0,0,0.5);
+            transition: transform 0.1s;
+        }
+
+        .bubble:active {
+            transform: scale(0.9);
+        }
+
+        /* End Screens */
+        #game-over-screen {
+            background-color: rgba(200, 0, 0, 0.9);
+        }
+        
+        #win-screen {
+            background-color: rgba(0, 150, 0, 0.9);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen active">
+        <h1>Colors Battle Royale</h1>
+        <p style="font-size: 1.5rem; margin-bottom: 20px;">Atire na cor correta para completar a missão!</p>
+        <input type="text" id="username" placeholder="Digite seu Nickname" autocomplete="off">
+        <button onclick="startGame()">Entrar na Partida</button>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen">
+        <div id="game-area">
+            <div class="hud">
+                <div class="level-text" id="level-indicator">Level 1 / 10</div>
+                <div class="sentence" id="sentence-display"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="screen">
+        <h1 style="color: #fff; text-shadow: 2px 2px 0px #000;">ELIMINADO!</h1>
+        <h2>Você errou a cor...</h2>
+        <p style="font-size: 1.5rem; margin-bottom: 20px;">Sua falha foi registrada no banco de dados.</p>
+        <button onclick="location.reload()">Tentar Novamente</button>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="win-screen" class="screen">
+        <h1 style="color: #fff; text-shadow: 2px 2px 0px #000;">BOOYAH!</h1>
+        <h2>Missão Concluída!</h2>
+        <p style="font-size: 1.5rem; margin-bottom: 20px;">Você ganhou +12 pontos de score no banco de dados!</p>
+        <button onclick="location.reload()">Jogar Novamente</button>
+    </div>
+
+    <script>
         // Supabase Configuration
         const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
         
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const MISSION_NAME = "Colors battle royale"; // Nome atualizado da missão
+        const MISSION_NAME = "Colors battle royale";
         let username = "";
         let currentLevel = 0;
         let animationId;
@@ -13,95 +211,103 @@
         let lastSpawn = 0;
         let gameActive = false;
 
-        // Novos níveis focados nas 10 cores solicitadas
         const levels = [
-            { sentence: "Find the <span class='blank'>Red</span> circle!", answer: "Red" },
-            { sentence: "Find the <span class='blank'>Green</span> circle!", answer: "Green" },
-            { sentence: "Find the <span class='blank'>Blue</span> circle!", answer: "Blue" },
-            { sentence: "Find the <span class='blank'>White</span> circle!", answer: "White" },
-            { sentence: "Find the <span class='blank'>Yellow</span> circle!", answer: "Yellow" },
-            { sentence: "Find the <span class='blank'>Brown</span> circle!", answer: "Brown" },
-            { sentence: "Find the <span class='blank'>Gray</span> circle!", answer: "Gray" },
-            { sentence: "Find the <span class='blank'>Black</span> circle!", answer: "Black" },
-            { sentence: "Find the <span class='blank'>Orange</span> circle!", answer: "Orange" },
-            { sentence: "Find the <span class='blank'>Purple</span> circle!", answer: "Purple" }
+            { sentence: "Find the color: <span class='blank'>Red</span>", answer: "red" },
+            { sentence: "Find the color: <span class='blank'>Green</span>", answer: "green" },
+            { sentence: "Find the color: <span class='blank'>Blue</span>", answer: "blue" },
+            { sentence: "Find the color: <span class='blank'>White</span>", answer: "white" },
+            { sentence: "Find the color: <span class='blank'>Yellow</span>", answer: "yellow" },
+            { sentence: "Find the color: <span class='blank'>Brown</span>", answer: "brown" },
+            { sentence: "Find the color: <span class='blank'>Gray</span>", answer: "gray" },
+            { sentence: "Find the color: <span class='blank'>Black</span>", answer: "black" },
+            { sentence: "Find the color: <span class='blank'>Orange</span>", answer: "orange" },
+            { sentence: "Find the color: <span class='blank'>Purple</span>", answer: "purple" }
         ];
 
-        const allColors = ["Red", "Green", "Blue", "White", "Yellow", "Brown", "Gray", "Black", "Orange", "Purple"];
+        const allColors = ["red", "green", "blue", "white", "yellow", "brown", "gray", "black", "orange", "purple"];
 
         // --- DATABASE FUNCTIONS ---
 
-        async function registerFail(user) {
+        async function updateMissionRecord(user, targetColumn) {
             try {
-                const { data: missionRow, error: fetchError } = await supabaseClient
+                let { data: rows, error: fetchError } = await supabaseClient
                     .from('missions')
                     .select('*')
-                    .eq('mission_name', MISSION_NAME)
-                    .single();
-                
-                let failStr = missionRow?.fail || "";
-                let failsArray = failStr.split(',').map(s => s.trim()).filter(s => s !== "");
-                
-                failsArray.push(user);
-                
-                if (fetchError && fetchError.code === 'PGRST116') {
-                    await supabaseClient
-                        .from('missions')
-                        .insert({ 
-                            mission_name: MISSION_NAME, 
-                            fail: failsArray.join(','),
-                            done: "" 
-                        });
+                    .eq('mission_name', MISSION_NAME);
+
+                if (fetchError) {
+                    console.error("Erro ao buscar missão:", fetchError);
+                    return;
+                }
+
+                let currentRecord = rows && rows.length > 0 ? rows[0] : null;
+
+                let columnStr = currentRecord ? (currentRecord[targetColumn] || "") : "";
+                let columnArray = columnStr.split(',').map(s => s.trim()).filter(s => s !== "");
+
+                if (targetColumn === 'done') {
+                    if (!columnArray.includes(user)) {
+                        columnArray.push(user);
+                    }
                 } else {
-                    await supabaseClient
+                    columnArray.push(user);
+                }
+
+                let newValuesString = columnArray.join(',');
+
+                if (currentRecord) {
+                    let updatePayload = {};
+                    updatePayload[targetColumn] = newValuesString;
+
+                    const { error: updateError } = await supabaseClient
                         .from('missions')
-                        .update({ fail: failsArray.join(',') })
+                        .update(updatePayload)
                         .eq('mission_name', MISSION_NAME);
+
+                    if (updateError) {
+                        console.error(`Erro ao atualizar a coluna ${targetColumn}:`, updateError);
+                    } else {
+                        console.log(`Sucesso ao atualizar ${targetColumn} para ${user}`);
+                    }
+                } else {
+                    let insertPayload = {
+                        mission_name: MISSION_NAME,
+                        done: targetColumn === 'done' ? newValuesString : "",
+                        fail: targetColumn === 'fail' ? newValuesString : ""
+                    };
+
+                    const { error: insertError } = await supabaseClient
+                        .from('missions')
+                        .insert(insertPayload);
+
+                    if (insertError) {
+                        console.error(`Erro ao inserir nova linha na missão:`, insertError);
+                    } else {
+                        console.log(`Sucesso ao criar registro e salvar ${targetColumn} para ${user}`);
+                    }
                 }
 
             } catch (err) {
-                console.error("Erro ao salvar falha no Supabase:", err);
+                console.error("Erro crítico na função updateMissionRecord:", err);
             }
         }
 
+        async function registerFail(user) {
+            await updateMissionRecord(user, 'fail');
+        }
+
         async function registerWin(user) {
+            await updateMissionRecord(user, 'done');
+
             try {
-                const { data: missionRow, error: fetchError } = await supabaseClient
-                    .from('missions')
-                    .select('*')
-                    .eq('mission_name', MISSION_NAME)
-                    .single();
-                
-                let doneStr = missionRow?.done || "";
-                let doneArray = doneStr.split(',').map(s => s.trim()).filter(s => s !== "");
-                
-                if (!doneArray.includes(user)) {
-                    doneArray.push(user);
-                }
-
-                if (fetchError && fetchError.code === 'PGRST116') {
-                    await supabaseClient
-                        .from('missions')
-                        .insert({ 
-                            mission_name: MISSION_NAME, 
-                            done: doneArray.join(','),
-                            fail: missionRow?.fail || "" 
-                        });
-                } else {
-                    await supabaseClient
-                        .from('missions')
-                        .update({ done: doneArray.join(',') })
-                        .eq('mission_name', MISSION_NAME);
-                }
-
                 const { data: userData, error: userError } = await supabaseClient
                     .from('users')
                     .select('score')
                     .eq('username', user)
                     .single();
 
-                if (!userError) {
-                    let currentScoreStr = userData?.score || "0";
+                if (!userError && userData) {
+                    let currentScoreStr = userData.score || "0";
                     let currentScore = Number(currentScoreStr);
                     if (isNaN(currentScore)) currentScore = 0;
                     
@@ -112,9 +318,8 @@
                         .update({ score: String(newScore) })
                         .eq('username', user);
                 }
-
             } catch (err) {
-                console.error("Erro ao salvar vitória no Supabase:", err);
+                console.error("Erro ao atualizar o score do usuário:", err);
             }
         }
 
@@ -150,22 +355,14 @@
             const height = container.clientHeight;
             
             const spawnCorrect = Math.random() < 0.4;
-            const colorName = spawnCorrect 
+            const colorValue = spawnCorrect 
                 ? levels[currentLevel].answer 
                 : allColors[Math.floor(Math.random() * allColors.length)];
 
             const el = document.createElement('div');
             el.className = 'bubble';
-            
-            // Define a cor de fundo do CSS baseado no nome da cor
-            el.style.backgroundColor = colorName.toLowerCase();
-            
-            // Adiciona borda preta ou branca caso a cor gerada suma no fundo da tela
-            if(colorName === "White") el.style.border = "3px solid #000";
-            if(colorName === "Black") el.style.border = "3px solid #fff";
-            
-            // Sem palavras dentro, círculo limpo
-            el.innerText = "";
+            // Aplica a cor de fundo dinamicamente em vez do texto
+            el.style.backgroundColor = colorValue;
             
             const x = Math.random() * (width - 150) + 25;
             const y = height + 50;
@@ -173,10 +370,10 @@
             const vx = (Math.random() - 0.5) * 6;
             const vy = -12 - Math.random() * 6; 
 
-            el.onmousedown = () => handleBubbleClick(colorName);
+            el.onmousedown = () => handleBubbleClick(colorValue);
 
             container.appendChild(el);
-            bubbles.push({ el, x, y, vx, vy, colorName });
+            bubbles.push({ el, x, y, vx, vy, colorValue });
         }
 
         function handleBubbleClick(clickedColor) {
@@ -249,3 +446,5 @@
             animationId = requestAnimationFrame(gameLoop);
         }
     </script>
+</body>
+</html>
