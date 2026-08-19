@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skimming and Scanning Challenge</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #F4F9FF; /* Clean pastel blue background */
+            color: #1B2A47; /* Dark indigo/blue text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #FFFFFF;
+            width: 100%;
+            max-width: 700px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(27, 42, 71, 0.08);
+            padding: 30px;
+            position: relative;
+            text-align: center;
+        }
+
+        h1, h2 {
+            color: #283593; /* Indigo */
+            margin-bottom: 15px;
+        }
+
+        p {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 12px;
+            border: 2px solid #A3C6E5;
+            border-radius: 8px;
+            font-size: 1rem;
+            color: #1B2A47;
+            margin-bottom: 20px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #283593;
+        }
+
+        button {
+            background-color: #A3C6E5; /* Pastel blue */
+            color: #1B2A47;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(163, 198, 229, 0.4);
+        }
+
+        button:hover {
+            background-color: #8EB7D9;
+            transform: translateY(-2px);
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        #timer {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #D32F2F;
+            background-color: #FFEBEE;
+            padding: 5px 12px;
+            border-radius: 8px;
+            border: 1px solid #FFCDD2;
+        }
+
+        #media-container {
+            margin-bottom: 20px;
+        }
+
+        #media-container img {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 8px;
+            border: 2px solid #E6F2FF;
+        }
+
+        #media-container embed {
+            width: 100%;
+            height: 400px;
+            border: 2px solid #A3C6E5;
+            border-radius: 8px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: #E6F2FF;
+            color: #283593;
+            border: 2px solid #A3C6E5;
+            padding: 15px;
+            font-size: 1rem;
+            border-radius: 8px;
+            text-align: left;
+            transition: all 0.2s ease;
+            box-shadow: none;
+            font-weight: 400;
+        }
+
+        .option-btn:hover {
+            background-color: #D0E6FB;
+            transform: none;
+        }
+
+        .option-btn.correct {
+            background-color: #A8D5BA !important;
+            border-color: #6DBF8C !important;
+            color: #1B4D31 !important;
+        }
+
+        .option-btn.wrong {
+            background-color: #F2A1A1 !important;
+            border-color: #E06C6C !important;
+            color: #661818 !important;
+            animation: shake 0.4s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        
+        .spinner {
+            border: 4px solid #E6F2FF;
+            border-top: 4px solid #283593;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen active">
+            <h1>Skimming & Scanning</h1>
+            <p>Welcome! In this game, you will test your quick reading skills. You only have <strong>1 minute</strong> to complete the mission!</p>
+            <input type="text" id="username" placeholder="Enter your username..." autocomplete="off">
+            <br>
+            <button onclick="startGame()">Start Game</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div id="timer">01:00</div>
+            <h2 id="question-text">Question goes here</h2>
+            
+            <div id="media-container"></div>
+            
+            <div class="options" id="options-container"></div>
+        </div>
+
+        <!-- Intermission Screen -->
+        <div id="intermission-screen" class="screen">
+            <h2>Parabéns pela leitura skimming!</h2>
+            <p>Você encontrou a informação principal do texto rapidamente.</p>
+            <p>Agora prepare-se para a leitura de Scanning no próximo texto.</p>
+            <button onclick="nextLevel()">Continuar</button>
+        </div>
+
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="screen">
+            <h2>Salvando progresso...</h2>
+            <div class="spinner"></div>
+            <p>Enviando seus pontos para o banco de dados.</p>
+        </div>
+
+        <!-- Win Screen -->
+        <div id="win-screen" class="screen">
+            <h2>Missão Cumprida! 🎉</h2>
+            <p>Você completou os desafios de Skimming e Scanning no tempo limite!</p>
+            <p><strong>15 pontos</strong> foram adicionados à sua conta.</p>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="screen">
+            <h2 style="color: #D32F2F;">Tempo Esgotado! ⏱️</h2>
+            <p>O tempo de 1 minuto acabou. Tente novamente para melhorar sua agilidade de leitura.</p>
+            <button onclick="location.reload()">Recomeçar</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const supabaseUrl = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
+        const supabaseKey = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        let username = '';
+        let timeLeft = 60;
+        let timerInterval;
+        let currentQuestionIndex = 0;
+
+        // Game Data
+        const questions = [
+            {
+                type: 'image',
+                src: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh0oH0ut9GrLBnu1DYYcVU4PXhfPuH4zEDSa-AHUHMXvfr6BUvy24-B1IbxX6DcuFHC_CAJkHvNlql6wvnbMUH0bdey9CmgJcAcFCS9_qklDXZaobxqw_ptVa42Gn6vtLOqaBHexxUf-0k/s1600/digitalizar0002.jpg',
+                q: "What is the text title?",
+                options: ["Prickly City", "Prickly City By Scott Stantis", "Uclick for UFS"],
+                answer: 0 // Index of correct option
+            },
+            {
+                type: 'pdf',
+                src: 'https://lionwoodinfant.co.uk/wp-content/uploads/2021/01/Yr2-Little-Red-Riding-Hood-Story-PowerPoint.pdf',
+                q: "Where do the little red riding hood lives?",
+                options: ["In a big city with tall buildings", "In a village near a forest", "In a castle on a mountain"],
+                answer: 1
+            },
+            {
+                type: 'pdf',
+                src: 'https://lionwoodinfant.co.uk/wp-content/uploads/2021/01/Yr2-Little-Red-Riding-Hood-Story-PowerPoint.pdf',
+                q: "Where the grandmother was locked inside?",
+                options: ["In the wardrobe", "In the basement", "Under the bed"],
+                answer: 0
+            },
+            {
+                type: 'pdf',
+                src: 'https://lionwoodinfant.co.uk/wp-content/uploads/2021/01/Yr2-Little-Red-Riding-Hood-Story-PowerPoint.pdf',
+                q: "Who have heard the little red riding hood's scream, and went there to help her?",
+                options: ["The police officer", "The bad wolf's brother", "The woodcutter"],
+                answer: 2
+            }
+        ];
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startGame() {
+            const userInp = document.getElementById('username').value.trim();
+            if (!userInp) {
+                alert("Por favor, digite seu username para começar!");
+                return;
+            }
+            username = userInp;
+            
+            showScreen('game-screen');
+            renderQuestion();
+            
+            // Start Global Timer
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                let min = Math.floor(timeLeft / 60);
+                let sec = timeLeft % 60;
+                document.getElementById('timer').innerText = 
+                    `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    showScreen('game-over-screen');
+                }
+            }, 1000);
+        }
+
+        function renderQuestion() {
+            const q = questions[currentQuestionIndex];
+            document.getElementById('question-text').innerText = q.q;
+
+            const mediaContainer = document.getElementById('media-container');
+            
+            // Load media only if type changed or it's the first question to avoid reloading PDF
+            if (currentQuestionIndex === 0) {
+                mediaContainer.innerHTML = `<img src="${q.src}" alt="Text Image">`;
+            } else if (currentQuestionIndex === 1) {
+                // Load PDF for the first time
+                mediaContainer.innerHTML = `<embed src="${q.src}" type="application/pdf" width="100%" height="400px" />`;
+            }
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            const q = questions[currentQuestionIndex];
+            
+            // Disable buttons temporarily
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+            if (selectedIndex === q.answer) {
+                btnElement.classList.add('correct');
+                
+                setTimeout(() => {
+                    if (currentQuestionIndex === 0) {
+                        // Success on Skimming
+                        showScreen('intermission-screen');
+                    } else if (currentQuestionIndex < questions.length - 1) {
+                        // Next Scanning question
+                        currentQuestionIndex++;
+                        renderQuestion();
+                    } else {
+                        // Game Won!
+                        clearInterval(timerInterval);
+                        saveProgressAndWin();
+                    }
+                    // Re-enable buttons for next step if it stays in game screen
+                    allBtns.forEach(b => b.style.pointerEvents = 'auto');
+                }, 800);
+            } else {
+                btnElement.classList.add('wrong');
+                setTimeout(() => {
+                    btnElement.classList.remove('wrong');
+                    allBtns.forEach(b => b.style.pointerEvents = 'auto');
+                }, 600);
+            }
+        }
+
+        function nextLevel() {
+            currentQuestionIndex++;
+            showScreen('game-screen');
+            renderQuestion();
+        }
+
+        async function saveProgressAndWin() {
+            showScreen('loading-screen');
+
+            try {
+                // 1. Update score in users table (+15)
+                const { data: userData, error: userError } = await supabase
+                    .from('users')
+                    .select('score')
+                    .eq('username', username)
+                    .single();
+                
+                let currentScore = 0;
+                if (userData && userData.score) {
+                    currentScore = Number(userData.score);
+                }
+                
+                await supabase
+                    .from('users')
+                    .update({ score: currentScore + 15 })
+                    .eq('username', username);
+
+                // 2. Add user to done column in missions table
+                const { data: missionData, error: missionError } = await supabase
+                    .from('missions')
+                    .select('done')
+                    .eq('mission_name', 'Skimming and Scanning')
+                    .single();
+
+                let newDoneStr = username;
+                if (missionData && missionData.done) {
+                    // Check if it's already an array or a comma-separated string
+                    if (Array.isArray(missionData.done)) {
+                        newDoneStr = [...missionData.done, username];
+                    } else {
+                        newDoneStr = missionData.done + ", " + username;
+                    }
+                }
+
+                await supabase
+                    .from('missions')
+                    .update({ done: newDoneStr })
+                    .eq('mission_name', 'Skimming and Scanning');
+
+                showScreen('win-screen');
+
+            } catch (err) {
+                console.error("Database Error: ", err);
+                // Even if DB fails, show win screen to not frustrate the user
+                alert("Houve um pequeno erro ao salvar, mas você concluiu com sucesso!");
+                showScreen('win-screen');
+            }
+        }
+    </script>
+</body>
+</html>
