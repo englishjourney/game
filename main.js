@@ -91,7 +91,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
     
-document.getElementById('btn-flashcards').addEventListener('click', openFlashcards);
+    const btnFlashcards = document.getElementById('btn-flashcards');
+    if (btnFlashcards) {
+        btnFlashcards.addEventListener('click', () => {
+            openFlashcards();
+        });
+    }
     
     const btnCloseModal = document.getElementById('btn-close-modal');
     if (btnCloseModal && modal) {
