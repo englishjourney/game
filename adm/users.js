@@ -8,11 +8,12 @@ async function loadUsers() {
     const container = document.getElementById('users-container');
     container.innerHTML = 'Carregando alunos...';
 
-    // Busca todos, ordenado por time e nome
+    // Busca todos, ordenado por série, time e nome
     const { data, error } = await supabase
         .from('users')
-        .select('id, name, username, score, class, rank, team, stars, hearts, nota1, nota2, nota3, nota4')
+        .select('id, name, username, score, class, rank, serie, team, stars, hearts, nota1, nota2, nota3, nota4')
         .neq('username', 'micael.svg')
+        .order('serie', { ascending: true })
         .order('team', { ascending: true })
         .order('name', { ascending: true });
 
@@ -21,12 +22,19 @@ async function loadUsers() {
         return;
     }
 
-    // Agrupa por team (Turma)
+    // Agrupa por serie e team (Turma)
     const teams = {};
     data.forEach(u => {
-        const teamName = u.team || 'Sem Turma';
-        if (!teams[teamName]) teams[teamName] = [];
-        teams[teamName].push(u);
+        const serieName = u.serie || '';
+        const teamName = u.team || '';
+        
+        let groupName = 'Sem Turma';
+        if (serieName || teamName) {
+            groupName = `${serieName} ${teamName}`.trim();
+        }
+
+        if (!teams[groupName]) teams[groupName] = [];
+        teams[groupName].push(u);
     });
 
     let html = '';
