@@ -984,3 +984,60 @@ dialog.profile-card-dialog::backdrop {
     max-width: 100%;
     text-align: center;
 }
+/* ================= ATUALIZAÇÕES FLASHCARDS (VERTICAL & ANIMAÇÕES) ================= */
+
+/* Retângulo vertical ajustado para os cards dos alunos */
+.flashcard-container.vertical-card {
+    width: 260px;
+    height: 380px;
+    perspective: 1000px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    cursor: default; /* Remove o ponteiro de clique já que agora viramos pelas setas */
+}
+
+/* Classes de Animação de Deslizar (Cima / Baixo) */
+.slide-out-up {
+    transform: translateY(-50px);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.slide-out-down {
+    transform: translateY(50px);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.slide-in-up {
+    transform: translateY(-50px);
+    opacity: 0;
+    animation: slideInFromTop 0.3s forwards;
+}
+
+.slide-in-down {
+    transform: translateY(50px);
+    opacity: 0;
+    animation: slideInFromBottom 0.3s forwards;
+}
+
+@keyframes slideInFromTop {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInFromBottom {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
