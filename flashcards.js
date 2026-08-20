@@ -109,7 +109,7 @@ export async function openFlashcards() {
             utterance.lang = 'en-US';
             window.speechSynthesis.speak(utterance);
         }
-    }););
+    });
 
     // Buscar dados do banco
     try {
