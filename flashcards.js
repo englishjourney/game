@@ -1,5 +1,5 @@
 // flashcards.js
-import { supabase } from './supabase.js'; // Mantenha a importação como você já usava
+import { supabase } from './supabaseClient.js';
 
 let currentDeckCards = [];
 let currentCardIndex = 0;
