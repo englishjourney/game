@@ -3,6 +3,21 @@ import { supabase } from './supabaseClient.js';
 import { runWithLoader } from './loader.js';
 import { openProfileCard } from './profileCard.js';
 
+// Função auxiliar para sanitizar e converter pontuações e estrelas para números válidos
+function parseNumber(val) {
+    if (val === null || val === undefined) return 0;
+    if (typeof val === 'number') return isNaN(val) ? 0 : val;
+    if (typeof val === 'string') {
+        const clean = val.trim().toLowerCase();
+        if (clean === '' || clean === 'null' || clean === 'empty' || clean === 'undefined' || clean === 'none') {
+            return 0;
+        }
+        const parsed = Number(clean);
+        return isNaN(parsed) ? 0 : parsed;
+    }
+    return 0;
+}
+
 export async function openSuperStars() {
     let modal = document.getElementById('superstar-modal');
     
@@ -37,7 +52,6 @@ export async function openSuperStars() {
 
     const contentDiv = modal.querySelector('#superstar-content');
     
-    // CORREÇÃO 1: Evita o erro "The element already has an 'open' attribute"
     if (!modal.open) {
         modal.showModal();
     }
@@ -45,28 +59,42 @@ export async function openSuperStars() {
     contentDiv.innerHTML = `<p style="text-align:center;">Buscando os melhores...</p>`;
 
     try {
-        const { data: users, error } = await runWithLoader(async () => {
-            // Trazemos os usuários ordenados por score (do maior para o menor)
+        const { data: rawUsers, error } = await runWithLoader(async () => {
             return await supabase
                 .from('users')
-                .select('username, score, serie, team, avatar_url, rank')
-                .order('score', { ascending: false });
+                .select('username, score, estrelas, serie, team, avatar_url, rank')
+                .neq('username', 'micael.svg'); // Remove o admin da busca
         });
 
         if (error) throw error;
         
-        if (!users || users.length === 0) {
+        // Filtra nulos e garante a remoção do admin
+        const validUsers = (rawUsers || []).filter(u => u && u.username && u.username !== 'micael.svg');
+
+        if (validUsers.length === 0) {
             contentDiv.innerHTML = `<p style="text-align:center;">Nenhum jogador encontrado.</p>`;
             return;
         }
 
-        // Lógica para filtrar o melhor de cada turma por série
+        // Ordena os usuários por Score (Maior -> Menor) e por Estrelas como desempate
+        const sortedUsers = validUsers.sort((a, b) => {
+            const scoreA = parseNumber(a.score);
+            const scoreB = parseNumber(b.score);
+            const starsA = parseNumber(a.estrelas);
+            const starsB = parseNumber(b.estrelas);
+
+            if (scoreB !== scoreA) {
+                return scoreB - scoreA;
+            }
+            return starsB - starsA;
+        });
+
+        // Lógica para separar o melhor de cada turma por série
         const superStarsData = {};
         
-        users.forEach(user => {
+        sortedUsers.forEach(user => {
             if (!user.serie || !user.team) return; // Pula usuários sem série ou turma
 
-            // CORREÇÃO 2: Garante que a série seja tratada como string para dar 'match' com o serieOrder
             const serieStr = String(user.serie).trim();
             const teamStr = String(user.team).trim().toUpperCase();
 
@@ -74,10 +102,13 @@ export async function openSuperStars() {
                 superStarsData[serieStr] = {};
             }
 
-            // Como a lista já veio ordenada do maior pro menor, 
-            // o primeiro de cada turma que aparecer será o maior score.
+            // Como a lista já está ordenada do maior para o menor,
+            // o primeiro aluno a ser inserido na turma será o líder absoluto.
             if (!superStarsData[serieStr][teamStr]) {
-                superStarsData[serieStr][teamStr] = user;
+                superStarsData[serieStr][teamStr] = {
+                    ...user,
+                    realScore: parseNumber(user.score) // Pontuação limpa e numérica
+                };
             }
         });
 
@@ -87,8 +118,12 @@ export async function openSuperStars() {
             '1': '1ª Série', '2': '2ª Série', '3': '3ª Série'
         };
 
-        // Ordem em que as séries devem aparecer na tela
-        const serieOrder = ['6', '7', '8', '9', '1', '2', '3'];
+        // Ordem prioritária de exibição na tela
+        const defaultSerieOrder = ['6', '7', '8', '9', '1', '2', '3'];
+        
+        // Inclui quaisquer outras séries que existam no banco e não estejam no array padrão
+        const extraSeries = Object.keys(superStarsData).filter(s => !defaultSerieOrder.includes(s));
+        const serieOrder = [...defaultSerieOrder, ...extraSeries];
 
         let html = '';
 
@@ -96,7 +131,6 @@ export async function openSuperStars() {
             const turmas = superStarsData[serieNum];
             
             if (turmas && Object.keys(turmas).length > 0) {
-                // Se a série não tiver nome mapeado, usa a própria chave como fallback
                 const tituloSerie = serieNames[serieNum] || `Série ${serieNum}`;
                 
                 html += `
@@ -122,7 +156,7 @@ export async function openSuperStars() {
                             </div>
                             <div class="superstar-info">
                                 <span class="superstar-username">${topPlayer.username}</span>
-                                <span class="superstar-score">🏆 ${topPlayer.score} pts</span>
+                                <span class="superstar-score">🏆 ${topPlayer.realScore} pts</span>
                             </div>
                         </div>
                     `;
@@ -140,14 +174,13 @@ export async function openSuperStars() {
         } else {
             contentDiv.innerHTML = html;
 
-            // Adiciona o evento de clique nos cards
+            // Adiciona o evento de clique nos cards dos jogadores
             const cards = contentDiv.querySelectorAll('.superstar-card');
             cards.forEach(card => {
                 card.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Impede o clique de fechar o modal
+                    e.stopPropagation();
                     const username = card.getAttribute('data-username');
                     
-                    // CORREÇÃO 3: Try/Catch caso o Profile Card falhe e evitar que a tela quebre
                     try {
                         openProfileCard(username);
                     } catch (err) {
