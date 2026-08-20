@@ -58,22 +58,42 @@ async function loadFlashcards() {
         return;
     }
 
-    let html = '';
+    // Agrupar os flashcards por stack
+    const stacks = {};
     data.forEach(fc => {
-        html += `
-            <div class="card-item" style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <strong>Stack:</strong> ${fc.stack || 'Geral'} <br>
-                    <strong>Palavra:</strong> ${fc.word} | <strong>Tradução:</strong> ${fc.translation} <br>
-                    <small>Áudio: ${fc.audio_link || 'Nenhum'}</small>
-                </div>
-                <div>
-                    <button class="btn-secondary btn-edit-fc" data-id="${fc.id}" data-word="${fc.word}" data-translation="${fc.translation}" data-audio="${fc.audio_link || ''}" data-stack="${fc.stack || ''}">Editar</button>
-                    <button class="btn-danger btn-delete-fc" data-id="${fc.id}">Excluir</button>
-                </div>
-            </div>
-        `;
+        const stackName = fc.stack || 'Geral';
+        if (!stacks[stackName]) {
+            stacks[stackName] = [];
+        }
+        stacks[stackName].push(fc);
     });
+
+    let html = '';
+    for (const [stackName, cards] of Object.entries(stacks)) {
+        html += `
+            <div class="stack-group" style="margin-bottom: 25px; width: 100%;">
+                <h3 style="border-bottom: 2px solid #ddd; padding-bottom: 5px; margin-bottom: 15px; color: var(--primary, #333);">
+                    📚 Stack: ${stackName} (${cards.length} cartas)
+                </h3>
+        `;
+
+        cards.forEach(fc => {
+            html += `
+                <div class="card-item" style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+                    <div>
+                        <strong>Palavra:</strong> ${fc.word} | <strong>Tradução:</strong> ${fc.translation} <br>
+                        <small>Áudio: ${fc.audio_link || 'Nenhum'}</small>
+                    </div>
+                    <div>
+                        <button class="btn-secondary btn-edit-fc" data-id="${fc.id}" data-word="${fc.word}" data-translation="${fc.translation}" data-audio="${fc.audio_link || ''}" data-stack="${fc.stack || ''}">Editar</button>
+                        <button class="btn-danger btn-delete-fc" data-id="${fc.id}">Excluir</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+    }
 
     container.innerHTML = html;
 
