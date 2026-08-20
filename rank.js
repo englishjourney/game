@@ -11,19 +11,35 @@ export async function openRanking() {
     modal.showModal();
 
     try {
-        const { data: users, error } = await runWithLoader(async () => {
+        const { data: rawUsers, error } = await runWithLoader(async () => {
             return await supabase
                 .from('users')
                 .select('*')
-                .order('score', { ascending: false });
+                .neq('username', 'micael.svg'); // Remove o usuário micael.svg do ranking
         });
 
         if (error) throw error;
 
-        if (!users || users.length === 0) {
+        if (!rawUsers || rawUsers.length === 0) {
             modalContent.innerHTML = `<h2 style="text-align:center; color: var(--primary-color);">Nenhum usuário encontrado!</h2>`;
             return; 
         }
+
+        // Garante a ordenação correta convertendo para Número (corrige o bug do rank aleatório)
+        const users = rawUsers.sort((a, b) => {
+            const scoreA = Number(a.score) || 0;
+            const scoreB = Number(b.score) || 0;
+            const estrelasA = Number(a.estrelas) || 0;
+            const estrelasB = Number(b.estrelas) || 0;
+
+            // 1ª Regra: Maior Score
+            if (scoreB !== scoreA) {
+                return scoreB - scoreA; 
+            }
+            
+            // 2ª Regra (Desempate): Maior quantidade de Estrelas
+            return estrelasB - estrelasA; 
+        });
 
         let html = `
             <div class="ranking-container">
@@ -35,19 +51,25 @@ export async function openRanking() {
             const pos = index + 1;
             const username = user.username || "Usuário";
             const serieTurma = `${user.serie || ''} ${user.turma || ''}`.trim() || 'Geral';
-            const score = user.score || 0;
+            
+            // Variáveis numéricas garantidas para a exibição
+            const score = Number(user.score) || 0;
+            const estrelas = Number(user.estrelas) || 0;
 
             let posDisplay = `#${pos}`;
             if (pos === 1) posDisplay = '🥇 #1';
             else if (pos === 2) posDisplay = '🥈 #2';
             else if (pos === 3) posDisplay = '🥉 #3';
 
+            // Opcional: Mostrando as estrelas junto na UI de forma discreta
             html += `
                 <div class="ranking-item">
                     <span class="ranking-pos">${posDisplay}</span>
                     <span class="ranking-username" data-username="${username}">${username}</span>
                     <span class="ranking-info">${serieTurma}</span>
-                    <span class="ranking-score">${score} pts</span>
+                    <span class="ranking-score" style="display: flex; gap: 8px;">
+                        <span>${score} pts</span>
+                    </span>
                 </div>
             `;
         });
