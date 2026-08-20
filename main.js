@@ -4,6 +4,7 @@ import { openProfile } from './profile.js';
 import { openMissions } from './missions.js';
 import { openRanking } from './rank.js';
 import { openSuperStars } from './SuperStar.js';
+import { openSuperStars } from './flashcards.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
     // Executa a verificação de segurança controlada primeiro
@@ -88,6 +89,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         btnSuperstars.addEventListener('click', () => {
             openSuperStars();
         });
+        // Exemplo de como vincular o botão
+document.getElementById('btn-flashcards').addEventListener('click', openFlashcards);
     }
     
     const btnCloseModal = document.getElementById('btn-close-modal');
