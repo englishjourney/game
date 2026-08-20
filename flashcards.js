@@ -4,13 +4,25 @@ import { supabase } from './supabaseClient.js';
 let currentDeckCards = [];
 let currentCardIndex = 0;
 
-// Escutador global para a tecla de seta direita
+// Escutador global para os comandos de teclado
 document.addEventListener('keydown', (e) => {
     const deckView = document.getElementById('fc-deck-view');
     // Verifica se o modal de flashcards e a visualização do baralho estão ativos
     if (deckView && deckView.style.display !== 'none') {
-        if (e.key === 'ArrowRight') {
-            nextCard();
+        const cardInner = document.getElementById('fc-card-inner');
+
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+            e.preventDefault();
+            if (cardInner) cardInner.classList.toggle('flipped');
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            changeCardWithAnimation('down'); // Próxima carta (desliza para cima, entra de baixo)
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            changeCardWithAnimation('up'); // carta anterior (desliza para baixo, entra de cima)
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            playCurrentAudio();
         }
     }
 });
@@ -22,7 +34,7 @@ export async function openFlashcards() {
     
     if (modalTitle) modalTitle.textContent = "Flashcards";
 
-    // Estrutura HTML Injetada: View 1 (Menu de Stacks) e View 2 (Cartas Empilhadas)
+    // Estrutura HTML Injetada com as novas instruções de teclado
     modalBody.innerHTML = `
         <div id="flashcards-container" style="width: 100%; height: 100%; display: flex; flex-direction: column;">
             
@@ -32,11 +44,11 @@ export async function openFlashcards() {
             </div>
 
             <!-- View 2: Active Deck (Cartas Empilhadas) -->
-            <div id="fc-deck-view" style="display: none; flex-direction: column; align-items: center; justify-content: center; flex: 1; position: relative; width: 100%; height: 100%; min-height: 400px; padding: 20px;">
-                <button id="fc-btn-back-to-stacks" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.1); border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9em;">
+            <div id="fc-deck-view" style="display: none; flex-direction: column; align-items: center; justify-content: center; flex: 1; position: relative; width: 100%; height: 100%; min-height: 400px; padding: 20px; overflow: hidden;">
+                <button id="fc-btn-back-to-stacks" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.1); border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9em; z-index: 10;">
                     ⬅ Voltar aos Stacks
                 </button>
-                <div id="fc-card-area" class="flashcard-container">
+                <div id="fc-card-area" class="flashcard-container vertical-card">
                     <div id="fc-card-inner" class="flashcard-inner">
                         <div class="flashcard-front">
                             <button id="fc-btn-audio" class="fc-audio-btn">🔊</button>
@@ -48,8 +60,10 @@ export async function openFlashcards() {
                     </div>
                 </div>
                 
-                <p style="margin-top: 25px; font-size: 0.9em; opacity: 0.7; pointer-events: none;">
-                    Clique na carta para virar.<br>Clique fora ou aperte ➡️ para próxima carta.
+                <p style="margin-top: 25px; font-size: 0.85em; opacity: 0.8; text-align: center; pointer-events: none; line-height: 1.4;">
+                    ⬆ ⬇ Setas Cima / Baixo: Próxima / Anterior carta<br>
+                    ⬅ ➡️ Setas Esquerda / Direita: Virar carta<br>
+                    ⏎ Enter: Ouvir áudio
                 </p>
             </div>
         </div>
@@ -57,9 +71,6 @@ export async function openFlashcards() {
 
     modal.showModal();
 
-    // Lógicas de clique na área do Deck
-    const deckView = document.getElementById('fc-deck-view');
-    const cardInner = document.getElementById('fc-card-inner');
     const btnAudio = document.getElementById('fc-btn-audio');
     const btnBackToStacks = document.getElementById('fc-btn-back-to-stacks');
 
@@ -70,55 +81,10 @@ export async function openFlashcards() {
         });
     }
 
-    // Clicar numa área vazia (fora da carta) passa para a próxima
-    deckView.addEventListener('click', (e) => {
-        if (e.target === deckView) {
-            nextCard();
-        }
-    });
-
-    // Clicar na carta faz o flip
-    cardInner.addEventListener('click', () => {
-        cardInner.classList.toggle('flipped');
-    });
-
-    // Clicar no áudio
+    // Clicar no botão de áudio
     btnAudio.addEventListener('click', (e) => {
-        e.stopPropagation(); // Impede que a carta vire ao clicar no áudio
-        const card = currentDeckCards[currentCardIndex];
-        
-        // 1. Se for um link do Google Translate, usamos a API Nativa de Voz do Navegador para burlar o bloqueio
-        if (card.audio && card.audio.includes('translate.google.com')) {
-            const utterance = new SpeechSynthesisUtterance(card.word);
-            utterance.lang = 'en-US'; // Define o sotaque para Inglês Americano
-            window.speechSynthesis.speak(utterance);
-            return; // Sai da função para não tentar carregar o link
-        }
-
-        // 2. Se for um link de áudio normal (ex: um .mp3 hospedado no Supabase)
-        if (card.audio && card.audio.trim() !== '') {
-            try {
-                const audio = new Audio(card.audio);
-                const playPromise = audio.play();
-                
-                if (playPromise !== undefined) {
-                    playPromise.catch(err => {
-                        console.warn("Erro ao reproduzir link de áudio, usando voz nativa como fallback:", err);
-                        // Fallback: Se o link falhar, o navegador lê a palavra
-                        const utterance = new SpeechSynthesisUtterance(card.word);
-                        utterance.lang = 'en-US';
-                        window.speechSynthesis.speak(utterance);
-                    });
-                }
-            } catch (err) {
-                console.warn("Erro ao instanciar áudio:", err);
-            }
-        } else if (card.word) {
-            // 3. Se a carta não tiver NENHUM link de áudio cadastrado, apenas lê a palavra
-            const utterance = new SpeechSynthesisUtterance(card.word);
-            utterance.lang = 'en-US';
-            window.speechSynthesis.speak(utterance);
-        }
+        e.stopPropagation();
+        playCurrentAudio();
     });
 
     // Buscar dados do banco
@@ -126,7 +92,6 @@ export async function openFlashcards() {
         const { data: cards, error } = await supabase.from('flashcards').select('*');
         if (error) throw error;
 
-        // Agrupar as cartas espalhadas por Stack
         const stacks = {};
         cards.forEach(card => {
             const stackName = card.stack || 'Geral'; 
@@ -150,7 +115,6 @@ function renderStacks(stacks) {
         return;
     }
 
-    // Criar botões em formato de carta para cada Stack
     for (const [stackName, cards] of Object.entries(stacks)) {
         const stackBtn = document.createElement('div');
         stackBtn.className = 'stack-card-btn';
@@ -171,7 +135,6 @@ function openDeck(cards) {
     currentDeckCards = cards;
     currentCardIndex = 0;
     
-    // Esconde os Stacks e mostra a área das cartas
     document.getElementById('fc-stacks-view').style.display = 'none';
     document.getElementById('fc-deck-view').style.display = 'flex';
     
@@ -185,26 +148,75 @@ function renderCurrentCard() {
     const wordEl = document.getElementById('fc-word');
     const translationEl = document.getElementById('fc-translation');
     
-    // Garante que a carta inicie mostrando a frente
     cardInner.classList.remove('flipped');
     
-    // Um leve delay para que o texto só mude após a carta desvirar (efeito mais natural)
-    setTimeout(() => {
-        const currentCard = currentDeckCards[currentCardIndex];
-        wordEl.textContent = currentCard.word || '';
-        translationEl.textContent = currentCard.translation || '';
-    }, 150);
+    const currentCard = currentDeckCards[currentCardIndex];
+    wordEl.textContent = currentCard.word || '';
+    translationEl.textContent = currentCard.translation || '';
 }
 
-function nextCard() {
+function changeCardWithAnimation(direction) {
     if (!currentDeckCards || currentDeckCards.length === 0) return;
+
+    const cardArea = document.getElementById('fc-card-area');
+    if (!cardArea) return;
+
+    // Define a animação de saída dependendo da tecla (Cima = sai subindo, Baixo = sai descendo)
+    const slideOutClass = direction === 'up' ? 'slide-out-down' : 'slide-out-up';
+    cardArea.classList.add(slideOutClass);
+
+    setTimeout(() => {
+        if (direction === 'up') {
+            currentCardIndex--;
+            if (currentCardIndex < 0) currentCardIndex = currentDeckCards.length - 1;
+        } else {
+            currentCardIndex++;
+            if (currentCardIndex >= currentDeckCards.length) currentCardIndex = 0;
+        }
+
+        renderCurrentCard();
+
+        // Remove a classe de saída e aplica a classe de entrada correspondente
+        cardArea.classList.remove(slideOutClass);
+        const slideInClass = direction === 'up' ? 'slide-in-up' : 'slide-in-down';
+        cardArea.classList.add(slideInClass);
+
+        setTimeout(() => {
+            cardArea.classList.remove(slideInClass);
+        }, 300);
+    }, 300);
+}
+
+function playCurrentAudio() {
+    if (!currentDeckCards || currentDeckCards.length === 0) return;
+    const card = currentDeckCards[currentCardIndex];
     
-    currentCardIndex++;
-    
-    // Se chegou ao fim do deck, volta para a primeira carta criando um loop infinito
-    if (currentCardIndex >= currentDeckCards.length) {
-        currentCardIndex = 0;
+    if (card.audio && card.audio.includes('translate.google.com')) {
+        const utterance = new SpeechSynthesisUtterance(card.word);
+        utterance.lang = 'en-US';
+        window.speechSynthesis.speak(utterance);
+        return;
     }
-    
-    renderCurrentCard();
+
+    if (card.audio && card.audio.trim() !== '') {
+        try {
+            const audio = new Audio(card.audio);
+            const playPromise = audio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.catch(err => {
+                    console.warn("Erro ao reproduzir link de áudio, usando voz nativa:", err);
+                    const utterance = new SpeechSynthesisUtterance(card.word);
+                    utterance.lang = 'en-US';
+                    window.speechSynthesis.speak(utterance);
+                });
+            }
+        } catch (err) {
+            console.warn("Erro ao instanciar áudio:", err);
+        }
+    } else if (card.word) {
+        const utterance = new SpeechSynthesisUtterance(card.word);
+        utterance.lang = 'en-US';
+        window.speechSynthesis.speak(utterance);
+    }
 }
