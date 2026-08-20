@@ -4,7 +4,7 @@ import { openProfile } from './profile.js';
 import { openMissions } from './missions.js';
 import { openRanking } from './rank.js';
 import { openSuperStars } from './SuperStar.js';
-import { openSuperStars } from './flashcards.js';
+import { openFlashcards } from './flashcards.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
     // Executa a verificação de segurança controlada primeiro
