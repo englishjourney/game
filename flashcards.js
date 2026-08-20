@@ -61,6 +61,14 @@ export async function openFlashcards() {
     const deckView = document.getElementById('fc-deck-view');
     const cardInner = document.getElementById('fc-card-inner');
     const btnAudio = document.getElementById('fc-btn-audio');
+    const btnBackToStacks = document.getElementById('fc-btn-back-to-stacks');
+
+    if (btnBackToStacks) {
+        btnBackToStacks.addEventListener('click', () => {
+            document.getElementById('fc-deck-view').style.display = 'none';
+            document.getElementById('fc-stacks-view').style.display = 'flex';
+        });
+    }
 
     // Clicar numa área vazia (fora da carta) passa para a próxima
     deckView.addEventListener('click', (e) => {
