@@ -2,6 +2,7 @@ import { initAuth, isAdmLoggedIn, logout } from './auth.js';
 import { initPlanner } from './planner.js';
 import { initUsers } from './users.js';
 import { initMissions } from './missions.js';
+import { initFlashcardsAdm } from './flashcardsAdm.js';
 import { supabase } from '../supabaseClient.js'; // Adjust path if necessary
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -22,6 +23,7 @@ export function showAdmPanel() {
     initPlanner();
     initUsers();
     initMissions();
+    initFlashcardsAdm();
     
     document.getElementById('btn-logout').addEventListener('click', logout);
 }
