@@ -57,6 +57,31 @@ async function loadPlanners() {
         return;
     }
 
+    // Lógica adicionada para interpretar texto como data/hora e ordenar crescentemente
+    data.sort((a, b) => {
+        const parseDateTime = (dateStr, timeStr) => {
+            if (!dateStr) return 0;
+            let year, month, day;
+            
+            if (dateStr.includes('/')) {
+                const parts = dateStr.split('/');
+                if (parts[2].length === 4) { year = parts[2]; month = parts[1]; day = parts[0]; }
+                else { year = parts[0]; month = parts[1]; day = parts[2]; }
+            } else if (dateStr.includes('-')) {
+                const parts = dateStr.split('-');
+                if (parts[0].length === 4) { year = parts[0]; month = parts[1]; day = parts[2]; }
+                else { year = parts[2]; month = parts[1]; day = parts[0]; }
+            } else {
+                return 0; 
+            }
+
+            const time = timeStr || '00:00';
+            return new Date(`${year}/${month}/${day} ${time}`).getTime();
+        };
+
+        return parseDateTime(a.date, a.time) - parseDateTime(b.date, b.time);
+    });
+
     container.innerHTML = data.map(p => `
         <div class="data-card">
             <div class="data-card-info">
