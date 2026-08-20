@@ -837,3 +837,32 @@ dialog.profile-card-dialog::backdrop {
 .audio-btn { cursor: pointer; padding: 5px 10px; }
 .audio-btn .loader-mini { display: block; }
 .audio-btn.ready .loader-mini { display: none; } /* Esconde o "Carregando" quando áudio estiver pronto */
+
+/* ================= BOTÃO FLASHCARDS (HIGH SCHOOL/TECH) ================= */
+#btn-flashcards {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+#btn-flashcards:hover {
+    background: rgba(0, 225, 255, 0.15);
+    box-shadow: 0 0 15px var(--primary-color), inset 0 0 10px var(--primary-color);
+    letter-spacing: 4px; /* O texto dá uma leve expandida */
+    color: #ffffff;
+}
+
+/* Efeito de "Scan" ou linha passando pelo botão */
+#btn-flashcards::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(to right, transparent, rgba(0, 225, 255, 0.4), transparent);
+    transform: skewX(-20deg);
+    transition: 0s;
+}
+
+#btn-flashcards:hover::after {
+    left: 200%;
+    transition: 0.7s ease-in-out;
+}
