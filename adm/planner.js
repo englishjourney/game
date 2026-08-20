@@ -57,7 +57,7 @@ async function loadPlanners() {
         return;
     }
 
-    // Lógica adicionada para interpretar texto como data/hora e ordenar crescentemente
+    // Ordena as aulas por data e hora em ordem crescente (mais próximas primeiro)
     data.sort((a, b) => {
         const parseDateTime = (dateStr, timeStr) => {
             if (!dateStr) return 0;
@@ -82,19 +82,35 @@ async function loadPlanners() {
         return parseDateTime(a.date, a.time) - parseDateTime(b.date, b.time);
     });
 
-    container.innerHTML = data.map(p => `
-        <div class="data-card">
-            <div class="data-card-info">
-                <p><strong>${p.day} - ${p.date} (${p.time})</strong> | Duração: ${p.duration}</p>
-                <p><strong>Turma:</strong> ${p.serie} ${p.team}</p>
-                <p><strong>Atividades:</strong> ${p.activities}</p>
-                ${p.skills ? `<p><strong>BNCC:</strong> ${p.skills}</p>` : ''}
-            </div>
-            <div class="data-card-actions">
-                <button class="btn-small btn-secondary" onclick='window.editPlanner(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Editar</button>
-                <!-- BOTÃO EXCLUIR ADICIONADO AQUI -->
-                <button class="btn-small" style="background-color: #ff4444; color: white; border: none;" onclick='window.deletePlanner("${p.id}")'>Excluir</button>
-            </div>
+    // Agrupa as aulas por data/dia da semana
+    const groups = data.reduce((acc, item) => {
+        const title = item.day ? `${item.day} - ${item.date}` : item.date;
+        if (!acc[title]) {
+            acc[title] = [];
+        }
+        acc[title].push(item);
+        return acc;
+    }, {});
+
+    // Renderiza as seções agrupadas com seus respectivos títulos
+    container.innerHTML = Object.entries(groups).map(([title, items]) => `
+        <div class="planner-section" style="margin-bottom: 24px;">
+            <h3 class="planner-section-title" style="margin-bottom: 12px; border-bottom: 2px solid #ccc; padding-bottom: 4px;">${title}</h3>
+            ${items.map(p => `
+                <div class="data-card">
+                    <div class="data-card-info">
+                        <p><strong>${p.day} - ${p.date} (${p.time})</strong> | Duração: ${p.duration}</p>
+                        <p><strong>Turma:</strong> ${p.serie} ${p.team}</p>
+                        <p><strong>Atividades:</strong> ${p.activities}</p>
+                        ${p.skills ? `<p><strong>BNCC:</strong> ${p.skills}</p>` : ''}
+                    </div>
+                    <div class="data-card-actions">
+                        <button class="btn-small btn-secondary" onclick='window.editPlanner(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Editar</button>
+                        <!-- BOTÃO EXCLUIR ADICIONADO AQUI -->
+                        <button class="btn-small" style="background-color: #ff4444; color: white; border: none;" onclick='window.deletePlanner("${p.id}")'>Excluir</button>
+                    </div>
+                </div>
+            `).join('')}
         </div>
     `).join('');
 }
