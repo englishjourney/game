@@ -77,24 +77,39 @@ export async function openFlashcards() {
         e.stopPropagation(); // Impede que a carta vire ao clicar no áudio
         const card = currentDeckCards[currentCardIndex];
         
-        if (card && card.audio && card.audio.trim() !== '') {
+        // 1. Se for um link do Google Translate, usamos a API Nativa de Voz do Navegador para burlar o bloqueio
+        if (card.audio && card.audio.includes('translate.google.com')) {
+            const utterance = new SpeechSynthesisUtterance(card.word);
+            utterance.lang = 'en-US'; // Define o sotaque para Inglês Americano
+            window.speechSynthesis.speak(utterance);
+            return; // Sai da função para não tentar carregar o link
+        }
+
+        // 2. Se for um link de áudio normal (ex: um .mp3 hospedado no Supabase)
+        if (card.audio && card.audio.trim() !== '') {
             try {
                 const audio = new Audio(card.audio);
                 const playPromise = audio.play();
                 
-                // Tratamento seguro da Promessa de áudio (Resolve o erro "NotSupportedError")
                 if (playPromise !== undefined) {
                     playPromise.catch(err => {
-                        console.warn("Erro ao reproduzir áudio (formato não suportado ou URL inválida):", err);
+                        console.warn("Erro ao reproduzir link de áudio, usando voz nativa como fallback:", err);
+                        // Fallback: Se o link falhar, o navegador lê a palavra
+                        const utterance = new SpeechSynthesisUtterance(card.word);
+                        utterance.lang = 'en-US';
+                        window.speechSynthesis.speak(utterance);
                     });
                 }
             } catch (err) {
                 console.warn("Erro ao instanciar áudio:", err);
             }
-        } else {
-            console.warn("Esta carta não possui áudio válido.");
+        } else if (card.word) {
+            // 3. Se a carta não tiver NENHUM link de áudio cadastrado, apenas lê a palavra
+            const utterance = new SpeechSynthesisUtterance(card.word);
+            utterance.lang = 'en-US';
+            window.speechSynthesis.speak(utterance);
         }
-    });
+    }););
 
     // Buscar dados do banco
     try {
