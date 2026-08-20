@@ -38,6 +38,7 @@ export async function openFlashcards() {
     modalBody.innerHTML = `
         <div id="flashcards-container" style="width: 100%; height: 100%; display: flex; flex-direction: column;">
             <button id="fc-btn-close-modal" style="position: absolute; top: 0px; right: 0px; background: #e74c3c; color: white; border: 3px solid #c0392b; border-radius: 50%; width: 40px; height: 40px; font-weight: bold; cursor: pointer; z-index: 20; display: flex; align-items: center; justify-content: center;">✕</button>
+            
             <!-- View 1: Stacks Menu -->
             <div id="fc-stacks-view" style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; padding: 20px;">
                 <p>Carregando seus stacks...</p>
@@ -68,6 +69,12 @@ export async function openFlashcards() {
             </div>
         </div>
     `;
+    const btnCloseModal = document.getElementById('fc-btn-close-modal');
+    if (btnCloseModal) {
+        btnCloseModal.addEventListener('click', () => {
+            modal.close();
+        });
+    }
 
     modal.showModal();
 
