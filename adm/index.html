@@ -38,6 +38,7 @@
             <button class="nav-btn" data-target="planner-section">Planejamentos</button>
             <button class="nav-btn" data-target="users-section">Usuários</button>
             <button class="nav-btn" data-target="missions-section">Missões</button>
+            <button class="nav-btn" data-target="flashcards-section">Flashcards</button>
         </nav>
 
         <main>
@@ -83,6 +84,17 @@
                     <!-- Preenchido via JS -->
                 </div>
             </section>
+
+            <!-- FLASHCARDS SECTION -->
+            <section id="flashcards-section" class="content-section hidden">
+                <div class="section-header">
+                    <h2>Gerenciamento de Flashcards</h2>
+                    <button id="btn-add-flashcard" class="btn-primary">+ Novo Flashcard</button>
+                </div>
+                <div id="flashcards-list" class="cards-container">
+                    <!-- Preenchido via JS -->
+                </div>
+            </section>
         </main>
     </div>
 
@@ -121,6 +133,24 @@
             <div class="modal-actions">
                 <button type="submit" class="btn-primary">Salvar</button>
                 <button type="button" class="btn-secondary" onclick="document.getElementById('mission-modal').close()">Cancelar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- MODAL FLASHCARDS -->
+    <dialog id="flashcard-modal">
+        <form id="flashcard-form">
+            <h3 id="flashcard-modal-title">Adicionar Flashcard</h3>
+            <input type="hidden" id="flashcard-id">
+            <div class="form-grid">
+                <label class="full-width">Palavra (Word): <input type="text" id="fc-word" required></label>
+                <label class="full-width">Tradução: <input type="text" id="fc-translation" required></label>
+                <label class="full-width">Link de Áudio (audio_link): <input type="text" id="fc-audio"></label>
+                <label class="full-width">Stack (Baralho): <input type="text" id="fc-stack" required></label>
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn-primary">Salvar</button>
+                <button type="button" class="btn-secondary" onclick="document.getElementById('flashcard-modal').close()">Cancelar</button>
             </div>
         </form>
     </dialog>
