@@ -3,7 +3,7 @@ import { supabase } from './supabaseClient.js';
 import { runWithLoader } from './loader.js';
 import { openProfileCard } from './profileCard.js';
 
-// Função auxiliar para sanitizar e converter pontuações e estrelas para números válidos
+// Função auxiliar para sanitizar e converter pontuações e stars para números válidos
 function parseNumber(val) {
     if (val === null || val === undefined) return 0;
     if (typeof val === 'number') return isNaN(val) ? 0 : val;
@@ -62,7 +62,7 @@ export async function openSuperStars() {
         const { data: rawUsers, error } = await runWithLoader(async () => {
             return await supabase
                 .from('users')
-                .select('username, score, estrelas, serie, team, avatar_url, rank')
+                .select('username, score, stars, serie, team, avatar_url, rank')
                 .neq('username', 'micael.svg'); // Remove o admin da busca
         });
 
@@ -76,12 +76,12 @@ export async function openSuperStars() {
             return;
         }
 
-        // Ordena os usuários por Score (Maior -> Menor) e por Estrelas como desempate
+        // Ordena os usuários por Score (Maior -> Menor) e por stars como desempate
         const sortedUsers = validUsers.sort((a, b) => {
             const scoreA = parseNumber(a.score);
             const scoreB = parseNumber(b.score);
-            const starsA = parseNumber(a.estrelas);
-            const starsB = parseNumber(b.estrelas);
+            const starsA = parseNumber(a.stars);
+            const starsB = parseNumber(b.stars);
 
             if (scoreB !== scoreA) {
                 return scoreB - scoreA;
