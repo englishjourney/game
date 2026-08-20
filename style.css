@@ -866,3 +866,121 @@ dialog.profile-card-dialog::backdrop {
     left: 200%;
     transition: 0.7s ease-in-out;
 }
+/* ================= FLASHCARDS UI ================= */
+
+/* Botões dos Stacks (Formato de Carta) */
+.stack-card-btn {
+    width: 120px;
+    height: 160px;
+    background: linear-gradient(135deg, var(--primary-color), #4a6582);
+    color: white;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+    padding: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.stack-card-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+}
+
+.stack-card-btn h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.2em;
+}
+
+.stack-card-btn p {
+    margin: 0;
+    font-size: 0.85em;
+    opacity: 0.8;
+}
+
+/* Área da Carta Empilhada */
+.flashcard-container {
+    width: 100%;
+    max-width: 350px;
+    aspect-ratio: 3 / 4;
+    perspective: 1000px; /* Cria profundidade para o 3D */
+    cursor: pointer;
+}
+
+.flashcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+    transform-style: preserve-3d;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+    border-radius: 16px;
+}
+
+/* Estado da carta virada */
+.flashcard-inner.flipped {
+    transform: rotateY(180deg);
+}
+
+/* Faces da Carta */
+.flashcard-front, .flashcard-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Frente */
+.flashcard-front {
+    background-color: #ffffff;
+    color: #2c2c2c;
+    border: 2px solid #ddd;
+}
+
+/* Trás (Invertida inicialmente) */
+.flashcard-back {
+    background-color: var(--primary-color, #5b5b8c);
+    color: white;
+    transform: rotateY(180deg);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Botão de Áudio */
+.fc-audio-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 1.8em;
+    cursor: pointer;
+    transition: transform 0.2s;
+    padding: 5px;
+}
+
+.fc-audio-btn:hover {
+    transform: scale(1.2);
+}
+
+/* Texto das Cartas */
+.fc-text {
+    font-size: 2em;
+    margin: 0;
+    word-wrap: break-word;
+    max-width: 100%;
+    text-align: center;
+}
