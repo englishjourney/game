@@ -897,3 +897,19 @@ dialog.superstar-dialog {
 .audio-btn { cursor: pointer; padding: 5px 10px; }
 .audio-btn .loader-mini { display: block; }
 .audio-btn.ready .loader-mini { display: none; } /* Esconde o "Carregando" quando áudio estiver pronto */
+
+/* ================= BOTÃO FLASHCARDS (ARCADE) ================= */
+#btn-flashcards {
+    transition: all 0.2s ease-in-out;
+}
+
+#btn-flashcards:hover {
+    background-color: var(--primary-color); /* Fica Amarelo */
+    color: #2c254a; /* Texto escuro */
+    border-color: #f39c12;
+    transform: scale(1.05) rotate(-2deg); /* Dá uma leve inclinada "divertida" */
+}
+
+#btn-flashcards:active {
+    transform: scale(0.95);
+}
