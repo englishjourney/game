@@ -79,10 +79,10 @@ async function loadFlashcards() {
 
         cards.forEach(fc => {
             html += `
-                <div class="card-item" style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+                <div class="card-item" style="border: 1px solid #334155; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; background: #1e293b; color: #ffffff;">
                     <div>
                         <strong>Palavra:</strong> ${fc.word} | <strong>Tradução:</strong> ${fc.translation} <br>
-                        <small>Áudio: ${fc.audio_link || 'Nenhum'}</small>
+                        <small style="color: #cbd5e1;">Áudio: ${fc.audio_link || 'Nenhum'}</small>
                     </div>
                     <div>
                         <button class="btn-secondary btn-edit-fc" data-id="${fc.id}" data-word="${fc.word}" data-translation="${fc.translation}" data-audio="${fc.audio_link || ''}" data-stack="${fc.stack || ''}">Editar</button>
