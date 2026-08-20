@@ -89,9 +89,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         btnSuperstars.addEventListener('click', () => {
             openSuperStars();
         });
-        // Exemplo de como vincular o botão
-document.getElementById('btn-flashcards').addEventListener('click', openFlashcards);
     }
+    
+document.getElementById('btn-flashcards').addEventListener('click', openFlashcards);
     
     const btnCloseModal = document.getElementById('btn-close-modal');
     if (btnCloseModal && modal) {
