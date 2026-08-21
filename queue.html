@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>May i go...</title>
+    
+    <!-- Link para o manifesto dinâmico (PWA) -->
+    <link rel="manifest" id="manifest-link">
+    
+    <!-- Importando o Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --primary: #2563eb;
+            --water: #0ea5e9;
+            --bathroom: #8b5cf6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text: #1f2937;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
+        }
+
+        h1 { margin-top: 0; font-size: 2rem; }
+        h2 { margin-top: 0; font-size: 1.5rem; }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .btn-water { background-color: var(--water); }
+        .btn-bathroom { background-color: var(--bathroom); }
+        .btn-refresh { background-color: var(--primary); }
+        .btn-return { background-color: var(--success); }
+        .btn-danger { background-color: var(--danger); }
+        
+        .btn-install { 
+            background-color: #374151;
+            margin-top: 1.5rem;
+            font-size: 0.9rem; 
+            padding: 0.8rem; 
+            display: none;
+        }
+
+        /* Modais */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 350px;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input:focus { border-color: var(--primary); }
+
+        /* Telas */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* Painel Admin */
+        #admin-list {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 1.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+            text-align: left;
+        }
+        
+        .admin-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.95rem;
+        }
+        
+        .admin-item span { font-weight: 500; }
+        .btn-admin-action {
+            background-color: var(--success);
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .status-huge {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 1rem 0;
+        }
+        .status-0 { color: var(--success); }
+    </style>
+</head>
+<body>
+
+    <!-- TELA 1: Principal -->
+    <div id="screen-home" class="container screen active">
+        <h1>May i go...</h1>
+        <button class="btn btn-water" onclick="openUserModal('water')">to drink water</button>
+        <button class="btn btn-bathroom" onclick="openUserModal('bathroom')">To the bathroom</button>
+        <button id="btn-install" class="btn btn-install">Instalar Aplicativo</button>
+    </div>
+
+    <!-- TELA 2: Fila do Aluno -->
+    <div id="screen-queue" class="container screen">
+        <h2>Seu Status</h2>
+        <div id="queue-position" class="status-huge">...</div>
+        <p id="queue-message">Aguarde sua vez...</p>
+        <button class="btn btn-refresh" onclick="checkQueue()">verificar a fila</button>
+        <button class="btn btn-return" onclick="returnToClass()">Voltei à sala</button>
+    </div>
+
+    <!-- TELA 3: Painel Admin -->
+    <div id="screen-admin" class="container screen">
+        <h2>Fila Atual</h2>
+        <ul id="admin-list"></ul>
+        <button class="btn btn-refresh" onclick="loadAdminQueue()">Atualizar Fila</button>
+        <button class="btn btn-danger" onclick="closeAdmin()">Sair do Painel</button>
+    </div>
+
+    <!-- MODAL: Username -->
+    <div id="modal-user" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Identificação</h2>
+            <p>Informe seu nome de usuário:</p>
+            <input type="text" id="input-username" placeholder="Nome de usuário" autocomplete="off">
+            <button class="btn btn-refresh" id="btn-confirm-user" onclick="joinQueue()">Confirmar</button>
+            <button class="btn btn-danger" onclick="closeModal('modal-user')">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- MODAL: Senha Admin -->
+    <div id="modal-admin" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Acesso Restrito</h2>
+            <p>Senha (micael.svg):</p>
+            <input type="password" id="input-admin-psswd" placeholder="Senha">
+            <button class="btn btn-refresh" onclick="verifyAdmin()">Entrar</button>
+            <button class="btn btn-danger" onclick="closeModal('modal-admin')">Cancelar</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIGURAÇÕES DO SUPABASE
+        // ==========================================
+        const SUPABASE_URL = 'COLE_AQUI_A_URL_DO_SEU_SUPABASE';
+        const SUPABASE_ANON_KEY = 'COLE_AQUI_A_ANON_KEY_DO_SEU_SUPABASE';
+        
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Variáveis Globais
+        let currentGoingTo = '';
+        let myStudentName = localStorage.getItem('queue_name') || null;
+        let deferredPrompt;
+
+        // ==========================================
+        // PWA (INSTALAÇÃO NO CHROMEBOOK)
+        // ==========================================
+        function setupPWA() {
+            const manifest = {
+                name: "May I Go",
+                short_name: "May I Go",
+                start_url: ".",
+                display: "standalone",
+                background_color: "#f0f2f5",
+                theme_color: "#2563eb",
+                icons: [{ 
+                    src: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzI1NjNlYiIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1zaXplPSI0MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPj88L3RleHQ+PC9zdmc+", 
+                    sizes: "192x192", 
+                    type: "image/svg+xml" 
+                }]
+            };
+            const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+            document.getElementById('manifest-link').href = URL.createObjectURL(blob);
+
+            const swCode = `self.addEventListener('fetch', ()=>{});`;
+            const swBlob = new Blob([swCode], {type: 'application/javascript'});
+            navigator.serviceWorker.register(URL.createObjectURL(swBlob));
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                document.getElementById('btn-install').style.display = 'block';
+            });
+
+            document.getElementById('btn-install').addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') document.getElementById('btn-install').style.display = 'none';
+                    deferredPrompt = null;
+                }
+            });
+        }
+        setupPWA();
+
+        // ==========================================
+        // FLUXO DO ALUNO
+        // ==========================================
+        window.onload = () => {
+            if (myStudentName) {
+                switchScreen('screen-queue');
+                checkQueue();
+            }
+        };
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function openUserModal(destination) {
+            currentGoingTo = destination;
+            document.getElementById('input-username').value = '';
+            document.getElementById('modal-user').style.display = 'flex';
+            document.getElementById('input-username').focus();
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        async function joinQueue() {
+            const usernameInput = document.getElementById('input-username').value.trim();
+            const btn = document.getElementById('btn-confirm-user');
+            
+            if (!usernameInput) return alert('Digite o nome de usuário!');
+            
+            btn.disabled = true;
+            btn.innerText = 'Verificando...';
+
+            try {
+                // 1. Validar usuário e pegar o 'name'
+                const { data: user, error: userError } = await supabase
+                    .from('users')
+                    .select('name')
+                    .eq('username', usernameInput)
+                    .single();
+
+                if (userError || !user) throw new Error('Usuário não encontrado.');
+                const realName = user.name;
+
+                // 2. Verificar se já está na fila
+                const { data: alreadyInQueue } = await supabase
+                    .from('queue')
+                    .select('*')
+                    .eq('name', realName)
+                    .single();
+
+                if (alreadyInQueue) {
+                    alert('Você já está na fila!');
+                } else {
+                    // 3. Pegar próxima posição
+                    const { data: maxPosData } = await supabase
+                        .from('queue')
+                        .select('position')
+                        .order('position', { ascending: false })
+                        .limit(1);
+
+                    let newPosition = 0;
+                    if (maxPosData && maxPosData.length > 0) {
+                        newPosition = maxPosData[0].position + 1;
+                    }
+
+                    // 4. Inserir
+                    const { error: insertError } = await supabase
+                        .from('queue')
+                        .insert([{ name: realName, goingTo: currentGoingTo, position: newPosition }]);
+
+                    if (insertError) throw new Error('Erro ao entrar na fila.');
+                }
+
+                // Salvar localmente e mostrar tela
+                myStudentName = realName;
+                localStorage.setItem('queue_name', myStudentName);
+                closeModal('modal-user');
+                switchScreen('screen-queue');
+                checkQueue();
+
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Confirmar';
+            }
+        }
+
+        async function checkQueue() {
+            if (!myStudentName) return;
+            const posDisplay = document.getElementById('queue-position');
+            const msgDisplay = document.getElementById('queue-message');
+            
+            posDisplay.innerText = '...';
+            posDisplay.classList.remove('status-0');
+
+            const { data: myQueueInfo } = await supabase
+                .from('queue')
+                .select('position')
+                .eq('name', myStudentName)
+                .single();
+
+            if (!myQueueInfo) {
+                // Usuário foi removido (pelo admin ou por si mesmo noutro PC)
+                localStorage.removeItem('queue_name');
+                myStudentName = null;
+                switchScreen('screen-home');
+                return;
+            }
+
+            const pos = myQueueInfo.position;
+            
+            if (pos === 0) {
+                posDisplay.innerText = 'Sua vez';
+                posDisplay.classList.add('status-0');
+                msgDisplay.innerText = 'Pode ir!';
+            } else {
+                posDisplay.innerText = pos;
+                msgDisplay.innerText = `Posição atual na fila`;
+            }
+        }
+
+        async function returnToClass() {
+            if (!myStudentName) return;
+            await removeUserFromQueue(myStudentName);
+            
+            localStorage.removeItem('queue_name');
+            myStudentName = null;
+            switchScreen('screen-home');
+        }
+
+        // ==========================================
+        // LÓGICA DE REPOSICIONAMENTO DA FILA
+        // ==========================================
+        async function removeUserFromQueue(nameToRemove) {
+            try {
+                const { data: userToRemove } = await supabase
+                    .from('queue')
+                    .select('position')
+                    .eq('name', nameToRemove)
+                    .single();
+
+                if (!userToRemove) return;
+                const removedPos = userToRemove.position;
+
+                await supabase.from('queue').delete().eq('name', nameToRemove);
+
+                const { data: others } = await supabase
+                    .from('queue')
+                    .select('name, position')
+                    .gt('position', removedPos);
+
+                if (others && others.length > 0) {
+                    for (let person of others) {
+                        await supabase
+                            .from('queue')
+                            .update({ position: person.position - 1 })
+                            .eq('name', person.name);
+                    }
+                }
+            } catch (err) {
+                console.error('Erro na fila:', err);
+            }
+        }
+
+        // ==========================================
+        // FLUXO DO ADMINISTRADOR (micael.svg)
+        // ==========================================
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.altKey && e.key === 'ArrowRight') {
+                document.getElementById('input-admin-psswd').value = '';
+                document.getElementById('modal-admin').style.display = 'flex';
+                document.getElementById('input-admin-psswd').focus();
+            }
+        });
+
+        async function verifyAdmin() {
+            const psswd = document.getElementById('input-admin-psswd').value;
+            
+            const { data: adminData } = await supabase
+                .from('users')
+                .select('*')
+                .eq('username', 'micael.svg')
+                .eq('psswd', psswd)
+                .single();
+
+            if (adminData) {
+                closeModal('modal-admin');
+                switchScreen('screen-admin');
+                loadAdminQueue();
+            } else {
+                alert('Senha incorreta!');
+            }
+        }
+
+        function closeAdmin() {
+            if (myStudentName) {
+                switchScreen('screen-queue');
+                checkQueue();
+            } else {
+                switchScreen('screen-home');
+            }
+        }
+
+        async function loadAdminQueue() {
+            const listEl = document.getElementById('admin-list');
+            listEl.innerHTML = '<li>Carregando...</li>';
+
+            const { data: queueData } = await supabase
+                .from('queue')
+                .select('*')
+                .order('position', { ascending: true });
+
+            listEl.innerHTML = '';
+
+            if (!queueData || queueData.length === 0) {
+                listEl.innerHTML = '<li>A fila está vazia.</li>';
+                return;
+            }
+
+            queueData.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'admin-item';
+                const destino = item.goingTo === 'water' ? 'Água' : 'Banheiro';
+                
+                li.innerHTML = `
+                    <span>[${item.position}] ${item.name} (${destino})</span>
+                    <button class="btn-admin-action" onclick="adminRemoveUser('${item.name}')">ja voltou para a sala</button>
+                `;
+                listEl.appendChild(li);
+            });
+        }
+
+        async function adminRemoveUser(name) {
+            await removeUserFromQueue(name);
+            loadAdminQueue();
+        }
+    </script>
+</body>
+</html>
