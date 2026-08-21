@@ -15,13 +15,16 @@
 }
 
 body {
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    font-family: var(--font-main);
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-main);
+    min-height: 100vh; /* Alterado de height para min-height para permitir scroll */
+    display: flex;
+    flex-direction: column; /* Garante que os elementos empilhem verticalmente */
+    justify-content: flex-start; /* Alinha ao topo */
+    align-items: center;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 .hidden { display: none !important; }
