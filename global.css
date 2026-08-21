@@ -1088,3 +1088,164 @@ dialog.superstar-dialog {
         opacity: 1;
     }
 }
+/* ================= NOVO FRAGMENTO: ESTILOS CANDY CRUSH / INTERFACE DE JOGO ================= */
+
+/* --- BARRA DE PROGRESSO "CANDY" --- */
+.candy-progress-container {
+    width: 100%;
+    max-width: 400px;
+    height: 24px;
+    background: #231c3d;
+    border: 3px solid #5b5b8c;
+    border-radius: 20px;
+    padding: 3px;
+    margin: 15px auto;
+    box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.candy-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(180deg, #ff7675 0%, #d63031 50%, #b2bec3 100%);
+    background-size: 100% 100%;
+    border-radius: 12px;
+    transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+}
+
+.candy-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    right: 4px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 4px;
+}
+
+/* --- CONTROLES DE NAVEGAÇÃO DOS FLASHCARDS (SETAS E BOTOES) --- */
+.fc-controls-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-top: 25px;
+}
+
+/* Setas de Navegação (Cima/Baixo/Lados) */
+.btn-candy-arrow {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #00cec9 0%, #0984e3 100%);
+    border: 4px solid #ffffff;
+    color: #ffffff;
+    font-size: 1.8rem;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 6px 0 #0652dd, 0 10px 15px rgba(0, 0, 0, 0.4);
+    transition: transform 0.1s, box-shadow 0.1s;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.btn-candy-arrow:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+.btn-candy-arrow:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #0652dd, 0 4px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Botão de Virar Carta (Candy Yellow) */
+.btn-candy-flip {
+    padding: 12px 24px;
+    border-radius: 25px;
+    background: linear-gradient(180deg, #ffeaa7 0%, #fdcb6e 100%);
+    border: 4px solid #ffffff;
+    color: #2d3436;
+    font-size: 1.2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #e17055, 0 10px 15px rgba(0, 0, 0, 0.3);
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.btn-candy-flip:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #e17055;
+}
+
+/* --- BOTÕES DE RESPOSTA / AÇÃO (ACERTO / ERRO) --- */
+.candy-action-grid {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.btn-candy-success {
+    background: linear-gradient(180deg, #55efc4 0%, #00b894 100%);
+    border: 3px solid #ffffff;
+    color: white;
+    font-weight: bold;
+    padding: 12px 20px;
+    border-radius: 18px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #00896c, 0 8px 12px rgba(0, 0, 0, 0.3);
+    font-size: 1.1rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.btn-candy-danger {
+    background: linear-gradient(180deg, #ff7675 0%, #d63031 100%);
+    border: 3px solid #ffffff;
+    color: white;
+    font-weight: bold;
+    padding: 12px 20px;
+    border-radius: 18px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #b21f1f, 0 8px 12px rgba(0, 0, 0, 0.3);
+    font-size: 1.1rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.btn-candy-success:active,
+.btn-candy-danger:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.4);
+}
+
+/* --- BADGES E BANNERS RECHEADOS --- */
+.candy-badge {
+    background: linear-gradient(180deg, #a29bfe 0%, #6c5ce7 100%);
+    border: 3px solid #ffffff;
+    color: #ffffff;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 900;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 0 #4834d4;
+    display: inline-block;
+    text-transform: uppercase;
+}
+
+.sweet-banner-title {
+    background: linear-gradient(180deg, #ff7675 0%, #e84393 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 2.2rem;
+    font-weight: 900;
+    text-align: center;
+    filter: drop-shadow(2px 4px 0px #2c254a);
+    margin-bottom: 15px;
+}
