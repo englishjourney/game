@@ -1,4 +1,3 @@
-Perfeito! Agora com base no arquivo do ensino medio meio neon, crie os estilos para a mesma interface desse html e js que vc enviou agora ha pouco: /* Sobrescrevendo variáveis para o tema High School */
 :root {
     --bg-color: #05050a; /* Fundo quase preto */
     --panel-bg: rgba(10, 15, 30, 0.85); /* Fundo translúcido azul escuro */
@@ -1041,5 +1040,3 @@ dialog.profile-card-dialog::backdrop {
         opacity: 1;
     }
 }
-
-Não altere nada que eu não pedi, não simplifique nem "melhore" o codigo pra não bugar nada.
