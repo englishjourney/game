@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordy | Aprenda Novos Idiomas</title>
+    <!-- Fonte do Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Ícones do FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Reset básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #f8faff;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Cabeçalho */
+        header {
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: #6C63FF; /* Cor principal */
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Seção Hero principal */
+        .hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 80px 5%;
+            min-height: 85vh;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero-content {
+            flex: 1;
+            padding-right: 50px;
+        }
+
+        .hero-content h1 {
+            font-size: 3.5rem;
+            line-height: 1.2;
+            color: #1a1a1a;
+            margin-bottom: 20px;
+        }
+
+        .hero-content h1 span {
+            color: #6C63FF;
+        }
+
+        .hero-content p {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 40px;
+            max-width: 500px;
+        }
+
+        /* Botões de Download */
+        .store-buttons {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn-store {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background-color: #111;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .btn-store:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-store i {
+            font-size: 30px;
+        }
+
+        .btn-texts {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .btn-texts span:first-child {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-texts span:last-child {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Imagem do App (Mockup) */
+        .hero-image {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Criando um celular com CSS para servir de placeholder */
+        .phone-mockup {
+            width: 300px;
+            height: 600px;
+            background: linear-gradient(135deg, #6C63FF, #4facfe);
+            border-radius: 40px;
+            border: 12px solid #111;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .phone-mockup::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 25px;
+            background-color: #111;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+        }
+
+        .phone-mockup h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        /* Rodapé */
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            background-color: #111;
+            color: #fff;
+        }
+
+        /* Responsividade para celulares */
+        @media (max-width: 768px) {
+            .hero {
+                flex-direction: column;
+                text-align: center;
+                padding: 40px 5%;
+            }
+            .hero-content {
+                padding-right: 0;
+                margin-bottom: 50px;
+            }
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+            .hero-content p {
+                margin: 0 auto 30px auto;
+            }
+            .store-buttons {
+                justify-content: center;
+            }
+            .phone-mockup {
+                width: 260px;
+                height: 520px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="#" class="logo">
+            <i class="fa-solid fa-language"></i> Wordy
+        </a>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Domine novos idiomas com o <span>Wordy</span></h1>
+            <p>O aplicativo perfeito para expandir seu vocabulário, melhorar sua pronúncia e alcançar a fluência de forma divertida e prática no seu dia a dia.</p>
+            
+            <div class="store-buttons">
+                <!-- Link iOS -->
+                <a href="https://apps.apple.com/us/app/wordy-language-learning/id6670703228" target="_blank" rel="noopener noreferrer" class="btn-store">
+                    <i class="fa-brands fa-apple"></i>
+                    <div class="btn-texts">
+                        <span>Baixar na</span>
+                        <span>App Store</span>
+                    </div>
+                </a>
+
+                <!-- Link Android -->
+                <a href="https://play.google.com/store/apps/details?id=com.appalex.learnlanguages&hl=pt_BR" target="_blank" rel="noopener noreferrer" class="btn-store">
+                    <i class="fa-brands fa-google-play"></i>
+                    <div class="btn-texts">
+                        <span>Disponível no</span>
+                        <span>Google Play</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="hero-image">
+            <!-- Representação visual do celular -->
+            <div class="phone-mockup">
+                <div>
+                    <i class="fa-solid fa-earth-americas" style="font-size: 60px; margin-bottom: 20px;"></i>
+                    <h2>Wordy</h2>
+                    <p>Aprender nunca foi tão fácil.</p>
+                </div>
+            </div>
+            <!-- NOTA: Se você tiver uma imagem real das telas do seu app, você pode substituir a div .phone-mockup pela tag abaixo: -->
+            <!-- <img src="sua-imagem-do-app.png" alt="Telas do aplicativo Wordy" style="max-width: 100%; height: auto;"> -->
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 Wordy. Todos os direitos reservados.</p>
+    </footer>
+
+</body>
+</html>
