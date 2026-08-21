@@ -6,6 +6,34 @@ import { openRanking } from './rank.js';
 import { openSuperStars } from './SuperStar.js';
 import { openFlashcards } from './flashcards.js';
 
+document.addEventListener('DOMContentLoaded', () => {
+  // Configura evento do botão principal de abrir as recomendações
+  const btnRecomenda = document.getElementById('btn-recomenda-teacher');
+  
+  if (btnRecomenda) {
+    btnRecomenda.addEventListener('click', () => {
+      // Exibe a dialog principal
+      document.getElementById('dialog-recomenda-teacher').classList.remove('oculto');
+      
+      // Carrega o TXT apenas se ainda não foi carregado
+      if (typeof listaDeAppsRecomendados !== 'undefined' && listaDeAppsRecomendados.length === 0) {
+        carregarAppsDoTeacher();
+      }
+    });
+  }
+
+  // Bônus: Fecha os modais se o aluno clicar fora da caixinha (no overlay escuro)
+  const modais = document.querySelectorAll('.modal-overlay');
+  modais.forEach(modal => {
+    modal.addEventListener('click', (e) => {
+      // Se clicou exatamente no fundo preto (não no conteúdo)
+      if (e.target === modal) {
+        modal.classList.add('oculto');
+      }
+    });
+  });
+});
+
 document.addEventListener("DOMContentLoaded", async () => {
     // Executa a verificação de segurança controlada primeiro
     await initSecurity();
