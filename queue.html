@@ -209,7 +209,8 @@
         const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
         
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // CORREÇÃO: "db" ao invés de "supabase" para não conflitar com a biblioteca importada
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // Variáveis Globais
         let currentGoingTo = '';
@@ -294,7 +295,7 @@
 
             try {
                 // 1. Validar usuário e pegar o 'name'
-                const { data: user, error: userError } = await supabase
+                const { data: user, error: userError } = await db
                     .from('users')
                     .select('name')
                     .eq('username', usernameInput)
@@ -304,7 +305,7 @@
                 const realName = user.name;
 
                 // 2. Verificar se já está na fila
-                const { data: alreadyInQueue } = await supabase
+                const { data: alreadyInQueue } = await db
                     .from('queue')
                     .select('*')
                     .eq('name', realName)
@@ -314,7 +315,7 @@
                     alert('Você já está na fila!');
                 } else {
                     // 3. Pegar próxima posição
-                    const { data: maxPosData } = await supabase
+                    const { data: maxPosData } = await db
                         .from('queue')
                         .select('position')
                         .order('position', { ascending: false })
@@ -326,7 +327,7 @@
                     }
 
                     // 4. Inserir
-                    const { error: insertError } = await supabase
+                    const { error: insertError } = await db
                         .from('queue')
                         .insert([{ name: realName, goingTo: currentGoingTo, position: newPosition }]);
 
@@ -356,7 +357,7 @@
             posDisplay.innerText = '...';
             posDisplay.classList.remove('status-0');
 
-            const { data: myQueueInfo } = await supabase
+            const { data: myQueueInfo } = await db
                 .from('queue')
                 .select('position')
                 .eq('name', myStudentName)
@@ -396,7 +397,7 @@
         // ==========================================
         async function removeUserFromQueue(nameToRemove) {
             try {
-                const { data: userToRemove } = await supabase
+                const { data: userToRemove } = await db
                     .from('queue')
                     .select('position')
                     .eq('name', nameToRemove)
@@ -405,16 +406,16 @@
                 if (!userToRemove) return;
                 const removedPos = userToRemove.position;
 
-                await supabase.from('queue').delete().eq('name', nameToRemove);
+                await db.from('queue').delete().eq('name', nameToRemove);
 
-                const { data: others } = await supabase
+                const { data: others } = await db
                     .from('queue')
                     .select('name, position')
                     .gt('position', removedPos);
 
                 if (others && others.length > 0) {
                     for (let person of others) {
-                        await supabase
+                        await db
                             .from('queue')
                             .update({ position: person.position - 1 })
                             .eq('name', person.name);
@@ -439,7 +440,7 @@
         async function verifyAdmin() {
             const psswd = document.getElementById('input-admin-psswd').value;
             
-            const { data: adminData } = await supabase
+            const { data: adminData } = await db
                 .from('users')
                 .select('*')
                 .eq('username', 'micael.svg')
@@ -468,7 +469,7 @@
             const listEl = document.getElementById('admin-list');
             listEl.innerHTML = '<li>Carregando...</li>';
 
-            const { data: queueData } = await supabase
+            const { data: queueData } = await db
                 .from('queue')
                 .select('*')
                 .order('position', { ascending: true });
