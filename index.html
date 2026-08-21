@@ -89,39 +89,6 @@
             </div>
         </div>
     </dialog>
-    <!-- Botão lateral flutuante -->
-<button id="btn-recomenda-teacher" class="btn-lateral-teacher">
-  <span class="seta-icone">➤</span>
-</button>
-
-<!-- Dialog 1: Grade de Apps Recomendados -->
-<div id="dialog-recomenda-teacher" class="modal-overlay oculto">
-  <div class="modal-conteudo modal-grade">
-    <div class="modal-cabecalho">
-      <h2>Recomendações do Teacher</h2>
-      <button class="btn-fechar" onclick="fecharDialog('dialog-recomenda-teacher')">✖</button>
-    </div>
-    <div class="modal-corpo">
-      <div id="grade-apps" class="grid-apps">
-        <!-- Os apps serão renderizados aqui pelo apps.js -->
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Dialog 2: Detalhes do App -->
-<div id="dialog-app-detalhe" class="modal-overlay oculto">
-  <div class="modal-conteudo modal-detalhe">
-    <div class="modal-cabecalho">
-      <h2 id="detalhe-nome-app">Nome do App</h2>
-      <button class="btn-fechar" onclick="fecharDialog('dialog-app-detalhe')">✖</button>
-    </div>
-    <div class="modal-corpo">
-      <p id="detalhe-desc-app">Descrição do App...</p>
-      <a id="detalhe-link-app" href="#" target="_blank" class="btn-acessar-app">Acessar App</a>
-    </div>
-  </div>
-</div>
 
     <!-- Scripts Modulares -->
     <script type="module" src="main.js"></script>
