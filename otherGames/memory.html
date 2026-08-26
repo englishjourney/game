@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Game - Animals</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #app {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .hidden {
+            display: none !important;
+        }
+        input {
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 300px;
+            margin-bottom: 15px;
+            outline: none;
+        }
+        input:focus {
+            border-color: #2196F3;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .info-bar {
+            display: flex;
+            justify-content: space-between;
+            background: #e3f2fd;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #1565c0;
+        }
+
+        /* Jogo da Memória */
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            perspective: 1000px;
+            margin: 0 auto;
+        }
+        
+        @media (max-width: 600px) {
+            .memory-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .memory-card {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 2 / 3; /* Força o formato Retrato (Vertical) */
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .memory-card.flip {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Lado Oculto (Verso) - Cor azul claro e borda amarelo escuro */
+        .card-hidden {
+            background-color: #add8e6; 
+            border: 4px solid #b8860b; 
+        }
+
+        /* Lado Revelado (Frente) */
+        .card-revealed {
+            background-color: #fff;
+            transform: rotateY(180deg);
+            border: 2px solid #ccc;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .card-revealed img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .correct-msg { color: #4CAF50; }
+        .incorrect-msg { color: #F44336; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <!-- TELA DE LOGIN -->
+        <div id="login-screen">
+            <h1>Memory Game - Animals</h1>
+            <p>Encontre os pares para ganhar pontos.</p>
+            <input type="text" id="username-input" placeholder="Digite seu nome de usuário" />
+            <br>
+            <button id="btn-login">Entrar</button>
+            <p id="login-error" class="hidden incorrect-msg" style="margin-top: 10px;">Usuário não encontrado. Tente novamente.</p>
+        </div>
+
+        <!-- TELA DO JOGO -->
+        <div id="game-screen" class="hidden">
+            <div class="info-bar">
+                <span id="player-name">Jogador: ---</span>
+                <span id="score-info">Pares encontrados: 0 / 10</span>
+            </div>
+
+            <div class="memory-grid" id="memory-grid">
+                <!-- Cartas geradas via JS -->
+            </div>
+        </div>
+
+        <!-- TELA DE RESULTADO FINAL -->
+        <div id="result-screen" class="hidden">
+            <h1>Fim de Jogo!</h1>
+            <h2 id="final-score-text">Você encontrou todos os pares.</h2>
+            <p id="reward-text" style="font-size: 18px; margin: 20px 0;"></p>
+            <!-- Sem botão de jogar novamente conforme solicitado -->
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from '../supabaseClient.js';
+
+        // --- DADOS DOS PARES (IMAGEM e TEXTO) ---
+        const animalPairs = [
+            { id: 'lion', text: 'Lion', img: 'https://images.unsplash.com/photo-1614027164847-1b28cfe1df60?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxleHBsb3JlLWZlZWR8Mnx8fGVufDB8fHx8fA%3D%3D' },
+            { id: 'bird', text: 'Bird', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjWJ47eD1SBj91V1Ii1ngSZ7YKTuR54yY_GML7W6AnwBJQ3_o3yXIKAVY&s=10' },
+            { id: 'ant', text: 'Ant', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQlQM5A3t2HIvnXfShfvVINhLHVL5vkfY_JiGM2zCuU2c9hvuYIIA1lqEk&s=10' },
+            { id: 'worm', text: 'Worm', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2OrzimjJD9Vm607vbgTxKvvTU4wodoSTeoGMTK5W7fU-jRKizNpYZ7KJN&s=10' },
+            { id: 'horse', text: 'Horse', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSoCjg0V_uozoZCvlS4FQwFoD7aqgZtStjImKtvUw6IpxqifFavilPenmU&s=10' },
+            { id: 'cow', text: 'Cow', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQTVJTbjSyY1RYFNIkxP0Tb3bnT2NLic8fN0koOHB-DMVQaIhHUkFEcpLj&s=10' },
+            { id: 'chicken', text: 'Chicken', img: 'https://upload.wikimedia.org/wikipedia/commons/8/84/Male_and_female_chicken_sitting_together.jpg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original' },
+            { id: 'pig', text: 'Pig', img: 'https://i.natgeofe.com/k/0ed36c42-672a-425b-9e62-7cc946b98051/pig-fence_2x3.jpg' },
+            { id: 'sheep', text: 'Sheep', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRD3-798r1z2r6jmzKK69EPvu3J5tCGGkYtQuCxeLm2Q5iClDR6_h9qDQeZ&s=10' },
+            { id: 'fish', text: 'Fish', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQBrtdiSTwRD9n8fgZKjKsLz4FxKkhqtkq5hyptap_Wuw&s=10' }
+        ];
+
+        // Variáveis de Estado do Jogo
+        let currentUser = null;
+        let cardsArray = [];
+        let hasFlippedCard = false;
+        let lockBoard = false;
+        let firstCard, secondCard;
+        let matchedPairs = 0;
+        const totalPairs = animalPairs.length;
+
+        // Referências do DOM
+        const loginScreen = document.getElementById('login-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const btnLogin = document.getElementById('btn-login');
+        const usernameInput = document.getElementById('username-input');
+        const loginError = document.getElementById('login-error');
+        const memoryGrid = document.getElementById('memory-grid');
+        const scoreInfo = document.getElementById('score-info');
+
+        // Lógica de Login
+        btnLogin.addEventListener('click', async () => {
+            const username = usernameInput.value.trim();
+            if (!username) return;
+
+            btnLogin.textContent = "Verificando...";
+            btnLogin.disabled = true;
+            loginError.classList.add('hidden');
+
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('username', username)
+                    .single();
+
+                if (error || !data) {
+                    loginError.classList.remove('hidden');
+                    btnLogin.textContent = "Entrar";
+                    btnLogin.disabled = false;
+                } else {
+                    currentUser = data;
+                    startGame();
+                }
+            } catch (err) {
+                console.error("Erro ao buscar usuário:", err);
+                loginError.textContent = "Erro de conexão. Tente novamente.";
+                loginError.classList.remove('hidden');
+                btnLogin.textContent = "Entrar";
+                btnLogin.disabled = false;
+            }
+        });
+
+        function startGame() {
+            loginScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            document.getElementById('player-name').textContent = `Jogador: ${currentUser.username}`;
+            
+            matchedPairs = 0;
+            scoreInfo.textContent = `Pares encontrados: 0 / ${totalPairs}`;
+            
+            buildDeck();
+        }
+
+        // Constrói e embaralha o baralho
+        function buildDeck() {
+            cardsArray = [];
+            
+            // Para cada animal cria duas cartas: uma de texto e uma de imagem
+            animalPairs.forEach(animal => {
+                cardsArray.push({ type: 'text', id: animal.id, content: animal.text });
+                cardsArray.push({ type: 'image', id: animal.id, content: animal.img });
+            });
+
+            // Embaralha (Fisher-Yates)
+            for (let i = cardsArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cardsArray[i], cardsArray[j]] = [cardsArray[j], cardsArray[i]];
+            }
+
+            renderBoard();
+        }
+
+        function renderBoard() {
+            memoryGrid.innerHTML = '';
+
+            cardsArray.forEach(cardData => {
+                const cardEl = document.createElement('div');
+                cardEl.classList.add('memory-card');
+                cardEl.dataset.id = cardData.id;
+
+                // Lado que fica escondido inicialmente
+                const hiddenFace = document.createElement('div');
+                hiddenFace.classList.add('card-face', 'card-hidden');
+
+                // Lado que revela o conteúdo
+                const revealedFace = document.createElement('div');
+                revealedFace.classList.add('card-face', 'card-revealed');
+
+                if (cardData.type === 'text') {
+                    revealedFace.textContent = cardData.content;
+                } else {
+                    const img = document.createElement('img');
+                    img.src = cardData.content;
+                    img.alt = cardData.id;
+                    revealedFace.appendChild(img);
+                }
+
+                cardEl.appendChild(hiddenFace);
+                cardEl.appendChild(revealedFace);
+
+                cardEl.addEventListener('click', flipCard);
+                memoryGrid.appendChild(cardEl);
+            });
+        }
+
+        function flipCard() {
+            if (lockBoard) return;
+            if (this === firstCard) return;
+
+            this.classList.add('flip');
+
+            if (!hasFlippedCard) {
+                // Primeiro clique
+                hasFlippedCard = true;
+                firstCard = this;
+                return;
+            }
+
+            // Segundo clique
+            secondCard = this;
+            checkForMatch();
+        }
+
+        function checkForMatch() {
+            let isMatch = firstCard.dataset.id === secondCard.dataset.id;
+            isMatch ? disableCards() : unflipCards();
+        }
+
+        function disableCards() {
+            // Remove evento de click das cartas combinadas
+            firstCard.removeEventListener('click', flipCard);
+            secondCard.removeEventListener('click', flipCard);
+            
+            matchedPairs++;
+            scoreInfo.textContent = `Pares encontrados: ${matchedPairs} / ${totalPairs}`;
+
+            resetBoard();
+
+            // Verifica se o jogo acabou
+            if (matchedPairs === totalPairs) {
+                setTimeout(() => {
+                    finishGame();
+                }, 800);
+            }
+        }
+
+        function unflipCards() {
+            lockBoard = true;
+
+            // Retorna as cartas caso não sejam iguais (espera 1s para o jogador ver)
+            setTimeout(() => {
+                firstCard.classList.remove('flip');
+                secondCard.classList.remove('flip');
+                resetBoard();
+            }, 1000);
+        }
+
+        function resetBoard() {
+            [hasFlippedCard, lockBoard] = [false, false];
+            [firstCard, secondCard] = [null, null];
+        }
+
+        async function finishGame() {
+            gameScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+
+            const rewardText = document.getElementById('reward-text');
+            rewardText.textContent = "Processando sua recompensa...";
+            rewardText.className = "correct-msg";
+            
+            try {
+                // Prevenção extra para garantir que a soma será 100% numérica:
+                // Converte para Int na base 10, se vier nulo/vazio, inicia com 0.
+                let currentScore = parseInt(currentUser.score, 10);
+                if (isNaN(currentScore)) currentScore = 0;
+                
+                const newScore = currentScore + 100;
+
+                const { error } = await supabase
+                    .from('users')
+                    .update({ score: newScore })
+                    .eq('id', currentUser.id);
+
+                if (error) {
+                    console.error(error);
+                    rewardText.textContent = "Você ganhou o jogo, mas houve um erro ao salvar a pontuação.";
+                    rewardText.className = "incorrect-msg";
+                } else {
+                    rewardText.innerHTML = `Parabéns! Excelente memória.<br><b>+100 Pontos adicionados à sua conta!</b>`;
+                }
+            } catch (err) {
+                console.error(err);
+                rewardText.textContent = "Erro ao tentar atualizar a pontuação no servidor.";
+                rewardText.className = "incorrect-msg";
+            }
+        }
+    </script>
+</body>
+</html>
