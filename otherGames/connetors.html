@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connectors - Quebra Cabeça de Frases</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #app {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .hidden {
+            display: none !important;
+        }
+        input {
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 300px;
+            margin-bottom: 15px;
+            outline: none;
+        }
+        input:focus {
+            border-color: #2196F3;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .info-bar {
+            display: flex;
+            justify-content: space-between;
+            background: #e3f2fd;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #1565c0;
+        }
+        /* Áreas do Jogo */
+        .area-title {
+            text-align: left;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .card-area {
+            min-height: 100px;
+            border: 2px dashed #bbb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-content: flex-start;
+            background-color: #fafafa;
+        }
+        .word-card {
+            background-color: #2196F3;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        .word-card:active {
+            transform: scale(0.95);
+        }
+        .word-card:hover {
+            background-color: #1976D2;
+        }
+        #feedback {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 15px 0;
+            min-height: 24px;
+        }
+        .correct { color: #4CAF50; }
+        .incorrect { color: #F44336; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <!-- TELA DE LOGIN -->
+        <div id="login-screen">
+            <h1>Connectors Puzzle</h1>
+            <p>Monte as frases corretamente para ganhar pontos.</p>
+            <input type="text" id="username-input" placeholder="Digite seu nome de usuário" />
+            <br>
+            <button id="btn-login">Entrar</button>
+            <p id="login-error" class="hidden incorrect" style="margin-top: 10px;">Usuário não encontrado. Tente novamente.</p>
+        </div>
+
+        <!-- TELA DO JOGO -->
+        <div id="game-screen" class="hidden">
+            <div class="info-bar">
+                <span id="player-name">Jogador: ---</span>
+                <span id="level-info">Frase: 1 / 10</span>
+                <span id="score-info">Acertos: 0</span>
+            </div>
+
+            <div class="area-title">Sua Resposta (Clique nas palavras abaixo para movê-las para cá):</div>
+            <div id="answer-area" class="card-area"></div>
+
+            <div class="area-title">Palavras Disponíveis:</div>
+            <div id="pool-area" class="card-area"></div>
+
+            <div id="feedback"></div>
+            
+            <button id="btn-check">Verificar Resposta</button>
+        </div>
+
+        <!-- TELA DE RESULTADO FINAL -->
+        <div id="result-screen" class="hidden">
+            <h1>Fim de Jogo!</h1>
+            <h2 id="final-score-text">Você acertou X de 10 frases.</h2>
+            <p id="reward-text" style="font-size: 18px; margin: 20px 0;"></p>
+            <button onclick="location.reload()">Jogar Novamente</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from '../supabaseClient.js';
+
+        // --- DADOS DAS FRASES E REGRAS DE INTERCAMBIALIDADE ---
+        // As pontuações foram removidas das palavras para permitir a intercambialidade perfeita.
+        const gameData = [
+            {
+                cards: ["Although", "it", "was", "raining", "we", "decided", "to", "go", "for", "a", "walk"],
+                valid: ["although it was raining we decided to go for a walk"]
+            },
+            {
+                cards: ["I", "don't", "like", "spicy", "food", "In", "other", "words", "I", "prefer", "mild", "meals"],
+                valid: [
+                    "i don't like spicy food in other words i prefer mild meals",
+                    "i don't like mild meals in other words i prefer spicy food"
+                ]
+            },
+            {
+                cards: ["I", "enjoy", "working", "from", "home", "On", "the", "other", "hand", "I", "sometimes", "miss", "talking", "to", "my", "coworkers"],
+                valid: ["i enjoy working from home on the other hand i sometimes miss talking to my coworkers"]
+            },
+            {
+                cards: ["She", "speaks", "English", "and", "Spanish", "Besides", "she", "is", "learning", "German"],
+                valid: [
+                    "she speaks english and spanish besides she is learning german",
+                    "she speaks english and german besides she is learning spanish",
+                    "she speaks spanish and english besides she is learning german",
+                    "she speaks spanish and german besides she is learning english",
+                    "she speaks german and english besides she is learning spanish",
+                    "she speaks german and spanish besides she is learning english"
+                ]
+            },
+            {
+                cards: ["The", "movie", "was", "very", "entertaining", "Moreover", "the", "actors", "gave", "excellent", "performances"],
+                valid: ["the movie was very entertaining moreover the actors gave excellent performances"]
+            },
+            {
+                cards: ["Despite", "being", "tired", "he", "continued", "studying", "for", "the", "exam"],
+                valid: ["despite being tired he continued studying for the exam"]
+            },
+            {
+                cards: ["She", "studied", "hard", "for", "the", "test", "therefore", "she", "got", "a", "very", "good", "grade"],
+                valid: ["she studied hard for the test therefore she got a very good grade"]
+            },
+            {
+                cards: ["I", "stayed", "home", "because", "I", "wasn't", "feeling", "well"],
+                valid: ["i stayed home because i wasn't feeling well"]
+            },
+            {
+                cards: ["Firstly", "we", "need", "to", "understand", "the", "problem", "before", "looking", "for", "a", "solution"],
+                valid: ["firstly we need to understand the problem before looking for a solution"]
+            },
+            {
+                cards: ["Next", "we", "will", "discuss", "some", "examples", "such", "as", "climate", "change", "and", "pollution", "Surely", "these", "are", "important", "issues", "to", "consider"],
+                valid: ["next we will discuss some examples such as climate change and pollution surely these are important issues to consider"]
+            }
+        ];
+
+        // Variáveis de Estado do Jogo
+        let currentUser = null;
+        let currentLevelIndex = 0;
+        let correctCount = 0;
+        
+        let poolCards = [];
+        let answerCards = [];
+        let isChecking = false;
+
+        // Referências do DOM
+        const loginScreen = document.getElementById('login-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const btnLogin = document.getElementById('btn-login');
+        const usernameInput = document.getElementById('username-input');
+        const loginError = document.getElementById('login-error');
+        const btnCheck = document.getElementById('btn-check');
+        const feedbackDiv = document.getElementById('feedback');
+
+        // Lógica de Login
+        btnLogin.addEventListener('click', async () => {
+            const username = usernameInput.value.trim();
+            if (!username) return;
+
+            btnLogin.textContent = "Verificando...";
+            btnLogin.disabled = true;
+            loginError.classList.add('hidden');
+
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('username', username)
+                    .single();
+
+                if (error || !data) {
+                    loginError.classList.remove('hidden');
+                    btnLogin.textContent = "Entrar";
+                    btnLogin.disabled = false;
+                } else {
+                    currentUser = data;
+                    startGame();
+                }
+            } catch (err) {
+                console.error("Erro ao buscar usuário:", err);
+                loginError.textContent = "Erro de conexão. Tente novamente.";
+                loginError.classList.remove('hidden');
+                btnLogin.textContent = "Entrar";
+                btnLogin.disabled = false;
+            }
+        });
+
+        function startGame() {
+            loginScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            document.getElementById('player-name').textContent = `Jogador: ${currentUser.username}`;
+            currentLevelIndex = 0;
+            correctCount = 0;
+            loadLevel();
+        }
+
+        // Embaralha Array (Fisher-Yates)
+        function shuffleArray(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function loadLevel() {
+            isChecking = false;
+            feedbackDiv.textContent = "";
+            btnCheck.disabled = false;
+            btnCheck.textContent = "Verificar Resposta";
+
+            document.getElementById('level-info').textContent = `Frase: ${currentLevelIndex + 1} / 10`;
+            document.getElementById('score-info').textContent = `Acertos: ${correctCount}`;
+
+            const currentData = gameData[currentLevelIndex];
+            
+            answerCards = [];
+            poolCards = shuffleArray(currentData.cards);
+            
+            // Garantir que não comece na ordem correta por acidente
+            const correctString = currentData.valid[0];
+            while(poolCards.join(" ").toLowerCase() === correctString && poolCards.length > 1) {
+                poolCards = shuffleArray(currentData.cards);
+            }
+
+            renderBoard();
+        }
+
+        function renderBoard() {
+            const poolArea = document.getElementById('pool-area');
+            const answerArea = document.getElementById('answer-area');
+            
+            poolArea.innerHTML = '';
+            answerArea.innerHTML = '';
+
+            answerCards.forEach((word, index) => {
+                const card = document.createElement('div');
+                card.className = 'word-card';
+                card.textContent = word;
+                card.onclick = () => { if(!isChecking) moveCard('answer', 'pool', index) };
+                answerArea.appendChild(card);
+            });
+
+            poolCards.forEach((word, index) => {
+                const card = document.createElement('div');
+                card.className = 'word-card';
+                card.textContent = word;
+                card.onclick = () => { if(!isChecking) moveCard('pool', 'answer', index) };
+                poolArea.appendChild(card);
+            });
+        }
+
+        function moveCard(from, to, index) {
+            if (from === 'pool') {
+                answerCards.push(poolCards[index]);
+                poolCards.splice(index, 1);
+            } else {
+                poolCards.push(answerCards[index]);
+                answerCards.splice(index, 1);
+            }
+            renderBoard();
+        }
+
+        // Verifica Resposta
+        btnCheck.addEventListener('click', () => {
+            if (isChecking) return;
+
+            if (poolCards.length > 0) {
+                feedbackDiv.textContent = "Por favor, use todas as palavras antes de verificar!";
+                feedbackDiv.className = "incorrect";
+                return;
+            }
+
+            isChecking = true;
+            btnCheck.disabled = true;
+
+            const currentData = gameData[currentLevelIndex];
+            const userAnswerStr = answerCards.join(" ").toLowerCase();
+
+            // Verifica se a resposta dada está entre as respostas válidas
+            const isCorrect = currentData.valid.some(validAnswer => validAnswer === userAnswerStr);
+
+            if (isCorrect) {
+                correctCount++;
+                feedbackDiv.textContent = "Correto! Muito bem.";
+                feedbackDiv.className = "correct";
+            } else {
+                feedbackDiv.textContent = "Incorreto!";
+                feedbackDiv.className = "incorrect";
+            }
+
+            // Aguarda 1.5s para leitura do feedback e avança
+            setTimeout(() => {
+                currentLevelIndex++;
+                if (currentLevelIndex < gameData.length) {
+                    loadLevel();
+                } else {
+                    finishGame();
+                }
+            }, 1800);
+        });
+
+        async function finishGame() {
+            gameScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+
+            document.getElementById('final-score-text').textContent = `Você acertou ${correctCount} de 10 frases.`;
+            const rewardText = document.getElementById('reward-text');
+
+            if (correctCount >= 5) {
+                rewardText.textContent = "Processando sua recompensa...";
+                rewardText.className = "correct";
+                
+                try {
+                    // Prevenção extra para garantir que a soma será 100% numérica:
+                    // Converte para Int na base 10, se vier nulo/vazio, inicia com 0.
+                    let currentScore = parseInt(currentUser.score, 10);
+                    if (isNaN(currentScore)) currentScore = 0;
+                    
+                    const newScore = currentScore + 100;
+
+                    const { error } = await supabase
+                        .from('users')
+                        .update({ score: newScore })
+                        .eq('id', currentUser.id);
+
+                    if (error) {
+                        console.error(error);
+                        rewardText.textContent = "Você ganhou o jogo, mas houve um erro ao salvar a pontuação.";
+                        rewardText.className = "incorrect";
+                    } else {
+                        rewardText.innerHTML = `Parabéns! Você alcançou o mínimo necessário.<br><b>+100 Pontos adicionados à sua conta!</b>`;
+                    }
+                } catch (err) {
+                    console.error(err);
+                    rewardText.textContent = "Erro ao tentar atualizar a pontuação no servidor.";
+                    rewardText.className = "incorrect";
+                }
+            } else {
+                rewardText.textContent = "Você precisava de pelo menos 5 acertos para ganhar pontos. Continue praticando!";
+                rewardText.className = "incorrect";
+            }
+        }
+    </script>
+</body>
+</html>
