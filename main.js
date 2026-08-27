@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             profileContainer.style.display = 'flex';
             profileContainer.style.flexDirection = 'row';
             profileContainer.style.alignItems = 'center';
-            profileContainer.style.gap = '15px'; // Espaçamento entre o avatar e o sair
+            profileContainer.style.gap = '30px'; // Espaçamento entre o avatar e o sair
         }
 
         if (btnAvatar) {
