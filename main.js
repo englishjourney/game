@@ -18,6 +18,29 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById('auth-screen').classList.add('hidden');
         document.getElementById('app-screen').classList.remove('hidden');
         applyTheme(session.serie);
+
+        // ==========================================
+        // CARREGAMENTO DO AVATAR DO USUÁRIO
+        // ==========================================
+        const userAvatarImg = document.getElementById('user-avatar');
+        const btnAvatar = document.getElementById('btn-avatar');
+
+        if (btnAvatar) {
+            if (session.avatar_url && session.avatar_url.trim() !== '') {
+                if (userAvatarImg) {
+                    userAvatarImg.src = session.avatar_url;
+                }
+            } else {
+                // Se não houver avatar_url, exibe a primeira letra do nome/username
+                const userName = session.name || session.username || 'U';
+                const initialLetter = userName.charAt(0).toUpperCase();
+
+                if (userAvatarImg) {
+                    userAvatarImg.remove();
+                }
+                btnAvatar.textContent = initialLetter;
+            }
+        }
     } else {
         document.getElementById('auth-screen').classList.remove('hidden');
         document.getElementById('app-screen').classList.add('hidden');
