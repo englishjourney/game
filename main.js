@@ -5,7 +5,8 @@ import { openMissions } from './missions.js';
 import { openRanking } from './rank.js';
 import { openSuperStars } from './SuperStar.js';
 import { openFlashcards } from './flashcards.js';
-import { openAppsDialog } from './apps.js'; // INCLUSÃO DA NOVA LÓGICA DE APPS
+import { openAppsDialog } from './apps.js'; 
+import { supabase } from './supabaseClient.js'; // IMPORTAÇÃO DO SUPABASE PARA BUSCA EM TEMPO REAL
 
 document.addEventListener("DOMContentLoaded", async () => {
     // Executa a verificação de segurança controlada primeiro
@@ -23,51 +24,77 @@ document.addEventListener("DOMContentLoaded", async () => {
         // CARREGAMENTO DO AVATAR DO USUÁRIO
         // ==========================================
         const btnAvatar = document.getElementById('btn-avatar');
+        const profileContainer = document.querySelector('.profile-container');
+
+        // Garante que o Avatar e o Botão Sair fiquem lado a lado sem sobrepor
+        if (profileContainer) {
+            profileContainer.style.display = 'flex';
+            profileContainer.style.flexDirection = 'row';
+            profileContainer.style.alignItems = 'center';
+            profileContainer.style.gap = '15px'; // Espaçamento entre o avatar e o sair
+        }
 
         if (btnAvatar) {
-            // Limpa o conteúdo atual do botão para evitar conflitos (remove tag img vazia ou letras antigas)
-            btnAvatar.innerHTML = '';
-            
-            // Reseta estilos básicos do botão para os dois casos
-            btnAvatar.style.padding = '0';
-            btnAvatar.style.background = 'transparent';
-            btnAvatar.style.border = 'none';
-            btnAvatar.style.cursor = 'pointer';
-
-            if (session.avatar_url && session.avatar_url.trim() !== '') {
-                // Se tem imagem, cria a tag <img> dinamicamente e injeta
-                const img = document.createElement('img');
-                img.id = 'user-avatar';
-                img.src = session.avatar_url;
-                img.alt = 'Avatar do Estudante';
+            // Função para montar o visual do Avatar
+            const updateAvatarUI = (avatarUrl, userName) => {
+                btnAvatar.innerHTML = ''; // Limpa conteúdo anterior
                 
-                // Estiliza a imagem para ser um círculo perfeito
-                img.style.width = '45px';
-                img.style.height = '45px';
-                img.style.borderRadius = '50%';
-                img.style.objectFit = 'cover';
-                img.style.border = '2px solid #333';
-                
-                btnAvatar.appendChild(img);
-            } else {
-                // Se não houver avatar_url, exibe a primeira letra num círculo estilizado
-                const userName = session.name || session.username || 'U';
-                const initialLetter = userName.charAt(0).toUpperCase();
-
-                btnAvatar.textContent = initialLetter;
-                
-                // Transforma o próprio botão num círculo maior com a letra
+                // Estilos base para o botão do Avatar
+                btnAvatar.style.padding = '0';
+                btnAvatar.style.background = 'transparent';
+                btnAvatar.style.border = 'none';
+                btnAvatar.style.cursor = 'pointer';
                 btnAvatar.style.width = '45px';
                 btnAvatar.style.height = '45px';
                 btnAvatar.style.borderRadius = '50%';
                 btnAvatar.style.display = 'flex';
                 btnAvatar.style.alignItems = 'center';
                 btnAvatar.style.justifyContent = 'center';
-                btnAvatar.style.backgroundColor = '#ffcc00'; // Cor base que combina com as estrelas
-                btnAvatar.style.color = '#333';
-                btnAvatar.style.fontWeight = '900';
-                btnAvatar.style.fontSize = '22px';
-                btnAvatar.style.border = '2px solid #333';
+
+                if (avatarUrl && avatarUrl.trim() !== '') {
+                    // Monta a Imagem
+                    const img = document.createElement('img');
+                    img.id = 'user-avatar';
+                    img.src = avatarUrl;
+                    img.alt = 'Avatar do Estudante';
+                    
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.borderRadius = '50%';
+                    img.style.objectFit = 'cover';
+                    img.style.border = '2px solid #333';
+                    
+                    btnAvatar.appendChild(img);
+                } else {
+                    // Monta a Letra Inicial
+                    const initialLetter = (userName || 'U').charAt(0).toUpperCase();
+                    btnAvatar.textContent = initialLetter;
+                    
+                    btnAvatar.style.backgroundColor = '#ffcc00';
+                    btnAvatar.style.color = '#333';
+                    btnAvatar.style.fontWeight = '900';
+                    btnAvatar.style.fontSize = '22px';
+                    btnAvatar.style.border = '2px solid #333';
+                }
+            };
+
+            // 1. Renderiza instantaneamente o que tiver salvo na sessão
+            updateAvatarUI(session.avatar_url, session.name || session.username);
+
+            // 2. Busca no banco de dados para garantir que pega imagens novas adicionadas em outra sessão
+            if (session.username) {
+                supabase
+                    .from('users')
+                    .select('avatar_url')
+                    .eq('username', session.username)
+                    .single()
+                    .then(({ data, error }) => {
+                        if (!error && data) {
+                            // Se achou uma imagem no banco, atualiza a interface imediatamente
+                            updateAvatarUI(data.avatar_url, session.name || session.username);
+                        }
+                    })
+                    .catch(err => console.error("Erro ao verificar o avatar no banco:", err));
             }
         }
     } else {
