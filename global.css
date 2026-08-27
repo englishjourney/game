@@ -1088,131 +1088,77 @@ dialog.superstar-dialog {
         opacity: 1;
     }
 }
-// main.js
-import { getSession, clearSession, handleRegister, handleLogin, initSecurity } from './auth.js';
-import { openProfile } from './profile.js';
-import { openMissions } from './missions.js';
-import { openRanking } from './rank.js';
-import { openSuperStars } from './SuperStar.js';
-import { openFlashcards } from './flashcards.js';
-import { openAppsDialog } from './apps.js'; // INCLUSÃO DA NOVA LÓGICA DE APPS
+/* ================== DIALOG DE APPS (GRADE) ================== */
+.apps-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 25px;
+    padding: 20px;
+    justify-items: center;
+}
 
-document.addEventListener("DOMContentLoaded", async () => {
-    // Executa a verificação de segurança controlada primeiro
-    await initSecurity();
+.app-item {
+    text-align: center;
+    transition: transform 0.2s ease;
+}
 
-    const session = getSession();
+.app-item:hover {
+    transform: scale(1.05);
+}
 
-    // Controle de exibição (Logado vs Deslogado)
-    if (session) {
-        document.getElementById('auth-screen').classList.add('hidden');
-        document.getElementById('app-screen').classList.remove('hidden');
-        applyTheme(session.serie);
-    } else {
-        document.getElementById('auth-screen').classList.remove('hidden');
-        document.getElementById('app-screen').classList.add('hidden');
-    }
+.app-link {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
 
-    // ==========================================
-    // ESCUTADORES DE EVENTO DOS FORMULÁRIOS
-    // ==========================================
-    const registerForm = document.getElementById('register-form');
-    if (registerForm) registerForm.addEventListener('submit', handleRegister);
+.app-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
 
-    const loginForm = document.getElementById('login-form');
-    if (loginForm) loginForm.addEventListener('submit', handleLogin);
+.app-name {
+    font-weight: bold;
+    font-size: 1rem;
+    color: #fff;
+    text-shadow: 1px 1px 2px #000;
+}
 
-    // Event listener do Avatar (Perfil)
-    const btnAvatar = document.getElementById('btn-avatar');
-    if (btnAvatar) {
-        btnAvatar.addEventListener('click', () => {
-            openProfile();
-        });
-    }
+/* ================== BOTÃO LATERAL (GLOBAL - BUBBLE STYLE) ================== */
+.sidebar-btn-apps {
+    position: fixed;
+    left: -15px; /* Esconde um pedaço para parecer que sai da borda */
+    top: 50%;
+    transform: translateY(-50%);
+    background: #ffcc00; /* Amarelo estilo cartoon/Brawl Stars */
+    border: 4px solid #333;
+    border-radius: 0 50px 50px 0; /* Arredondado só na direita (bubble) */
+    padding: 15px 20px 15px 25px;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 4px 4px 0px rgba(0,0,0,0.5);
+    transition: left 0.3s ease;
+}
 
-    // Toggle Formulários (Login / Cadastro)
-    const btnShowRegister = document.getElementById('btn-show-register');
-    if (btnShowRegister) {
-        btnShowRegister.addEventListener('click', () => {
-            document.getElementById('login-form').parentElement.classList.add('hidden');
-            document.getElementById('register-box').classList.remove('hidden');
-        });
-    }
+.sidebar-btn-apps:hover {
+    left: -5px; /* Revela um pouco mais no hover */
+}
 
-    const btnShowLogin = document.getElementById('btn-show-login');
-    if (btnShowLogin) {
-        btnShowLogin.addEventListener('click', () => {
-            document.getElementById('register-box').classList.add('hidden');
-            document.getElementById('login-form').parentElement.classList.remove('hidden');
-        });
-    }
+.sidebar-btn-apps .arrow-icon {
+    display: inline-block;
+    font-size: 26px;
+    font-weight: 900;
+    color: #333;
+    animation: bubbleJump 1.2s infinite ease-in-out;
+}
 
-    // Lógica do botão de Sair
-    const btnLogout = document.getElementById('btn-logout');
-    if (btnLogout) {
-        btnLogout.addEventListener('click', () => {
-            clearSession();
-            window.location.reload(); 
-        });
-    }
-
-    // ==========================================
-    // LÓGICA DO DIALOG (JANELAS E APPS)
-    // ==========================================
-    const modal = document.getElementById('content-modal');
-    
-    // BOTÃO LATERAL DE APPS
-    const btnAppsSidebar = document.getElementById('btn-apps-sidebar');
-    if (btnAppsSidebar) {
-        btnAppsSidebar.addEventListener('click', () => {
-            openAppsDialog();
-        });
-    }
-    
-    const btnMissions = document.getElementById('btn-missions');
-    if (btnMissions) {
-        btnMissions.addEventListener('click', () => {
-            openMissions();
-        });
-    }
-
-    const btnRanking = document.getElementById('btn-ranking');
-    if (btnRanking) {
-        btnRanking.addEventListener('click', () => {
-            openRanking();
-        });
-    }
-
-    const btnSuperstars = document.getElementById('btn-superstars');
-    if (btnSuperstars) {
-        btnSuperstars.addEventListener('click', () => {
-            openSuperStars();
-        });
-    }
-    
-    const btnFlashcards = document.getElementById('btn-flashcards');
-    if (btnFlashcards) {
-        btnFlashcards.addEventListener('click', () => {
-            openFlashcards();
-        });
-    }
-    
-    const btnCloseModal = document.getElementById('btn-close-modal');
-    if (btnCloseModal && modal) {
-        btnCloseModal.addEventListener('click', () => modal.close());
-    }
-});
-
-function applyTheme(serie) {
-    const isHighSchool = ['1', '2', '3'].includes(serie);
-    const themeStyle = document.getElementById('theme-highschool');
-    const logoImg = document.getElementById('app-logo');
-
-    if (isHighSchool) {
-        if (themeStyle) themeStyle.href = 'style.css';
-        if (logoImg) logoImg.src = 'logorpg.png';
-    } else {
-        if (themeStyle) themeStyle.href = '';
-        if (logoImg) logoImg.src = 'logoarcade.png';
-    }
+@keyframes bubbleJump {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(8px); }
 }
