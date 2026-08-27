@@ -97,7 +97,7 @@
             max-width: 350px;
         }
 
-        input, select {
+        input {
             width: 100%;
             padding: 0.8rem;
             margin-bottom: 1rem;
@@ -106,10 +106,9 @@
             font-size: 1rem;
             box-sizing: border-box;
             outline: none;
-            background-color: white;
         }
 
-        input:focus, select:focus { border-color: var(--primary); }
+        input:focus { border-color: var(--primary); }
 
         /* Telas */
         .screen { display: none; }
@@ -176,9 +175,13 @@
     <!-- TELA 3: Painel Admin -->
     <div id="screen-admin" class="container screen">
         <h2>Fila Atual</h2>
-        <!-- DROPDOWN DE TURMAS ADICIONADO AQUI -->
-        <select id="admin-turma-select" onchange="loadAdminQueue()"></select>
-        
+        <div style="margin-bottom: 1rem; text-align: left;">
+            <label for="admin-turma-select" style="font-size: 0.9rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Filtrar Turma:</label>
+            <select id="admin-turma-select" onchange="onAdminTurmaChange()" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid #d1d5db; font-size: 1rem; margin-bottom: 0.8rem; background-color: #fff;">
+                <option value="ALL">Todas as Turmas</option>
+            </select>
+            <button id="btn-toggle-block" class="btn btn-danger" style="margin: 0; font-size: 0.95rem; padding: 0.7rem;" onclick="toggleBlockTurma()">Bloquear Fila</button>
+        </div>
         <ul id="admin-list"></ul>
         <button class="btn btn-refresh" onclick="loadAdminQueue()">Atualizar Fila</button>
         <button class="btn btn-danger" onclick="closeAdmin()">Sair do Painel</button>
@@ -219,6 +222,7 @@
         // Variáveis Globais
         let currentGoingTo = '';
         let myStudentName = localStorage.getItem('queue_name') || null;
+        let myStudentSerieTurma = localStorage.getItem('queue_serie_turma') || null;
         let deferredPrompt;
 
         // ==========================================
@@ -262,11 +266,45 @@
         }
         setupPWA();
 
+        // Helper para formatar Serie e Team em SerieTurma
+        function formatSerieTurma(serie, team) {
+            if (!serie && !team) return 'Sem Turma';
+            if (!serie) return `${team}`;
+            if (!team) return `${serie}`;
+            return `${serie} - ${team}`;
+        }
+
+        // Helper para verificar se uma turma está bloqueada
+        async function checkIfTurmaBlocked(serieTurma) {
+            if (!serieTurma) return false;
+            try {
+                const { data } = await db
+                    .from('queue')
+                    .select('name')
+                    .eq('name', 'BLOCK:' + serieTurma);
+                return data && data.length > 0;
+            } catch (err) {
+                console.error('Erro ao verificar bloqueio:', err);
+                return false;
+            }
+        }
+
         // ==========================================
         // FLUXO DO ALUNO
         // ==========================================
-        window.onload = () => {
+        window.onload = async () => {
             if (myStudentName) {
+                if (!myStudentSerieTurma) {
+                    const { data: user } = await db
+                        .from('users')
+                        .select('serie, team')
+                        .eq('name', myStudentName)
+                        .single();
+                    if (user) {
+                        myStudentSerieTurma = formatSerieTurma(user.serie, user.team);
+                        localStorage.setItem('queue_serie_turma', myStudentSerieTurma);
+                    }
+                }
                 switchScreen('screen-queue');
                 checkQueue();
             }
@@ -298,7 +336,7 @@
             btn.innerText = 'Verificando...';
 
             try {
-                // 1. Validar usuário e pegar o 'name', 'serie' e 'team'
+                // 1. Validar usuário e pegar 'name', 'serie' e 'team'
                 const { data: user, error: userError } = await db
                     .from('users')
                     .select('name, serie, team')
@@ -307,8 +345,14 @@
 
                 if (userError || !user) throw new Error('Usuário não encontrado.');
                 const realName = user.name;
-                const userSerie = user.serie;
-                const userTeam = user.team;
+                const serieTurma = formatSerieTurma(user.serie, user.team);
+
+                // Verificar se a fila desta turma está bloqueada
+                const isBlocked = await checkIfTurmaBlocked(serieTurma);
+                if (isBlocked) {
+                    alert('A fila virtual so funciona na aula de inglês');
+                    return;
+                }
 
                 // 2. Verificar se já está na fila
                 const { data: alreadyInQueue } = await db
@@ -320,12 +364,11 @@
                 if (alreadyInQueue) {
                     alert('Você já está na fila!');
                 } else {
-                    // 3. Pegar próxima posição apenas da mesma série e time
+                    // 3. Pegar próxima posição
                     const { data: maxPosData } = await db
                         .from('queue')
                         .select('position')
-                        .eq('serie', userSerie)
-                        .eq('team', userTeam)
+                        .not('name', 'like', 'BLOCK:%')
                         .order('position', { ascending: false })
                         .limit(1);
 
@@ -334,23 +377,19 @@
                         newPosition = maxPosData[0].position + 1;
                     }
 
-                    // 4. Inserir (salvando também serie e team no supabase)
+                    // 4. Inserir
                     const { error: insertError } = await db
                         .from('queue')
-                        .insert([{ 
-                            name: realName, 
-                            goingTo: currentGoingTo, 
-                            position: newPosition,
-                            serie: userSerie,
-                            team: userTeam
-                        }]);
+                        .insert([{ name: realName, goingTo: currentGoingTo, position: newPosition }]);
 
                     if (insertError) throw new Error('Erro ao entrar na fila.');
                 }
 
                 // Salvar localmente e mostrar tela
                 myStudentName = realName;
+                myStudentSerieTurma = serieTurma;
                 localStorage.setItem('queue_name', myStudentName);
+                localStorage.setItem('queue_serie_turma', myStudentSerieTurma);
                 closeModal('modal-user');
                 switchScreen('screen-queue');
                 checkQueue();
@@ -371,28 +410,79 @@
             posDisplay.innerText = '...';
             posDisplay.classList.remove('status-0');
 
-            const { data: myQueueInfo } = await db
-                .from('queue')
-                .select('position')
-                .eq('name', myStudentName)
-                .single();
+            // Recuperar serieTurma se necessário
+            if (!myStudentSerieTurma) {
+                const { data: user } = await db
+                    .from('users')
+                    .select('serie, team')
+                    .eq('name', myStudentName)
+                    .single();
+                if (user) {
+                    myStudentSerieTurma = formatSerieTurma(user.serie, user.team);
+                    localStorage.setItem('queue_serie_turma', myStudentSerieTurma);
+                }
+            }
 
-            if (!myQueueInfo) {
+            // Verificar se a fila da turma do aluno está bloqueada
+            if (myStudentSerieTurma) {
+                const isBlocked = await checkIfTurmaBlocked(myStudentSerieTurma);
+                if (isBlocked) {
+                    posDisplay.innerText = '-';
+                    msgDisplay.innerText = 'A fila virtual so funciona na aula de inglês';
+                    return;
+                }
+            }
+
+            // Buscar todos da fila no banco
+            const { data: allQueue } = await db
+                .from('queue')
+                .select('*')
+                .not('name', 'like', 'BLOCK:%')
+                .order('position', { ascending: true });
+
+            if (!allQueue) return;
+
+            // Verificar se o aluno está na fila
+            const myEntry = allQueue.find(item => item.name === myStudentName);
+            if (!myEntry) {
                 // Usuário foi removido (pelo admin ou por si mesmo noutro PC)
                 localStorage.removeItem('queue_name');
+                localStorage.removeItem('queue_serie_turma');
                 myStudentName = null;
+                myStudentSerieTurma = null;
                 switchScreen('screen-home');
                 return;
             }
 
-            const pos = myQueueInfo.position;
-            
-            if (pos === 0) {
+            // Mapear usuários para suas turmas para criar a fila virtual
+            const names = allQueue.map(q => q.name);
+            const { data: usersData } = await db
+                .from('users')
+                .select('name, serie, team')
+                .in('name', names);
+
+            const userMap = {};
+            if (usersData) {
+                usersData.forEach(u => {
+                    userMap[u.name] = formatSerieTurma(u.serie, u.team);
+                });
+            }
+
+            // Filtrar somente a fila da mesma serie-turma do aluno
+            const filteredQueue = allQueue.filter(item => userMap[item.name] === myStudentSerieTurma);
+
+            // Posição na fila virtual da turma
+            const virtualIndex = filteredQueue.findIndex(item => item.name === myStudentName);
+
+            if (virtualIndex === -1) {
+                posDisplay.innerText = '...';
+                msgDisplay.innerText = 'Aguarde sua vez...';
+            } else if (virtualIndex === 0) {
                 posDisplay.innerText = 'Sua vez';
                 posDisplay.classList.add('status-0');
                 msgDisplay.innerText = 'Pode ir!';
             } else {
-                posDisplay.innerText = pos;
+                posDisplay.innerText = virtualIndex;
                 msgDisplay.innerText = `Posição atual na fila`;
             }
         }
@@ -402,7 +492,9 @@
             await removeUserFromQueue(myStudentName);
             
             localStorage.removeItem('queue_name');
+            localStorage.removeItem('queue_serie_turma');
             myStudentName = null;
+            myStudentSerieTurma = null;
             switchScreen('screen-home');
         }
 
@@ -411,27 +503,21 @@
         // ==========================================
         async function removeUserFromQueue(nameToRemove) {
             try {
-                // Pegar os dados (posição, serie, team) antes de deletar
                 const { data: userToRemove } = await db
                     .from('queue')
-                    .select('position, serie, team')
+                    .select('position')
                     .eq('name', nameToRemove)
                     .single();
 
                 if (!userToRemove) return;
-                
                 const removedPos = userToRemove.position;
-                const removedSerie = userToRemove.serie;
-                const removedTeam = userToRemove.team;
 
                 await db.from('queue').delete().eq('name', nameToRemove);
 
-                // Reorganizar apenas os alunos da mesma turma
                 const { data: others } = await db
                     .from('queue')
                     .select('name, position')
-                    .eq('serie', removedSerie)
-                    .eq('team', removedTeam)
+                    .not('name', 'like', 'BLOCK:%')
                     .gt('position', removedPos);
 
                 if (others && others.length > 0) {
@@ -458,6 +544,37 @@
             }
         });
 
+        async function populateAdminTurmas() {
+            const select = document.getElementById('admin-turma-select');
+            const currentValue = select ? select.value : 'ALL';
+
+            const { data: users } = await db
+                .from('users')
+                .select('serie, team');
+
+            const turmasSet = new Set();
+            if (users) {
+                users.forEach(u => {
+                    const st = formatSerieTurma(u.serie, u.team);
+                    if (st && st !== 'Sem Turma') turmasSet.add(st);
+                });
+            }
+
+            const sortedTurmas = Array.from(turmasSet).sort();
+
+            select.innerHTML = '<option value="ALL">Todas as Turmas</option>';
+            sortedTurmas.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t;
+                opt.innerText = t;
+                select.appendChild(opt);
+            });
+
+            if (sortedTurmas.includes(currentValue) || currentValue === 'ALL') {
+                select.value = currentValue;
+            }
+        }
+
         async function verifyAdmin() {
             const psswd = document.getElementById('input-admin-psswd').value;
             
@@ -471,6 +588,7 @@
             if (adminData) {
                 closeModal('modal-admin');
                 switchScreen('screen-admin');
+                await populateAdminTurmas();
                 loadAdminQueue();
             } else {
                 alert('Senha incorreta!');
@@ -486,56 +604,126 @@
             }
         }
 
+        async function onAdminTurmaChange() {
+            await updateBlockButtonUI();
+            loadAdminQueue();
+        }
+
+        async function updateBlockButtonUI() {
+            const select = document.getElementById('admin-turma-select');
+            const btnBlock = document.getElementById('btn-toggle-block');
+            if (!select || !btnBlock) return;
+            const selectedTurma = select.value;
+
+            if (selectedTurma === 'ALL') {
+                btnBlock.innerText = 'Selecione uma turma para bloquear';
+                btnBlock.disabled = true;
+                btnBlock.className = 'btn btn-danger';
+                btnBlock.style.opacity = '0.5';
+                return;
+            }
+
+            btnBlock.disabled = false;
+            btnBlock.style.opacity = '1';
+
+            const isBlocked = await checkIfTurmaBlocked(selectedTurma);
+            if (isBlocked) {
+                btnBlock.innerText = 'Desbloquear Fila';
+                btnBlock.className = 'btn btn-return';
+            } else {
+                btnBlock.innerText = 'Bloquear Fila';
+                btnBlock.className = 'btn btn-danger';
+            }
+        }
+
+        async function toggleBlockTurma() {
+            const select = document.getElementById('admin-turma-select');
+            const selectedTurma = select ? select.value : 'ALL';
+
+            if (selectedTurma === 'ALL') {
+                return alert('Selecione uma turma específica no dropdown para bloquear ou desbloquear!');
+            }
+
+            const isBlocked = await checkIfTurmaBlocked(selectedTurma);
+
+            if (isBlocked) {
+                // Desbloquear
+                await db.from('queue').delete().eq('name', 'BLOCK:' + selectedTurma);
+                alert(`Fila da turma "${selectedTurma}" desbloqueada.`);
+            } else {
+                // Bloquear
+                await db.from('queue').insert([{ name: 'BLOCK:' + selectedTurma, goingTo: 'block', position: -1 }]);
+                alert(`Fila da turma "${selectedTurma}" bloqueada.`);
+            }
+
+            await updateBlockButtonUI();
+            loadAdminQueue();
+        }
+
         async function loadAdminQueue() {
             const listEl = document.getElementById('admin-list');
-            const selectEl = document.getElementById('admin-turma-select');
-            
+            const select = document.getElementById('admin-turma-select');
+            const selectedTurma = select ? select.value : 'ALL';
+
             listEl.innerHTML = '<li>Carregando...</li>';
 
+            await updateBlockButtonUI();
+
+            // 1. Buscar pessoas na fila (excluindo marcadores de bloqueio)
             const { data: queueData } = await db
                 .from('queue')
                 .select('*')
+                .not('name', 'like', 'BLOCK:%')
                 .order('position', { ascending: true });
 
             listEl.innerHTML = '';
 
             if (!queueData || queueData.length === 0) {
-                listEl.innerHTML = '<li>A fila geral está vazia.</li>';
-                selectEl.innerHTML = '<option value="">Nenhuma turma na fila</option>';
+                listEl.innerHTML = '<li>A fila está vazia.</li>';
                 return;
             }
 
-            // Descobre turmas ativas na fila unindo "serie" e "team"
-            const turmasAtivas = [...new Set(queueData.map(item => `${item.serie} - ${item.team}`))];
-            
-            // Salva a seleção atual para não perder ao atualizar a fila
-            const selecaoAtual = selectEl.value;
+            // 2. Mapear os usuários da fila para suas respectivas turmas
+            const names = queueData.map(q => q.name);
+            const { data: usersData } = await db
+                .from('users')
+                .select('name, serie, team')
+                .in('name', names);
 
-            // Preenche o dropdown
-            selectEl.innerHTML = turmasAtivas.map(t => `<option value="${t}">${t}</option>`).join('');
-
-            // Restaura seleção anterior se a turma ainda existir na fila
-            if (turmasAtivas.includes(selecaoAtual)) {
-                selectEl.value = selecaoAtual;
+            const userMap = {};
+            if (usersData) {
+                usersData.forEach(u => {
+                    userMap[u.name] = formatSerieTurma(u.serie, u.team);
+                });
             }
 
-            const turmaSelecionada = selectEl.value;
+            // 3. Filtrar de acordo com a turma selecionada no dropdown
+            let filteredData = queueData;
+            if (selectedTurma !== 'ALL') {
+                filteredData = queueData.filter(item => userMap[item.name] === selectedTurma);
+            }
 
-            // Filtra os itens da fila correspondentes à turma escolhida no dropdown
-            const filaFiltrada = queueData.filter(item => `${item.serie} - ${item.team}` === turmaSelecionada);
-
-            if (filaFiltrada.length === 0) {
-                listEl.innerHTML = '<li>Nenhum aluno desta turma na fila no momento.</li>';
+            if (filteredData.length === 0) {
+                listEl.innerHTML = '<li>A fila para esta turma está vazia.</li>';
                 return;
             }
 
-            filaFiltrada.forEach(item => {
+            // Exibir a fila
+            const virtualCounters = {};
+
+            filteredData.forEach(item => {
+                const itemTurma = userMap[item.name] || 'Sem Turma';
+                if (virtualCounters[itemTurma] === undefined) {
+                    virtualCounters[itemTurma] = 0;
+                }
+                const virtualPos = virtualCounters[itemTurma]++;
+
                 const li = document.createElement('li');
                 li.className = 'admin-item';
                 const destino = item.goingTo === 'water' ? 'Água' : 'Banheiro';
                 
                 li.innerHTML = `
-                    <span>[${item.position}] ${item.name} (${destino})</span>
+                    <span>[${virtualPos}] ${item.name} (${itemTurma}) - ${destino}</span>
                     <button class="btn-admin-action" onclick="adminRemoveUser('${item.name}')">ja voltou para a sala</button>
                 `;
                 listEl.appendChild(li);
