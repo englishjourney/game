@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             profileContainer.style.display = 'flex';
             profileContainer.style.flexDirection = 'row';
             profileContainer.style.alignItems = 'center';
-            profileContainer.style.gap = '30px'; // Espaçamento entre o avatar e o sair
+            profileContainer.style.gap = '18px'; // Espaçamento entre o avatar e o sair
         }
 
         if (btnAvatar) {
@@ -44,8 +44,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 btnAvatar.style.background = 'transparent';
                 btnAvatar.style.border = 'none';
                 btnAvatar.style.cursor = 'pointer';
-                btnAvatar.style.width = '45px';
-                btnAvatar.style.height = '45px';
+                btnAvatar.style.width = '90px';
+                btnAvatar.style.height = '90px';
                 btnAvatar.style.borderRadius = '50%';
                 btnAvatar.style.display = 'flex';
                 btnAvatar.style.alignItems = 'center';
