@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Catching Foods</title>
+    <!-- Importando Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --text-color: #ffffff;
+            --primary-color: #f9a826;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            touch-action: none; /* Evita scroll no celular ao arrastar */
+        }
+
+        /* Telas */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s ease;
+        }
+
+        .hidden {
+            display: none !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Tela de Login */
+        #login-screen {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            z-index: 100;
+        }
+        
+        .login-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .login-box h1 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        .login-box input {
+            padding: 12px;
+            width: 80%;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: #1a1a2e;
+            border: none;
+            padding: 12px 25px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Tela do Jogo */
+        #game-screen {
+            background: url('https://img.freepik.com/free-vector/video-game-background_1308-112702.jpg') no-repeat center center;
+            background-size: cover;
+            z-index: 10;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            box-sizing: border-box;
+            z-index: 20;
+            background: rgba(0, 0, 0, 0.5);
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .hearts {
+            letter-spacing: 5px;
+        }
+
+        #game-area {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #monster {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 120px;
+            background-image: url('https://png.pngtree.com/png-clipart/20240606/original/pngtree-cartoon-monster-with-open-mouth-png-image_15257989.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center bottom;
+            z-index: 15;
+            cursor: grab;
+            transition: filter 0.3s;
+        }
+
+        #monster:active {
+            cursor: grabbing;
+        }
+
+        @keyframes sparkle {
+            0% { filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 10px #f9a826); }
+            50% { filter: drop-shadow(0 0 20px #fff) drop-shadow(0 0 40px #f9a826); }
+            100% { filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 10px #f9a826); }
+        }
+
+        .sparkle-effect {
+            animation: sparkle 0.5s ease-in-out;
+        }
+
+        .falling-item {
+            position: absolute;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px #000;
+            text-align: center;
+            z-index: 14;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        .falling-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+
+        /* Tela de Fim de Jogo */
+        #end-screen {
+            background: rgba(0,0,0,0.9);
+            z-index: 100;
+        }
+
+        #end-message {
+            font-size: 32px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        #loading-text {
+            color: #f9a826;
+            font-size: 18px;
+            margin-top: 15px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- TELA DE LOGIN -->
+    <div id="login-screen" class="screen">
+        <div class="login-box">
+            <h1>Catching Foods</h1>
+            <p>Comidas dão pontos! Objetos tiram vidas!</p>
+            <input type="text" id="username-input" placeholder="Seu Username" autocomplete="off">
+            <br>
+            <button class="btn" id="btn-start">Iniciar Missão</button>
+        </div>
+    </div>
+
+    <!-- TELA DO JOGO -->
+    <div id="game-screen" class="screen hidden">
+        <div id="ui-layer">
+            <div id="score-display">Pontos: 0 / 50</div>
+            <div class="hearts" id="hearts-display">❤️❤️❤️❤️❤️</div>
+        </div>
+        <div id="game-area">
+            <div id="monster"></div>
+        </div>
+    </div>
+
+    <!-- TELA DE FIM DE JOGO -->
+    <div id="end-screen" class="screen hidden">
+        <h1 id="end-title">Game Over</h1>
+        <p id="end-message"></p>
+        <p id="loading-text" class="hidden">Salvando seu progresso...</p>
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIGURAÇÃO DO SUPABASE
+        // ==========================================
+        const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co'; // EX: https://xyz.supabase.co
+        const SUPABASE_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ==========================================
+        // DADOS DO JOGO
+        // ==========================================
+        const foods = [
+            { word: "Rice", url: "https://cdn-icons-png.flaticon.com/512/184/184532.png" },
+            { word: "Apple", url: "https://cdn-icons-png.flaticon.com/512/123/123431.png" },
+            { word: "Fries", url: "https://cdn-icons-png.flaticon.com/512/889/889779.png" },
+            { word: "Meat", url: "https://cdn-icons-png.flaticon.com/512/1046/1046769.png" },
+            { word: "Pizza", url: "https://cdn-icons-png.flaticon.com/512/1404/1404945.png" },
+            { word: "Hot-dog", url: "https://cdn-icons-png.flaticon.com/512/4803/4803052.png" },
+            { word: "Cake", url: "https://cdn-icons-png.flaticon.com/512/9123/9123699.png" },
+            { word: "Soda", url: "https://cdn-icons-png.flaticon.com/512/3076/3076091.png" },
+            { word: "Sandwich", url: "https://cdn-icons-png.flaticon.com/512/7627/7627772.png" },
+            { word: "Jelly", url: "https://cdn-icons-png.flaticon.com/512/1398/1398525.png" },
+            { word: "Cheese", url: "https://cdn-icons-png.flaticon.com/512/4063/4063297.png" },
+            { word: "Chicken", url: "https://cdn-icons-png.flaticon.com/512/1206/1206237.png" },
+            { word: "Grape", url: "https://cdn-icons-png.flaticon.com/512/2836/2836932.png" },
+            { word: "Pineapple", url: "https://cdn-icons-png.flaticon.com/512/661/661764.png" },
+            { word: "Banana", url: "https://images.vexels.com/media/users/3/143061/isolated/preview/aaf71ed4e387a6838e1c521fbecde77a-fruta-icone-da-banana.png" },
+            { word: "Fried egg", url: "https://cdn-icons-png.flaticon.com/512/3480/3480653.png" },
+            { word: "Carrot", url: "https://cdn-icons-png.flaticon.com/512/883/883760.png" },
+            { word: "Cucumber", url: "https://cdn-icons-png.flaticon.com/512/5582/5582651.png" },
+            { word: "Lettuce", url: "https://cdn-icons-png.flaticon.com/512/3823/3823399.png" },
+            { word: "Tea", url: "https://cdn-icons-png.flaticon.com/512/3504/3504837.png" },
+            { word: "Coffee", url: "https://cdn-icons-png.flaticon.com/512/8230/8230211.png" },
+            { word: "Juice", url: "https://cdn-icons-png.flaticon.com/512/5025/5025087.png" },
+            { word: "Ice cream", url: "https://cdn-icons-png.flaticon.com/512/3077/3077188.png" },
+            { word: "Onion", url: "https://cdn-icons-png.flaticon.com/512/5346/5346247.png" },
+            { word: "Butter", url: "https://cdn-icons-png.flaticon.com/512/2915/2915875.png" }
+        ].map(item => ({ ...item, type: 'food' }));
+
+        const objects = [
+            { word: "Phone", url: "https://images.icon-icons.com/317/PNG/512/phone-icon_34382.png" },
+            { word: "Wheel", url: "https://images.vexels.com/media/users/3/325634/isolated/preview/895d20bf2c24cca756f14ed34b6f7b00-wooden-wheel-icon.png" },
+            { word: "Brick", url: "https://cdn-icons-png.flaticon.com/512/605/605712.png" },
+            { word: "Fan", url: "https://cdn-icons-png.flaticon.com/512/3060/3060734.png" },
+            { word: "Backpack", url: "https://cdn-icons-png.flaticon.com/512/5027/5027380.png" },
+            { word: "Paper", url: "https://cdn-icons-png.flaticon.com/512/3238/3238024.png" },
+            { word: "Keyboard", url: "https://cdn.iconscout.com/icon/free/png-256/free-keyboard-icon-svg-download-png-1235306.png" },
+            { word: "Chair", url: "https://cdn-icons-png.flaticon.com/512/123/123345.png" }
+        ].map(item => ({ ...item, type: 'object' }));
+
+        const allItems = [...foods, ...objects];
+
+        // ==========================================
+        // VARIÁVEIS DE ESTADO
+        // ==========================================
+        let currentUser = "";
+        let score = 0;
+        let lives = 5;
+        let isPlaying = false;
+        let fallingElements = [];
+        let spawnIntervalId;
+        let gameLoopId;
+        
+        // Elementos DOM
+        const gameArea = document.getElementById('game-area');
+        const monster = document.getElementById('monster');
+        const scoreDisplay = document.getElementById('score-display');
+        const heartsDisplay = document.getElementById('hearts-display');
+
+        // ==========================================
+        // LÓGICA DO AVATAR / ARRASTAR
+        // ==========================================
+        let isDragging = false;
+        let monsterWidth = 120; // Largura do monstro definida no CSS
+
+        const startDrag = (e) => { isDragging = true; };
+        const endDrag = () => { isDragging = false; };
+        const drag = (e) => {
+            if (!isDragging || !isPlaying) return;
+            e.preventDefault(); 
+            
+            // Suporta mouse e touch
+            let clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            let areaRect = gameArea.getBoundingClientRect();
+            
+            // Calcula a nova posição no centro do cursor
+            let newLeft = clientX - areaRect.left;
+            
+            // Limita nas bordas
+            if (newLeft < monsterWidth / 2) newLeft = monsterWidth / 2;
+            if (newLeft > areaRect.width - monsterWidth / 2) newLeft = areaRect.width - monsterWidth / 2;
+            
+            monster.style.left = `${newLeft}px`;
+        };
+
+        // Eventos de Touch e Mouse para o container do jogo inteiro (melhora a jogabilidade mobile)
+        gameArea.addEventListener('mousedown', startDrag);
+        gameArea.addEventListener('touchstart', startDrag, { passive: false });
+        
+        window.addEventListener('mouseup', endDrag);
+        window.addEventListener('touchend', endDrag);
+        
+        gameArea.addEventListener('mousemove', drag);
+        gameArea.addEventListener('touchmove', drag, { passive: false });
+
+
+        // ==========================================
+        // MECÂNICAS PRINCIPAIS DO JOGO
+        // ==========================================
+        function startGame() {
+            score = 0;
+            lives = 5;
+            isPlaying = true;
+            fallingElements = [];
+            updateUI();
+            
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            spawnIntervalId = setInterval(spawnItem, 1200); // Nasce um item a cada 1.2s
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        function spawnItem() {
+            if (!isPlaying) return;
+
+            const randomData = allItems[Math.floor(Math.random() * allItems.length)];
+            const el = document.createElement('div');
+            el.className = 'falling-item';
+            el.innerText = randomData.word;
+            
+            // Posição inicial (Topo) e Posição X aleatória
+            const areaWidth = gameArea.clientWidth;
+            const startX = Math.random() * (areaWidth - 100) + 50; // Padding lateral
+            
+            el.style.left = `${startX}px`;
+            el.style.top = `-50px`; // Começa fora da tela
+
+            gameArea.appendChild(el);
+
+            fallingElements.push({
+                element: el,
+                data: randomData,
+                y: -50,
+                speed: 3 + Math.random() * 2, // Velocidade aleatória de queda
+                transformed: false // Verifica se já bateu e virou imagem
+            });
+        }
+
+        function gameLoop() {
+            if (!isPlaying) return;
+
+            const monsterRect = monster.getBoundingClientRect();
+            
+            // Reduzindo ligeiramente a hit-box do monstro para ser mais justa 
+            const hitbox = {
+                top: monsterRect.top + 30,
+                bottom: monsterRect.bottom,
+                left: monsterRect.left + 20,
+                right: monsterRect.right - 20
+            };
+
+            for (let i = fallingElements.length - 1; i >= 0; i--) {
+                let item = fallingElements[i];
+
+                if (!item.transformed) {
+                    item.y += item.speed;
+                    item.element.style.top = `${item.y}px`;
+
+                    const itemRect = item.element.getBoundingClientRect();
+
+                    // Verifica Colisão
+                    if (itemRect.bottom > hitbox.top && 
+                        itemRect.top < hitbox.bottom &&
+                        itemRect.right > hitbox.left &&
+                        itemRect.left < hitbox.right) {
+                            
+                            handleCollision(item, i);
+                    }
+
+                    // Se passou reto do chão, só remove da tela
+                    else if (item.y > window.innerHeight) {
+                        item.element.remove();
+                        fallingElements.splice(i, 1);
+                    }
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function handleCollision(item, index) {
+            item.transformed = true;
+            
+            // Transforma o texto na imagem correspondente
+            item.element.innerHTML = `<img src="${item.data.url}" alt="${item.data.word}">`;
+
+            if (item.data.type === 'food') {
+                score += 5; // Soma 5 por comida. Para chegar a 50 precisa de 10 comidas
+                monster.classList.remove('sparkle-effect');
+                void monster.offsetWidth; // Trigger reflow para reiniciar animação
+                monster.classList.add('sparkle-effect');
+                
+                if (score >= 50) {
+                    score = 50;
+                    endGame(true);
+                }
+            } else {
+                lives -= 1;
+                if (lives <= 0) {
+                    lives = 0;
+                    endGame(false);
+                }
+            }
+
+            updateUI();
+
+            // A imagem some depois de meio segundo (foi "comida" ou bateu)
+            setTimeout(() => {
+                if(item.element && item.element.parentNode) {
+                    item.element.remove();
+                }
+                const idx = fallingElements.indexOf(item);
+                if(idx > -1) fallingElements.splice(idx, 1);
+            }, 400);
+        }
+
+        function updateUI() {
+            scoreDisplay.innerText = `Pontos: ${score} / 50`;
+            
+            let heartsHtml = '';
+            for(let i = 1; i <= 5; i++) {
+                heartsHtml += (i <= lives) ? '❤️' : '🖤';
+            }
+            heartsDisplay.innerText = heartsHtml;
+        }
+
+        // ==========================================
+        // FIM DE JOGO E INTEGRAÇÃO SUPABASE
+        // ==========================================
+        async function endGame(isWin) {
+            isPlaying = false;
+            clearInterval(spawnIntervalId);
+            cancelAnimationFrame(gameLoopId);
+
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('hidden');
+
+            const title = document.getElementById('end-title');
+            const message = document.getElementById('end-message');
+            const loading = document.getElementById('loading-text');
+
+            if (isWin) {
+                title.innerText = "Parabéns, Você Venceu!";
+                title.style.color = "#4CAF50";
+                message.innerText = `Excelente trabalho, ${currentUser}! Capturou as comidas certas.`;
+                
+                loading.classList.remove('hidden');
+                await saveProgressToSupabase();
+                loading.innerText = "Progresso salvo com sucesso!";
+            } else {
+                title.innerText = "Game Over";
+                title.style.color = "#f44336";
+                message.innerText = `Poxa, ${currentUser}. Você comeu muitos objetos e perdeu suas vidas.`;
+            }
+        }
+
+        async function saveProgressToSupabase() {
+            try {
+                // 1. Buscar usuário para somar a pontuação
+                const { data: userData, error: userError } = await supabaseClient
+                    .from('users')
+                    .select('score')
+                    .eq('username', currentUser)
+                    .single();
+
+                if (userError) throw userError;
+
+                const currentScore = userData.score || 0;
+                const newScore = currentScore + 50; // O prêmio total do jogo (50 pontos)
+
+                // 2. Atualizar Score do Usuário
+                await supabaseClient
+                    .from('users')
+                    .update({ score: newScore })
+                    .eq('username', currentUser);
+
+                // 3. Atualizar Missões (Mission: Catching foods)
+                const { data: missionData, error: missionError } = await supabaseClient
+                    .from('missions')
+                    .select('done')
+                    .eq('name', 'Catching foods')
+                    .single();
+
+                if (missionError && missionError.code !== 'PGRST116') {
+                    // Ignore caso a missão não exista (PGRST116), se for erro real loga
+                    throw missionError; 
+                }
+
+                if (missionData) {
+                    let doneList = missionData.done || '';
+                    
+                    // Verifica se o user já completou para não duplicar
+                    const usersArray = doneList.split(',').map(u => u.trim());
+                    if (!usersArray.includes(currentUser)) {
+                        doneList = doneList ? `${doneList},${currentUser}` : currentUser;
+                        
+                        await supabaseClient
+                            .from('missions')
+                            .update({ done: doneList })
+                            .eq('name', 'Catching foods');
+                    }
+                }
+                console.log("Banco de dados atualizado com sucesso!");
+            } catch (error) {
+                console.error("Erro ao salvar no banco:", error);
+                document.getElementById('loading-text').innerText = "Erro ao salvar no banco de dados. Verifique a configuração.";
+            }
+        }
+
+        // ==========================================
+        // INICIALIZAÇÃO
+        // ==========================================
+        document.getElementById('btn-start').addEventListener('click', async () => {
+            const input = document.getElementById('username-input');
+            const name = input.value.trim();
+
+            if (!name) {
+                alert("Por favor, digite seu nome de usuário.");
+                return;
+            }
+
+            // Verifica se o usuário existe no Supabase (Opcional, mas seguro)
+            const { data, error } = await supabaseClient
+                .from('users')
+                .select('username')
+                .eq('username', name)
+                .single();
+
+            if (error || !data) {
+                alert(`Usuário '${name}' não encontrado no banco de dados!`);
+                return;
+            }
+
+            currentUser = name;
+            startGame();
+        });
+
+    </script>
+</body>
+</html>
