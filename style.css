@@ -1041,3 +1041,34 @@ dialog.profile-card-dialog::backdrop {
         opacity: 1;
     }
 }
+/* ================== BOTÃO LATERAL (STYLE.CSS - NEON PISCANDO) ================== */
+.sidebar-btn-apps {
+    background: rgba(0, 10, 20, 0.8);
+    border: 2px solid #00f3ff;
+    border-left: none;
+    border-radius: 0 10px 10px 0; /* Borda mais reta, vibe cyberpunk */
+    box-shadow: 0 0 10px #00f3ff, inset 0 0 5px #00f3ff;
+    padding: 15px 15px 15px 20px;
+}
+
+.sidebar-btn-apps:hover {
+    box-shadow: 0 0 20px #00f3ff, inset 0 0 10px #00f3ff;
+}
+
+.sidebar-btn-apps .arrow-icon {
+    color: #00f3ff;
+    text-shadow: 0 0 10px #00f3ff;
+    /* Substitui a animação de pulo pelo neon falhando */
+    animation: neonFlickerFail 2.5s infinite; 
+}
+
+@keyframes neonFlickerFail {
+    0%, 18%, 22%, 25%, 53%, 57%, 100% {
+        opacity: 1;
+        text-shadow: 0 0 10px #00f3ff, 0 0 20px #00f3ff;
+    }
+    20%, 24%, 55% {
+        opacity: 0.2;
+        text-shadow: none;
+    }
+}
