@@ -1061,6 +1061,46 @@ dialog.profile-card-dialog::backdrop {
     /* Substitui a animação de pulo pelo neon falhando */
     animation: neonFlickerFail 2.5s infinite; 
 }
+.apps-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 25px;
+    padding: 20px;
+    justify-items: center;
+}
+
+.app-item {
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+.app-item:hover {
+    transform: scale(1.05);
+}
+
+.app-link {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.app-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.app-name {
+    font-weight: bold;
+    font-size: 1rem;
+    color: #fff;
+    text-shadow: 1px 1px 2px #000;
+}
 
 @keyframes neonFlickerFail {
     0%, 18%, 22%, 25%, 53%, 57%, 100% {
