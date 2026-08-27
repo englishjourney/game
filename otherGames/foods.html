@@ -91,7 +91,7 @@
 
         /* Tela do Jogo */
         #game-screen {
-            background: url('https://img.freepik.com/free-vector/video-game-background_1308-112702.jpg') no-repeat center center;
+            background: url('https://t4.ftcdn.net/jpg/08/28/10/27/360_F_828102741_yAB8cTDpzctSSpPX2yJLC6TfMZE13W1b.jpg') no-repeat center center;
             background-size: cover;
             z-index: 10;
         }
@@ -159,7 +159,7 @@
             color: white;
             text-shadow: 2px 2px 4px #000;
             text-align: center;
-            z-index: 14;
+            z-index: 16;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -430,7 +430,7 @@
                     score = 50;
                     endGame(true);
                 }
-            } else {
+            } else if (item.data.type === 'object') {
                 lives -= 1;
                 if (lives <= 0) {
                     lives = 0;
