@@ -285,6 +285,7 @@
         let fallingElements = [];
         let spawnIntervalId;
         let gameLoopId;
+        let speedMultiplier = 1;
         
         // Elementos DOM
         const gameArea = document.getElementById('game-area');
@@ -328,6 +329,20 @@
         gameArea.addEventListener('mousemove', drag);
         gameArea.addEventListener('touchmove', drag, { passive: false });
 
+        // ==========================================
+        // FUNÇÃO DE PRÉ-CARREGAMENTO
+        // ==========================================
+        function preloadImages(urls) {
+            return Promise.all(urls.map(url => {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.src = url;
+                    img.onload = resolve;
+                    img.onerror = resolve; // Resolve mesmo com erro para não travar
+                });
+            }));
+        }
+
 
         // ==========================================
         // MECÂNICAS PRINCIPAIS DO JOGO
@@ -335,6 +350,7 @@
         function startGame() {
             score = 0;
             lives = 5;
+            speedMultiplier = 1;
             isPlaying = true;
             fallingElements = [];
             updateUI();
@@ -367,7 +383,7 @@
                 element: el,
                 data: randomData,
                 y: -50,
-                speed: 3 + Math.random() * 2, // Velocidade aleatória de queda
+                speed: (3 + Math.random() * 2) * speedMultiplier, // Velocidade aleatória multiplicada pelo fator de aumento
                 transformed: false // Verifica se já bateu e virou imagem
             });
         }
@@ -421,7 +437,7 @@
             item.element.innerHTML = `<img src="${item.data.url}" alt="${item.data.word}">`;
 
             if (item.data.type === 'food') {
-                score += 5; // Soma 5 por comida. Para chegar a 50 precisa de 10 comidas
+                score += 1; // Precisa comer exatamente 50 itens para formar 50 pontos
                 monster.classList.remove('sparkle-effect');
                 void monster.offsetWidth; // Trigger reflow para reiniciar animação
                 monster.classList.add('sparkle-effect');
@@ -431,12 +447,14 @@
                     endGame(true);
                 }
             } else if (item.data.type === 'object') {
-                lives -= 1;
+                lives -= 1; // Perde 1 vida ao comer objeto
                 if (lives <= 0) {
                     lives = 0;
                     endGame(false);
                 }
             }
+
+            speedMultiplier *= 1.02; // Aumenta a velocidade em 2% a cada item comido
 
             updateUI();
 
@@ -555,12 +573,27 @@
                 return;
             }
 
+            const btn = document.getElementById('btn-start');
+            const originalText = btn.innerText;
+            btn.innerText = "Carregando jogo...";
+            btn.disabled = true;
+
+            // Carrega todas as imagens para evitar início de jogo com itens invisíveis
+            const urlsToLoad = allItems.map(item => item.url);
+            urlsToLoad.push('https://png.pngtree.com/png-clipart/20240606/original/pngtree-cartoon-monster-with-open-mouth-png-image_15257989.png');
+            urlsToLoad.push('https://t4.ftcdn.net/jpg/08/28/10/27/360_F_828102741_yAB8cTDpzctSSpPX2yJLC6TfMZE13W1b.jpg');
+            
+            await preloadImages(urlsToLoad);
+
             // Verifica se o usuário existe no Supabase (Opcional, mas seguro)
             const { data, error } = await supabaseClient
                 .from('users')
                 .select('username')
                 .eq('username', name)
                 .single();
+
+            btn.innerText = originalText;
+            btn.disabled = false;
 
             if (error || !data) {
                 alert(`Usuário '${name}' não encontrado no banco de dados!`);
