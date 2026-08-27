@@ -53,8 +53,9 @@ export async function openAppsDialog() {
         gridHtml += `
             <div class="app-item">
                 <a href="${app.url}" target="_blank" title="${app.description}" class="app-link">
-                    <img src="${app.image}" alt="Ícone do ${app.name}" class="app-image">
-                    <span class="app-name">${app.name}</span>
+                    <!-- Tamanho fixo e bem menor definido no atributo style -->
+                    <img src="${app.image}" alt="Ícone do ${app.name}" class="app-image" style="width: 50px; height: 50px; object-fit: cover; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                    <span class="app-name" style="font-size: 0.9rem; margin-top: 5px;">${app.name}</span>
                 </a>
             </div>
         `;
