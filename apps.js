@@ -1,75 +1,70 @@
-// Variável para guardar os apps carregados e não precisar ler o arquivo duas vezes
-let listaDeAppsRecomendados = [];
+// apps.js
 
-// Função para buscar e processar o arquivo apps.txt
-async function carregarAppsDoTeacher() {
-  try {
-    // Busca o arquivo txt (ajuste o caminho se necessário)
-    const response = await fetch('apps.txt');
-    const textoCompleto = await response.text();
-    
-    // Expressão regular para pegar: "Nome":"Link"(Imagem):"Descrição";
-    const regex = /"([^"]+)"\s*:\s*"([^"]+)"\s*\(\s*([^)]+)\s*\)\s*:\s*"([^"]+)"\s*;/g;
-    let match;
-    
-    listaDeAppsRecomendados = [];
+// Função para buscar e converter o texto de apps.txt
+async function fetchAppsData() {
+    try {
+        const response = await fetch('apps.txt');
+        if (!response.ok) throw new Error("Não foi possível ler apps.txt");
+        
+        const text = await response.text();
+        const apps = [];
+        
+        // Expressão regular para capturar os dados no formato exato solicitado:
+        // "Nome":"Link"(Imagem): "Descrição";
+        const regex = /"([^"]+)"\s*:\s*"([^"]+)"\s*\(([^)]+)\)\s*:\s*"([^"]+)";/g;
+        
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+            apps.push({
+                name: match[1],
+                url: match[2],
+                image: match[3],
+                description: match[4]
+            });
+        }
+        
+        return apps;
+    } catch (error) {
+        console.error("Erro ao carregar os apps:", error);
+        return [];
+    }
+}
 
-    // Extrai os dados batendo com o regex
-    while ((match = regex.exec(textoCompleto)) !== null) {
-      listaDeAppsRecomendados.push({
-        nome: match[1],
-        link: match[2],
-        imagem: match[3],
-        descricao: match[4]
-      });
+// Função para abrir o Dialog e injetar os aplicativos
+export async function openAppsDialog() {
+    const modal = document.getElementById('content-modal');
+    const modalContent = document.getElementById('modal-content');
+
+    // Estado de carregamento
+    modalContent.innerHTML = '<h2 style="text-align: center;">Carregando Apps...</h2>';
+    modal.showModal();
+
+    const apps = await fetchAppsData();
+
+    if (apps.length === 0) {
+        modalContent.innerHTML = '<h2 style="text-align: center;">Nenhum app encontrado.</h2>';
+        return;
     }
 
-    renderizarGradeApps();
-  } catch (erro) {
-    console.error("Erro ao carregar o arquivo apps.txt:", erro);
-    document.getElementById('grade-apps').innerHTML = "<p>Não foi possível carregar as recomendações no momento.</p>";
-  }
-}
+    // Criando a grade de aplicativos
+    let gridHtml = '<div class="apps-grid-container">';
+    
+    apps.forEach(app => {
+        gridHtml += `
+            <div class="app-item">
+                <a href="${app.url}" target="_blank" title="${app.description}" class="app-link">
+                    <img src="${app.image}" alt="Ícone do ${app.name}" class="app-image">
+                    <span class="app-name">${app.name}</span>
+                </a>
+            </div>
+        `;
+    });
+    
+    gridHtml += '</div>';
 
-// Função para desenhar a grade dentro da primeira Dialog
-function renderizarGradeApps() {
-  const containerGrade = document.getElementById('grade-apps');
-  containerGrade.innerHTML = ""; // Limpa antes de popular
-
-  if (listaDeAppsRecomendados.length === 0) {
-    containerGrade.innerHTML = "<p>Nenhum app recomendado no momento.</p>";
-    return;
-  }
-
-  listaDeAppsRecomendados.forEach((app, index) => {
-    // Cria o card do app
-    const divCard = document.createElement('div');
-    divCard.className = 'app-card';
-    divCard.onclick = () => abrirDetalhesApp(index);
-
-    divCard.innerHTML = `
-      <img src="${app.imagem}" alt="${app.nome}" class="app-imagem">
-      <span class="app-nome">${app.nome}</span>
+    // Atualiza o conteúdo do modal
+    modalContent.innerHTML = `
+        <h2 style="text-align: center; margin-bottom: 20px;">Aplicativos Recomendados</h2>
+        ${gridHtml}
     `;
-
-    containerGrade.appendChild(divCard);
-  });
-}
-
-// Função para abrir a 2ª Dialog com detalhes do App
-function abrirDetalhesApp(index) {
-  const app = listaDeAppsRecomendados[index];
-  
-  // Preenche os dados
-  document.getElementById('detalhe-nome-app').innerText = app.nome;
-  document.getElementById('detalhe-desc-app').innerText = app.descricao;
-  document.getElementById('detalhe-link-app').href = app.link;
-
-  // Abre a segunda dialog (fica por cima da primeira)
-  document.getElementById('dialog-app-detalhe').classList.remove('oculto');
-}
-
-// Função global para fechar qualquer dialog
-function fecharDialog(idDialog) {
-  document.getElementById(idDialog).classList.add('oculto');
 }
