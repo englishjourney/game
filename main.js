@@ -5,6 +5,7 @@ import { openMissions } from './missions.js';
 import { openRanking } from './rank.js';
 import { openSuperStars } from './SuperStar.js';
 import { openFlashcards } from './flashcards.js';
+import { openAppsDialog } from './apps.js'; // INCLUSÃO DA NOVA LÓGICA DE APPS
 
 document.addEventListener("DOMContentLoaded", async () => {
     // Executa a verificação de segurança controlada primeiro
@@ -66,9 +67,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // ==========================================
-    // LÓGICA DO DIALOG (JANELAS)
+    // LÓGICA DO DIALOG (JANELAS E APPS)
     // ==========================================
     const modal = document.getElementById('content-modal');
+    
+    // BOTÃO LATERAL DE APPS
+    const btnAppsSidebar = document.getElementById('btn-apps-sidebar');
+    if (btnAppsSidebar) {
+        btnAppsSidebar.addEventListener('click', () => {
+            openAppsDialog();
+        });
+    }
     
     const btnMissions = document.getElementById('btn-missions');
     if (btnMissions) {
