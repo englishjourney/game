@@ -97,7 +97,7 @@
             max-width: 350px;
         }
 
-        input {
+        input, select {
             width: 100%;
             padding: 0.8rem;
             margin-bottom: 1rem;
@@ -106,9 +106,10 @@
             font-size: 1rem;
             box-sizing: border-box;
             outline: none;
+            background-color: white;
         }
 
-        input:focus { border-color: var(--primary); }
+        input:focus, select:focus { border-color: var(--primary); }
 
         /* Telas */
         .screen { display: none; }
@@ -175,6 +176,9 @@
     <!-- TELA 3: Painel Admin -->
     <div id="screen-admin" class="container screen">
         <h2>Fila Atual</h2>
+        <!-- DROPDOWN DE TURMAS ADICIONADO AQUI -->
+        <select id="admin-turma-select" onchange="loadAdminQueue()"></select>
+        
         <ul id="admin-list"></ul>
         <button class="btn btn-refresh" onclick="loadAdminQueue()">Atualizar Fila</button>
         <button class="btn btn-danger" onclick="closeAdmin()">Sair do Painel</button>
@@ -294,15 +298,17 @@
             btn.innerText = 'Verificando...';
 
             try {
-                // 1. Validar usuário e pegar o 'name'
+                // 1. Validar usuário e pegar o 'name', 'serie' e 'team'
                 const { data: user, error: userError } = await db
                     .from('users')
-                    .select('name')
+                    .select('name, serie, team')
                     .eq('username', usernameInput)
                     .single();
 
                 if (userError || !user) throw new Error('Usuário não encontrado.');
                 const realName = user.name;
+                const userSerie = user.serie;
+                const userTeam = user.team;
 
                 // 2. Verificar se já está na fila
                 const { data: alreadyInQueue } = await db
@@ -314,10 +320,12 @@
                 if (alreadyInQueue) {
                     alert('Você já está na fila!');
                 } else {
-                    // 3. Pegar próxima posição
+                    // 3. Pegar próxima posição apenas da mesma série e time
                     const { data: maxPosData } = await db
                         .from('queue')
                         .select('position')
+                        .eq('serie', userSerie)
+                        .eq('team', userTeam)
                         .order('position', { ascending: false })
                         .limit(1);
 
@@ -326,10 +334,16 @@
                         newPosition = maxPosData[0].position + 1;
                     }
 
-                    // 4. Inserir
+                    // 4. Inserir (salvando também serie e team no supabase)
                     const { error: insertError } = await db
                         .from('queue')
-                        .insert([{ name: realName, goingTo: currentGoingTo, position: newPosition }]);
+                        .insert([{ 
+                            name: realName, 
+                            goingTo: currentGoingTo, 
+                            position: newPosition,
+                            serie: userSerie,
+                            team: userTeam
+                        }]);
 
                     if (insertError) throw new Error('Erro ao entrar na fila.');
                 }
@@ -397,20 +411,27 @@
         // ==========================================
         async function removeUserFromQueue(nameToRemove) {
             try {
+                // Pegar os dados (posição, serie, team) antes de deletar
                 const { data: userToRemove } = await db
                     .from('queue')
-                    .select('position')
+                    .select('position, serie, team')
                     .eq('name', nameToRemove)
                     .single();
 
                 if (!userToRemove) return;
+                
                 const removedPos = userToRemove.position;
+                const removedSerie = userToRemove.serie;
+                const removedTeam = userToRemove.team;
 
                 await db.from('queue').delete().eq('name', nameToRemove);
 
+                // Reorganizar apenas os alunos da mesma turma
                 const { data: others } = await db
                     .from('queue')
                     .select('name, position')
+                    .eq('serie', removedSerie)
+                    .eq('team', removedTeam)
                     .gt('position', removedPos);
 
                 if (others && others.length > 0) {
@@ -467,6 +488,8 @@
 
         async function loadAdminQueue() {
             const listEl = document.getElementById('admin-list');
+            const selectEl = document.getElementById('admin-turma-select');
+            
             listEl.innerHTML = '<li>Carregando...</li>';
 
             const { data: queueData } = await db
@@ -477,11 +500,36 @@
             listEl.innerHTML = '';
 
             if (!queueData || queueData.length === 0) {
-                listEl.innerHTML = '<li>A fila está vazia.</li>';
+                listEl.innerHTML = '<li>A fila geral está vazia.</li>';
+                selectEl.innerHTML = '<option value="">Nenhuma turma na fila</option>';
                 return;
             }
 
-            queueData.forEach(item => {
+            // Descobre turmas ativas na fila unindo "serie" e "team"
+            const turmasAtivas = [...new Set(queueData.map(item => `${item.serie} - ${item.team}`))];
+            
+            // Salva a seleção atual para não perder ao atualizar a fila
+            const selecaoAtual = selectEl.value;
+
+            // Preenche o dropdown
+            selectEl.innerHTML = turmasAtivas.map(t => `<option value="${t}">${t}</option>`).join('');
+
+            // Restaura seleção anterior se a turma ainda existir na fila
+            if (turmasAtivas.includes(selecaoAtual)) {
+                selectEl.value = selecaoAtual;
+            }
+
+            const turmaSelecionada = selectEl.value;
+
+            // Filtra os itens da fila correspondentes à turma escolhida no dropdown
+            const filaFiltrada = queueData.filter(item => `${item.serie} - ${item.team}` === turmaSelecionada);
+
+            if (filaFiltrada.length === 0) {
+                listEl.innerHTML = '<li>Nenhum aluno desta turma na fila no momento.</li>';
+                return;
+            }
+
+            filaFiltrada.forEach(item => {
                 const li = document.createElement('li');
                 li.className = 'admin-item';
                 const destino = item.goingTo === 'water' ? 'Água' : 'Banheiro';
