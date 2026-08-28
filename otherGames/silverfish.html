@@ -574,14 +574,27 @@
             player.isHiding = true;
         }
         if (e.code === 'ArrowUp') {
-            e.preventDefault();
-            player.isHiding = false;
+        e.preventDefault();
+        player.isHiding = false;
+        // Se não estiver levitando, reposiciona instantaneamente no nível do chão
+        if (!player.isLevitating) {
+            player.y = GROUND_Y - player.height;
+            player.vy = 0;
+            player.isGrounded = true;
         }
     });
 
     window.addEventListener('keyup', (e) => {
-        if (e.code === 'ArrowDown') player.isHiding = false;
-    });
+    if (e.code === 'ArrowDown') {
+        player.isHiding = false;
+        // Ao soltar a seta para baixo, ajusta o jogador de volta para o topo do chão
+        if (!player.isLevitating) {
+            player.y = GROUND_Y - player.height;
+            player.vy = 0;
+            player.isGrounded = true;
+        }
+    }
+});
 
     window.addEventListener('mousedown', jump);
 
@@ -594,16 +607,21 @@
         if (!player.isLevitating) jump();
     }, {passive: false});
 
-    window.addEventListener('touchmove', (e) => {
-        if (!isPlaying) return;
-        let touchCurrentY = e.touches[0].screenY;
-        
-        if (touchCurrentY - touchStartY > 30) {
-            player.isHiding = true; // Deslizou para baixo (Entra na pedra)
-        } else if (touchStartY - touchCurrentY > 30) {
-            player.isHiding = false; // Deslizou para cima (Volta a revelar/levitar)
+   window.addEventListener('touchmove', (e) => {
+    if (!isPlaying) return;
+    let touchCurrentY = e.touches[0].screenY;
+    
+    if (touchCurrentY - touchStartY > 30) {
+        player.isHiding = true; // Deslizou para baixo (Entra na pedra)
+    } else if (touchStartY - touchCurrentY > 30) {
+        player.isHiding = false; // Deslizou para cima (Volta a revelar)
+        if (!player.isLevitating) {
+            player.y = GROUND_Y - player.height;
+            player.vy = 0;
+            player.isGrounded = true;
         }
-    });
+    }
+});
 
     window.addEventListener('touchend', (e) => {
         if (!isPlaying) return;
@@ -626,29 +644,27 @@
         cameraX += gameSpeed;
         gameSpeed += 0.001; // Aceleração gradativa bem leve
 
-        // Física do Jogador
-        if (player.isLevitating) {
-            // Flutua acima da zona de palavras por padrão
-            let targetY = GROUND_Y - 160; 
-            
-            if (player.isHiding) {
-                targetY = GROUND_Y + 10; // Desce para dentro/trás da pedra
-            } else if (player.isDiving) {
-                targetY = GROUND_Y - 60; // Mergulha para a altura dos itens
-            }
+       // Física do Jogador
+if (player.isLevitating) {
+    let targetY = GROUND_Y - 180; 
+    
+    if (player.isHiding) {
+        targetY = GROUND_Y + 10;
+    } else if (player.isDiving) {
+        targetY = GROUND_Y - 60;
+    }
 
-            player.y += (targetY - player.y) * 0.1;
-            player.vy = 0;
-            player.isGrounded = false;
-        } else if (player.isHiding) {
-            let targetY = GROUND_Y + 10;
-            player.y += (targetY - player.y) * 0.2;
-            player.vy = 0;
-            player.isGrounded = true;
-        } else {
-            player.vy += player.gravity;
-            player.y += player.vy;
-        }
+    player.y += (targetY - player.y) * 0.1;
+    player.vy = 0;
+    player.isGrounded = false;
+} else if (player.isHiding) {
+    player.y = GROUND_Y + 10; // Fixa na pedra e trava a gravidade
+    player.vy = 0;
+    player.isGrounded = true;
+} else {
+    player.vy += player.gravity;
+    player.y += player.vy;
+}
 
         // Colisão com os Blocos (Chão)
         const playerWorldX = player.x + cameraX;
