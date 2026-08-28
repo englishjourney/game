@@ -508,10 +508,10 @@
         }
     });
 
-    document.getElementById('btn-re').addEventListener('click', () => {
+    document.getElementById('btn-restart').addEventListener('click', () => {
         document.getElementById('gameover-screen').classList.add('hidden');
         effectsLayer.innerHTML = ''; // Limpa as imagens congeladas
-        Game();
+        startGame();
     });
 
     // ==========================================
@@ -871,7 +871,7 @@
                 };
                 let borderColors = {
                     'point': '#ffca28',
-                    'danger': '##ffca28',
+                    'danger': '#ffca28',
                     'bonus_shield': '#ffca28',
                     'bonus_levitation': '#ffca28'
                 };
