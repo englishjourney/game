@@ -2,384 +2,849 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Minecraft Silverfish Runner</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; user-select: none; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #111; display: flex; justify-content: center; align-items: center; }
-        #game-container { position: relative; width: 900px; height: 500px; background-image: url('https://wallpaperaccess.com/full/2915358.jpg'); background-size: cover; background-position: center; border: 4px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.8); overflow: hidden; border-radius: 8px; }
-        .overlay-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: white; text-align: center; backdrop-filter: blur(4px); }
-        .modal-box { background: rgba(30, 30, 30, 0.95); border: 3px solid #555; padding: 30px 40px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; align-items: center; gap: 15px; max-width: 420px; width: 90%; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Container Principal do Jogo */
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 1000px;
+            height: 100%;
+            max-height: 550px;
+            background-color: #111;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        /* Telas de Sobreposição (Menus) */
+        .overlay-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: white;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .hidden {
+            display: none !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .modal-box {
+            background: rgba(30, 30, 30, 0.95);
+            border: 3px solid #555;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 85%;
+            max-width: 400px;
+        }
+
         h1 { font-size: 26px; color: #ffca28; text-shadow: 2px 2px #000; }
         h2 { font-size: 22px; color: #4caf50; }
-        input[type="text"] { width: 100%; padding: 12px 15px; border-radius: 6px; border: 2px solid #555; background: #222; color: #fff; font-size: 16px; text-align: center; outline: none; }
+        p { font-size: 15px; color: #ccc; line-height: 1.4; }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: 2px solid #555;
+            background: #222;
+            color: #fff;
+            font-size: 16px;
+            text-align: center;
+            outline: none;
+            transition: 0.2s;
+        }
+
         input[type="text"]:focus { border-color: #ffca28; }
-        .btn { background: #4caf50; color: white; border: none; padding: 12px 28px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 0 #2e7d32; transition: all 0.1s ease; text-transform: uppercase; }
+
+        .btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #2e7d32;
+            transition: all 0.1s ease;
+            text-transform: uppercase;
+            width: 100%;
+        }
+
         .btn:hover { background: #66bb6a; }
         .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #2e7d32; }
-        .progress-container { width: 100%; background-color: #333; border-radius: 10px; overflow: hidden; height: 20px; border: 1px solid #666; }
-        .progress-bar { width: 0%; height: 100%; background-color: #ffca28; transition: width 0.2s; }
-        #hud { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; align-items: center; z-index: 10; pointer-events: none; }
-        .hud-card { background: rgba(0, 0, 0, 0.65); padding: 8px 16px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.2); color: white; font-weight: bold; font-size: 15px; display: flex; align-items: center; gap: 10px; }
+
+        /* Barra de Carregamento */
+        .progress-container {
+            width: 100%;
+            background-color: #222;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 20px;
+            border: 1px solid #555;
+            margin-top: 10px;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: #ffca28;
+            transition: width 0.2s;
+        }
+
+        /* HUD - Interface em Jogo */
+        #hud {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        .hud-card {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid #444;
+            color: white;
+            font-weight: bold;
+            font-size: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
         .hud-highlight { color: #ffca28; }
-        canvas { display: block; width: 100%; height: 100%; }
-        #overlay-effects { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
-        .danger-overlay-img { position: absolute; width: 70px; height: 70px; transform: translate(-50%, -50%); animation: pulse 0.5s infinite alternate; z-index: 30; }
-        @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(1); } 100% { transform: translate(-50%, -50%) scale(1.2); } }
-        .score-popup { position: absolute; color: #4caf50; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 0 #000; animation: floatUp 1s forwards; pointer-events: none; z-index: 25; }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; background: #333; }
+        .hud-highlight-green { color: #4caf50; }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            background: #333;
+            display: inline-block;
+            margin-top: 5px;
+            border: 1px solid #fff;
+        }
+
+        /* Elementos do Jogo */
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+        }
+
+        /* Personagem em GIF para preservar a animação (Canvas não anima GIFs nativamente) */
+        #player-sprite {
+            position: absolute;
+            width: 75px; /* Tamanho do silverfish */
+            height: 50px;
+            z-index: 20;
+            /* Inverte horizontalmente para andar para a direita */
+            transform: scaleX(-1);
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        /* Camada de Efeitos Visuais (Imagens Transformadas) */
+        #effects-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 30;
+        }
+
+        .transformed-img {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            transform: translate(-50%, -50%);
+            object-fit: contain;
+            z-index: 35;
+        }
+
+        /* Animação para pontos subindo */
+        .float-up {
+            animation: floatUpAnim 1s forwards ease-out;
+        }
+
+        @keyframes floatUpAnim {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -150%) scale(1.5); }
+        }
+
+        /* Animação para Perigos piscando e congelados */
+        .freeze-danger {
+            animation: dangerPulse 0.5s infinite alternate;
+            width: 90px;
+            height: 90px;
+        }
+
+        @keyframes dangerPulse {
+            0% { transform: translate(-50%, -50%) scale(1); filter: drop-shadow(0 0 10px red); }
+            100% { transform: translate(-50%, -50%) scale(1.2); filter: drop-shadow(0 0 20px red); }
+        }
+
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <!-- HUD -->
-    <div id="hud" style="display: none;">
-        <div class="hud-card">
-            <span>Jogador: <span id="hud-username" class="hud-highlight">-</span></span>
-        </div>
-        <div class="hud-card">
-            <span>Pontos da Rodada: <span id="hud-score" class="hud-highlight">0</span></span>
-            <span>| Total Banco: <span id="hud-total-score" class="hud-highlight">0</span></span>
-        </div>
-        <div class="hud-card" id="hud-buffs">
-            <span id="shield-indicator" style="display:none; background:#1e88e5;" class="status-badge">🛡️ Escudo</span>
-            <span id="levitation-indicator" style="display:none; background:#ab47bc;" class="status-badge">🪶 Levitação (<span id="lev-timer">10</span>s)</span>
-        </div>
-    </div>
-
-    <!-- Tela de Login -->
+    
     <div id="login-screen" class="overlay-screen">
         <div class="modal-box">
-            <h1>MINECRAFT RUNNER</h1>
-            <p>Digite seu nome de usuário para sincronizar sua pontuação na tabela users.</p>
-            <input type="text" id="username-input" placeholder="Seu Nome de Usuário" maxlength="20" autocomplete="off">
-            <button class="btn" id="start-login-btn">Entrar e Jogar</button>
+            <h1>Silverfish Runner</h1>
+            <p>Pule os buracos e perigos, colete os itens para ganhar pontos!</p>
+            <input type="text" id="username-input" placeholder="Digite seu Nome de Usuário" autocomplete="off">
+            <button class="btn" id="btn-login">Iniciar Jogo</button>
         </div>
     </div>
 
-    <!-- Tela de Carregamento -->
-    <div id="loading-screen" class="overlay-screen" style="display: none;">
+    <div id="loading-screen" class="overlay-screen hidden">
         <div class="modal-box">
-            <h2>Carregando Terreno...</h2>
-            <p>Preparando texturas, mapa e gifs do jogo...</p>
+            <h2>Construindo o Mundo...</h2>
+            <p>Carregando texturas, gifs e blocos.</p>
             <div class="progress-container">
                 <div class="progress-bar" id="progress-bar"></div>
             </div>
         </div>
     </div>
 
-    <!-- Tela de Game Over -->
-    <div id="gameover-screen" class="overlay-screen" style="display: none;">
+    <div id="gameover-screen" class="overlay-screen hidden">
         <div class="modal-box">
-            <h1 style="color: #f44336;">FIM DE JOGO!</h1>
-            <p id="gameover-reason">Você encostou em um perigo!</p>
-            <p style="font-size: 16px;">Pontos nesta partida: <strong id="final-session-score" style="color:#ffca28;">0</strong></p>
-            <p style="font-size: 16px;">Novo Total na Tabela Users: <strong id="final-total-score" style="color:#4caf50;">0</strong></p>
-            <button class="btn" id="restart-btn">Jogar Novamente</button>
+            <h1 style="color: #f44336; text-shadow: none;">FIM DE JOGO</h1>
+            <p id="gameover-reason" style="font-size: 18px; color: #fff; font-weight: bold;"></p>
+            <div style="text-align: left; width: 100%; background: #222; padding: 10px; border-radius: 6px;">
+                <p>Pontos nesta rodada: <span id="final-session-score" class="hud-highlight">0</span></p>
+                <p>Total Banco de Dados: <span id="final-total-score" class="hud-highlight-green">0</span></p>
+            </div>
+            <p id="saving-status" style="color: #ffca28; font-size: 14px;">Salvando progresso...</p>
+            <button class="btn hidden" id="btn-restart">Jogar Novamente</button>
         </div>
     </div>
 
-    <div id="overlay-effects"></div>
-    <canvas id="gameCanvas" width="900" height="500"></canvas>
+    <div id="hud" class="hidden">
+        <div class="hud-card">
+            <span>👤 <span id="hud-username" class="hud-highlight">-</span></span>
+            <span>🏆 Total Banco: <span id="hud-total-score" class="hud-highlight-green">0</span></span>
+        </div>
+        <div class="hud-card" style="align-items: flex-end;">
+            <span>Pontos da Rodada: <span id="hud-score" class="hud-highlight" style="font-size: 20px;">0</span></span>
+            <span id="shield-indicator" class="status-badge hidden" style="background:#1e88e5;">🛡️ Escudo</span>
+            <span id="levitation-indicator" class="status-badge hidden" style="background:#ab47bc;">🪶 Levitação (<span id="lev-timer">10</span>s)</span>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas" width="1000" height="550"></canvas>
+    
+    <img id="player-sprite" src="https://img1.picmix.com/output/stamp/normal/6/6/1/9/2649166_bed44.gif" alt="Silverfish" class="hidden">
+    
+    <div id="effects-layer"></div>
+
 </div>
 
 <script>
-/** 1. BACKEND SIMULATION (Tabela Users) **/
-class BackendAPI {
-    static async getUser(username) {
-        const dbData = JSON.parse(localStorage.getItem('mc_runner_users') || '{}');
-        if (dbData[username] !== undefined) {
-            return { username: username, score: dbData[username] };
-        } else {
-            dbData[username] = 0;
-            localStorage.setItem('mc_runner_users', JSON.stringify(dbData));
-            return { username: username, score: 0 };
-        }
-    }
+    // ==========================================
+    // CONFIGURAÇÃO DO SUPABASE
+    // ==========================================
+    const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    static async updateScore(username, addedPoints) {
-        const dbData = JSON.parse(localStorage.getItem('mc_runner_users') || '{}');
-        const currentScore = dbData[username] || 0;
-        const newScore = currentScore + addedPoints;
-        dbData[username] = newScore;
-        localStorage.setItem('mc_runner_users', JSON.stringify(dbData));
-        return { username: username, newScore: newScore };
-    }
-}
+    // ==========================================
+    // DEFINIÇÕES E DADOS DO JOGO
+    // ==========================================
+    const ASSETS_URLS = {
+        bg: 'https://wallpaperaccess.com/full/2915358.jpg',
+        cobblestone: 'https://i.pinimg.com/474x/e8/85/0a/e8850a26cdef4cb4352801a4f9de7445.jpg',
+        silverfish: 'https://img1.picmix.com/output/stamp/normal/6/6/1/9/2649166_bed44.gif',
+        
+        golden_apple: 'https://minecraft.wiki/images/Golden_Apple_JE2_BE2.png?aa827',
+        enchanted_apple: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/e/ed/Enchanted_Golden_Apple_JE2_BE2.gif/revision/latest/thumbnail/width/360/height/360?cb=20200430025309',
+        golden_carrot: 'https://minecraft.wiki/images/Golden_Carrot_JE4_BE2.png?43b25',
+        ender_pearl: 'https://minecraft.wiki/images/Ender_Pearl_JE3_BE2.png?829a7',
+        cooked_porkchop: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/e/ee/Cooked_Porkchop_JE4_BE3.png/revision/latest/thumbnail/width/360/height/360?cb=20190504061538',
+        iron_sword: 'https://www.pngkey.com/png/full/149-1494354_minecraft-iron-sword-png-clip-art-transparent-stock.png',
 
-/** 2. PRELOADER DE RECURSOS **/
-const ASSETS_TO_LOAD = {
-    bg: 'https://wallpaperaccess.com/full/2915358.jpg',
-    cobblestone: 'https://i.pinimg.com/474x/e8/85/0a/e8850a26cdef4cb4352801a4f9de7445.jpg',
-    silverfish: 'https://img1.picmix.com/output/stamp/normal/6/6/1/9/2649166_bed44.gif',
-    golden_apple: 'https://minecraft.wiki/images/Golden_Apple_JE2_BE2.png?aa827',
-    enchanted_apple: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/e/ed/Enchanted_Golden_Apple_JE2_BE2.gif/revision/latest/thumbnail/width/360/height/360?cb=20200430025309',
-    golden_carrot: 'https://minecraft.wiki/images/Golden_Carrot_JE4_BE2.png?43b25',
-    ender_pearl: 'https://minecraft.wiki/images/Ender_Pearl_JE3_BE2.png?829a7',
-    cooked_porkchop: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/e/ee/Cooked_Porkchop_JE4_BE3.png/revision/latest/thumbnail/width/360/height/360?cb=20190504061538',
-    iron_sword: 'https://www.pngkey.com/png/full/149-1494354_minecraft-iron-sword-png-clip-art-transparent-stock.png',
-    fire: 'https://mcdf.wiki.gg/images/Fire_%28Item%29.gif?bd609b',
-    poison: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/e/e9/Poison_JE1_BE1.png/revision/latest?cb=20201201162146',
-    lava: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/9/95/Flowing_Lava_%28Nether_1%29.gif/revision/latest/scale-to-width-down/250?cb=20200307141840',
-    cactus: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/2/29/Cactus_JE2_BE1.png/revision/latest?cb=20200924050150',
-    levitation: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/a/af/Shulker_Bullet.png/revision/latest?cb=20170422161445',
-    shield: 'https://minecraft.wiki/images/Shield_JE2_BE1.png?4837d'
-};
+        fire: 'https://mcdf.wiki.gg/images/Fire_%28Item%29.gif?bd609b',
+        poison: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/e/e9/Poison_JE1_BE1.png/revision/latest?cb=20201201162146',
+        lava: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/9/95/Flowing_Lava_%28Nether_1%29.gif/revision/latest/scale-to-width-down/250?cb=20200307141840',
+        cactus: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/2/29/Cactus_JE2_BE1.png/revision/latest?cb=20200924050150',
 
-const loadedImages = {};
+        levitation: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/a/af/Shulker_Bullet.png/revision/latest?cb=20170422161445',
+        shield: 'https://minecraft.wiki/images/Shield_JE2_BE1.png?4837d'
+    };
 
-function preloadAssets(onProgress, onComplete) {
-    const keys = Object.keys(ASSETS_TO_LOAD);
-    let loadedCount = 0;
-    const total = keys.length;
+    const ITEM_DEFINITIONS = [
+        // Pontos
+        { word: 'Golden Apple', type: 'point', points: 1, key: 'golden_apple' },
+        { word: 'Enchanted Apple', type: 'point', points: 3, key: 'enchanted_apple' },
+        { word: 'Golden Carrot', type: 'point', points: 1, key: 'golden_carrot' },
+        { word: 'Ender Pearl', type: 'point', points: 2, key: 'ender_pearl' },
+        { word: 'Cooked Porkchop', type: 'point', points: 1, key: 'cooked_porkchop' },
+        { word: 'Iron Sword', type: 'point', points: 2, key: 'iron_sword' },
+        // Perigos
+        { word: 'Fire', type: 'danger', key: 'fire' },
+        { word: 'Poison', type: 'danger', key: 'poison' },
+        { word: 'Lava', type: 'danger', key: 'lava' },
+        { word: 'Cactus', type: 'danger', key: 'cactus' },
+        // Bonus
+        { word: 'Levitation', type: 'bonus_levitation', points: 1, key: 'levitation' },
+        { word: 'Shield', type: 'bonus_shield', points: 1, key: 'shield' }
+    ];
 
-    keys.forEach(key => {
-        const img = new Image();
-        img.crossOrigin = 'Anonymous';
-        img.src = ASSETS_TO_LOAD[key];
-        img.onload = () => { loadedImages[key] = img; loadedCount++; onProgress(loadedCount / total); if (loadedCount === total) onComplete(); };
-        img.onerror = () => {
-            const fallbackCanvas = document.createElement('canvas'); fallbackCanvas.width = 40; fallbackCanvas.height = 40;
-            const ctx = fallbackCanvas.getContext('2d'); ctx.fillStyle = '#ff00ff'; ctx.fillRect(0,0,40,40);
-            const fallbackImg = new Image(); fallbackImg.src = fallbackCanvas.toDataURL();
-            loadedImages[key] = fallbackImg; loadedCount++; onProgress(loadedCount / total); if (loadedCount === total) onComplete();
-        };
-    });
-}
+    // Variáveis Globais
+    let currentUser = "";
+    let currentTotalScore = 0; // Score salvo no banco
+    let sessionScore = 0;      // Score adquirido na partida
+    let isPlaying = false;
+    let gameSpeed = 5;
+    let cameraX = 0;
+    let animationId;
+    let loadedImages = {};
 
-/** 3. GAME ENGINE E LÓGICA DO JOGO **/
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+    const BLOCK_SIZE = 60;
+    const GROUND_Y = 400;
 
-const loginScreen = document.getElementById('login-screen');
-const loadingScreen = document.getElementById('loading-screen');
-const gameoverScreen = document.getElementById('gameover-screen');
-const hud = document.getElementById('hud');
-const overlayEffects = document.getElementById('overlay-effects');
-const progressBar = document.getElementById('progress-bar');
+    let worldBlocks = [];
+    let worldItems = [];
 
-const ITEM_DEFINITIONS = [
-    { text: 'Golden Apple', type: 'point', points: 1, key: 'golden_apple' },
-    { text: 'Enchanted Golden Apple', type: 'point', points: 3, key: 'enchanted_apple' },
-    { text: 'Golden Carrot', type: 'point', points: 1, key: 'golden_carrot' },
-    { text: 'Ender Pearl', type: 'point', points: 2, key: 'ender_pearl' },
-    { text: 'Cooked Porkchop', type: 'point', points: 1, key: 'cooked_porkchop' },
-    { text: 'Iron Sword', type: 'point', points: 2, key: 'iron_sword' },
-    { text: 'Fire', type: 'danger', key: 'fire' },
-    { text: 'Poison', type: 'danger', key: 'poison' },
-    { text: 'Lava', type: 'danger', key: 'lava' },
-    { text: 'Cactus', type: 'danger', key: 'cactus' },
-    { text: 'Levitation', type: 'bonus_levitation', points: 1, key: 'levitation' },
-    { text: 'Shield', type: 'bonus_shield', points: 1, key: 'shield' }
-];
+    // Físicas do Jogador
+    const player = {
+        x: 150, // Fixo na tela (o mapa move)
+        y: 0,
+        width: 75,
+        height: 50,
+        vy: 0,
+        gravity: 0.6,
+        jumpForce: -11.5,
+        isGrounded: false,
+        hasShield: false,
+        isLevitating: false,
+        levitationTimeLeft: 0,
+        levitationInterval: null
+    };
 
-let currentUser = '';
-let currentTotalScore = 0;
-let sessionScore = 0;
-let gameSpeed = 5;
-let isPlaying = false;
-let animationFrameId = null;
+    // Elementos DOM
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const playerSprite = document.getElementById('player-sprite');
+    const effectsLayer = document.getElementById('effects-layer');
 
-const BLOCK_SIZE = 40;
-const GROUND_Y = 380;
-let cameraX = 0;
-let worldMap = []; 
-let worldItems = [];
+    // ==========================================
+    // SISTEMA DE PRELOADER
+    // ==========================================
+    function preloadAssets(onProgress, onComplete) {
+        const keys = Object.keys(ASSETS_URLS);
+        let loaded = 0;
+        const total = keys.length;
 
-const player = { x: 180, y: GROUND_Y - 40, width: 50, height: 35, vy: 0, gravity: 0.65, jumpForce: -12.5, isGrounded: false, hasShield: false, isLevitating: false, levitationTimeLeft: 0, levitationInterval: null };
-
-// Botão Entrar
-document.getElementById('start-login-btn').addEventListener('click', () => {
-    const name = document.getElementById('username-input').value.trim();
-    if (!name) { alert('Informe um nome de usuário!'); return; }
-    currentUser = name;
-    loginScreen.style.display = 'none';
-    loadingScreen.style.display = 'flex'; // Exibe a tela "Carregando Terreno"
-
-    BackendAPI.getUser(currentUser).then(userData => {
-        currentTotalScore = userData.score;
-        document.getElementById('hud-username').innerText = currentUser;
-        document.getElementById('hud-total-score').innerText = currentTotalScore;
-
-        preloadAssets((progress) => {
-            progressBar.style.width = `${progress * 100}%`;
-        }, () => {
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-                hud.style.display = 'flex';
-                initGame();
-            }, 400);
+        keys.forEach(key => {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.src = ASSETS_URLS[key];
+            img.onload = () => {
+                loadedImages[key] = img;
+                loaded++;
+                onProgress(loaded / total);
+                if (loaded === total) onComplete();
+            };
+            img.onerror = () => {
+                loaded++; // Ignora erro para não travar
+                onProgress(loaded / total);
+                if (loaded === total) onComplete();
+            };
         });
-    });
-});
-
-// Botão Jogar Novamente
-document.getElementById('restart-btn').addEventListener('click', () => {
-    gameoverScreen.style.display = 'none';
-    overlayEffects.innerHTML = '';
-    initGame();
-});
-
-// Controles
-function handleJump() {
-    if (!isPlaying) return;
-    if (player.isGrounded || player.isLevitating) {
-        player.vy = player.jumpForce;
-        player.isGrounded = false;
     }
-}
-window.addEventListener('keydown', (e) => { if (e.code === 'Space') { e.preventDefault(); handleJump(); } });
-canvas.addEventListener('mousedown', handleJump);
-canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleJump(); });
 
-function pregenerateMap() {
-    worldMap = []; worldItems = []; let currentX = 0;
-    for (let i = 0; i < 15; i++) { worldMap.push({ x: currentX, y: GROUND_Y, width: BLOCK_SIZE, height: BLOCK_SIZE }); currentX += BLOCK_SIZE; }
-    for (let i = 0; i < 300; i++) {
-        const createGap = Math.random() < 0.22 && i > 5;
-        if (createGap) currentX += (Math.random() < 0.5 ? 1 : 2) * BLOCK_SIZE;
-        worldMap.push({ x: currentX, y: GROUND_Y, width: BLOCK_SIZE, height: BLOCK_SIZE });
-        if (Math.random() < 0.45 && !createGap) {
-            const itemDef = ITEM_DEFINITIONS[Math.floor(Math.random() * ITEM_DEFINITIONS.length)];
-            worldItems.push({ ...itemDef, x: currentX, y: GROUND_Y - 55 - (Math.random() < 0.3 ? 60 : 0), width: 90, height: 30, collected: false });
+    // ==========================================
+    // GERAÇÃO DO MAPA
+    // ==========================================
+    function generateWorldMap() {
+        worldBlocks = [];
+        worldItems = [];
+        let currentX = 0;
+
+        // Plataforma inicial segura (15 blocos)
+        for(let i = 0; i < 15; i++) {
+            worldBlocks.push({ x: currentX, y: GROUND_Y, width: BLOCK_SIZE, height: BLOCK_SIZE });
+            currentX += BLOCK_SIZE;
         }
-        currentX += BLOCK_SIZE;
+
+        // Gera 1500 blocos (~90.000 pixels de mapa)
+        for(let i = 0; i < 1500; i++) {
+            // 20% de chance de ter um buraco de 1 ou 2 blocos
+            const makeGap = Math.random() < 0.20;
+            
+            if (makeGap) {
+                const gapSize = Math.random() < 0.5 ? 1 : 2;
+                currentX += gapSize * BLOCK_SIZE;
+            }
+
+            // Cria o Bloco
+            worldBlocks.push({ x: currentX, y: GROUND_Y, width: BLOCK_SIZE, height: BLOCK_SIZE });
+
+            // 40% de chance de gerar uma palavra inglesa em cima do bloco
+            if (!makeGap && Math.random() < 0.4) {
+                const itemDef = ITEM_DEFINITIONS[Math.floor(Math.random() * ITEM_DEFINITIONS.length)];
+                
+                // Determina a altura do item (mais baixo ou alto)
+                const yOffset = Math.random() < 0.4 ? 120 : 60;
+                
+                worldItems.push({
+                    ...itemDef,
+                    x: currentX - 10, // centraliza visualmente
+                    y: GROUND_Y - yOffset,
+                    width: 80,
+                    height: 35,
+                    collected: false
+                });
+            }
+
+            currentX += BLOCK_SIZE;
+        }
     }
-}
 
-function initGame() {
-    sessionScore = 0; gameSpeed = 5; cameraX = 0;
-    player.y = GROUND_Y - player.height; player.vy = 0; player.isGrounded = true; player.hasShield = false; player.isLevitating = false;
-    if (player.levitationInterval) clearInterval(player.levitationInterval);
-    updateHUD(); pregenerateMap(); isPlaying = true;
-    if (animationFrameId) cancelAnimationFrame(animationFrameId);
-    gameLoop();
-}
+    // ==========================================
+    // LÓGICA DE LOGIN E INÍCIO
+    // ==========================================
+    document.getElementById('btn-login').addEventListener('click', async () => {
+        const username = document.getElementById('username-input').value.trim();
+        if(!username) return alert("Digite o nome de usuário!");
 
-function updateHUD() {
-    document.getElementById('hud-score').innerText = sessionScore;
-    document.getElementById('hud-total-score').innerText = currentTotalScore;
-    document.getElementById('shield-indicator').style.display = player.hasShield ? 'inline-block' : 'none';
-    document.getElementById('levitation-indicator').style.display = player.isLevitating ? 'inline-block' : 'none';
-    document.getElementById('lev-timer').innerText = player.levitationTimeLeft;
-}
+        const btn = document.getElementById('btn-login');
+        btn.innerText = "Verificando...";
+        btn.disabled = true;
 
-function gameLoop() { if (!isPlaying) return; update(); render(); animationFrameId = requestAnimationFrame(gameLoop); }
+        // Busca o usuário no Supabase
+        try {
+            const { data, error } = await supabaseClient
+                .from('users')
+                .select('score')
+                .eq('username', username)
+                .single();
 
-function update() {
-    cameraX += gameSpeed; gameSpeed += 0.0008;
+            if (error || !data) {
+                alert(`Usuário '${username}' não encontrado na tabela users!`);
+                btn.innerText = "Iniciar Jogo";
+                btn.disabled = false;
+                return;
+            }
 
-    if (player.isLevitating) {
-        player.y += ((GROUND_Y - 140) - player.y) * 0.1; player.vy = 0; player.isGrounded = false;
-    } else {
-        player.vy += player.gravity; player.y += player.vy;
+            currentUser = username;
+            currentTotalScore = data.score || 0;
+
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('loading-screen').classList.remove('hidden');
+
+            // Carrega texturas
+            preloadAssets(
+                (pct) => { document.getElementById('progress-bar').style.width = `${pct * 100}%`; },
+                () => {
+                    setTimeout(() => {
+                        document.getElementById('loading-screen').classList.add('hidden');
+                        document.getElementById('hud').classList.remove('hidden');
+                        playerSprite.classList.remove('hidden');
+                        startGame();
+                    }, 500);
+                }
+            );
+
+        } catch (err) {
+            console.error(err);
+            alert("Erro de conexão.");
+            btn.innerText = "Iniciar Jogo";
+            btn.disabled = false;
+        }
+    });
+
+    document.getElementById('btn-restart').addEventListener('click', () => {
+        document.getElementById('gameover-screen').classList.add('hidden');
+        effectsLayer.innerHTML = ''; // Limpa as imagens congeladas
+        startGame();
+    });
+
+    // ==========================================
+    // MECÂNICAS E LOOP PRINCIPAL
+    // ==========================================
+    function startGame() {
+        generateWorldMap();
+        sessionScore = 0;
+        gameSpeed = 6;
+        cameraX = 0;
+        
+        player.y = GROUND_Y - player.height;
+        player.vy = 0;
+        player.isGrounded = true;
+        player.hasShield = false;
+        player.isLevitating = false;
+        
+        if (player.levitationInterval) clearInterval(player.levitationInterval);
+
+        updateHUD();
+        isPlaying = true;
+        
+        if(animationId) cancelAnimationFrame(animationId);
+        gameLoop();
     }
 
-    const playerWorldX = player.x + cameraX;
-    let landed = false;
+    // Controles (Pulo)
+    function jump() {
+        if (!isPlaying) return;
+        if (player.isGrounded || player.isLevitating) {
+            player.vy = player.jumpForce;
+            player.isGrounded = false;
+        }
+    }
 
-    if (!player.isLevitating) {
-        for (let block of worldMap) {
-            if (playerWorldX + player.width * 0.7 > block.x && playerWorldX + player.width * 0.2 < block.x + block.width) {
-                if (player.y + player.height >= block.y && player.y + player.height <= block.y + 15 && player.vy >= 0) {
-                    player.y = block.y - player.height; player.vy = 0; player.isGrounded = true; landed = true; break;
+    window.addEventListener('keydown', (e) => { if(e.code === 'Space') jump(); });
+    window.addEventListener('mousedown', jump);
+    window.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); }, {passive: false});
+
+    function gameLoop() {
+        if (!isPlaying) return;
+        update();
+        render();
+        animationId = requestAnimationFrame(gameLoop);
+    }
+
+    function update() {
+        cameraX += gameSpeed;
+        gameSpeed += 0.001; // Aceleração gradativa bem leve
+
+        // Física do Jogador
+        if (player.isLevitating) {
+            // Flutua numa altura fixa
+            const targetY = GROUND_Y - 140;
+            player.y += (targetY - player.y) * 0.1;
+            player.vy = 0;
+            player.isGrounded = false;
+        } else {
+            player.vy += player.gravity;
+            player.y += player.vy;
+        }
+
+        // Colisão com os Blocos (Chão)
+        const playerWorldX = player.x + cameraX;
+        let onGround = false;
+
+        if (!player.isLevitating && player.vy >= 0) {
+            for (let block of worldBlocks) {
+                // Checa se está horizontalmente dentro do bloco (com uma tolerância/hitbox menor)
+                if (playerWorldX + player.width * 0.6 > block.x && playerWorldX + player.width * 0.4 < block.x + block.width) {
+                    // Checa se está verticalmente tocando o topo do bloco
+                    if (player.y + player.height >= block.y && player.y + player.height <= block.y + 20) {
+                        player.y = block.y - player.height;
+                        player.vy = 0;
+                        player.isGrounded = true;
+                        onGround = true;
+                        break;
+                    }
                 }
             }
         }
-    }
-    if (!landed && !player.isLevitating) player.isGrounded = false;
-    if (player.y > canvas.height + 50) { triggerGameOver("Você caiu em um buraco!"); return; }
 
-    for (let item of worldItems) {
-        if (item.collected) continue;
-        const screenX = item.x - cameraX;
-        if (player.x < screenX + item.width && player.x + player.width > screenX && player.y < item.y + item.height && player.y + player.height > item.y) {
-            item.collected = true;
-            if (item.type === 'point') { sessionScore += item.points; showPopup(`+${item.points}`, player.x + 20, player.y - 10); updateHUD(); }
-            else if (item.type === 'bonus_shield') { sessionScore += item.points; player.hasShield = true; showPopup("🛡️ ESCUDO!", player.x + 10, player.y - 10); updateHUD(); }
-            else if (item.type === 'bonus_levitation') { sessionScore += item.points; activateLevitation(); showPopup("🪶 LEVITAÇÃO!", player.x + 10, player.y - 10); updateHUD(); }
-            else if (item.type === 'danger') {
-                if (player.hasShield) { player.hasShield = false; showPopup("🛡️ Escudo Quebrado!", player.x, player.y - 10); updateHUD(); }
-                else { handleDangerCollision(item); return; }
+        if (!onGround && !player.isLevitating) {
+            player.isGrounded = false;
+        }
+
+        // Queda num buraco
+        if (player.y > canvas.height) {
+            triggerGameOver("Você caiu no precipício!");
+            return;
+        }
+
+        // Colisão com as Palavras (Itens)
+        for (let item of worldItems) {
+            if (item.collected) continue;
+
+            const screenX = item.x - cameraX;
+            
+            // Ignora itens fora da tela
+            if (screenX > canvas.width || screenX + item.width < 0) continue;
+
+            // Hitbox do item e player
+            if (player.x < screenX + item.width && 
+                player.x + player.width > screenX &&
+                player.y < item.y + item.height && 
+                player.y + player.height > item.y) {
+                
+                item.collected = true;
+                handleItemCollision(item);
+                if (!isPlaying) return; // Se era perigo, o jogo congelou e parou o loop.
+            }
+        }
+
+        // Atualiza a posição da tag <img> do GIF do jogador na tela
+        playerSprite.style.left = `${player.x}px`;
+        playerSprite.style.top = `${player.y}px`;
+    }
+
+    function handleItemCollision(item) {
+        // Gera a imagem correspondente visualmente no HTML (para suportar o GIF rodando)
+        const img = document.createElement('img');
+        img.src = ASSETS_URLS[item.key];
+        img.className = 'transformed-img';
+        img.style.left = `${player.x + player.width/2}px`;
+        img.style.top = `${player.y + player.height/2}px`;
+
+        if (item.type === 'point' || item.type.startsWith('bonus')) {
+            // Flutua a imagem para cima
+            img.classList.add('float-up');
+            effectsLayer.appendChild(img);
+            setTimeout(() => img.remove(), 1000);
+
+            // Adiciona pontos
+            sessionScore += item.points;
+            
+            // Aplica bônus
+            if (item.type === 'bonus_shield') {
+                player.hasShield = true;
+            } else if (item.type === 'bonus_levitation') {
+                activateLevitation();
+            }
+
+            updateHUD();
+
+        } else if (item.type === 'danger') {
+            if (player.hasShield) {
+                player.hasShield = false; // Quebra escudo e sobrevive
+                img.classList.add('float-up');
+                effectsLayer.appendChild(img);
+                setTimeout(() => img.remove(), 1000);
+                updateHUD();
+            } else {
+                // Morreu: Congela a tela por 2 segundos mostrando o perigo
+                isPlaying = false; 
+                img.classList.add('freeze-danger');
+                effectsLayer.appendChild(img);
+                
+                // Pausa o GIF do player removendo-o temporariamente (ou mantendo congelado)
+                setTimeout(() => {
+                    triggerGameOver(`Você encostou em: ${item.word}`);
+                }, 2000);
             }
         }
     }
-}
 
-function activateLevitation() {
-    player.isLevitating = true; player.levitationTimeLeft = 10; updateHUD();
-    if (player.levitationInterval) clearInterval(player.levitationInterval);
-    player.levitationInterval = setInterval(() => {
-        player.levitationTimeLeft--; updateHUD();
-        if (player.levitationTimeLeft <= 0) { clearInterval(player.levitationInterval); player.isLevitating = false; updateHUD(); }
-    }, 1000);
-}
+    function activateLevitation() {
+        player.isLevitating = true;
+        player.levitationTimeLeft = 10;
+        updateHUD();
 
-function showPopup(text, x, y) {
-    const el = document.createElement('div'); el.className = 'score-popup'; el.innerText = text; el.style.left = `${x}px`; el.style.top = `${y}px`;
-    overlayEffects.appendChild(el); setTimeout(() => el.remove(), 1000);
-}
+        if (player.levitationInterval) clearInterval(player.levitationInterval);
 
-function handleDangerCollision(item) {
-    isPlaying = false;
-    const dangerImg = document.createElement('img'); dangerImg.src = ASSETS_TO_LOAD[item.key];
-    dangerImg.className = 'danger-overlay-img'; dangerImg.style.left = `${player.x + player.width / 2}px`; dangerImg.style.top = `${player.y + player.height / 2}px`;
-    overlayEffects.appendChild(dangerImg);
-    setTimeout(() => { triggerGameOver(`Você encostou em: ${item.text}!`); }, 2000);
-}
-
-function triggerGameOver(reason) {
-    isPlaying = false; if (player.levitationInterval) clearInterval(player.levitationInterval);
-    BackendAPI.updateScore(currentUser, sessionScore).then(res => {
-        currentTotalScore = res.newScore;
-        document.getElementById('gameover-reason').innerText = reason;
-        document.getElementById('final-session-score').innerText = sessionScore;
-        document.getElementById('final-total-score').innerText = currentTotalScore;
-        gameoverScreen.style.display = 'flex';
-    });
-}
-
-function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (loadedImages.bg) {
-        const bgOffset = (cameraX * 0.3) % canvas.width;
-        ctx.drawImage(loadedImages.bg, -bgOffset, 0, canvas.width, canvas.height); ctx.drawImage(loadedImages.bg, canvas.width - bgOffset, 0, canvas.width, canvas.height);
+        player.levitationInterval = setInterval(() => {
+            player.levitationTimeLeft--;
+            updateHUD();
+            if (player.levitationTimeLeft <= 0) {
+                clearInterval(player.levitationInterval);
+                player.isLevitating = false;
+                updateHUD();
+            }
+        }, 1000);
     }
-    for (let block of worldMap) {
-        const screenX = block.x - cameraX;
-        if (screenX + block.width > -50 && screenX < canvas.width + 50) {
-            if (loadedImages.cobblestone) ctx.drawImage(loadedImages.cobblestone, screenX, block.y, block.width, block.height);
-            else { ctx.fillStyle = '#777'; ctx.fillRect(screenX, block.y, block.width, block.height); }
+
+    function updateHUD() {
+        document.getElementById('hud-username').innerText = currentUser;
+        document.getElementById('hud-score').innerText = sessionScore;
+        document.getElementById('hud-total-score').innerText = currentTotalScore;
+        
+        const shieldEl = document.getElementById('shield-indicator');
+        const levEl = document.getElementById('levitation-indicator');
+        
+        player.hasShield ? shieldEl.classList.remove('hidden') : shieldEl.classList.add('hidden');
+        
+        if (player.isLevitating) {
+            levEl.classList.remove('hidden');
+            document.getElementById('lev-timer').innerText = player.levitationTimeLeft;
+        } else {
+            levEl.classList.add('hidden');
         }
     }
-    for (let item of worldItems) {
-        if (item.collected) continue;
-        const screenX = item.x - cameraX;
-        if (screenX + item.width > -50 && screenX < canvas.width + 50) {
+
+    // ==========================================
+    // ENCERRAMENTO E SALVAMENTO NO SUPABASE
+    // ==========================================
+    async function triggerGameOver(reason) {
+        isPlaying = false;
+        if (player.levitationInterval) clearInterval(player.levitationInterval);
+
+        document.getElementById('gameover-reason').innerText = reason;
+        document.getElementById('final-session-score').innerText = sessionScore;
+        
+        const goScreen = document.getElementById('gameover-screen');
+        const btnRestart = document.getElementById('btn-restart');
+        const savingText = document.getElementById('saving-status');
+        
+        goScreen.classList.remove('hidden');
+        btnRestart.classList.add('hidden');
+        savingText.innerText = "Salvando progresso no Supabase...";
+
+        try {
+            // Pega o score real atualizado
+            const { data } = await supabaseClient.from('users').select('score').eq('username', currentUser).single();
+            const realScore = data ? (data.score || 0) : currentTotalScore;
+            const newTotal = realScore + sessionScore;
+
+            // Atualiza
+            await supabaseClient.from('users').update({ score: newTotal }).eq('username', currentUser);
+            
+            currentTotalScore = newTotal;
+            document.getElementById('final-total-score').innerText = currentTotalScore;
+            
+            savingText.innerText = "Progresso salvo com sucesso!";
+            btnRestart.classList.remove('hidden'); // Libera para jogar de novo
+
+        } catch (err) {
+            console.error("Erro ao salvar:", err);
+            savingText.innerText = "Falha ao salvar no banco. Verifique a conexão.";
+            btnRestart.classList.remove('hidden');
+        }
+    }
+
+    // ==========================================
+    // DESENHO (RENDER) - CANVAS
+    // ==========================================
+    function render() {
+        // Redimensiona logicamente pro tamanho do container CSS atual
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 1. Fundo Parallax
+        if (loadedImages.bg) {
+            const bgWidth = canvas.width;
+            const bgOffset = (cameraX * 0.2) % bgWidth;
+            ctx.drawImage(loadedImages.bg, -bgOffset, 0, bgWidth, canvas.height);
+            ctx.drawImage(loadedImages.bg, bgWidth - bgOffset, 0, bgWidth, canvas.height);
+        }
+
+        // 2. Plataformas (Cobblestone)
+        for (let block of worldBlocks) {
+            const screenX = block.x - cameraX;
+            // Desenha se estiver na tela
+            if (screenX + block.width > -100 && screenX < canvas.width + 100) {
+                if (loadedImages.cobblestone) {
+                    ctx.drawImage(loadedImages.cobblestone, screenX, block.y, block.width, block.height);
+                    // Como é um piso contínuo até a parte inferior, preenche o buraco debaixo da textura
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(screenX, block.y + block.height, block.width, canvas.height - block.y);
+                } else {
+                    ctx.fillStyle = '#555';
+                    ctx.fillRect(screenX, block.y, block.width, canvas.height - block.y);
+                }
+            }
+        }
+
+        // 3. Palavras de Ingês (Itens)
+        for (let item of worldItems) {
+            if (item.collected) continue;
+
+            const screenX = item.x - cameraX;
+            if (screenX + item.width > -100 && screenX < canvas.width + 100) {
+                ctx.save();
+                
+                // Cores baseadas no tipo de item
+                let bgColors = {
+                    'point': 'rgba(0,0,0, 0.7)',
+                    'danger': 'rgba(120, 0, 0, 0.8)',
+                    'bonus_shield': 'rgba(21, 101, 192, 0.8)',
+                    'bonus_levitation': 'rgba(106, 27, 154, 0.8)'
+                };
+                let borderColors = {
+                    'point': '#ffca28',
+                    'danger': '#ff5252',
+                    'bonus_shield': '#42a5f5',
+                    'bonus_levitation': '#e100ff'
+                };
+
+                ctx.font = 'bold 14px "Segoe UI"';
+                const textWidth = ctx.measureText(item.word).width;
+                const boxWidth = textWidth + 20;
+
+                ctx.fillStyle = bgColors[item.type] || bgColors['point'];
+                ctx.strokeStyle = borderColors[item.type] || borderColors['point'];
+                ctx.lineWidth = 2;
+                
+                // Desenha a caixinha
+                ctx.beginPath();
+                ctx.roundRect(screenX, item.y, boxWidth, 30, 5);
+                ctx.fill();
+                ctx.stroke();
+
+                // Desenha o Texto
+                ctx.fillStyle = '#fff';
+                ctx.fillText(item.word, screenX + 10, item.y + 20);
+
+                ctx.restore();
+            }
+        }
+
+        // Obs: O Player e os Efeitos Animados de Colisão são tratados via DOM (Tags <img>) fora do Canvas.
+        // Se o player tem escudo, nós desenhamos um círculo azul extra sobre ele no canvas:
+        if (player.hasShield && isPlaying) {
             ctx.save();
-            let badgeBg = item.type === 'danger' ? 'rgba(180, 0, 0, 0.85)' : item.type.startsWith('bonus') ? 'rgba(106, 27, 154, 0.85)' : 'rgba(0, 0, 0, 0.75)';
-            let borderColor = item.type === 'danger' ? '#ff5252' : item.type.startsWith('bonus') ? '#e100ff' : '#ffca28';
-            ctx.font = 'bold 13px "Segoe UI", sans-serif'; const bw = ctx.measureText(item.text).width + 24;
-            ctx.fillStyle = badgeBg; ctx.strokeStyle = borderColor; ctx.lineWidth = 2;
-            roundRect(ctx, screenX, item.y, bw, 26, 6, true, true);
-            if (loadedImages[item.key]) ctx.drawImage(loadedImages[item.key], screenX + 4, item.y + 3, 20, 20);
-            ctx.fillStyle = '#fff'; ctx.fillText(item.text, screenX + 26, item.y + 17);
+            ctx.strokeStyle = '#42a5f5';
+            ctx.lineWidth = 4;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#42a5f5';
+            ctx.beginPath();
+            ctx.arc(player.x + player.width/2, player.y + player.height/2, player.width * 0.7, 0, Math.PI*2);
+            ctx.stroke();
             ctx.restore();
         }
     }
-    ctx.save(); ctx.translate(player.x + player.width, player.y); ctx.scale(-1, 1);
-    if (loadedImages.silverfish) ctx.drawImage(loadedImages.silverfish, 0, 0, player.width, player.height);
-    else { ctx.fillStyle = '#888'; ctx.fillRect(0, 0, player.width, player.height); }
-    ctx.restore();
-    if (player.hasShield) { ctx.save(); ctx.strokeStyle = '#42a5f5'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width * 0.7, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
-}
-
-function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
-    ctx.beginPath(); ctx.moveTo(x + radius, y); ctx.lineTo(x + width - radius, y); ctx.quadraticCurveTo(x + width, y, x + width, y + radius); ctx.lineTo(x + width, y + height - radius); ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height); ctx.lineTo(x + radius, y + height); ctx.quadraticCurveTo(x, y + height, x, y + height - radius); ctx.lineTo(x, y + radius); ctx.quadraticCurveTo(x, y, x + radius, y); ctx.closePath();
-    if (fill) ctx.fill(); if (stroke) ctx.stroke();
-}
 </script>
 </body>
 </html>
