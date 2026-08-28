@@ -508,10 +508,10 @@
         }
     });
 
-    document.getElementById('btn-restart').addEventListener('click', () => {
+    document.getElementById('btn-re').addEventListener('click', () => {
         document.getElementById('gameover-screen').classList.add('hidden');
         effectsLayer.innerHTML = ''; // Limpa as imagens congeladas
-        startGame();
+        Game();
     });
 
     // ==========================================
@@ -528,6 +528,10 @@
         player.isGrounded = true;
         player.hasShield = false;
         player.isLevitating = false;
+
+        player.isHiding = false;
+        player.isDiving = false;
+        if (player.diveTimeout) clearTimeout(player.diveTimeout);
         
         if (player.levitationInterval) clearInterval(player.levitationInterval);
 
@@ -538,19 +542,66 @@
         gameLoop();
     }
 
-    // Controles (Pulo)
+    // Controles (Pulo, Mergulho e Esquiva)
+    let touchStartY = 0;
+
     function jump() {
         if (!isPlaying) return;
-        if (player.isGrounded || player.isLevitating) {
+        
+        if (player.isLevitating) {
+            // Se não estiver escondido na pedra, dá um mergulho rápido para pegar itens
+            if (!player.isHiding) {
+                player.isDiving = true;
+                if (player.diveTimeout) clearTimeout(player.diveTimeout);
+                player.diveTimeout = setTimeout(() => { player.isDiving = false; }, 600); // 600ms de mergulho
+            }
+        } else if (player.isGrounded) {
             player.vy = player.jumpForce;
             player.isGrounded = false;
         }
     }
 
-    window.addEventListener('keydown', (e) => { if(e.code === 'Space') jump(); });
-    window.addEventListener('mousedown', jump);
-    window.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); }, {passive: false});
+    window.addEventListener('keydown', (e) => { 
+        if (e.code === 'Space') jump(); 
+        if (e.code === 'ArrowDown' && player.isLevitating) player.isHiding = true;
+    });
 
+    window.addEventListener('keyup', (e) => {
+        if (e.code === 'ArrowDown') player.isHiding = false;
+    });
+
+    window.addEventListener('mousedown', jump);
+
+    window.addEventListener('touchstart', (e) => {
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+        e.preventDefault();
+        touchStartY = e.changedTouches[0].screenY;
+        
+        // Pula imediatamente se estiver correndo no chão
+        if (!player.isLevitating) jump();
+    }, {passive: false});
+
+    window.addEventListener('touchmove', (e) => {
+        if (!isPlaying || !player.isLevitating) return;
+        let touchCurrentY = e.touches[0].screenY;
+        
+        if (touchCurrentY - touchStartY > 30) {
+            player.isHiding = true; // Deslizou para baixo (Entra na pedra)
+        } else if (touchStartY - touchCurrentY > 30) {
+            player.isHiding = false; // Deslizou para cima (Volta a levitar)
+        }
+    });
+
+    window.addEventListener('touchend', (e) => {
+        if (!isPlaying || !player.isLevitating) return;
+        let touchEndY = e.changedTouches[0].screenY;
+        
+        // Se foi apenas um toque (tap) e não um deslize, aciona o mergulho
+        if (Math.abs(touchEndY - touchStartY) < 30) {
+            jump();
+        }
+    });
+    
     function gameLoop() {
         if (!isPlaying) return;
         update();
@@ -564,8 +615,15 @@
 
         // Física do Jogador
         if (player.isLevitating) {
-            // Flutua numa altura fixa
-            const targetY = GROUND_Y - 140;
+            // Flutua acima da zona de palavras por padrão
+            let targetY = GROUND_Y - 160; 
+            
+            if (player.isHiding) {
+                targetY = GROUND_Y + 10; // Desce para dentro/trás da pedra
+            } else if (player.isDiving) {
+                targetY = GROUND_Y - 60; // Mergulha para a altura dos itens
+            }
+
             player.y += (targetY - player.y) * 0.1;
             player.vy = 0;
             player.isGrounded = false;
@@ -613,6 +671,8 @@
             // Ignora itens fora da tela
             if (screenX > canvas.width || screenX + item.width < 0) continue;
 
+            if (player.isHiding) continue;
+
             // Hitbox do item e player
             if (player.x < screenX + item.width && 
                 player.x + player.width > screenX &&
@@ -628,6 +688,13 @@
         // Atualiza a posição da tag <img> do GIF do jogador na tela
         playerSprite.style.left = `${player.x}px`;
         playerSprite.style.top = `${player.y}px`;
+        
+        let overlap = Math.max(0, (player.y + player.height) - GROUND_Y);
+        if (overlap > 0 && player.isLevitating && player.isHiding) {
+            playerSprite.style.clipPath = `inset(0 0 ${overlap}px 0)`;
+        } else {
+            playerSprite.style.clipPath = 'none';
+        }
     }
 
     function handleItemCollision(item) {
@@ -798,15 +865,15 @@
                 // Cores baseadas no tipo de item
                 let bgColors = {
                     'point': 'rgba(0,0,0, 0.7)',
-                    'danger': 'rgba(120, 0, 0, 0.8)',
-                    'bonus_shield': 'rgba(21, 101, 192, 0.8)',
-                    'bonus_levitation': 'rgba(106, 27, 154, 0.8)'
+                    'danger': 'rgba(0,0,0, 0.7)',
+                    'bonus_shield': 'rgba(0,0,0, 0.7)',
+                    'bonus_levitation': 'rgba(0,0,0, 0.7)'
                 };
                 let borderColors = {
                     'point': '#ffca28',
-                    'danger': '#ff5252',
-                    'bonus_shield': '#42a5f5',
-                    'bonus_levitation': '#e100ff'
+                    'danger': '##ffca28',
+                    'bonus_shield': '#ffca28',
+                    'bonus_levitation': '#ffca28'
                 };
 
                 ctx.font = 'bold 14px "Segoe UI"';
