@@ -28,11 +28,13 @@
         @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(1); } 100% { transform: translate(-50%, -50%) scale(1.2); } }
         .score-popup { position: absolute; color: #4caf50; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 0 #000; animation: floatUp 1s forwards; pointer-events: none; z-index: 25; }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; background: #333; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
+    <!-- HUD -->
     <div id="hud" style="display: none;">
         <div class="hud-card">
             <span>Jogador: <span id="hud-username" class="hud-highlight">-</span></span>
@@ -42,30 +44,33 @@
             <span>| Total Banco: <span id="hud-total-score" class="hud-highlight">0</span></span>
         </div>
         <div class="hud-card" id="hud-buffs">
-            <span id="shield-indicator" style="display:none;" class="status-badge">🛡️ Escudo Ativo</span>
-            <span id="levitation-indicator" style="display:none;" class="status-badge">🪶 Levitação (<span id="lev-timer">10</span>s)</span>
+            <span id="shield-indicator" style="display:none; background:#1e88e5;" class="status-badge">🛡️ Escudo</span>
+            <span id="levitation-indicator" style="display:none; background:#ab47bc;" class="status-badge">🪶 Levitação (<span id="lev-timer">10</span>s)</span>
         </div>
     </div>
 
+    <!-- Tela de Login -->
     <div id="login-screen" class="overlay-screen">
         <div class="modal-box">
             <h1>MINECRAFT RUNNER</h1>
             <p>Digite seu nome de usuário para sincronizar sua pontuação na tabela users.</p>
-            <input type="text" id="username-input" placeholder="Seu Nome de Usuário" maxlength="20">
+            <input type="text" id="username-input" placeholder="Seu Nome de Usuário" maxlength="20" autocomplete="off">
             <button class="btn" id="start-login-btn">Entrar e Jogar</button>
         </div>
     </div>
 
+    <!-- Tela de Carregamento -->
     <div id="loading-screen" class="overlay-screen" style="display: none;">
         <div class="modal-box">
-            <h2>Carregando Recursos...</h2>
-            <p>Preparando texturas e gifs do jogo...</p>
+            <h2>Carregando Terreno...</h2>
+            <p>Preparando texturas, mapa e gifs do jogo...</p>
             <div class="progress-container">
                 <div class="progress-bar" id="progress-bar"></div>
             </div>
         </div>
     </div>
 
+    <!-- Tela de Game Over -->
     <div id="gameover-screen" class="overlay-screen" style="display: none;">
         <div class="modal-box">
             <h1 style="color: #f44336;">FIM DE JOGO!</h1>
@@ -81,7 +86,7 @@
 </div>
 
 <script>
-// Integração Backend (Usuários & Score)
+/** 1. BACKEND SIMULATION (Tabela Users) **/
 class BackendAPI {
     static async getUser(username) {
         const dbData = JSON.parse(localStorage.getItem('mc_runner_users') || '{}');
@@ -102,6 +107,278 @@ class BackendAPI {
         localStorage.setItem('mc_runner_users', JSON.stringify(dbData));
         return { username: username, newScore: newScore };
     }
+}
+
+/** 2. PRELOADER DE RECURSOS **/
+const ASSETS_TO_LOAD = {
+    bg: 'https://wallpaperaccess.com/full/2915358.jpg',
+    cobblestone: 'https://i.pinimg.com/474x/e8/85/0a/e8850a26cdef4cb4352801a4f9de7445.jpg',
+    silverfish: 'https://img1.picmix.com/output/stamp/normal/6/6/1/9/2649166_bed44.gif',
+    golden_apple: 'https://minecraft.wiki/images/Golden_Apple_JE2_BE2.png?aa827',
+    enchanted_apple: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/e/ed/Enchanted_Golden_Apple_JE2_BE2.gif/revision/latest/thumbnail/width/360/height/360?cb=20200430025309',
+    golden_carrot: 'https://minecraft.wiki/images/Golden_Carrot_JE4_BE2.png?43b25',
+    ender_pearl: 'https://minecraft.wiki/images/Ender_Pearl_JE3_BE2.png?829a7',
+    cooked_porkchop: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/e/ee/Cooked_Porkchop_JE4_BE3.png/revision/latest/thumbnail/width/360/height/360?cb=20190504061538',
+    iron_sword: 'https://www.pngkey.com/png/full/149-1494354_minecraft-iron-sword-png-clip-art-transparent-stock.png',
+    fire: 'https://mcdf.wiki.gg/images/Fire_%28Item%29.gif?bd609b',
+    poison: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/e/e9/Poison_JE1_BE1.png/revision/latest?cb=20201201162146',
+    lava: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/9/95/Flowing_Lava_%28Nether_1%29.gif/revision/latest/scale-to-width-down/250?cb=20200307141840',
+    cactus: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/2/29/Cactus_JE2_BE1.png/revision/latest?cb=20200924050150',
+    levitation: 'https://static.wikia.nocookie.net/minecraft_gamepedia/images/a/af/Shulker_Bullet.png/revision/latest?cb=20170422161445',
+    shield: 'https://minecraft.wiki/images/Shield_JE2_BE1.png?4837d'
+};
+
+const loadedImages = {};
+
+function preloadAssets(onProgress, onComplete) {
+    const keys = Object.keys(ASSETS_TO_LOAD);
+    let loadedCount = 0;
+    const total = keys.length;
+
+    keys.forEach(key => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.src = ASSETS_TO_LOAD[key];
+        img.onload = () => { loadedImages[key] = img; loadedCount++; onProgress(loadedCount / total); if (loadedCount === total) onComplete(); };
+        img.onerror = () => {
+            const fallbackCanvas = document.createElement('canvas'); fallbackCanvas.width = 40; fallbackCanvas.height = 40;
+            const ctx = fallbackCanvas.getContext('2d'); ctx.fillStyle = '#ff00ff'; ctx.fillRect(0,0,40,40);
+            const fallbackImg = new Image(); fallbackImg.src = fallbackCanvas.toDataURL();
+            loadedImages[key] = fallbackImg; loadedCount++; onProgress(loadedCount / total); if (loadedCount === total) onComplete();
+        };
+    });
+}
+
+/** 3. GAME ENGINE E LÓGICA DO JOGO **/
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const loginScreen = document.getElementById('login-screen');
+const loadingScreen = document.getElementById('loading-screen');
+const gameoverScreen = document.getElementById('gameover-screen');
+const hud = document.getElementById('hud');
+const overlayEffects = document.getElementById('overlay-effects');
+const progressBar = document.getElementById('progress-bar');
+
+const ITEM_DEFINITIONS = [
+    { text: 'Golden Apple', type: 'point', points: 1, key: 'golden_apple' },
+    { text: 'Enchanted Golden Apple', type: 'point', points: 3, key: 'enchanted_apple' },
+    { text: 'Golden Carrot', type: 'point', points: 1, key: 'golden_carrot' },
+    { text: 'Ender Pearl', type: 'point', points: 2, key: 'ender_pearl' },
+    { text: 'Cooked Porkchop', type: 'point', points: 1, key: 'cooked_porkchop' },
+    { text: 'Iron Sword', type: 'point', points: 2, key: 'iron_sword' },
+    { text: 'Fire', type: 'danger', key: 'fire' },
+    { text: 'Poison', type: 'danger', key: 'poison' },
+    { text: 'Lava', type: 'danger', key: 'lava' },
+    { text: 'Cactus', type: 'danger', key: 'cactus' },
+    { text: 'Levitation', type: 'bonus_levitation', points: 1, key: 'levitation' },
+    { text: 'Shield', type: 'bonus_shield', points: 1, key: 'shield' }
+];
+
+let currentUser = '';
+let currentTotalScore = 0;
+let sessionScore = 0;
+let gameSpeed = 5;
+let isPlaying = false;
+let animationFrameId = null;
+
+const BLOCK_SIZE = 40;
+const GROUND_Y = 380;
+let cameraX = 0;
+let worldMap = []; 
+let worldItems = [];
+
+const player = { x: 180, y: GROUND_Y - 40, width: 50, height: 35, vy: 0, gravity: 0.65, jumpForce: -12.5, isGrounded: false, hasShield: false, isLevitating: false, levitationTimeLeft: 0, levitationInterval: null };
+
+// Botão Entrar
+document.getElementById('start-login-btn').addEventListener('click', () => {
+    const name = document.getElementById('username-input').value.trim();
+    if (!name) { alert('Informe um nome de usuário!'); return; }
+    currentUser = name;
+    loginScreen.style.display = 'none';
+    loadingScreen.style.display = 'flex'; // Exibe a tela "Carregando Terreno"
+
+    BackendAPI.getUser(currentUser).then(userData => {
+        currentTotalScore = userData.score;
+        document.getElementById('hud-username').innerText = currentUser;
+        document.getElementById('hud-total-score').innerText = currentTotalScore;
+
+        preloadAssets((progress) => {
+            progressBar.style.width = `${progress * 100}%`;
+        }, () => {
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                hud.style.display = 'flex';
+                initGame();
+            }, 400);
+        });
+    });
+});
+
+// Botão Jogar Novamente
+document.getElementById('restart-btn').addEventListener('click', () => {
+    gameoverScreen.style.display = 'none';
+    overlayEffects.innerHTML = '';
+    initGame();
+});
+
+// Controles
+function handleJump() {
+    if (!isPlaying) return;
+    if (player.isGrounded || player.isLevitating) {
+        player.vy = player.jumpForce;
+        player.isGrounded = false;
+    }
+}
+window.addEventListener('keydown', (e) => { if (e.code === 'Space') { e.preventDefault(); handleJump(); } });
+canvas.addEventListener('mousedown', handleJump);
+canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleJump(); });
+
+function pregenerateMap() {
+    worldMap = []; worldItems = []; let currentX = 0;
+    for (let i = 0; i < 15; i++) { worldMap.push({ x: currentX, y: GROUND_Y, width: BLOCK_SIZE, height: BLOCK_SIZE }); currentX += BLOCK_SIZE; }
+    for (let i = 0; i < 300; i++) {
+        const createGap = Math.random() < 0.22 && i > 5;
+        if (createGap) currentX += (Math.random() < 0.5 ? 1 : 2) * BLOCK_SIZE;
+        worldMap.push({ x: currentX, y: GROUND_Y, width: BLOCK_SIZE, height: BLOCK_SIZE });
+        if (Math.random() < 0.45 && !createGap) {
+            const itemDef = ITEM_DEFINITIONS[Math.floor(Math.random() * ITEM_DEFINITIONS.length)];
+            worldItems.push({ ...itemDef, x: currentX, y: GROUND_Y - 55 - (Math.random() < 0.3 ? 60 : 0), width: 90, height: 30, collected: false });
+        }
+        currentX += BLOCK_SIZE;
+    }
+}
+
+function initGame() {
+    sessionScore = 0; gameSpeed = 5; cameraX = 0;
+    player.y = GROUND_Y - player.height; player.vy = 0; player.isGrounded = true; player.hasShield = false; player.isLevitating = false;
+    if (player.levitationInterval) clearInterval(player.levitationInterval);
+    updateHUD(); pregenerateMap(); isPlaying = true;
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    gameLoop();
+}
+
+function updateHUD() {
+    document.getElementById('hud-score').innerText = sessionScore;
+    document.getElementById('hud-total-score').innerText = currentTotalScore;
+    document.getElementById('shield-indicator').style.display = player.hasShield ? 'inline-block' : 'none';
+    document.getElementById('levitation-indicator').style.display = player.isLevitating ? 'inline-block' : 'none';
+    document.getElementById('lev-timer').innerText = player.levitationTimeLeft;
+}
+
+function gameLoop() { if (!isPlaying) return; update(); render(); animationFrameId = requestAnimationFrame(gameLoop); }
+
+function update() {
+    cameraX += gameSpeed; gameSpeed += 0.0008;
+
+    if (player.isLevitating) {
+        player.y += ((GROUND_Y - 140) - player.y) * 0.1; player.vy = 0; player.isGrounded = false;
+    } else {
+        player.vy += player.gravity; player.y += player.vy;
+    }
+
+    const playerWorldX = player.x + cameraX;
+    let landed = false;
+
+    if (!player.isLevitating) {
+        for (let block of worldMap) {
+            if (playerWorldX + player.width * 0.7 > block.x && playerWorldX + player.width * 0.2 < block.x + block.width) {
+                if (player.y + player.height >= block.y && player.y + player.height <= block.y + 15 && player.vy >= 0) {
+                    player.y = block.y - player.height; player.vy = 0; player.isGrounded = true; landed = true; break;
+                }
+            }
+        }
+    }
+    if (!landed && !player.isLevitating) player.isGrounded = false;
+    if (player.y > canvas.height + 50) { triggerGameOver("Você caiu em um buraco!"); return; }
+
+    for (let item of worldItems) {
+        if (item.collected) continue;
+        const screenX = item.x - cameraX;
+        if (player.x < screenX + item.width && player.x + player.width > screenX && player.y < item.y + item.height && player.y + player.height > item.y) {
+            item.collected = true;
+            if (item.type === 'point') { sessionScore += item.points; showPopup(`+${item.points}`, player.x + 20, player.y - 10); updateHUD(); }
+            else if (item.type === 'bonus_shield') { sessionScore += item.points; player.hasShield = true; showPopup("🛡️ ESCUDO!", player.x + 10, player.y - 10); updateHUD(); }
+            else if (item.type === 'bonus_levitation') { sessionScore += item.points; activateLevitation(); showPopup("🪶 LEVITAÇÃO!", player.x + 10, player.y - 10); updateHUD(); }
+            else if (item.type === 'danger') {
+                if (player.hasShield) { player.hasShield = false; showPopup("🛡️ Escudo Quebrado!", player.x, player.y - 10); updateHUD(); }
+                else { handleDangerCollision(item); return; }
+            }
+        }
+    }
+}
+
+function activateLevitation() {
+    player.isLevitating = true; player.levitationTimeLeft = 10; updateHUD();
+    if (player.levitationInterval) clearInterval(player.levitationInterval);
+    player.levitationInterval = setInterval(() => {
+        player.levitationTimeLeft--; updateHUD();
+        if (player.levitationTimeLeft <= 0) { clearInterval(player.levitationInterval); player.isLevitating = false; updateHUD(); }
+    }, 1000);
+}
+
+function showPopup(text, x, y) {
+    const el = document.createElement('div'); el.className = 'score-popup'; el.innerText = text; el.style.left = `${x}px`; el.style.top = `${y}px`;
+    overlayEffects.appendChild(el); setTimeout(() => el.remove(), 1000);
+}
+
+function handleDangerCollision(item) {
+    isPlaying = false;
+    const dangerImg = document.createElement('img'); dangerImg.src = ASSETS_TO_LOAD[item.key];
+    dangerImg.className = 'danger-overlay-img'; dangerImg.style.left = `${player.x + player.width / 2}px`; dangerImg.style.top = `${player.y + player.height / 2}px`;
+    overlayEffects.appendChild(dangerImg);
+    setTimeout(() => { triggerGameOver(`Você encostou em: ${item.text}!`); }, 2000);
+}
+
+function triggerGameOver(reason) {
+    isPlaying = false; if (player.levitationInterval) clearInterval(player.levitationInterval);
+    BackendAPI.updateScore(currentUser, sessionScore).then(res => {
+        currentTotalScore = res.newScore;
+        document.getElementById('gameover-reason').innerText = reason;
+        document.getElementById('final-session-score').innerText = sessionScore;
+        document.getElementById('final-total-score').innerText = currentTotalScore;
+        gameoverScreen.style.display = 'flex';
+    });
+}
+
+function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (loadedImages.bg) {
+        const bgOffset = (cameraX * 0.3) % canvas.width;
+        ctx.drawImage(loadedImages.bg, -bgOffset, 0, canvas.width, canvas.height); ctx.drawImage(loadedImages.bg, canvas.width - bgOffset, 0, canvas.width, canvas.height);
+    }
+    for (let block of worldMap) {
+        const screenX = block.x - cameraX;
+        if (screenX + block.width > -50 && screenX < canvas.width + 50) {
+            if (loadedImages.cobblestone) ctx.drawImage(loadedImages.cobblestone, screenX, block.y, block.width, block.height);
+            else { ctx.fillStyle = '#777'; ctx.fillRect(screenX, block.y, block.width, block.height); }
+        }
+    }
+    for (let item of worldItems) {
+        if (item.collected) continue;
+        const screenX = item.x - cameraX;
+        if (screenX + item.width > -50 && screenX < canvas.width + 50) {
+            ctx.save();
+            let badgeBg = item.type === 'danger' ? 'rgba(180, 0, 0, 0.85)' : item.type.startsWith('bonus') ? 'rgba(106, 27, 154, 0.85)' : 'rgba(0, 0, 0, 0.75)';
+            let borderColor = item.type === 'danger' ? '#ff5252' : item.type.startsWith('bonus') ? '#e100ff' : '#ffca28';
+            ctx.font = 'bold 13px "Segoe UI", sans-serif'; const bw = ctx.measureText(item.text).width + 24;
+            ctx.fillStyle = badgeBg; ctx.strokeStyle = borderColor; ctx.lineWidth = 2;
+            roundRect(ctx, screenX, item.y, bw, 26, 6, true, true);
+            if (loadedImages[item.key]) ctx.drawImage(loadedImages[item.key], screenX + 4, item.y + 3, 20, 20);
+            ctx.fillStyle = '#fff'; ctx.fillText(item.text, screenX + 26, item.y + 17);
+            ctx.restore();
+        }
+    }
+    ctx.save(); ctx.translate(player.x + player.width, player.y); ctx.scale(-1, 1);
+    if (loadedImages.silverfish) ctx.drawImage(loadedImages.silverfish, 0, 0, player.width, player.height);
+    else { ctx.fillStyle = '#888'; ctx.fillRect(0, 0, player.width, player.height); }
+    ctx.restore();
+    if (player.hasShield) { ctx.save(); ctx.strokeStyle = '#42a5f5'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width * 0.7, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
+}
+
+function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+    ctx.beginPath(); ctx.moveTo(x + radius, y); ctx.lineTo(x + width - radius, y); ctx.quadraticCurveTo(x + width, y, x + width, y + radius); ctx.lineTo(x + width, y + height - radius); ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height); ctx.lineTo(x + radius, y + height); ctx.quadraticCurveTo(x, y + height, x, y + height - radius); ctx.lineTo(x, y + radius); ctx.quadraticCurveTo(x, y, x + radius, y); ctx.closePath();
+    if (fill) ctx.fill(); if (stroke) ctx.stroke();
 }
 </script>
 </body>
