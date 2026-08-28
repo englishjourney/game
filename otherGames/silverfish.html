@@ -371,6 +371,9 @@
         isGrounded: false,
         hasShield: false,
         isLevitating: false,
+        isHiding: false,
+        isDiving: false,
+        diveTimeout: null,
         levitationTimeLeft: 0,
         levitationInterval: null
     };
@@ -562,8 +565,18 @@
     }
 
     window.addEventListener('keydown', (e) => { 
-        if (e.code === 'Space') jump(); 
-        if (e.code === 'ArrowDown' && player.isLevitating) player.isHiding = true;
+        if (e.code === 'Space') {
+            e.preventDefault();
+            jump();
+        }
+        if (e.code === 'ArrowDown') {
+            e.preventDefault();
+            player.isHiding = true;
+        }
+        if (e.code === 'ArrowUp') {
+            e.preventDefault();
+            player.isHiding = false;
+        }
     });
 
     window.addEventListener('keyup', (e) => {
@@ -582,21 +595,21 @@
     }, {passive: false});
 
     window.addEventListener('touchmove', (e) => {
-        if (!isPlaying || !player.isLevitating) return;
+        if (!isPlaying) return;
         let touchCurrentY = e.touches[0].screenY;
         
         if (touchCurrentY - touchStartY > 30) {
             player.isHiding = true; // Deslizou para baixo (Entra na pedra)
         } else if (touchStartY - touchCurrentY > 30) {
-            player.isHiding = false; // Deslizou para cima (Volta a levitar)
+            player.isHiding = false; // Deslizou para cima (Volta a revelar/levitar)
         }
     });
 
     window.addEventListener('touchend', (e) => {
-        if (!isPlaying || !player.isLevitating) return;
+        if (!isPlaying) return;
         let touchEndY = e.changedTouches[0].screenY;
         
-        // Se foi apenas um toque (tap) e não um deslize, aciona o mergulho
+        // Se foi apenas um toque (tap) e não um deslize, aciona o pulo/mergulho
         if (Math.abs(touchEndY - touchStartY) < 30) {
             jump();
         }
@@ -627,6 +640,11 @@
             player.y += (targetY - player.y) * 0.1;
             player.vy = 0;
             player.isGrounded = false;
+        } else if (player.isHiding) {
+            let targetY = GROUND_Y + 10;
+            player.y += (targetY - player.y) * 0.2;
+            player.vy = 0;
+            player.isGrounded = true;
         } else {
             player.vy += player.gravity;
             player.y += player.vy;
@@ -636,7 +654,7 @@
         const playerWorldX = player.x + cameraX;
         let onGround = false;
 
-        if (!player.isLevitating && player.vy >= 0) {
+        if (!player.isLevitating && !player.isHiding && player.vy >= 0) {
             for (let block of worldBlocks) {
                 // Checa se está horizontalmente dentro do bloco (com uma tolerância/hitbox menor)
                 if (playerWorldX + player.width * 0.6 > block.x && playerWorldX + player.width * 0.4 < block.x + block.width) {
@@ -652,7 +670,7 @@
             }
         }
 
-        if (!onGround && !player.isLevitating) {
+        if (!onGround && !player.isLevitating && !player.isHiding) {
             player.isGrounded = false;
         }
 
@@ -690,7 +708,7 @@
         playerSprite.style.top = `${player.y}px`;
         
         let overlap = Math.max(0, (player.y + player.height) - GROUND_Y);
-        if (overlap > 0 && player.isLevitating && player.isHiding) {
+        if (overlap > 0 && player.isHiding) {
             playerSprite.style.clipPath = `inset(0 0 ${overlap}px 0)`;
         } else {
             playerSprite.style.clipPath = 'none';
