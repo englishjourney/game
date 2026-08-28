@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Silverfish Runner</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; user-select: none; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #111; display: flex; justify-content: center; align-items: center; }
+        #game-container { position: relative; width: 900px; height: 500px; background-image: url('https://wallpaperaccess.com/full/2915358.jpg'); background-size: cover; background-position: center; border: 4px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.8); overflow: hidden; border-radius: 8px; }
+        .overlay-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: white; text-align: center; backdrop-filter: blur(4px); }
+        .modal-box { background: rgba(30, 30, 30, 0.95); border: 3px solid #555; padding: 30px 40px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; align-items: center; gap: 15px; max-width: 420px; width: 90%; }
+        h1 { font-size: 26px; color: #ffca28; text-shadow: 2px 2px #000; }
+        h2 { font-size: 22px; color: #4caf50; }
+        input[type="text"] { width: 100%; padding: 12px 15px; border-radius: 6px; border: 2px solid #555; background: #222; color: #fff; font-size: 16px; text-align: center; outline: none; }
+        input[type="text"]:focus { border-color: #ffca28; }
+        .btn { background: #4caf50; color: white; border: none; padding: 12px 28px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 0 #2e7d32; transition: all 0.1s ease; text-transform: uppercase; }
+        .btn:hover { background: #66bb6a; }
+        .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #2e7d32; }
+        .progress-container { width: 100%; background-color: #333; border-radius: 10px; overflow: hidden; height: 20px; border: 1px solid #666; }
+        .progress-bar { width: 0%; height: 100%; background-color: #ffca28; transition: width 0.2s; }
+        #hud { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; align-items: center; z-index: 10; pointer-events: none; }
+        .hud-card { background: rgba(0, 0, 0, 0.65); padding: 8px 16px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.2); color: white; font-weight: bold; font-size: 15px; display: flex; align-items: center; gap: 10px; }
+        .hud-highlight { color: #ffca28; }
+        canvas { display: block; width: 100%; height: 100%; }
+        #overlay-effects { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+        .danger-overlay-img { position: absolute; width: 70px; height: 70px; transform: translate(-50%, -50%); animation: pulse 0.5s infinite alternate; z-index: 30; }
+        @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(1); } 100% { transform: translate(-50%, -50%) scale(1.2); } }
+        .score-popup { position: absolute; color: #4caf50; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 0 #000; animation: floatUp 1s forwards; pointer-events: none; z-index: 25; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="hud" style="display: none;">
+        <div class="hud-card">
+            <span>Jogador: <span id="hud-username" class="hud-highlight">-</span></span>
+        </div>
+        <div class="hud-card">
+            <span>Pontos da Rodada: <span id="hud-score" class="hud-highlight">0</span></span>
+            <span>| Total Banco: <span id="hud-total-score" class="hud-highlight">0</span></span>
+        </div>
+        <div class="hud-card" id="hud-buffs">
+            <span id="shield-indicator" style="display:none;" class="status-badge">🛡️ Escudo Ativo</span>
+            <span id="levitation-indicator" style="display:none;" class="status-badge">🪶 Levitação (<span id="lev-timer">10</span>s)</span>
+        </div>
+    </div>
+
+    <div id="login-screen" class="overlay-screen">
+        <div class="modal-box">
+            <h1>MINECRAFT RUNNER</h1>
+            <p>Digite seu nome de usuário para sincronizar sua pontuação na tabela users.</p>
+            <input type="text" id="username-input" placeholder="Seu Nome de Usuário" maxlength="20">
+            <button class="btn" id="start-login-btn">Entrar e Jogar</button>
+        </div>
+    </div>
+
+    <div id="loading-screen" class="overlay-screen" style="display: none;">
+        <div class="modal-box">
+            <h2>Carregando Recursos...</h2>
+            <p>Preparando texturas e gifs do jogo...</p>
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameover-screen" class="overlay-screen" style="display: none;">
+        <div class="modal-box">
+            <h1 style="color: #f44336;">FIM DE JOGO!</h1>
+            <p id="gameover-reason">Você encostou em um perigo!</p>
+            <p style="font-size: 16px;">Pontos nesta partida: <strong id="final-session-score" style="color:#ffca28;">0</strong></p>
+            <p style="font-size: 16px;">Novo Total na Tabela Users: <strong id="final-total-score" style="color:#4caf50;">0</strong></p>
+            <button class="btn" id="restart-btn">Jogar Novamente</button>
+        </div>
+    </div>
+
+    <div id="overlay-effects"></div>
+    <canvas id="gameCanvas" width="900" height="500"></canvas>
+</div>
+
+<script>
+// Integração Backend (Usuários & Score)
+class BackendAPI {
+    static async getUser(username) {
+        const dbData = JSON.parse(localStorage.getItem('mc_runner_users') || '{}');
+        if (dbData[username] !== undefined) {
+            return { username: username, score: dbData[username] };
+        } else {
+            dbData[username] = 0;
+            localStorage.setItem('mc_runner_users', JSON.stringify(dbData));
+            return { username: username, score: 0 };
+        }
+    }
+
+    static async updateScore(username, addedPoints) {
+        const dbData = JSON.parse(localStorage.getItem('mc_runner_users') || '{}');
+        const currentScore = dbData[username] || 0;
+        const newScore = currentScore + addedPoints;
+        dbData[username] = newScore;
+        localStorage.setItem('mc_runner_users', JSON.stringify(dbData));
+        return { username: username, newScore: newScore };
+    }
+}
+</script>
+</body>
+</html>
