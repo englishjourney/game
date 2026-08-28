@@ -13,14 +13,19 @@
             --primary-color: #f9a826;
         }
 
-        body {
+        html, body {
             margin: 0;
             padding: 0;
+            width: 100%;
+            height: 100%;
+            height: 100dvh; /* Ajuste dinâmico para navegadores mobile */
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             overflow: hidden;
-            touch-action: none; /* Evita scroll no celular ao arrastar */
+            touch-action: none; /* Evita scroll/zoom no celular ao arrastar */
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         /* Telas */
@@ -28,13 +33,15 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             transition: opacity 0.3s ease;
+            box-sizing: border-box;
         }
 
         .hidden {
@@ -51,21 +58,26 @@
         
         .login-box {
             background: rgba(255, 255, 255, 0.1);
-            padding: 30px;
+            padding: 25px 20px;
             border-radius: 15px;
             text-align: center;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.2);
+            width: 85%;
+            max-width: 380px;
+            box-sizing: border-box;
         }
 
         .login-box h1 {
             margin-top: 0;
             color: var(--primary-color);
+            font-size: clamp(22px, 6vw, 32px);
         }
 
         .login-box input {
             padding: 12px;
-            width: 80%;
+            width: 100%;
+            box-sizing: border-box;
             margin-bottom: 20px;
             border-radius: 8px;
             border: none;
@@ -83,10 +95,11 @@
             border-radius: 8px;
             cursor: pointer;
             transition: transform 0.2s;
+            width: 100%;
         }
 
         .btn:hover {
-            transform: scale(1.05);
+            transform: scale(1.03);
         }
 
         /* Tela do Jogo */
@@ -101,18 +114,20 @@
             top: 0;
             left: 0;
             width: 100%;
-            padding: 15px 20px;
+            padding: 10px 15px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
             box-sizing: border-box;
             z-index: 20;
-            background: rgba(0, 0, 0, 0.5);
-            font-size: 24px;
+            background: rgba(0, 0, 0, 0.6);
+            font-size: clamp(14px, 4.5vw, 22px);
             font-weight: bold;
         }
 
         .hearts {
-            letter-spacing: 5px;
+            letter-spacing: 2px;
+            white-space: nowrap;
         }
 
         #game-area {
@@ -124,11 +139,11 @@
 
         #monster {
             position: absolute;
-            bottom: 10px;
+            bottom: 15px;
             left: 50%;
             transform: translateX(-50%);
-            width: 120px;
-            height: 120px;
+            width: clamp(80px, 22vw, 120px);
+            height: clamp(80px, 22vw, 120px);
             background-image: url('https://png.pngtree.com/png-clipart/20240606/original/pngtree-cartoon-monster-with-open-mouth-png-image_15257989.png');
             background-size: contain;
             background-repeat: no-repeat;
@@ -136,6 +151,7 @@
             z-index: 15;
             cursor: grab;
             transition: filter 0.3s;
+            touch-action: none;
         }
 
         #monster:active {
@@ -154,7 +170,7 @@
 
         .falling-item {
             position: absolute;
-            font-size: 24px;
+            font-size: clamp(16px, 4vw, 24px);
             font-weight: bold;
             color: white;
             text-shadow: 2px 2px 4px #000;
@@ -164,11 +180,14 @@
             align-items: center;
             justify-content: center;
             user-select: none;
+            transform: translateX(-50%); /* Garante que o centro do elemento seja o ponto X */
+            white-space: nowrap;
+            pointer-events: none;
         }
 
         .falling-item img {
-            width: 60px;
-            height: 60px;
+            width: clamp(40px, 12vw, 60px);
+            height: clamp(40px, 12vw, 60px);
             object-fit: contain;
         }
 
@@ -176,10 +195,17 @@
         #end-screen {
             background: rgba(0,0,0,0.9);
             z-index: 100;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #end-title {
+            font-size: clamp(24px, 7vw, 36px);
+            margin-bottom: 10px;
         }
 
         #end-message {
-            font-size: 32px;
+            font-size: clamp(16px, 4.5vw, 24px);
             margin-bottom: 20px;
             text-align: center;
         }
@@ -227,7 +253,7 @@
         // ==========================================
         // CONFIGURAÇÃO DO SUPABASE
         // ==========================================
-        const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co'; // EX: https://xyz.supabase.co
+        const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -297,29 +323,32 @@
         // LÓGICA DO AVATAR / ARRASTAR
         // ==========================================
         let isDragging = false;
-        let monsterWidth = 120; // Largura do monstro definida no CSS
 
         const startDrag = (e) => { isDragging = true; };
         const endDrag = () => { isDragging = false; };
         const drag = (e) => {
             if (!isDragging || !isPlaying) return;
-            e.preventDefault(); 
+            if (e.cancelable) e.preventDefault(); 
             
-            // Suporta mouse e touch
-            let clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            // Pega a coordenada X (mouse ou touch)
+            let clientX = e.type.includes('mouse') ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
             let areaRect = gameArea.getBoundingClientRect();
             
-            // Calcula a nova posição no centro do cursor
+            // Pega dinamicamente a largura do monstro para a escala atual
+            let currentMonsterWidth = monster.offsetWidth || 100;
             let newLeft = clientX - areaRect.left;
             
-            // Limita nas bordas
-            if (newLeft < monsterWidth / 2) newLeft = monsterWidth / 2;
-            if (newLeft > areaRect.width - monsterWidth / 2) newLeft = areaRect.width - monsterWidth / 2;
+            // Limita a posição para o monstro não sair da tela
+            let minX = currentMonsterWidth / 2;
+            let maxX = areaRect.width - (currentMonsterWidth / 2);
+
+            if (newLeft < minX) newLeft = minX;
+            if (newLeft > maxX) newLeft = maxX;
             
             monster.style.left = `${newLeft}px`;
         };
 
-        // Eventos de Touch e Mouse para o container do jogo inteiro (melhora a jogabilidade mobile)
+        // Eventos de Touch e Mouse
         gameArea.addEventListener('mousedown', startDrag);
         gameArea.addEventListener('touchstart', startDrag, { passive: false });
         
@@ -338,11 +367,10 @@
                     const img = new Image();
                     img.src = url;
                     img.onload = resolve;
-                    img.onerror = resolve; // Resolve mesmo com erro para não travar
+                    img.onerror = resolve;
                 });
             }));
         }
-
 
         // ==========================================
         // MECÂNICAS PRINCIPAIS DO JOGO
@@ -353,12 +381,13 @@
             speedMultiplier = 1;
             isPlaying = true;
             fallingElements = [];
+            monster.style.left = '50%'; // Reset da posição inicial
             updateUI();
             
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
 
-            spawnIntervalId = setInterval(spawnItem, 1200); // Nasce um item a cada 1.2s
+            spawnIntervalId = setInterval(spawnItem, 1200);
             gameLoopId = requestAnimationFrame(gameLoop);
         }
 
@@ -370,12 +399,15 @@
             el.className = 'falling-item';
             el.innerText = randomData.word;
             
-            // Posição inicial (Topo) e Posição X aleatória
             const areaWidth = gameArea.clientWidth;
-            const startX = Math.random() * (areaWidth - 100) + 50; // Padding lateral
+            // Margem de segurança de 50px de cada lado para evitar corte do texto
+            const margin = 50; 
+            const minX = margin;
+            const maxX = Math.max(minX + 1, areaWidth - margin);
+            const startX = Math.random() * (maxX - minX) + minX;
             
             el.style.left = `${startX}px`;
-            el.style.top = `-50px`; // Começa fora da tela
+            el.style.top = `-50px`;
 
             gameArea.appendChild(el);
 
@@ -383,8 +415,8 @@
                 element: el,
                 data: randomData,
                 y: -50,
-                speed: (3 + Math.random() * 2) * speedMultiplier, // Velocidade aleatória multiplicada pelo fator de aumento
-                transformed: false // Verifica se já bateu e virou imagem
+                speed: (3 + Math.random() * 2) * speedMultiplier,
+                transformed: false
             });
         }
 
@@ -393,12 +425,12 @@
 
             const monsterRect = monster.getBoundingClientRect();
             
-            // Reduzindo ligeiramente a hit-box do monstro para ser mais justa 
+            // Hitbox proporcional ao tamanho do monstro
             const hitbox = {
-                top: monsterRect.top + 30,
+                top: monsterRect.top + (monsterRect.height * 0.25),
                 bottom: monsterRect.bottom,
-                left: monsterRect.left + 20,
-                right: monsterRect.right - 20
+                left: monsterRect.left + (monsterRect.width * 0.15),
+                right: monsterRect.right - (monsterRect.width * 0.15)
             };
 
             for (let i = fallingElements.length - 1; i >= 0; i--) {
@@ -416,11 +448,11 @@
                         itemRect.right > hitbox.left &&
                         itemRect.left < hitbox.right) {
                             
-                            handleCollision(item, i);
+                        handleCollision(item, i);
                     }
 
-                    // Se passou reto do chão, só remove da tela
-                    else if (item.y > window.innerHeight) {
+                    // Se passou do limite inferior da área de jogo
+                    else if (item.y > gameArea.clientHeight + 50) {
                         item.element.remove();
                         fallingElements.splice(i, 1);
                     }
@@ -437,9 +469,9 @@
             item.element.innerHTML = `<img src="${item.data.url}" alt="${item.data.word}">`;
 
             if (item.data.type === 'food') {
-                score += 1; // Precisa comer exatamente 50 itens para formar 50 pontos
+                score += 1;
                 monster.classList.remove('sparkle-effect');
-                void monster.offsetWidth; // Trigger reflow para reiniciar animação
+                void monster.offsetWidth;
                 monster.classList.add('sparkle-effect');
                 
                 if (score >= 50) {
@@ -447,18 +479,17 @@
                     endGame(true);
                 }
             } else if (item.data.type === 'object') {
-                lives -= 1; // Perde 1 vida ao comer objeto
+                lives -= 1;
                 if (lives <= 0) {
                     lives = 0;
                     endGame(false);
                 }
             }
 
-            speedMultiplier *= 1.02; // Aumenta a velocidade em 2% a cada item comido
+            speedMultiplier *= 1.02;
 
             updateUI();
 
-            // A imagem some depois de meio segundo (foi "comida" ou bateu)
             setTimeout(() => {
                 if(item.element && item.element.parentNode) {
                     item.element.remove();
@@ -510,7 +541,6 @@
 
         async function saveProgressToSupabase() {
             try {
-                // 1. Buscar usuário para somar a pontuação
                 const { data: userData, error: userError } = await supabaseClient
                     .from('users')
                     .select('score')
@@ -520,15 +550,13 @@
                 if (userError) throw userError;
 
                 const currentScore = userData.score || 0;
-                const newScore = currentScore + 50; // O prêmio total do jogo (50 pontos)
+                const newScore = currentScore + 50;
 
-                // 2. Atualizar Score do Usuário
                 await supabaseClient
                     .from('users')
                     .update({ score: newScore })
                     .eq('username', currentUser);
 
-                // 3. Atualizar Missões (Mission: Catching foods)
                 const { data: missionData, error: missionError } = await supabaseClient
                     .from('missions')
                     .select('done')
@@ -536,14 +564,12 @@
                     .single();
 
                 if (missionError && missionError.code !== 'PGRST116') {
-                    // Ignore caso a missão não exista (PGRST116), se for erro real loga
                     throw missionError; 
                 }
 
                 if (missionData) {
                     let doneList = missionData.done || '';
                     
-                    // Verifica se o user já completou para não duplicar
                     const usersArray = doneList.split(',').map(u => u.trim());
                     if (!usersArray.includes(currentUser)) {
                         doneList = doneList ? `${doneList},${currentUser}` : currentUser;
@@ -578,14 +604,12 @@
             btn.innerText = "Carregando jogo...";
             btn.disabled = true;
 
-            // Carrega todas as imagens para evitar início de jogo com itens invisíveis
             const urlsToLoad = allItems.map(item => item.url);
             urlsToLoad.push('https://png.pngtree.com/png-clipart/20240606/original/pngtree-cartoon-monster-with-open-mouth-png-image_15257989.png');
             urlsToLoad.push('https://t4.ftcdn.net/jpg/08/28/10/27/360_F_828102741_yAB8cTDpzctSSpPX2yJLC6TfMZE13W1b.jpg');
             
             await preloadImages(urlsToLoad);
 
-            // Verifica se o usuário existe no Supabase (Opcional, mas seguro)
             const { data, error } = await supabaseClient
                 .from('users')
                 .select('username')
