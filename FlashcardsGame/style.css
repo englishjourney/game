@@ -1,0 +1,108 @@
+:root {
+    --bg-color: #F4F1DE;
+    --primary: #3D405B;
+    --accent-red: #E07A5F;
+    --accent-green: #81B29A;
+    --accent-yellow: #F2CC8F;
+    --card-bg: #FFFFFF;
+    --font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    font-family: var(--font);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    color: var(--primary);
+}
+
+#app-container {
+    background: var(--card-bg);
+    border: 4px solid var(--primary);
+    border-radius: 20px;
+    padding: 30px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 8px 8px 0px var(--primary);
+    text-align: center;
+}
+
+.screen { display: flex; flex-direction: column; gap: 15px; }
+.hidden { display: none !important; }
+
+/* Typographic Elements */
+h1, h2 { margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+
+/* Inputs & Forms */
+input, select {
+    padding: 12px;
+    border: 3px solid var(--primary);
+    border-radius: 10px;
+    font-size: 16px;
+    font-family: var(--font);
+}
+.form-group { display: flex; flex-direction: column; text-align: left; gap: 5px; }
+.checkbox-group { flex-direction: row; align-items: center; }
+
+/* Buttons Cartoon Style */
+.btn {
+    padding: 12px 20px;
+    font-size: 18px;
+    font-weight: bold;
+    border: 3px solid var(--primary);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    text-transform: uppercase;
+}
+.btn.primary { background: var(--accent-yellow); box-shadow: 4px 4px 0px var(--primary); }
+.btn.secondary { background: var(--accent-green); box-shadow: 4px 4px 0px var(--primary); }
+.btn.danger { background: var(--accent-red); color: white; box-shadow: 4px 4px 0px var(--primary); }
+.btn.small { padding: 5px 10px; font-size: 14px; }
+
+.btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px var(--primary); }
+
+/* Players List */
+.players-list { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
+.player-row { display: flex; align-items: center; gap: 10px; background: #eee; padding: 10px; border-radius: 10px; border: 2px solid var(--primary);}
+.player-row img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--primary); }
+
+/* Scoreboard */
+.scoreboard { display: flex; justify-content: space-between; font-weight: bold; font-size: 20px; margin-bottom: 20px;}
+.team-red { color: var(--accent-red); }
+.team-blue { color: #118AB2; }
+
+/* Flashcard Flip Animation */
+.card-container { perspective: 1000px; width: 100%; height: 300px; margin-bottom: 20px; }
+.card-inner {
+    width: 100%; height: 100%;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    position: relative;
+}
+.card-inner.flipped { transform: rotateY(180deg); }
+.card-front, .card-back {
+    width: 100%; height: 100%;
+    position: absolute;
+    backface-visibility: hidden;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 32px; font-weight: bold;
+    border: 4px solid var(--primary); border-radius: 20px;
+    box-shadow: 6px 6px 0px var(--primary);
+}
+.card-front { background: white; }
+.card-back { background: var(--accent-yellow); transform: rotateY(180deg); }
+
+.card-back.correct { background: var(--accent-green); color: white; }
+.card-back.wrong { background: var(--accent-red); color: white; }
+
+/* Options Grid */
+.options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.option-btn { background: white; border: 3px solid var(--primary); padding: 15px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; }
+.option-btn:hover { background: #eee; }
+
+.error { color: var(--accent-red); font-weight: bold; }
+.countdown { font-size: 80px; font-weight: bold; color: var(--accent-red); }
