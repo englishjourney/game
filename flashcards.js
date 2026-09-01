@@ -46,7 +46,7 @@ export async function openFlashcards() {
 
             <!-- View 2: Active Deck (Cartas Empilhadas) -->
             <div id="fc-deck-view" style="display: none; flex-direction: column; align-items: center; justify-content: center; flex: 1; position: relative; width: 100%; height: 100%; min-height: 400px; padding: 20px; overflow: hidden;">
-                <button id="fc-btn-back-to-stacks" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.1); border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9em; z-index: 10;">
+                <button id="fc-btn-back-to-stacks" style="color: white; position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.1); border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9em; z-index: 10;">
                     ⬅ Stacks
                 </button>
                 <div id="fc-card-area" class="flashcard-container vertical-card">
