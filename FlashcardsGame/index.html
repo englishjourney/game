@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards Game</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div id="app-container">
+        
+        <div id="login-screen" class="screen">
+            <h1>Flashcards Game!</h1>
+            <input type="text" id="username-input" placeholder="Enter your username">
+            <button id="login-btn" class="btn primary">Check</button>
+            <p id="login-error" class="error hidden">User does not exist.</p>
+        </div>
+
+        <div id="menu-screen" class="screen hidden">
+            <h1 id="welcome-msg">Welcome, User!</h1>
+            <button id="show-create-btn" class="btn primary">Create a room</button>
+            <button id="show-join-btn" class="btn secondary">Enter in a room</button>
+        </div>
+
+        <div id="create-room-screen" class="screen hidden">
+            <h2>Create Room</h2>
+            <p id="room-name-display"></p>
+            <div class="form-group">
+                <label>Room ID (Auto-generated):</label>
+                <input type="text" id="new-room-id" disabled>
+            </div>
+            <div class="form-group">
+                <label>Password (4-6 digits):</label>
+                <input type="number" id="new-room-pw" min="1000" max="999999">
+            </div>
+            <div class="form-group">
+                <label>Stacks (Min 4):</label>
+                <div id="stacks-container"></div>
+                <button id="add-stack-btn" class="btn small">+1 Stack</button>
+            </div>
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="im-player-check" checked>
+                <label for="im-player-check">I'm player</label>
+            </div>
+            <button id="create-room-btn" class="btn primary">Create</button>
+            <button id="cancel-create-btn" class="btn danger">Cancel</button>
+        </div>
+
+        <div id="join-room-screen" class="screen hidden">
+            <h2>Join a Room</h2>
+            <input type="text" id="join-room-id" placeholder="Room ID (e.g., AB12)">
+            <input type="password" id="join-room-pw" placeholder="Password">
+            <button id="join-room-btn" class="btn primary">Enter</button>
+            <button id="cancel-join-btn" class="btn danger">Cancel</button>
+            <p id="join-error" class="error hidden">Invalid ID or Password.</p>
+        </div>
+
+        <div id="waiting-screen" class="screen hidden">
+            <h2>Waiting for players...</h2>
+            <div class="room-info">
+                <p>Room ID: <span id="wait-room-id"></span></p>
+                <p>Password: <span id="wait-room-pw"></span></p>
+            </div>
+            <div class="players-list" id="players-list">
+                </div>
+            <div class="host-controls hidden" id="host-controls">
+                <button id="edit-stacks-btn" class="btn secondary">Edit stacks</button>
+                <button id="start-game-btn" class="btn primary">Start game</button>
+            </div>
+            <button id="leave-room-btn" class="btn danger">Sair da sala</button>
+        </div>
+
+        <div id="game-screen" class="screen hidden">
+            <div class="scoreboard">
+                <div class="team-score team-red">Team Red: <span id="score-team1">0</span></div>
+                <div class="team-score team-blue">Team Blue: <span id="score-team2">0</span></div>
+            </div>
+            
+            <div id="countdown-display" class="countdown hidden">3</div>
+            
+            <div id="gameplay-area" class="hidden">
+                <div class="card-container">
+                    <div class="card-inner" id="flashcard">
+                        <div class="card-front" id="card-word">WORD</div>
+                        <div class="card-back" id="card-translation">TRANSLATION</div>
+                    </div>
+                </div>
+                <div class="options-grid" id="options-grid">
+                    </div>
+            </div>
+        </div>
+
+        <div id="end-screen" class="screen hidden">
+            <h1 id="winner-msg">Game Over!</h1>
+            <button id="play-again-btn" class="btn primary">Play again</button>
+            <button id="leave-end-btn" class="btn danger">Sair da sala</button>
+        </div>
+
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
