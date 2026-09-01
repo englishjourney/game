@@ -74,8 +74,6 @@ function generateRoomID() {
 // 3. CRIAR SALA
 // ==========================================
 async function loadStacksToForm() {
-    // Busca todos os stacks unicos. 
-    // Nota: O ideal é uma view SQL ou RPC `SELECT DISTINCT stack`, aqui fazemos client-side por simplicidade.
     const { data } = await supabaseClient.from('flashcards').select('stack');
     availableStacks = [...new Set(data.map(item => item.stack))];
     
@@ -147,8 +145,13 @@ document.getElementById('join-room-btn').addEventListener('click', async () => {
         return;
     }
 
-    // Adiciona jogador ao array se não estiver
-    let players = data.players || [];
+    let players = [];
+    if (Array.isArray(data.players)) {
+        players = data.players;
+    } else if (typeof data.players === 'string') {
+        players = data.players.replace(/[\[\]{}"']/g, '').split(',').map(p => p.trim()).filter(p => p !== '');
+    }
+
     if (!players.includes(currentUser.username)) {
         players.push(currentUser.username);
         await supabaseClient.from('flashcardsGame').update({ players }).eq('roomID', roomID);
@@ -159,7 +162,7 @@ document.getElementById('join-room-btn').addEventListener('click', async () => {
 });
 
 // ==========================================
-// 5. SALA DE ESPERA (Realtime)
+// 5. SALA DE ESPERA E REALTIME (CORRIGIDO)
 // ==========================================
 async function joinWaitingRoom() {
     showScreen('waiting-screen');
@@ -180,14 +183,21 @@ async function updatePlayersList() {
     const { data: roomData } = await supabaseClient.from('flashcardsGame').select('players').eq('roomID', currentRoom.roomID).single();
     if(!roomData) return;
 
+    let players = [];
+    if (Array.isArray(roomData.players)) {
+        players = roomData.players;
+    } else if (typeof roomData.players === 'string') {
+        players = roomData.players.replace(/[\[\]{}"']/g, '').split(',').map(p => p.trim()).filter(p => p !== '');
+    }
+
     const list = document.getElementById('players-list');
     list.innerHTML = '';
 
-    for (let username of roomData.players) {
+    for (let username of players) {
         const { data: user } = await supabaseClient.from('users').select('avatar_url').eq('username', username).single();
         const div = document.createElement('div');
         div.className = 'player-row';
-        div.innerHTML = `<img src="${user.avatar_url || 'default-avatar.png'}" alt="avatar"> <span>${username}</span>`;
+        div.innerHTML = `<img src="${user?.avatar_url || 'default-avatar.png'}" alt="avatar"> <span>${username}</span>`;
         list.appendChild(div);
     }
 }
@@ -197,10 +207,24 @@ function subscribeToRoomUpdates() {
     
     roomSubscription = supabaseClient.channel(`room:${currentRoom.roomID}`)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'flashcardsGame', filter: `roomID=eq.${currentRoom.roomID}` }, payload => {
+            
+            // AQUI ESTÁ A CORREÇÃO: Pegamos o status antigo e novo
+            const oldStatus = payload.old.status;
+            const newStatus = payload.new.status;
             currentRoom = payload.new;
-            if (currentRoom.status === 'playing') joinGameScreen();
-            else if (currentRoom.status === 'ended') showEndScreen();
-            else updatePlayersList();
+
+            // Só reinicia telas de carregamento/jogo se houve MUDANÇA de estado
+            if (newStatus === 'playing' && oldStatus !== 'playing') {
+                joinGameScreen();
+            } else if (newStatus === 'ended' && oldStatus !== 'ended') {
+                showEndScreen();
+            } else if (newStatus === 'waiting' && oldStatus !== 'waiting') {
+                joinWaitingRoom(); // Host clicou em Play Again
+            } else if (newStatus === 'waiting') {
+                updatePlayersList();
+            }
+            
+            // A pontuação atualiza sempre de forma passiva, sem reiniciar o jogo!
             updateScoreboardUI();
         })
         .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'flashcardsGame', filter: `roomID=eq.${currentRoom.roomID}` }, payload => {
@@ -232,10 +256,15 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
 
 async function joinGameScreen() {
     showScreen('game-screen');
+    
+    // Agora é 100% seguro criar o GameEngine aqui, pois ele rodará UMA única vez por partida!
     gameEngine = new GameEngine(supabaseClient, currentRoom, currentUser);
     
-    // Se for só espectador
-    if(!currentRoom.players.includes(currentUser.username)) return; 
+    let players = [];
+    if (Array.isArray(currentRoom.players)) players = currentRoom.players;
+    else if (typeof currentRoom.players === 'string') players = currentRoom.players.replace(/[\[\]{}"']/g, '').split(',').map(p => p.trim());
+
+    if(!players.includes(currentUser.username)) return; 
 
     await gameEngine.init();
     
@@ -263,12 +292,13 @@ function updateScoreboardUI() {
 
 async function renderCard() {
     const card = gameEngine.getCurrentCard();
-    if (!card) return endGame(); // Acabaram os stacks deste jogador
+    
+    // SE NÃO TEM MAIS CARTA: ESTE JOGADOR TERMINOU, ACABA O JOGO PARA TODOS
+    if (!card) return endGame(); 
 
     const cardInner = document.getElementById('flashcard');
     cardInner.classList.remove('flipped');
     
-    // Reseta cores
     const cardBack = document.getElementById('card-translation');
     cardBack.className = 'card-back'; 
     
@@ -284,21 +314,20 @@ async function renderCard() {
         btn.className = 'option-btn';
         btn.innerText = opt;
         btn.onclick = async () => {
-            // Desabilita botões para evitar duplo clique
             grid.querySelectorAll('button').forEach(b => b.disabled = true);
             
             const isCorrect = await gameEngine.handleAnswer(opt);
             cardInner.classList.add('flipped');
             cardBack.classList.add(isCorrect ? 'correct' : 'wrong');
 
-            setTimeout(() => renderCard(), 1500); // Passa pra proxima após 1.5s
+            setTimeout(() => renderCard(), 1500);
         };
         grid.appendChild(btn);
     });
 }
 
 async function endGame() {
-    // Altera o status da sala para encerrado (O primeiro que acabar as cartas vence a corrida)
+    // Quem chegar aqui primeiro encerra a sala (e o Realtime de todo mundo abre a tela final)
     await supabaseClient.from('flashcardsGame').update({ status: 'ended' }).eq('roomID', currentRoom.roomID);
 }
 
@@ -311,15 +340,14 @@ function showEndScreen() {
     else msg.innerText = "It's a TIE!";
 }
 
+// Quando o Host quiser jogar de novo:
 document.getElementById('play-again-btn').addEventListener('click', async () => {
     if (currentRoom.host === currentUser.username) {
-        // Reseta placar e volta pro lobby
+        // Apenas reseta a sala no banco, o Realtime cuida do resto!
         await supabaseClient.from('flashcardsGame').update({ 
             status: 'waiting', 
             team1_score: 0, 
             team2_score: 0 
         }).eq('roomID', currentRoom.roomID);
     }
-    // A subscription (Realtime) vai capturar a mudança pra 'waiting' e atualizar a tela
-    joinWaitingRoom(); 
 });
