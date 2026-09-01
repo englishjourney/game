@@ -24,14 +24,44 @@ export class GameEngine {
 
         this.myTeam = teamRed.includes(this.user.username) ? 'team1_score' : 'team2_score';
 
+        // --- INDICADOR DO TIME (Adicionado no cabeçalho) ---
+        const myTeamColor = this.myTeam === 'team1_score' ? 'Red' : 'Blue';
+        let teamIndicator = document.getElementById('my-team-indicator');
+        if (!teamIndicator) {
+            teamIndicator = document.createElement('div');
+            teamIndicator.id = 'my-team-indicator';
+            teamIndicator.style.textAlign = 'center';
+            teamIndicator.style.fontWeight = 'bold';
+            teamIndicator.style.fontSize = '22px';
+            teamIndicator.style.marginBottom = '15px';
+            
+            const scoreboard = document.querySelector('.scoreboard');
+            if (scoreboard) {
+                scoreboard.parentNode.insertBefore(teamIndicator, scoreboard.nextSibling);
+            }
+        }
+        teamIndicator.innerText = `My Team: ${myTeamColor}`;
+        teamIndicator.style.color = myTeamColor === 'Red' ? 'var(--accent-red)' : '#118AB2';
+        // --------------------------------------------------
+
+        // Garante que stacks seja um Array válido para a busca funcionar perfeitamente
+        let stacksArray = [];
+        if (Array.isArray(this.room.stacks)) {
+            stacksArray = this.room.stacks;
+        } else if (typeof this.room.stacks === 'string') {
+            stacksArray = this.room.stacks.replace(/[\[\]{}"']/g, '').split(',').map(s => s.trim()).filter(s => s !== '');
+        }
+
         // Busca os cards baseados nos stacks
-        const { data } = await this.supabase
+        const { data, error } = await this.supabase
             .from('flashcards')
             .select('*')
-            .in('stack', this.room.stacks);
+            .in('stack', stacksArray);
+            
+        if (error) console.error("Erro ao buscar as cartas:", error);
         
-        // Embaralha as cartas
-        this.cards = data.sort(() => Math.random() - 0.5);
+        // Embaralha as cartas de todos os stacks combinados
+        this.cards = (data || []).sort(() => Math.random() - 0.5);
     }
 
     getTeamsHeader() {
@@ -68,18 +98,20 @@ export class GameEngine {
         
         if (isCorrect) {
             // Atualiza pontuação do time no banco (simulação de corrida)
-            const { data: currentRoom } = await this.supabase
+            const { data: currentRoom, error } = await this.supabase
                 .from('flashcardsGame')
                 .select(this.myTeam)
                 .eq('roomID', this.room.roomID)
                 .single();
             
-            const newScore = currentRoom[this.myTeam] + 1;
-            
-            await this.supabase
-                .from('flashcardsGame')
-                .update({ [this.myTeam]: newScore })
-                .eq('roomID', this.room.roomID);
+            if (!error && currentRoom) {
+                const newScore = currentRoom[this.myTeam] + 1;
+                
+                await this.supabase
+                    .from('flashcardsGame')
+                    .update({ [this.myTeam]: newScore })
+                    .eq('roomID', this.room.roomID);
+            }
         }
 
         this.currentCardIndex++;
