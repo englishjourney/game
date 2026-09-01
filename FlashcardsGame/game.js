@@ -7,6 +7,7 @@ export class GameEngine {
         this.cards = [];
         this.currentCardIndex = 0;
         this.myTeam = null;
+        this.myTeamColor = null;
     }
 
     async init() {
@@ -23,44 +24,47 @@ export class GameEngine {
         });
 
         this.myTeam = teamRed.includes(this.user.username) ? 'team1_score' : 'team2_score';
+        this.myTeamColor = teamRed.includes(this.user.username) ? 'Red' : 'Blue';
 
-        // --- INDICADOR DO TIME (Adicionado no cabeçalho) ---
-        const myTeamColor = this.myTeam === 'team1_score' ? 'Red' : 'Blue';
+        // --- INÍCIO DO CÓDIGO DO CABEÇALHO ---
+        // Cria ou atualiza o texto "My Team: Cor" no centro do topo da tela
         let teamIndicator = document.getElementById('my-team-indicator');
         if (!teamIndicator) {
-            teamIndicator = document.createElement('div');
+            teamIndicator = document.createElement('h3');
             teamIndicator.id = 'my-team-indicator';
             teamIndicator.style.textAlign = 'center';
-            teamIndicator.style.fontWeight = 'bold';
-            teamIndicator.style.fontSize = '22px';
-            teamIndicator.style.marginBottom = '15px';
+            teamIndicator.style.margin = '15px 0';
             
-            const scoreboard = document.querySelector('.scoreboard');
-            if (scoreboard) {
-                scoreboard.parentNode.insertBefore(teamIndicator, scoreboard.nextSibling);
-            }
+            // Tenta colocar no header da sua página. Se não achar o header, coloca no topo.
+            const container = document.querySelector('header') || document.body;
+            container.insertBefore(teamIndicator, container.firstChild);
         }
-        teamIndicator.innerText = `My Team: ${myTeamColor}`;
-        teamIndicator.style.color = myTeamColor === 'Red' ? 'var(--accent-red)' : '#118AB2';
-        // --------------------------------------------------
+        teamIndicator.textContent = `My Team: ${this.myTeamColor}`;
+        teamIndicator.style.color = this.myTeamColor;
+        // --- FIM DO CÓDIGO DO CABEÇALHO ---
 
-        // Garante que stacks seja um Array válido para a busca funcionar perfeitamente
+
+        // --- INÍCIO DA CORREÇÃO DOS STACKS (SUA TEORIA) ---
+        // Limpa a string vinda do Supabase e transforma num Array de palavras que o .in() consegue ler
         let stacksArray = [];
         if (Array.isArray(this.room.stacks)) {
             stacksArray = this.room.stacks;
         } else if (typeof this.room.stacks === 'string') {
-            stacksArray = this.room.stacks.replace(/[\[\]{}"']/g, '').split(',').map(s => s.trim()).filter(s => s !== '');
+            stacksArray = this.room.stacks
+                .replace(/[\[\]{}"']/g, '') // Tira as chaves, aspas e colchetes
+                .split(',')                  // Separa as palavras pela vírgula
+                .map(s => s.trim())          // Tira os espaços em branco
+                .filter(s => s !== '');      // Remove itens vazios
         }
 
-        // Busca os cards baseados nos stacks
-        const { data, error } = await this.supabase
+        // Busca todas as rows (cartas) no banco onde a coluna 'stack' tenha o nome de um dos stacks
+        const { data } = await this.supabase
             .from('flashcards')
             .select('*')
             .in('stack', stacksArray);
-            
-        if (error) console.error("Erro ao buscar as cartas:", error);
-        
-        // Embaralha as cartas de todos os stacks combinados
+        // --- FIM DA CORREÇÃO ---
+
+        // Embaralha as cartas. O (data || []) protege para não dar erro se vier vazio.
         this.cards = (data || []).sort(() => Math.random() - 0.5);
     }
 
@@ -72,7 +76,8 @@ export class GameEngine {
     }
 
     getCurrentCard() {
-        if (this.currentCardIndex >= this.cards.length) return null; // Acabou
+        // Agora, isso aqui só vai ser Null depois que você passar por todas as cartas pesquisadas
+        if (this.currentCardIndex >= this.cards.length) return null; 
         return this.cards[this.currentCardIndex];
     }
 
@@ -85,7 +90,7 @@ export class GameEngine {
             .neq('translation', card.translation)
             .limit(3);
 
-        let options = wrongOptions.map(o => o.translation);
+        let options = (wrongOptions || []).map(o => o.translation);
         options.push(card.translation);
         
         // Embaralha opções
@@ -104,6 +109,7 @@ export class GameEngine {
                 .eq('roomID', this.room.roomID)
                 .single();
             
+            // Mantive a proteção de erro da última mensagem para evitar travamentos
             if (!error && currentRoom) {
                 const newScore = currentRoom[this.myTeam] + 1;
                 
