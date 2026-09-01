@@ -3,9 +3,9 @@ import { checkUserExists, checkActiveSession } from './auth.js';
 import { GameEngine } from './game.js';
 
 // ATENÇÃO: Insira suas credenciais do Supabase aqui
-const SUPABASE_URL = 'SUA_URL_AQUI';
-const SUPABASE_KEY = 'SUA_ANON_KEY_AQUI';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Estado Global
 let currentUser = null;
@@ -27,7 +27,7 @@ document.getElementById('login-btn').addEventListener('click', async () => {
     const username = document.getElementById('username-input').value.trim();
     if (!username) return;
 
-    const user = await checkUserExists(supabase, username);
+    const user = await checkUserExists(supabaseClient, username);
     if (!user) {
         document.getElementById('login-error').classList.remove('hidden');
         return;
@@ -37,7 +37,7 @@ document.getElementById('login-btn').addEventListener('click', async () => {
     document.getElementById('welcome-msg').innerText = `Welcome, ${user.username}!`;
     
     // Verifica se já está numa sala
-    const activeRoom = await checkActiveSession(supabase, user.username);
+    const activeRoom = await checkActiveSession(supabaseClient, user.username);
     if (activeRoom) {
         currentRoom = activeRoom;
         if(activeRoom.status === 'playing') joinGameScreen();
@@ -76,7 +76,7 @@ function generateRoomID() {
 async function loadStacksToForm() {
     // Busca todos os stacks unicos. 
     // Nota: O ideal é uma view SQL ou RPC `SELECT DISTINCT stack`, aqui fazemos client-side por simplicidade.
-    const { data } = await supabase.from('flashcards').select('stack');
+    const { data } = await supabaseClient.from('flashcards').select('stack');
     availableStacks = [...new Set(data.map(item => item.stack))];
     
     const container = document.getElementById('stacks-container');
@@ -115,7 +115,7 @@ document.getElementById('create-room-btn').addEventListener('click', async () =>
     const imPlayer = document.getElementById('im-player-check').checked;
     const players = imPlayer ? [currentUser.username] : [];
 
-    const { data, error } = await supabase.from('flashcardsGame').insert([{
+    const { data, error } = await supabaseClient.from('flashcardsGame').insert([{
         roomID,
         roomPW,
         stacks: selectedStacks,
@@ -136,7 +136,7 @@ document.getElementById('join-room-btn').addEventListener('click', async () => {
     const roomID = document.getElementById('join-room-id').value.toUpperCase();
     const roomPW = document.getElementById('join-room-pw').value;
 
-    const { data, error } = await supabase.from('flashcardsGame')
+    const { data, error } = await supabaseClient.from('flashcardsGame')
         .select('*')
         .eq('roomID', roomID)
         .eq('roomPW', roomPW)
@@ -151,7 +151,7 @@ document.getElementById('join-room-btn').addEventListener('click', async () => {
     let players = data.players || [];
     if (!players.includes(currentUser.username)) {
         players.push(currentUser.username);
-        await supabase.from('flashcardsGame').update({ players }).eq('roomID', roomID);
+        await supabaseClient.from('flashcardsGame').update({ players }).eq('roomID', roomID);
     }
 
     currentRoom = data;
@@ -177,14 +177,14 @@ async function joinWaitingRoom() {
 }
 
 async function updatePlayersList() {
-    const { data: roomData } = await supabase.from('flashcardsGame').select('players').eq('roomID', currentRoom.roomID).single();
+    const { data: roomData } = await supabaseClient.from('flashcardsGame').select('players').eq('roomID', currentRoom.roomID).single();
     if(!roomData) return;
 
     const list = document.getElementById('players-list');
     list.innerHTML = '';
 
     for (let username of roomData.players) {
-        const { data: user } = await supabase.from('users').select('avatar_url').eq('username', username).single();
+        const { data: user } = await supabaseClient.from('users').select('avatar_url').eq('username', username).single();
         const div = document.createElement('div');
         div.className = 'player-row';
         div.innerHTML = `<img src="${user.avatar_url || 'default-avatar.png'}" alt="avatar"> <span>${username}</span>`;
@@ -193,9 +193,9 @@ async function updatePlayersList() {
 }
 
 function subscribeToRoomUpdates() {
-    if (roomSubscription) supabase.removeChannel(roomSubscription);
+    if (roomSubscription) supabaseClient.removeChannel(roomSubscription);
     
-    roomSubscription = supabase.channel(`room:${currentRoom.roomID}`)
+    roomSubscription = supabaseClient.channel(`room:${currentRoom.roomID}`)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'flashcardsGame', filter: `roomID=eq.${currentRoom.roomID}` }, payload => {
             currentRoom = payload.new;
             if (currentRoom.status === 'playing') joinGameScreen();
@@ -215,10 +215,10 @@ document.getElementById('leave-end-btn').addEventListener('click', leaveRoom);
 
 async function leaveRoom() {
     if (currentRoom.host === currentUser.username) {
-        await supabase.from('flashcardsGame').delete().eq('roomID', currentRoom.roomID);
+        await supabaseClient.from('flashcardsGame').delete().eq('roomID', currentRoom.roomID);
     } else {
         const players = currentRoom.players.filter(p => p !== currentUser.username);
-        await supabase.from('flashcardsGame').update({ players }).eq('roomID', currentRoom.roomID);
+        await supabaseClient.from('flashcardsGame').update({ players }).eq('roomID', currentRoom.roomID);
     }
     window.location.reload();
 }
@@ -227,12 +227,12 @@ async function leaveRoom() {
 // 6. GAMEPLAY
 // ==========================================
 document.getElementById('start-game-btn').addEventListener('click', async () => {
-    await supabase.from('flashcardsGame').update({ status: 'playing' }).eq('roomID', currentRoom.roomID);
+    await supabaseClient.from('flashcardsGame').update({ status: 'playing' }).eq('roomID', currentRoom.roomID);
 });
 
 async function joinGameScreen() {
     showScreen('game-screen');
-    gameEngine = new GameEngine(supabase, currentRoom, currentUser);
+    gameEngine = new GameEngine(supabaseClient, currentRoom, currentUser);
     
     // Se for só espectador
     if(!currentRoom.players.includes(currentUser.username)) return; 
@@ -299,7 +299,7 @@ async function renderCard() {
 
 async function endGame() {
     // Altera o status da sala para encerrado (O primeiro que acabar as cartas vence a corrida)
-    await supabase.from('flashcardsGame').update({ status: 'ended' }).eq('roomID', currentRoom.roomID);
+    await supabaseClient.from('flashcardsGame').update({ status: 'ended' }).eq('roomID', currentRoom.roomID);
 }
 
 function showEndScreen() {
@@ -314,7 +314,7 @@ function showEndScreen() {
 document.getElementById('play-again-btn').addEventListener('click', async () => {
     if (currentRoom.host === currentUser.username) {
         // Reseta placar e volta pro lobby
-        await supabase.from('flashcardsGame').update({ 
+        await supabaseClient.from('flashcardsGame').update({ 
             status: 'waiting', 
             team1_score: 0, 
             team2_score: 0 
