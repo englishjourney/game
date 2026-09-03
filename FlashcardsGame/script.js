@@ -10,6 +10,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Estado Global
 let currentUser = null;
 let currentRoom = null;
+let roomCurrentStatus = 'waiting'
 let availableStacks = [];
 let gameEngine = null;
 let roomSubscription = null;
@@ -208,19 +209,23 @@ function subscribeToRoomUpdates() {
     roomSubscription = supabaseClient.channel(`room:${currentRoom.roomID}`)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'flashcardsGame', filter: `roomID=eq.${currentRoom.roomID}` }, payload => {
             
-            // AQUI ESTÁ A CORREÇÃO: Pegamos o status antigo e novo
-            const oldStatus = payload.old.status;
-            const newStatus = payload.new.status;
-            currentRoom = payload.new;
+            // 1. Pegamos o status ANTIGO localmente, e não do payload do Supabase
+            const oldStatus = roomCurrentStatus;
+            
+            // 2. Mesclamos os dados novos com os atuais para não perder a array de 'stacks' e 'players'
+            currentRoom = { ...currentRoom, ...payload.new };
+            
+            // 3. Atualizamos o status local
+            roomCurrentStatus = currentRoom.status;
 
-            // Só reinicia telas de carregamento/jogo se houve MUDANÇA de estado
-            if (newStatus === 'playing' && oldStatus !== 'playing') {
+            // Só reinicia telas de carregamento/jogo se houve MUDANÇA REAL de estado
+            if (roomCurrentStatus === 'playing' && oldStatus !== 'playing') {
                 joinGameScreen();
-            } else if (newStatus === 'ended' && oldStatus !== 'ended') {
+            } else if (roomCurrentStatus === 'ended' && oldStatus !== 'ended') {
                 showEndScreen();
-            } else if (newStatus === 'waiting' && oldStatus !== 'waiting') {
+            } else if (roomCurrentStatus === 'waiting' && oldStatus !== 'waiting') {
                 joinWaitingRoom(); // Host clicou em Play Again
-            } else if (newStatus === 'waiting') {
+            } else if (roomCurrentStatus === 'waiting') {
                 updatePlayersList();
             }
             
