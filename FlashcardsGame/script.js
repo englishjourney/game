@@ -262,7 +262,9 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
 async function joinGameScreen() {
     showScreen('game-screen');
     
-    // Agora é 100% seguro criar o GameEngine aqui, pois ele rodará UMA única vez por partida!
+    // ADICIONE ESTA LINHA: Força ocultar os botões/cartas enquanto o cronômetro roda
+    document.getElementById('gameplay-area').classList.add('hidden');
+    
     gameEngine = new GameEngine(supabaseClient, currentRoom, currentUser);
     
     let players = [];
