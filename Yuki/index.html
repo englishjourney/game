@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+  <title>Yuki - Tutor de Inglês</title>
+  <!-- Alterne entre style.css (Cyberpunk) e global.css (Cartoon) mudando a tag abaixo -->
+  <link id="theme-stylesheet" rel="stylesheet" href="style.css">
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="chat-container">
+    <!-- Cabeçalho -->
+    <header class="chat-header">
+      <div class="avatar-container">
+        <img src="Yuki/yuki.png" alt="Yuki Avatar" class="avatar-img">
+      </div>
+      <div class="header-info">
+        <h2>Yuki</h2>
+        <span class="status-online">Online</span>
+      </div>
+    </header>
+
+    <!-- Área de Mensagens -->
+    <main class="chat-messages" id="chat-messages">
+      <!-- Mensagens serão inseridas dinamicamente via JS -->
+    </main>
+
+    <!-- Campo de Entrada -->
+    <footer class="chat-input-area">
+      <form id="chat-form">
+        <textarea id="user-input" placeholder="Digite sua dúvida ou resposta..." rows="1" required></textarea>
+        <button type="submit" id="send-btn">
+          <svg viewBox="0 0 24 24" width="24" height="24">
+            <path fill="currentColor" d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/>
+          </svg>
+        </button>
+      </form>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
