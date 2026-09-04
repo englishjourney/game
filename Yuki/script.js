@@ -23,28 +23,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // Busca os dados do usuário autenticado na tabela 'users'
+// Substitua esta função inteira no script.js
 async function loadUserData() {
-  const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+  const localUser = localStorage.getItem("game_user");
 
-  if (authError || !user) {
-    console.error("Usuário não autenticado.");
+  if (!localUser) {
+    // Se não tiver cache, ele não faz nada, pois o auth.js vai exibir a tela de login
     return;
   }
 
-  const { data: userData, error: dbError } = await supabaseClient
-    .from("users")
-    .select("name, username, avatar_url, serie, team")
-    .eq("id", user.id)
-    .single();
+  // Transforma o texto do cache de volta em um objeto
+  const parsedUser = JSON.parse(localUser);
 
-  if (dbError) {
-    console.error("Erro ao carregar dados do usuário:", dbError);
-    return;
-  }
-
-  currentUser = userData;
+  currentUser = parsedUser;
   // Junta série e turma (ex: 6 + B = 6B)
-  currentUser.gradeClass = `${userData.serie || ''}${userData.team || ''}`;
+  currentUser.gradeClass = `${currentUser.serie || ''}${currentUser.team || ''}`;
+  
+  console.log("Usuário carregado com sucesso do cache:", currentUser.name);
 }
 
 // Ajuste automático de scroll quando o teclado mobile abre
