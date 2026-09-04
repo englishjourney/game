@@ -22,21 +22,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupMobileKeyboardAdjust();
 });
 
-// Busca os dados do usuário autenticado na tabela 'users'
-// Substitua esta função inteira no script.js
+// Busca os dados do usuário do cache do navegador
 async function loadUserData() {
   const localUser = localStorage.getItem("game_user");
 
   if (!localUser) {
-    // Se não tiver cache, ele não faz nada, pois o auth.js vai exibir a tela de login
     return;
   }
 
-  // Transforma o texto do cache de volta em um objeto
   const parsedUser = JSON.parse(localUser);
 
   currentUser = parsedUser;
-  // Junta série e turma (ex: 6 + B = 6B)
   currentUser.gradeClass = `${currentUser.serie || ''}${currentUser.team || ''}`;
   
   console.log("Usuário carregado com sucesso do cache:", currentUser.name);
@@ -86,7 +82,6 @@ function renderMessage(sender, text, avatarUrl) {
 
   chatMessagesContainer.appendChild(row);
 
-  // Regra de Scroll: se for a IA Yuki (mensagem longa), mostra do COMEÇO da mensagem
   if (sender === "yuki") {
     row.scrollIntoView({ behavior: "smooth", block: "start" });
   } else {
@@ -115,10 +110,9 @@ chatForm.addEventListener("submit", async (e) => {
   const loadingRow = renderMessage("yuki", "Yuki está digitando...", "yuki.png");
 
   try {
-    // 4. Envia mensagem ao Apps Script (Proxy para Groq)
+    // 4. Envia mensagem ao Apps Script sem acionar a requisição Preflight (CORS)
     const response = await fetch(APPS_SCRIPT_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message: message,
         userData: {
@@ -130,7 +124,7 @@ chatForm.addEventListener("submit", async (e) => {
     });
 
     const data = await response.json();
-    loadingRow.remove(); // Remove o indicador de carregamento
+    loadingRow.remove();
 
     const yukiReply = data.reply || "Ops, tive um probleminha para responder. Pode repetir?";
     const detectedSubject = data.mainSubject || "Geral";
@@ -162,13 +156,11 @@ async function saveAssignmentData(history, mainSubject) {
   };
 
   if (currentAssignmentId) {
-    // Atualiza o registro existente
     await supabaseClient
       .from("assignments")
       .update(payload)
       .eq("id", currentAssignmentId);
   } else {
-    // Cria um novo registro e captura o id gerado
     const { data, error } = await supabaseClient
       .from("assignments")
       .insert([payload])
