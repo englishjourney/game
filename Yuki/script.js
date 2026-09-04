@@ -3,7 +3,8 @@ const SUPABASE_URL = "https://rmsmamzutvxugdbiqsrz.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEOyf6-TY45LS6daHbWtSD2lQ5PyABbMdrTyNx8xg1yl853-5g3Ep7LCLoru01YFpbcA/exec";
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Instância com nome 'supabaseClient' para evitar conflito com a biblioteca global
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Estado da Aplicação
 let currentUser = null;
@@ -23,14 +24,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // Busca os dados do usuário autenticado na tabela 'users'
 async function loadUserData() {
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
 
   if (authError || !user) {
     console.error("Usuário não autenticado.");
     return;
   }
 
-  const { data: userData, error: dbError } = await supabase
+  const { data: userData, error: dbError } = await supabaseClient
     .from("users")
     .select("name, username, avatar_url, serie, team")
     .eq("id", user.id)
@@ -70,7 +71,7 @@ function renderMessage(sender, text, avatarUrl) {
 
   const avatarImg = document.createElement("img");
   avatarImg.classList.add("avatar-img");
-  avatarImg.src = sender === "yuki" ? "Yuki/yuki.png" : (avatarUrl || "default-avatar.png");
+  avatarImg.src = sender === "yuki" ? "yuki.png" : (avatarUrl || "default-avatar.png");
 
   const bubble = document.createElement("div");
   bubble.classList.add("message-bubble");
@@ -116,7 +117,7 @@ chatForm.addEventListener("submit", async (e) => {
   chatHistoryText += `${currentUser.username} [${timestamp}]: ${message}\n`;
 
   // 3. Renderiza mensagem temporária de digitação do Yuki
-  const loadingRow = renderMessage("yuki", "Yuki está digitando...", "Yuki/yuki.png");
+  const loadingRow = renderMessage("yuki", "Yuki está digitando...", "yuki.png");
 
   try {
     // 4. Envia mensagem ao Apps Script (Proxy para Groq)
@@ -140,7 +141,7 @@ chatForm.addEventListener("submit", async (e) => {
     const detectedSubject = data.mainSubject || "Geral";
 
     // 5. Renderiza a resposta do Yuki
-    renderMessage("yuki", yukiReply, "Yuki/yuki.png");
+    renderMessage("yuki", yukiReply, "yuki.png");
     
     // 6. Atualiza o histórico
     const yukiTimestamp = getFormattedTimestamp();
@@ -152,7 +153,7 @@ chatForm.addEventListener("submit", async (e) => {
   } catch (error) {
     console.error("Erro na comunicação com a IA:", error);
     loadingRow.remove();
-    renderMessage("yuki", "Tive um erro de conexão. Tente novamente!", "Yuki/yuki.png");
+    renderMessage("yuki", "Tive um erro de conexão. Tente novamente!", "yuki.png");
   }
 });
 
@@ -167,13 +168,13 @@ async function saveAssignmentData(history, mainSubject) {
 
   if (currentAssignmentId) {
     // Atualiza o registro existente
-    await supabase
+    await supabaseClient
       .from("assignments")
       .update(payload)
       .eq("id", currentAssignmentId);
   } else {
     // Cria um novo registro e captura o id gerado
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from("assignments")
       .insert([payload])
       .select("id")
