@@ -90,3 +90,33 @@ dialog::backdrop { background: rgba(0,0,0,0.7); }
 .form-grid .full-width { grid-column: 1 / -1; }
 .form-grid input, .form-grid textarea, .form-grid select { margin-top: 5px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: white; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+/* Botão Flutuante e Fixo */
+#btn-add-plan {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    padding: 15px 25px;
+    font-size: 1.1rem;
+    border-radius: 50px;
+}
+
+/* Cores dos Cartões Especiais */
+.card-special-1, .card-special-1 * { background-color: #facc15 !important; color: #000 !important; border-color: #ca8a04 !important; }
+.card-special-2, .card-special-2 * { background-color: #ef4444 !important; color: #fff !important; border-color: #b91c1c !important; }
+.card-special-3, .card-special-3 * { background-color: #f97316 !important; color: #fff !important; border-color: #c2410c !important; }
+
+/* Botões de Minimizar/Maximizar */
+.minimize-btn {
+    background: transparent;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.minimize-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
