@@ -3,47 +3,6 @@ import { supabase } from '../supabaseClient.js';
 export function initPlanner() {
     loadPlanners();
 
-    document.getElementById('btn-add-plan').addEventListener('click', () => {
-        document.getElementById('planner-form').reset();
-        document.getElementById('plan-id').value = '';
-        document.getElementById('planner-modal-title').textContent = 'Adicionar Aula';
-        document.getElementById('planner-modal').showModal();
-    });
-
-    document.getElementById('planner-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const id = document.getElementById('plan-id').value;
-        const planData = {
-            day: document.getElementById('plan-day').value,
-            date: document.getElementById('plan-date').value,
-            time: document.getElementById('plan-time').value,
-            serie: document.getElementById('plan-serie').value,
-            team: document.getElementById('plan-team').value,
-            skills: document.getElementById('plan-skills').value,
-            activities: document.getElementById('plan-activities').value,
-            duration: document.getElementById('plan-duration').value
-        };
-
-        let result;
-        if (id) {
-            result = await supabase.from('planner').update(planData).eq('id', id);
-        } else {
-            result = await supabase.from('planner').insert([planData]);
-        }
-
-        if (result.error) {
-            alert('Erro ao salvar: ' + result.error.message);
-        } else {
-            document.getElementById('planner-modal').close();
-            loadPlanners();
-        }
-    });
-}
-
-export function initPlanner() {
-    loadPlanners();
-
     // Lógica das Caixas de Seleção e Obrigatoriedade
     const updateRequiredFields = () => {
         const isEsp = document.getElementById('cb-especial').checked;
@@ -250,7 +209,7 @@ window.editPlanner = (p) => {
     document.getElementById('planner-modal-title').textContent = 'Editar Aula';
     document.getElementById('planner-modal').showModal();
 };
-
+                            
 // FUNÇÃO DE EXCLUSÃO ADICIONADA AQUI
 window.deletePlanner = async (id) => {
     // Confirmação para evitar exclusões acidentais
