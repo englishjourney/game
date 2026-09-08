@@ -41,6 +41,13 @@ export function initUsers() {
 
 async function loadUsers() {
     const container = document.getElementById('users-container');
+    
+    // CORREÇÃO: Verifica se o contêiner existe antes de tentar alterar o HTML
+    if (!container) {
+        console.error("Erro: O elemento com ID 'users-container' não foi encontrado no HTML.");
+        return; // Para a função aqui e evita a tela em branco
+    }
+
     container.innerHTML = 'Carregando alunos...';
 
     const { data, error } = await supabase
@@ -52,7 +59,6 @@ async function loadUsers() {
         .order('name', { ascending: true });
 
     if (error) return container.innerHTML = 'Erro ao carregar alunos.';
-
     const teams = {};
     data.forEach(u => {
         let groupName = (u.serie || u.team) ? `${u.serie || ''} ${u.team || ''}`.trim() : 'Sem Turma';
