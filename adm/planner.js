@@ -166,22 +166,24 @@ async function loadPlanners() {
             <div class="planner-section-content">
                 ${items.map(p => {
                     let cardClass = p.special == 1 ? 'card-special-1' : (p.special == 2 ? 'card-special-2' : (p.special == 3 ? 'card-special-3' : ''));
-                    let titleHtml = p.special == 2 ? \`<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>FOLGA</strong></p>\` : (p.special == 3 ? \`<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>PROVA</strong></p>\` : '');
-                    return \`
-                    <div class="data-card \${cardClass}" id="plan-card-\${p.id}">
+                    // Correção: usando aspas simples aqui para não quebrar a template string
+                    let titleHtml = p.special == 2 ? '<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>FOLGA</strong></p>' : (p.special == 3 ? '<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>PROVA</strong></p>' : '');
+                    
+                    return `
+                    <div class="data-card ${cardClass}" id="plan-card-${p.id}">
                         <div class="data-card-info">
-                            <p><strong>\${p.day} - \${p.date} \${p.time ? \`(\${p.time})\` : ''}</strong> \${p.duration ? \`| Duração: \${p.duration}\` : ''}</p>
-                            \${titleHtml}
-                            \${p.serie || p.team ? \`<p><strong>Turma:</strong> \${p.serie || ''} \${p.team || ''}</p>\` : ''}
-                            \${p.activities ? \`<p><strong>Atividades:</strong> \${p.activities}</p>\` : ''}
-                            \${p.skills ? \`<p><strong>BNCC:</strong> \${p.skills}</p>\` : ''}
+                            <p><strong>${p.day} - ${p.date} ${p.time ? `(${p.time})` : ''}</strong> ${p.duration ? `| Duração: ${p.duration}` : ''}</p>
+                            ${titleHtml}
+                            ${p.serie || p.team ? `<p><strong>Turma:</strong> ${p.serie || ''} ${p.team || ''}</p>` : ''}
+                            ${p.activities ? `<p><strong>Atividades:</strong> ${p.activities}</p>` : ''}
+                            ${p.skills ? `<p><strong>BNCC:</strong> ${p.skills}</p>` : ''}
                         </div>
                         <div class="data-card-actions">
-                            <button class="btn-small btn-secondary" onclick='window.editPlanner(\${JSON.stringify(p).replace(/'/g, "&#39;")})'>Editar</button>
-                            <button class="btn-small" style="background-color: #ff4444; color: white; border: none;" onclick='window.deletePlanner("\${p.id}")'>Excluir</button>
+                            <button class="btn-small btn-secondary" onclick='window.editPlanner(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Editar</button>
+                            <button class="btn-small" style="background-color: #ff4444; color: white; border: none;" onclick='window.deletePlanner("${p.id}")'>Excluir</button>
                         </div>
                     </div>
-                    \`;
+                    `;
                 }).join('')}
             </div>
         </div>
