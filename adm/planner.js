@@ -47,7 +47,9 @@ export function initPlanner() {
     // --- NOVA LÓGICA DO BOTÃO REPLICAR ---
     const btnReplicar = document.getElementById('btn-replicar');
     if (btnReplicar) {
-        btnReplicar.addEventListener('click', async () => {
+        btnReplicar.addEventListener('click', async (e) => {
+            e.preventDefault(); // <-- CORREÇÃO: Impede que o botão envie o formulário e cancele a replicação
+
             const startDateStr = document.getElementById('plan-date').value;
             const endDateStr = document.getElementById('plan-end-date').value;
 
@@ -72,7 +74,7 @@ export function initPlanner() {
             current.setDate(current.getDate() + 1);
 
             while (current <= end) {
-                // Envia apenas o estritamente necessário (dia, data em texto simples e special: 3)
+                // CORREÇÃO: Enviando APENAS day, date e special. Nada de strings vazias.
                 inserts.push({
                     day: diasSemana[current.getDay()],
                     date: formatDateBR(new Date(current)),
@@ -82,53 +84,28 @@ export function initPlanner() {
             }
 
             if (inserts.length > 0) {
-                // Lógica visual da barra de progresso
-                let progressContainer = document.getElementById('replicar-progress-container');
-                if (!progressContainer) {
-                    progressContainer = document.createElement('div');
-                    progressContainer.id = 'replicar-progress-container';
-                    progressContainer.style.marginTop = '10px';
-                    progressContainer.innerHTML = `
-                        <progress id="replicar-progress" value="0" max="100" style="width: 100%;"></progress>
-                        <div id="replicar-progress-text" style="text-align: center; font-size: 0.9em; margin-top: 4px; font-weight: bold;">0%</div>
-                    `;
-                    document.getElementById('plan-end-date').insertAdjacentElement('afterend', progressContainer);
-                }
+                // Mostra a progress bar
                 const progressBar = document.getElementById('replicar-progress');
-                const progressText = document.getElementById('replicar-progress-text');
-                
-                progressContainer.style.display = 'block';
-                progressBar.value = 0;
-                progressText.innerText = '0%';
-                
-                btnReplicar.disabled = true;
-                let successCount = 0;
-                let hasError = false;
-
-                // Inserindo linha por linha para animar o progresso
-                for (let i = 0; i < inserts.length; i++) {
-                    const { error } = await supabase.from('planner').insert([inserts[i]]);
-                    if (error) {
-                        alert(`Erro ao replicar a prova no dia ${inserts[i].date}: ${error.message}`);
-                        hasError = true;
-                        break;
-                    }
-                    successCount++;
-                    let percent = Math.round((successCount / inserts.length) * 100);
-                    progressBar.value = percent;
-                    progressText.innerText = percent + '%';
+                if (progressBar) {
+                    progressBar.classList.remove('hidden');
+                    progressBar.value = 50; // Indica processamento visualmente
                 }
 
-                btnReplicar.disabled = false;
+                // Envia tudo de uma vez para o Supabase (Bulk Insert)
+                const { error } = await supabase.from('planner').insert(inserts);
+                
+                // Preenche a barra ao finalizar e a esconde depois de 2 segundos
+                if (progressBar) {
+                    progressBar.value = 100;
+                    setTimeout(() => progressBar.classList.add('hidden'), 2000);
+                }
 
-                if (!hasError) {
-                    alert(`Provas replicadas com sucesso até o dia ${endDateStr}! Lembre-se de salvar o registro principal.`);
-                    setTimeout(() => { progressContainer.style.display = 'none'; }, 2500);
-                    loadPlanners();
+                if (error) {
+                    alert('Erro ao replicar: ' + error.message);
                 } else {
-                    progressContainer.style.display = 'none';
+                    alert(`Provas replicadas com sucesso até o dia ${endDateStr}! Lembre-se de salvar o registro principal.`);
+                    loadPlanners();
                 }
-
             } else {
                 alert('A data final deve ser posterior à data inicial.');
             }
