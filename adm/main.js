@@ -47,53 +47,54 @@ async function setupDashboard() {
     const searchInput = document.getElementById('global-search');
     const resultsContainer = document.getElementById('search-results');
 
-    if (!searchInput || !resultsContainer) return;
-
-    searchInput.addEventListener('input', async (e) => {
-        const query = e.target.value.trim();
-        if (query.length < 3) {
-            resultsContainer.classList.add('hidden');
-            return;
-        }
-
-        resultsContainer.innerHTML = '<div class="search-item">Buscando...</div>';
-        resultsContainer.classList.remove('hidden');
-
-        try {
-            const { data: users } = await supabase.from('users').select('name, username, team').ilike('name', `%${query}%`).limit(3);
-            const { data: planners } = await supabase.from('planner').select('serie, team, activities').ilike('activities', `%${query}%`).limit(3);
-
-            let html = '';
-            if (users && users.length) {
-                html += '<div style="padding: 5px 10px; color: var(--primary); font-size: 0.8em">Alunos</div>';
-                users.forEach(u => html += `<div class="search-item">${u.name} (${u.username}) - ${u.team}</div>`);
-            }
-            if (planners && planners.length) {
-                html += '<div style="padding: 5px 10px; color: var(--primary); font-size: 0.8em">Planejamentos</div>';
-                planners.forEach(p => html += `<div class="search-item">${p.serie} ${p.team}: ${p.activities.substring(0,30)}...</div>`);
+    if (searchInput && resultsContainer) {
+        searchInput.addEventListener('input', async (e) => {
+            const query = e.target.value.trim();
+            if (query.length < 3) {
+                resultsContainer.classList.add('hidden');
+                return;
             }
 
-            if (!html) html = '<div class="search-item">Nenhum resultado.</div>';
-            resultsContainer.innerHTML = html;
-        } catch (err) {
-            console.error(err);
-        }
-    });
+            resultsContainer.innerHTML = '<div class="search-item">Buscando...</div>';
+            resultsContainer.classList.remove('hidden');
 
-    document.addEventListener('click', (e) => {
-        if (e.target !== searchInput && e.target !== resultsContainer) {
-            resultsContainer.classList.add('hidden');
-        }
-    });
+            try {
+                const { data: users } = await supabase.from('users').select('name, username, team').ilike('name', `%${query}%`).limit(3);
+                const { data: planners } = await supabase.from('planner').select('serie, team, activities').ilike('activities', `%${query}%`).limit(3);
 
-    loadSchedule();
+                let html = '';
+                if (users && users.length) {
+                    html += '<div style="padding: 5px 10px; color: var(--primary); font-size: 0.8em">Alunos</div>';
+                    users.forEach(u => html += `<div class="search-item">${u.name} (${u.username}) - ${u.team}</div>`);
+                }
+                if (planners && planners.length) {
+                    html += '<div style="padding: 5px 10px; color: var(--primary); font-size: 0.8em">Planejamentos</div>';
+                    planners.forEach(p => html += `<div class="search-item">${p.serie} ${p.team}: ${p.activities.substring(0,30)}...</div>`);
+                }
+
+                if (!html) html = '<div class="search-item">Nenhum resultado.</div>';
+                resultsContainer.innerHTML = html;
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target !== searchInput && e.target !== resultsContainer) {
+                resultsContainer.classList.add('hidden');
+            }
+        });
+    }
+
+    // Garante o carregamento dos horários do Supabase no Dashboard
+    await loadSchedule();
 }
 
 async function loadSchedule() {
     const container = document.getElementById('schedule-container');
-    if (!container) return; // Evita quebrar se a div não existir
+    if (!container) return;
     
-    container.innerHTML = 'Carregando horários...';
+    container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted);">Carregando horários semanais...</div>';
 
     try {
         const { data: rows, error } = await supabase.from('schedule').select('*');
@@ -101,19 +102,19 @@ async function loadSchedule() {
         if (error) throw error;
         
         if (!rows || rows.length === 0) {
-            container.innerHTML = 'Nenhum horário encontrado na base de dados.';
+            container.innerHTML = '<div style="text-align: center; padding: 20px;">Nenhum horário encontrado na tabela "schedule".</div>';
             return;
         }
 
-        // Pega a primeira linha de horários
-        const data = rows[0];
+        // Pega a linha preenchida ou a primeira linha da tabela
+        const data = rows.find(r => r.seg_mat || r.seg_ves || r.ter_mat || r.ter_ves || r.qua_mat || r.qua_ves) || rows[0];
 
         const dias = [
-            { id: 'seg', nome: 'Segunda-feira' },
-            { id: 'ter', nome: 'Terça-feira' },
-            { id: 'qua', nome: 'Quarta-feira' },
-            { id: 'qui', nome: 'Quinta-feira' },
-            { id: 'sex', nome: 'Sexta-feira' }
+            { id: 'seg', nome: 'Segunda-Feira' },
+            { id: 'ter', nome: 'Terça-Feira' },
+            { id: 'qua', nome: 'Quarta-Feira' },
+            { id: 'qui', nome: 'Quinta-Feira' },
+            { id: 'sex', nome: 'Sexta-Feira' }
         ];
 
         let html = '';
@@ -122,28 +123,30 @@ async function loadSchedule() {
             const mat = data[`${dia.id}_mat`];
             const ves = data[`${dia.id}_ves`];
 
+            // Se o dia inteiro estiver totalmente vazio, pula
+            if (!mat && !ves) return;
+
             // Card principal do dia da semana
-            html += `<div class="schedule-card" style="margin-bottom: 20px; border: 1px solid var(--border); padding: 20px; border-radius: 8px; background: var(--bg-card); box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <h3 style="text-align: center; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; color: var(--primary); font-size: 1.4rem;">${dia.nome}</h3>
+            html += `<div class="schedule-card" style="margin-bottom: 25px; border: 1px solid var(--border); padding: 20px; border-radius: 10px; background: var(--bg-card); box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <h3 style="text-align: center; border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-bottom: 20px; color: var(--primary); font-size: 1.4rem;">${dia.nome}</h3>
                 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">`;
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">`;
 
             const renderTurno = (turnoStr, turnoNome) => {
-                let turnoHtml = `<div style="background: var(--bg-dark); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                    <strong style="display: block; margin-bottom: 12px; text-align: center; color: var(--primary); font-size: 1.1rem;">${turnoNome}</strong>`;
+                let turnoHtml = `<div style="background: var(--bg-dark); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column;">
+                    <strong style="display: block; margin-bottom: 12px; text-align: center; color: var(--primary); font-size: 1.1rem; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 6px;">${turnoNome}</strong>`;
 
-                // Se a célula estiver totalmente vazia ou nula
+                // Se a coluna estiver totalmente vazia, exibe "Sem horários"
                 if (!turnoStr || turnoStr.trim() === '') {
-                    turnoHtml += `<div style="text-align: center; padding: 10px; color: #888; font-style: italic;">Sem horários</div></div>`;
+                    turnoHtml += `<div style="text-align: center; padding: 20px; color: #888; font-style: italic; margin: auto;">Sem horários</div></div>`;
                     return turnoHtml;
                 }
                 
-                // Quebra o texto por vírgulas e remove qualquer colchete [ ou ] e espaços em branco
+                // Quebra o texto por vírgulas e remove colchetes e espaços extras
                 const items = turnoStr.split(',').map(item => item.replace(/[\[\]]/g, '').trim()).filter(item => item !== '');
 
-                // Se depois de limpar sobrar vazio
                 if (items.length === 0) {
-                    turnoHtml += `<div style="text-align: center; padding: 10px; color: #888; font-style: italic;">Sem horários</div></div>`;
+                    turnoHtml += `<div style="text-align: center; padding: 20px; color: #888; font-style: italic; margin: auto;">Sem horários</div></div>`;
                     return turnoHtml;
                 }
 
@@ -154,14 +157,14 @@ async function loadSchedule() {
                     let color = 'white';
                     let borderColor = 'rgba(255,255,255,0.1)';
 
-                    // Aplica cores baseadas na palavra (Vago ou Intervalo)
-                    if (text.toLowerCase().includes('vago')) {
+                    const lowerText = text.toLowerCase();
+                    if (lowerText.includes('vago')) {
                         bg = '#eab308'; // Amarelo
-                        color = 'black';
+                        color = '#000';
                         borderColor = '#ca8a04';
-                    } else if (text.toLowerCase().includes('intervalo')) {
+                    } else if (lowerText.includes('intervalo')) {
                         bg = '#ef4444'; // Vermelho
-                        color = 'white';
+                        color = '#fff';
                         borderColor = '#b91c1c';
                     }
 
@@ -172,17 +175,21 @@ async function loadSchedule() {
                 return turnoHtml;
             };
 
-            // Renderiza Matutino e Vespertino dentro do mesmo grid
+            // Renderiza as seções Matutino e Vespertino lado a lado
             html += renderTurno(mat, 'Matutino');
             html += renderTurno(ves, 'Vespertino');
             
-            // Fecha o grid e o card
             html += `</div></div>`;
         });
 
+        if (!html) {
+            container.innerHTML = '<div style="text-align: center; padding: 20px;">Nenhum dia da semana cadastrado possui horários preenchidos.</div>';
+            return;
+        }
+
         container.innerHTML = html;
     } catch (err) {
-        console.error("Erro ao puxar horários:", err);
-        container.innerHTML = '<div style="color: #ef4444; padding: 20px; text-align: center;">Erro ao carregar os horários. Verifique se a tabela "schedule" existe e está acessível.</div>';
+        console.error("Erro ao carregar horários do schedule:", err);
+        container.innerHTML = '<div style="color: #ef4444; padding: 20px; text-align: center;">Erro ao carregar os horários. Verifique a conexão com o Supabase e a tabela "schedule".</div>';
     }
 }
