@@ -91,78 +91,98 @@ async function setupDashboard() {
 
 async function loadSchedule() {
     const container = document.getElementById('schedule-container');
+    if (!container) return; // Evita quebrar se a div não existir
+    
     container.innerHTML = 'Carregando horários...';
 
-    const { data: rows, error } = await supabase.from('schedule').select('*');
-    
-    if (error || !rows || rows.length === 0) {
-        container.innerHTML = 'Nenhum horário encontrado na base de dados.';
-        return;
-    }
+    try {
+        const { data: rows, error } = await supabase.from('schedule').select('*');
+        
+        if (error) throw error;
+        
+        if (!rows || rows.length === 0) {
+            container.innerHTML = 'Nenhum horário encontrado na base de dados.';
+            return;
+        }
 
-    // Pega a linha que efetivamente possui algum dia preenchido
-    const data = rows.find(r => r.seg_mat || r.seg_ves || r.ter_mat || r.ter_ves) || rows[0];
+        // Pega a primeira linha de horários
+        const data = rows[0];
 
-    const dias = [
-        { id: 'seg', nome: 'Segunda-feira' },
-        { id: 'ter', nome: 'Terça-feira' },
-        { id: 'qua', nome: 'Quarta-feira' },
-        { id: 'qui', nome: 'Quinta-feira' },
-        { id: 'sex', nome: 'Sexta-feira' }
-    ];
+        const dias = [
+            { id: 'seg', nome: 'Segunda-feira' },
+            { id: 'ter', nome: 'Terça-feira' },
+            { id: 'qua', nome: 'Quarta-feira' },
+            { id: 'qui', nome: 'Quinta-feira' },
+            { id: 'sex', nome: 'Sexta-feira' }
+        ];
 
-    let html = '';
-    
-    dias.forEach(dia => {
-        const mat = data[`${dia.id}_mat`];
-        const ves = data[`${dia.id}_ves`];
+        let html = '';
+        
+        dias.forEach(dia => {
+            const mat = data[`${dia.id}_mat`];
+            const ves = data[`${dia.id}_ves`];
 
-        if (!mat && !ves) return; // Pula dias 100% vazios
+            // Card principal do dia da semana
+            html += `<div class="schedule-card" style="margin-bottom: 20px; border: 1px solid var(--border); padding: 20px; border-radius: 8px; background: var(--bg-card); box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <h3 style="text-align: center; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; color: var(--primary); font-size: 1.4rem;">${dia.nome}</h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">`;
 
-        // Container unificado para o Dia (Manhã e Tarde na mesma tabela/cartão)
-        html += `<div class="schedule-card" style="margin-bottom: 20px; border: 1px solid var(--border); padding: 20px; border-radius: 8px; background: var(--bg-card); box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <h3 style="text-align: center; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; color: var(--primary); font-size: 1.4rem;">${dia.nome}</h3>
-            <div style="display: grid; grid-template-columns: ${mat && ves ? '1fr 1fr' : '1fr'}; gap: 20px;">`;
+            const renderTurno = (turnoStr, turnoNome) => {
+                let turnoHtml = `<div style="background: var(--bg-dark); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <strong style="display: block; margin-bottom: 12px; text-align: center; color: var(--primary); font-size: 1.1rem;">${turnoNome}</strong>`;
 
-        const renderTurno = (turnoStr, turnoNome) => {
-            if (!turnoStr || turnoStr.trim() === '') return '';
-            
-            // Extrai as matérias isolando o que está entre chaves (ou quebra por vírgula se n for possível)
-            const items = turnoStr.match(/\[.*?\]/g) || turnoStr.split(',');
+                // Se a célula estiver totalmente vazia ou nula
+                if (!turnoStr || turnoStr.trim() === '') {
+                    turnoHtml += `<div style="text-align: center; padding: 10px; color: #888; font-style: italic;">Sem horários</div></div>`;
+                    return turnoHtml;
+                }
+                
+                // Quebra o texto por vírgulas e remove qualquer colchete [ ou ] e espaços em branco
+                const items = turnoStr.split(',').map(item => item.replace(/[\[\]]/g, '').trim()).filter(item => item !== '');
 
-            let turnoHtml = `<div style="background: var(--bg-dark); padding: 15px; border-radius: 8px;">
-                <strong style="display: block; margin-bottom: 12px; text-align: center; color: var(--primary); font-size: 1.1rem;">${turnoNome}</strong>
-                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">`;
-
-            items.forEach(item => {
-                // Remove os colchetes para exibir só o texto
-                let text = item.trim().replace(/^\[|\]$/g, '');
-                if (!text) return;
-
-                let bg = 'rgba(255, 255, 255, 0.05)';
-                let color = 'white';
-
-                // Aplica cores baseadas no texto simples
-                if (text.toLowerCase().includes('vago')) {
-                    bg = '#eab308'; // Amarelo
-                    color = 'black';
-                } else if (text.toLowerCase().includes('intervalo')) {
-                    bg = '#ef4444'; // Vermelho
-                    color = 'white';
+                // Se depois de limpar sobrar vazio
+                if (items.length === 0) {
+                    turnoHtml += `<div style="text-align: center; padding: 10px; color: #888; font-style: italic;">Sem horários</div></div>`;
+                    return turnoHtml;
                 }
 
-                turnoHtml += `<li style="background-color: ${bg}; color: ${color}; padding: 10px; border-radius: 6px; text-align: center; font-weight: 500; border: 1px solid rgba(255,255,255,0.1);">${text}</li>`;
-            });
+                turnoHtml += `<ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">`;
 
-            turnoHtml += `</ul></div>`;
-            return turnoHtml;
-        };
+                items.forEach(text => {
+                    let bg = 'rgba(255, 255, 255, 0.05)';
+                    let color = 'white';
+                    let borderColor = 'rgba(255,255,255,0.1)';
 
-        if (mat) html += renderTurno(mat, 'Manhã');
-        if (ves) html += renderTurno(ves, 'Tarde');
-        
-        html += `</div></div>`;
-    });
+                    // Aplica cores baseadas na palavra (Vago ou Intervalo)
+                    if (text.toLowerCase().includes('vago')) {
+                        bg = '#eab308'; // Amarelo
+                        color = 'black';
+                        borderColor = '#ca8a04';
+                    } else if (text.toLowerCase().includes('intervalo')) {
+                        bg = '#ef4444'; // Vermelho
+                        color = 'white';
+                        borderColor = '#b91c1c';
+                    }
 
-    container.innerHTML = html;
+                    turnoHtml += `<li style="background-color: ${bg}; color: ${color}; padding: 10px; border-radius: 6px; text-align: center; font-weight: 500; border: 1px solid ${borderColor};">${text}</li>`;
+                });
+
+                turnoHtml += `</ul></div>`;
+                return turnoHtml;
+            };
+
+            // Renderiza Matutino e Vespertino dentro do mesmo grid
+            html += renderTurno(mat, 'Matutino');
+            html += renderTurno(ves, 'Vespertino');
+            
+            // Fecha o grid e o card
+            html += `</div></div>`;
+        });
+
+        container.innerHTML = html;
+    } catch (err) {
+        console.error("Erro ao puxar horários:", err);
+        container.innerHTML = '<div style="color: #ef4444; padding: 20px; text-align: center;">Erro ao carregar os horários. Verifique se a tabela "schedule" existe e está acessível.</div>';
+    }
 }
