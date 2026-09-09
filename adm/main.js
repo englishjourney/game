@@ -128,38 +128,45 @@ async function loadSchedule() {
             <h3 style="text-align: center; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; color: var(--primary);">${dia.nome}</h3>
             <div style="display: flex; flex-direction: column; gap: 15px;">`;
 
-        const renderTurno = (turnoStr, turnoNome) => {
-            if (!turnoStr) return '';
-            // Separa de forma segura por colchetes mantendo o conteúdo interno
-            const items = turnoStr.match(/\[.*?\]/g) || turnoStr.split(',');
+      // Substitua a lógica de leitura dos horários no arquivo onde o Dashboard é renderizado (provavelmente main.js ou dashboard.js):
 
-            let turnoHtml = `<div>
-                <strong style="display: block; margin-bottom: 8px;">${turnoNome}</strong>
-                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px;">`;
+const renderTurno = (turnoStr, turnoNome) => {
+    if (!turnoStr) return '';
+    
+    // CORREÇÃO: Trata como texto simples, dividindo por vírgulas.
+    // Isso evita que erros de digitação como [Intervalo} façam o dado sumir da tela.
+    const items = turnoStr.split(',');
 
-            items.forEach(item => {
-                let text = item.trim();
-                let bg = 'var(--bg-dark)';
-                let color = 'white';
+    let turnoHtml = `<div>
+        <strong style="display: block; margin-bottom: 8px;">${turnoNome}</strong>
+        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px;">`;
 
-                // Tratamento de Vago e Intervalo independente da posição
-                if (text.includes('[Vago]')) {
-                    bg = '#eab308'; // Amarelo
-                    color = 'black';
-                } else if (text.includes('[Intervalo]')) {
-                    bg = '#ef4444'; // Vermelho
-                    color = 'white';
-                }
+    items.forEach(item => {
+        let text = item.trim();
+        if (!text) return;
 
-                // Remove os colchetes apenas no momento de exibir a string limpa
-                text = text.replace(/^\[|\]$/g, '');
+        let bg = 'var(--bg-dark)';
+        let color = 'white';
+        let textLower = text.toLowerCase();
 
-                turnoHtml += `<li style="background-color: ${bg}; color: ${color}; padding: 8px; border-radius: 4px; text-align: center; font-weight: 500;">${text}</li>`;
-            });
+        // Localiza Vago e Intervalo independente de colchetes quebrados
+        if (textLower.includes('vago')) {
+            bg = '#eab308'; // Faixa Amarela
+            color = 'black';
+        } else if (textLower.includes('intervalo')) {
+            bg = '#ef4444'; // Faixa Vermelha
+            color = 'white';
+        }
 
-            turnoHtml += `</ul></div>`;
-            return turnoHtml;
-        };
+        // Remove colchetes ou chaves das pontas [ ou } para exibição limpa (Texto Simples)
+        text = text.replace(/^[\[{(]\vert{}[\]})]$/g, '').trim();
+
+        turnoHtml += `<li style="background-color: ${bg}; color: ${color}; padding: 8px; border-radius: 4px; text-align: center; font-weight: 500;">${text}</li>`;
+    });
+
+    turnoHtml += `</ul></div>`;
+    return turnoHtml;
+};
 
         html += renderTurno(mat, 'Manhã');
         html += renderTurno(ves, 'Tarde');
