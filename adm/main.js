@@ -43,15 +43,11 @@ function setupNavigation() {
     });
 }
 
-// Global Search & Schedule
 async function setupDashboard() {
     const searchInput = document.getElementById('global-search');
     const resultsContainer = document.getElementById('search-results');
 
-    // Trava de segurança: se a barra de pesquisa global não existir nesta página, para a função aqui
     if (!searchInput || !resultsContainer) {
-        // O loadSchedule precisa ser carregado mesmo que a pesquisa global não exista
-        loadSchedule();
         return;
     }
 
@@ -66,9 +62,7 @@ async function setupDashboard() {
         resultsContainer.classList.remove('hidden');
 
         try {
-            // Busca em users
             const { data: users } = await supabase.from('users').select('name, username, team').ilike('name', `%${query}%`).limit(3);
-            // Busca em planner
             const { data: planners } = await supabase.from('planner').select('serie, team, activities').ilike('activities', `%${query}%`).limit(3);
 
             let html = '';
@@ -89,14 +83,12 @@ async function setupDashboard() {
         }
     });
 
-    // Fechar busca ao clicar fora
     document.addEventListener('click', (e) => {
         if (e.target !== searchInput && e.target !== resultsContainer) {
             resultsContainer.classList.add('hidden');
         }
     });
 
-    // Carregar Horários
     loadSchedule();
 }
 
@@ -104,50 +96,74 @@ async function loadSchedule() {
     const container = document.getElementById('schedule-container');
     container.innerHTML = 'Carregando horários...';
 
-    // Removemos o `.limit(1).single()` para poder puxar todas as rows do supabase
-    const { data, error } = await supabase.from('schedule').select('*');
-    if (error || !data || data.length === 0) {
+    // REMOVIDO: o .single() quebrava a lógica e deixava o painel vazio se houvessem múltiplos (ou nenhum) registros. 
+    // CORRIGIDO: usando apenas .limit(1) para buscar o primeiro sem disparar o erro nativo do supabase (PGRST116).
+    const { data: rows, error } = await supabase.from('schedule').select('*').limit(1);
+    if (error || !rows || rows.length === 0) {
         container.innerHTML = 'Nenhum horário encontrado.';
         return;
     }
 
-    // Agrupa as rows pelo mesmo dia e data
-    const grouped = data.reduce((acc, row) => {
-        const dia = row.dia || row.day || '';
-        const dataVal = row.data || row.date || '';
-        const key = dia || dataVal ? `${dia} - ${dataVal}` : 'Outros';
-        
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(row);
-        return acc;
-    }, {});
+    const data = rows[0];
+
+    // Dias da semana para estruturar 1 cartão por dia
+    const dias = [
+        { id: 'seg', nome: 'Segunda-feira' },
+        { id: 'ter', nome: 'Terça-feira' },
+        { id: 'qua', nome: 'Quarta-feira' },
+        { id: 'qui', nome: 'Quinta-feira' },
+        { id: 'sex', nome: 'Sexta-feira' }
+    ];
 
     let html = '';
-    // Monta os cards separados
-    Object.keys(grouped).forEach(key => {
-        const items = grouped[key];
-        html += `<div class="schedule-card">
-            <h3>${key}</h3>
-            <ul>
-                ${items.map(item => {
-                    let info = [];
-                    // Extrai campos padronizados caso existam na sua row (hora, turma, disciplina, etc)
-                    if (item.hora || item.time) info.push(item.hora || item.time);
-                    if (item.turma || item.team || item.serie) info.push(`${item.serie || ''} ${item.turma || item.team || ''}`.trim());
-                    if (item.disciplina || item.activities) info.push(item.disciplina || item.activities);
-                    
-                    // Fallback: se os nomes das colunas da tabela "schedule" forem diferentes, lista o resto dos valores presentes
-                    if (info.length === 0) {
-                        Object.keys(item).forEach(k => {
-                            if (k !== 'id' && k !== 'dia' && k !== 'data' && k !== 'day' && k !== 'date' && item[k]) {
-                                info.push(item[k]);
-                            }
-                        });
-                    }
-                    return `<li>${info.join(' | ')}</li>`;
-                }).join('')}
-            </ul>
-        </div>`;
+    
+    dias.forEach(dia => {
+        const mat = data[`${dia.id}_mat`];
+        const ves = data[`${dia.id}_ves`];
+
+        // Se o dia não tiver informações nem de manhã nem a tarde, pula a criação do cartão
+        if (!mat && !ves) return;
+
+        html += `<div class="schedule-card" style="margin-bottom: 20px; border: 1px solid var(--border); padding: 15px; border-radius: 8px; background: var(--bg-card);">
+            <h3 style="text-align: center; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; color: var(--primary);">${dia.nome}</h3>
+            <div style="display: flex; flex-direction: column; gap: 15px;">`;
+
+        const renderTurno = (turnoStr, turnoNome) => {
+            if (!turnoStr) return '';
+            // Separa de forma segura por colchetes mantendo o conteúdo interno
+            const items = turnoStr.match(/\[.*?\]/g) || turnoStr.split(',');
+
+            let turnoHtml = `<div>
+                <strong style="display: block; margin-bottom: 8px;">${turnoNome}</strong>
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px;">`;
+
+            items.forEach(item => {
+                let text = item.trim();
+                let bg = 'var(--bg-dark)';
+                let color = 'white';
+
+                // Tratamento de Vago e Intervalo independente da posição
+                if (text.includes('[Vago]')) {
+                    bg = '#eab308'; // Amarelo
+                    color = 'black';
+                } else if (text.includes('[Intervalo]')) {
+                    bg = '#ef4444'; // Vermelho
+                    color = 'white';
+                }
+
+                // Remove os colchetes apenas no momento de exibir a string limpa
+                text = text.replace(/^\[|\]$/g, '');
+
+                turnoHtml += `<li style="background-color: ${bg}; color: ${color}; padding: 8px; border-radius: 4px; text-align: center; font-weight: 500;">${text}</li>`;
+            });
+
+            turnoHtml += `</ul></div>`;
+            return turnoHtml;
+        };
+
+        html += renderTurno(mat, 'Manhã');
+        html += renderTurno(ves, 'Tarde');
+        html += `</div></div>`;
     });
 
     container.innerHTML = html;
