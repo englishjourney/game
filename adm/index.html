@@ -118,8 +118,13 @@
                     <label style="flex-direction: row; gap: 5px; align-items: center;"><input type="checkbox" id="cb-folga"> Folga</label>
                     <label style="flex-direction: row; gap: 5px; align-items: center;"><input type="checkbox" id="cb-prova"> Prova</label>
                 </div>
-                <label id="label-end-date" class="hidden full-width" style="color: var(--primary);">Data Final (Prova): <input type="text" id="plan-end-date"></label>
-                
+                <label id="label-end-date" class="hidden full-width" style="color: var(--primary);">
+    Data Final (Prova): 
+    <div style="display: flex; gap: 10px; margin-top: 5px;">
+        <input type="text" id="plan-end-date" placeholder="DD/MM/AAAA" style="flex: 1;">
+        <button type="button" id="btn-replicate" class="btn-primary" style="padding: 0 15px; white-space: nowrap;">Replicar</button>
+    </div>
+</label>
                 <label>Dia da Semana: <input type="text" id="plan-day" required></label>
                 <label>Data: <input type="text" id="plan-date" required></label>
                 <label>Hora: <input type="text" id="plan-time" required></label>
