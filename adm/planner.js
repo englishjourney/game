@@ -75,30 +75,20 @@ export function initPlanner() {
             let start = parseDateBR(planData.date);
             let end = parseDateBR(endDate);
             let inserts = [];
-            let startTime = start.getTime(); // Guarda o timestamp do primeiro dia
             
             for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                if (d.getTime() === startTime) {
-                    // Primeiro dia: recebe todas as informações preenchidas
-                    inserts.push({
-                        ...planData,
-                        date: formatDateBR(new Date(d)),
-                        day: diasSemana[d.getDay()]
-                    });
-                } else {
-                    // Dias adicionais: apenas dia, data e mantém como PROVA (special: 3)
-                    inserts.push({
-                        day: diasSemana[d.getDay()],
-                        date: formatDateBR(new Date(d)),
-                        time: '',
-                        serie: '',
-                        team: '',
-                        skills: '',
-                        activities: '',
-                        duration: '',
-                        special: 3
-                    });
-                }
+                // Criação da row garantindo que todos os dias tenham apenas data, dia e o special 3 ("PROVA")
+                inserts.push({
+                    day: diasSemana[d.getDay()],
+                    date: formatDateBR(new Date(d)),
+                    time: '',
+                    serie: '',
+                    team: '',
+                    skills: '',
+                    activities: '',
+                    duration: '',
+                    special: 3
+                });
             }
             result = await supabase.from('planner').insert(inserts);
         } else {
