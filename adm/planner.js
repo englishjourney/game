@@ -3,7 +3,6 @@ import { supabase } from '../supabaseClient.js';
 export function initPlanner() {
     loadPlanners();
 
-    // Lógica das Caixas de Seleção e Obrigatoriedade
     const updateRequiredFields = () => {
         const isEsp = document.getElementById('cb-especial').checked;
         const isFlg = document.getElementById('cb-folga').checked;
@@ -30,7 +29,6 @@ export function initPlanner() {
     });
     window.updateRequiredFields = updateRequiredFields;
 
-    // Abrir Modal
     document.getElementById('btn-add-plan').addEventListener('click', () => {
         document.getElementById('planner-form').reset();
         document.getElementById('plan-id').value = '';
@@ -40,7 +38,6 @@ export function initPlanner() {
         document.getElementById('planner-modal').showModal();
     });
 
-    // Salvar Dados
     document.getElementById('planner-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -63,7 +60,7 @@ export function initPlanner() {
 
         let result;
         if (specialValue === 3 && !id) {
-            // Lógica de Múltiplos Dias para PROVA
+            // CORRIGIDO: Lógica de Múltiplos Dias para PROVA (Todos recebem apenas Data, Dia e Prova=3)
             const endDate = document.getElementById('plan-end-date').value;
             const parseDateBR = (dStr) => {
                 const p = dStr.includes('/') ? dStr.split('/') : dStr.split('-');
@@ -77,7 +74,7 @@ export function initPlanner() {
             let inserts = [];
             
             for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                // Criação da row garantindo que todos os dias tenham apenas data, dia e o special 3 ("PROVA")
+                // Todos os dias inseridos manterão apenas informações de dia, data e estado de Prova
                 inserts.push({
                     day: diasSemana[d.getDay()],
                     date: formatDateBR(new Date(d)),
@@ -87,7 +84,7 @@ export function initPlanner() {
                     skills: '',
                     activities: '',
                     duration: '',
-                    special: 3
+                    special: 3 // Define como prova
                 });
             }
             result = await supabase.from('planner').insert(inserts);
@@ -102,7 +99,6 @@ export function initPlanner() {
         }
     });
 
-    // Pesquisa Local no Planner
     const searchInput = document.getElementById('planner-search');
     const resultsContainer = document.getElementById('planner-search-results');
     
@@ -174,7 +170,6 @@ async function loadPlanners() {
             <div class="planner-section-content">
                 ${items.map(p => {
                     let cardClass = p.special == 1 ? 'card-special-1' : (p.special == 2 ? 'card-special-2' : (p.special == 3 ? 'card-special-3' : ''));
-                    // Correção: usando aspas simples aqui para não quebrar a template string
                     let titleHtml = p.special == 2 ? '<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>FOLGA</strong></p>' : (p.special == 3 ? '<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>PROVA</strong></p>' : '');
                     
                     return `
@@ -220,20 +215,16 @@ window.editPlanner = (p) => {
     document.getElementById('planner-modal').showModal();
 };
                             
-// FUNÇÃO DE EXCLUSÃO ADICIONADA AQUI
 window.deletePlanner = async (id) => {
-    // Confirmação para evitar exclusões acidentais
     if (!confirm('Tem certeza que deseja excluir esta aula? Esta ação não pode ser desfeita.')) {
         return; 
     }
 
-    // Exclui a linha do Supabase usando o ID
     const { error } = await supabase.from('planner').delete().eq('id', id);
 
     if (error) {
         alert('Erro ao excluir a aula: ' + error.message);
     } else {
-        // Recarrega a lista para mostrar a exclusão na hora
         loadPlanners();
     }
 };
