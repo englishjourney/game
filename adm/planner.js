@@ -46,8 +46,8 @@ export function initPlanner() {
         
         const id = document.getElementById('plan-id').value;
         const specialValue = document.getElementById('cb-especial').checked ? 1 :
-                           document.getElementById('cb-folga').checked ? 2 :
-                           document.getElementById('cb-prova').checked ? 3 : 0;
+                             document.getElementById('cb-folga').checked ? 2 :
+                             document.getElementById('cb-prova').checked ? 3 : 0;
 
         const planData = {
             day: document.getElementById('plan-day').value,
@@ -63,58 +63,33 @@ export function initPlanner() {
 
         let result;
         if (specialValue === 3 && !id) {
-            // Lógica de Múltiplos Dias para PROVA usando puramente TEXTO SIMPLES e conversão de dias inteiros
-            const endDateStr = document.getElementById('plan-end-date').value; // Ex: '2026-09-25' ou '25/09/2026'
-            const startDateStr = planData.date; // Ex: '21/09/2026'
-
-            // Função puramente textual/matemática para evitar fuso horário
-            const dateToDays = (dStr) => {
-                if (!dStr) return 0;
-                let p = dStr.includes('/') ? dStr.split('/') : dStr.split('-');
-                let y = parseInt(p[2].length === 4 ? p[2] : p[0]);
-                let m = parseInt(p[1]) - 1;
-                let d = parseInt(p[2].length === 4 ? p[0] : p[2]);
-                return Math.floor(new Date(y, m, d).getTime() / (1000 * 60 * 60 * 24));
+            // Lógica de Múltiplos Dias para PROVA
+            const endDate = document.getElementById('plan-end-date').value;
+            const parseDateBR = (dStr) => {
+                const p = dStr.includes('/') ? dStr.split('/') : dStr.split('-');
+                return p[2].length === 4 ? new Date(`${p[2]}-${p[1]}-${p[0]}T12:00:00`) : new Date(`${p[0]}-${p[1]}-${p[2]}T12:00:00`);
             };
-
-            const daysToDateBR = (totalDays) => {
-                let dateObj = new Date(totalDays * 1000 * 60 * 60 * 24);
-                let d = String(dateObj.getDate()).padStart(2, '0');
-                let m = String(dateObj.getMonth() + 1).padStart(2, '0');
-                let y = dateObj.getFullYear();
-                return `${d}/${m}/${y}`;
-            };
-
-            const getDayOfWeek = (dStr) => {
-                let p = dStr.includes('/') ? dStr.split('/') : dStr.split('-');
-                let y = parseInt(p[2].length === 4 ? p[2] : p[0]);
-                let m = parseInt(p[1]) - 1;
-                let d = parseInt(p[2].length === 4 ? p[0] : p[2]);
-                const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-                return diasSemana[new Date(y, m, d).getDay()];
-            };
-
-            let startDays = dateToDays(startDateStr);
-            let endDays = dateToDays(endDateStr);
-            if (endDays < startDays) endDays = startDays;
-
+            const formatDateBR = (d) => `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
+            const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+            
+            let start = parseDateBR(planData.date);
+            let end = parseDateBR(endDate);
             let inserts = [];
-            for (let currentDays = startDays; currentDays <= endDays; currentDays++) {
-                let formattedDate = daysToDateBR(currentDays);
-                let calculatedDay = getDayOfWeek(formattedDate);
-
-                if (currentDays === startDays) {
-                    // Primeiro dia: leva todas as informações preenchidas
+            let startTime = start.getTime(); // Guarda o timestamp do primeiro dia
+            
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                if (d.getTime() === startTime) {
+                    // Primeiro dia: recebe todas as informações preenchidas
                     inserts.push({
                         ...planData,
-                        date: formattedDate,
-                        day: calculatedDay
+                        date: formatDateBR(new Date(d)),
+                        day: diasSemana[d.getDay()]
                     });
                 } else {
-                    // Dias seguintes: apenas data, dia e o status de prova (texto simples e campos vazios)
+                    // Dias adicionais: apenas dia, data e mantém como PROVA (special: 3)
                     inserts.push({
-                        day: calculatedDay,
-                        date: formattedDate,
+                        day: diasSemana[d.getDay()],
+                        date: formatDateBR(new Date(d)),
                         time: '',
                         serie: '',
                         team: '',
@@ -209,6 +184,7 @@ async function loadPlanners() {
             <div class="planner-section-content">
                 ${items.map(p => {
                     let cardClass = p.special == 1 ? 'card-special-1' : (p.special == 2 ? 'card-special-2' : (p.special == 3 ? 'card-special-3' : ''));
+                    // Correção: usando aspas simples aqui para não quebrar a template string
                     let titleHtml = p.special == 2 ? '<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>FOLGA</strong></p>' : (p.special == 3 ? '<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>PROVA</strong></p>' : '');
                     
                     return `
@@ -254,16 +230,20 @@ window.editPlanner = (p) => {
     document.getElementById('planner-modal').showModal();
 };
                             
+// FUNÇÃO DE EXCLUSÃO ADICIONADA AQUI
 window.deletePlanner = async (id) => {
+    // Confirmação para evitar exclusões acidentais
     if (!confirm('Tem certeza que deseja excluir esta aula? Esta ação não pode ser desfeita.')) {
         return; 
     }
 
+    // Exclui a linha do Supabase usando o ID
     const { error } = await supabase.from('planner').delete().eq('id', id);
 
     if (error) {
         alert('Erro ao excluir a aula: ' + error.message);
     } else {
+        // Recarrega a lista para mostrar a exclusão na hora
         loadPlanners();
     }
 };
