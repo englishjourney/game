@@ -48,6 +48,11 @@ async function setupDashboard() {
     const searchInput = document.getElementById('global-search');
     const resultsContainer = document.getElementById('search-results');
 
+    // Trava de segurança: se a barra de pesquisa global não existir nesta página, para a função aqui
+    if (!searchInput || !resultsContainer) {
+        return;
+    }
+
     searchInput.addEventListener('input', async (e) => {
         const query = e.target.value.trim();
         if (query.length < 3) {
