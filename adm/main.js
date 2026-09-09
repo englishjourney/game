@@ -50,6 +50,8 @@ async function setupDashboard() {
 
     // Trava de segurança: se a barra de pesquisa global não existir nesta página, para a função aqui
     if (!searchInput || !resultsContainer) {
+        // O loadSchedule precisa ser carregado mesmo que a pesquisa global não exista
+        loadSchedule();
         return;
     }
 
@@ -102,27 +104,48 @@ async function loadSchedule() {
     const container = document.getElementById('schedule-container');
     container.innerHTML = 'Carregando horários...';
 
-    const { data, error } = await supabase.from('schedule').select('*').limit(1).single();
-    if (error || !data) {
+    // Removemos o `.limit(1).single()` para poder puxar todas as rows do supabase
+    const { data, error } = await supabase.from('schedule').select('*');
+    if (error || !data || data.length === 0) {
         container.innerHTML = 'Nenhum horário encontrado.';
         return;
     }
 
-    // Filtra apenas colunas que terminam com _mat ou _ves
-    const columns = Object.keys(data).filter(k => k.includes('_mat') || k.includes('_ves'));
-    
-    // Organiza para mostrar (poderia ser ordenado baseado na data atual, mas faremos simples)
+    // Agrupa as rows pelo mesmo dia e data
+    const grouped = data.reduce((acc, row) => {
+        const dia = row.dia || row.day || '';
+        const dataVal = row.data || row.date || '';
+        const key = dia || dataVal ? `${dia} - ${dataVal}` : 'Outros';
+        
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(row);
+        return acc;
+    }, {});
+
     let html = '';
-    columns.forEach(col => {
-        if (!data[col]) return;
-        const items = data[col].replace(/[\[\]]/g, '').split(',');
-        
-        const friendlyName = col.replace('_mat', ' - Manhã').replace('_ves', ' - Tarde').toUpperCase();
-        
+    // Monta os cards separados
+    Object.keys(grouped).forEach(key => {
+        const items = grouped[key];
         html += `<div class="schedule-card">
-            <h3>${friendlyName}</h3>
+            <h3>${key}</h3>
             <ul>
-                ${items.map(item => `<li>${item.trim()}</li>`).join('')}
+                ${items.map(item => {
+                    let info = [];
+                    // Extrai campos padronizados caso existam na sua row (hora, turma, disciplina, etc)
+                    if (item.hora || item.time) info.push(item.hora || item.time);
+                    if (item.turma || item.team || item.serie) info.push(`${item.serie || ''} ${item.turma || item.team || ''}`.trim());
+                    if (item.disciplina || item.activities) info.push(item.disciplina || item.activities);
+                    
+                    // Fallback: se os nomes das colunas da tabela "schedule" forem diferentes, lista o resto dos valores presentes
+                    if (info.length === 0) {
+                        Object.keys(item).forEach(k => {
+                            if (k !== 'id' && k !== 'dia' && k !== 'data' && k !== 'day' && k !== 'date' && item[k]) {
+                                info.push(item[k]);
+                            }
+                        });
+                    }
+                    return `<li>${info.join(' | ')}</li>`;
+                }).join('')}
             </ul>
         </div>`;
     });
