@@ -1,349 +1,358 @@
 import { supabase } from '../supabaseClient.js';
 
 export function initPlanner() {
-    loadPlanners();
-    setupPlannerModal();
-    setupPlannerSearch();
+    const btnAdd = document.getElementById('btn-add-plan');
+    const modal = document.getElementById('planner-modal');
+    const form = document.getElementById('planner-form');
+    const searchInput = document.getElementById('planner-search');
+    const resultsContainer = document.getElementById('planner-search-results');
+
+    const cbEspecial = document.getElementById('cb-especial');
+    const cbFolga = document.getElementById('cb-folga');
+    const cbProva = document.getElementById('cb-prova');
+    const labelEndDate = document.getElementById('label-end-date');
+
+    // Exclusividade entre caixas de seleção (especial, folga, prova) e controle do campo de data final
+    [cbEspecial, cbFolga, cbProva].forEach(cb => {
+        cb.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                [cbEspecial, cbFolga, cbProva].forEach(other => {
+                    if (other !== e.target) other.checked = false;
+                });
+            }
+            // Se for Prova (cbProva), exibe o campo de Data Final e o botão Replicar
+            if (cbProva.checked) {
+                labelEndDate.classList.remove('hidden');
+            } else {
+                labelEndDate.classList.add('hidden');
+                const endDateInput = document.getElementById('plan-end-date');
+                if (endDateInput) endDateInput.value = '';
+            }
+        });
+    });
+
+    // Garantir que o botão "Replicar" exista perto do campo Data Final
+    let btnReplicate = document.getElementById('btn-replicate');
+    if (!btnReplicate) {
+        btnReplicate = document.createElement('button');
+        btnReplicate.type = 'button';
+        btnReplicate.id = 'btn-replicate';
+        btnReplicate.textContent = 'Replicar';
+        btnReplicate.className = 'btn-secondary';
+        btnReplicate.style.marginLeft = '10px';
+        btnReplicate.style.padding = '5px 10px';
+        
+        // Inserir após o input de data final
+        const endDateInput = document.getElementById('plan-end-date');
+        if (endDateInput && endDateInput.parentNode) {
+            endDateInput.parentNode.appendChild(btnReplicate);
+        }
+    }
+
+    // Ação do Botão Replicar
+    btnReplicate.addEventListener('click', async () => {
+        const startDateStr = document.getElementById('plan-date').value.trim();
+        const endDateStr = document.getElementById('plan-end-date').value.trim();
+        const timeVal = document.getElementById('plan-time').value.trim();
+        const serieVal = document.getElementById('plan-serie').value.trim();
+        const teamVal = document.getElementById('plan-team').value.trim();
+        const durationVal = document.getElementById('plan-duration').value.trim();
+        const skillsVal = document.getElementById('plan-skills').value.trim();
+        const activitiesVal = document.getElementById('plan-activities').value.trim();
+
+        if (!startDateStr || !endDateStr) {
+            alert('Por favor, preencha a Data inicial e a Data Final para replicar.');
+            return;
+        }
+
+        // Converter datas no formato DD/MM/YYYY para objetos Date
+        const parseDate = (str) => {
+            const parts = str.split('/');
+            if (parts.length !== 3) return null;
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        };
+
+        const formatDate = (dateObj) => {
+            const d = String(dateObj.getDate()).padStart(2, '0');
+            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const y = dateObj.getFullYear();
+            return `${d}/${m}/${y}`;
+        };
+
+        const getDayName = (dateObj) => {
+            const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+            return days[dateObj.getDay()];
+        };
+
+        const startDate = parseDate(startDateStr);
+        const endDate = parseDate(endDateStr);
+
+        if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+            alert('Formato de data inválido. Use DD/MM/YYYY.');
+            return;
+        }
+
+        if (startDate > endDate) {
+            alert('A data inicial não pode ser posterior à data final.');
+            return;
+        }
+
+        let currDate = new Date(startDate);
+        currDate.setDate(currDate.getDate() + 1); // Próximas após a data do registro atual
+
+        const rowsToInsert = [];
+        while (currDate <= endDate) {
+            rowsToInsert.push({
+                day: getDayName(currDate),
+                date: formatDate(currDate),
+                time: timeVal,
+                serie: serieVal,
+                team: teamVal,
+                duration: durationVal,
+                skills: skillsVal,
+                activities: activitiesVal,
+                special: '3' // Prova
+            });
+            currDate.setDate(currDate.getDate() + 1);
+        }
+
+        if (rowsToInsert.length === 0) {
+            alert('Nenhuma data adicional encontrada no intervalo.');
+            return;
+        }
+
+        try {
+            const { error } = await supabase.from('planner').insert(rowsToInsert);
+            if (error) throw error;
+            alert(`${rowsToInsert.length} novas aulas de prova replicadas com sucesso!`);
+            modal.close();
+            loadPlanner();
+        } catch (err) {
+            console.error('Erro ao replicar aulas:', err);
+            alert('Erro ao replicar aulas. Verifique o console.');
+        }
+    });
+
+    btnAdd.addEventListener('click', () => {
+        document.getElementById('planner-modal-title').textContent = 'Adicionar Aula';
+        form.reset();
+        document.getElementById('plan-id').value = '';
+        labelEndDate.classList.add('hidden');
+        modal.showModal();
+    });
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('plan-id').value;
+        
+        let specialVal = '';
+        if (cbEspecial.checked) specialVal = '1';
+        else if (cbFolga.checked) specialVal = '2';
+        else if (cbProva.checked) specialVal = '3';
+
+        const planData = {
+            day: document.getElementById('plan-day').value.trim(),
+            date: document.getElementById('plan-date').value.trim(),
+            time: document.getElementById('plan-time').value.trim(),
+            serie: document.getElementById('plan-serie').value.trim(),
+            team: document.getElementById('plan-team').value.trim(),
+            duration: document.getElementById('plan-duration').value.trim(),
+            skills: document.getElementById('plan-skills').value.trim(),
+            activities: document.getElementById('plan-activities').value.trim(),
+            special: specialVal
+        };
+
+        try {
+            if (id) {
+                const { error } = await supabase.from('planner').update(planData).eq('id', id);
+                if (error) throw error;
+            } else {
+                const { error } = await supabase.from('planner').insert([planData]);
+                if (error) throw error;
+            }
+            modal.close();
+            loadPlanner();
+        } catch (err) {
+            console.error('Erro ao salvar planejamento:', err);
+            alert('Erro ao salvar planejamento.');
+        }
+    });
+
+    // Pesquisa no planner
+    if (searchInput && resultsContainer) {
+        searchInput.addEventListener('input', async (e) => {
+            const query = e.target.value.trim();
+            if (query.length < 2) {
+                resultsContainer.classList.add('hidden');
+                return;
+            }
+
+            resultsContainer.innerHTML = '<div class="search-item">Buscando...</div>';
+            resultsContainer.classList.remove('hidden');
+
+            try {
+                const { data } = await supabase.from('planner')
+                    .select('*')
+                    .or(`date.ilike.%${query}%,time.ilike.%${query}%,team.ilike.%${query}%,serie.ilike.%${query}%`)
+                    .limit(5);
+
+                let html = '';
+                if (data && data.length) {
+                    data.forEach(p => {
+                        html += `<div class="search-item" style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid var(--border);" data-id="${p.id}">
+                            <strong>${p.serie} ${p.team}</strong> - ${p.date} (${p.time})
+                        </div>`;
+                    });
+                } else {
+                    html = '<div class="search-item" style="padding: 8px 12px;">Nenhum planejamento encontrado.</div>';
+                }
+                resultsContainer.innerHTML = html;
+
+                resultsContainer.querySelectorAll('.search-item[data-id]').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const planId = item.dataset.id;
+                        resultsContainer.classList.add('hidden');
+                        searchInput.value = '';
+                        editPlannerById(planId);
+                    });
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target !== searchInput && e.target !== resultsContainer) {
+                resultsContainer.classList.add('hidden');
+            }
+        });
+    }
+
+    loadPlanner();
 }
 
-async function loadPlanners() {
+async function loadPlanner() {
     const container = document.getElementById('planner-list');
     if (!container) return;
 
     container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted);">Carregando planejamentos...</div>';
 
     try {
-        const { data, error } = await supabase
-            .from('planner')
-            .select('*')
-            .order('id', { ascending: false });
-
+        const { data, error } = await supabase.from('planner').select('*').order('id', { ascending: false });
         if (error) throw error;
 
         if (!data || data.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 20px;">Nenhum planejamento cadastrado.</div>';
+            container.innerHTML = '<div style="text-align: center; padding: 20px;">Nenhuma aula planejada cadastrada.</div>';
             return;
         }
 
-        renderPlannersList(data);
+        let html = '';
+        data.forEach(p => {
+            let borderColor = 'var(--border)';
+            let bgCard = 'var(--bg-card)';
+            let badgeText = '';
+            let badgeBg = '';
+
+            if (p.special === '1') {
+                borderColor = '#eab308';
+                bgCard = 'rgba(234, 179, 8, 0.05)';
+                badgeText = 'Especial';
+                badgeBg = '#eab308';
+            } else if (p.special === '2') {
+                borderColor = '#ef4444';
+                bgCard = 'rgba(239, 68, 68, 0.05)';
+                badgeText = 'Folga';
+                badgeBg = '#ef4444';
+            } else if (p.special === '3') {
+                borderColor = '#f97316'; // Laranja para Prova
+                bgCard = 'rgba(249, 115, 22, 0.05)';
+                badgeText = 'Prova';
+                badgeBg = '#f97316';
+            }
+
+            html += `<div class="card" style="border: 1px solid ${borderColor}; background: ${bgCard}; padding: 20px; border-radius: 10px; position: relative; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">`;
+            
+            if (badgeText) {
+                html += `<span style="position: absolute; top: 15px; right: 15px; background: ${badgeBg}; color: ${p.special === '1' ? '#000' : '#fff'}; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">${badgeText}</span>`;
+            }
+
+            html += `<h3 style="margin-bottom: 10px; color: var(--primary);">${p.serie || ''} - ${p.team || ''}</h3>
+                <p style="margin: 4px 0;"><strong>Dia:</strong> ${p.day || ''} | <strong>Data:</strong> ${p.date || ''} | <strong>Hora:</strong> ${p.time || ''}</p>
+                <p style="margin: 4px 0;"><strong>Duração:</strong> ${p.duration || 'N/A'}</p>
+                <p style="margin: 8px 0 4px 0;"><strong>Habilidades BNCC:</strong></p>
+                <p style="margin: 0 0 8px 0; font-size: 0.9rem; color: var(--text-muted);">${p.skills || 'Nenhuma'}</p>
+                <p style="margin: 8px 0 4px 0;"><strong>Atividades:</strong></p>
+                <p style="margin: 0 0 15px 0; white-space: pre-wrap; font-size: 0.9rem;">${p.activities || ''}</p>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-secondary btn-edit" data-id="${p.id}" style="padding: 6px 12px; font-size: 0.85rem;">Editar</button>
+                    <button class="btn-danger btn-delete" data-id="${p.id}" style="padding: 6px 12px; font-size: 0.85rem;">Excluir</button>
+                </div>
+            </div>`;
+        });
+
+        container.innerHTML = html;
+
+        container.querySelectorAll('.btn-edit').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.dataset.id;
+                await editPlannerById(id);
+            });
+        });
+
+        container.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.dataset.id;
+                if (confirm('Tem certeza que deseja excluir este planejamento?')) {
+                    const { error } = await supabase.from('planner').delete().eq('id', id);
+                    if (!error) loadPlanner();
+                    else alert('Erro ao excluir planejamento.');
+                }
+            });
+        });
+
     } catch (err) {
         console.error('Erro ao carregar planejamentos:', err);
-        container.innerHTML = '<div style="color: #ef4444; padding: 20px; text-align: center;">Erro ao carregar os planejamentos.</div>';
+        container.innerHTML = '<div style="color: #ef4444; padding: 20px; text-align: center;">Erro ao carregar planejamentos.</div>';
     }
 }
 
-function renderPlannersList(planners) {
-    const container = document.getElementById('planner-list');
-    let html = '';
-
-    planners.forEach(p => {
-        let badge = '';
-        if (p.special === '1' || p.special === 1) badge = '<span style="background: var(--primary); color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold;">Especial</span>';
-        if (p.special === '2' || p.special === 2) badge = '<span style="background: #3b82f6; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold;">Folga</span>';
-        if (p.special === '3' || p.special === 3) badge = '<span style="background: #ef4444; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold;">Prova</span>';
-
-        html += `
-            <div class="card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 12px; position: relative;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div>
-                        <span style="color: var(--primary); font-weight: bold; font-size: 1.1rem;">${p.serie || ''} - Turma ${p.team || ''}</span>
-                        <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 2px;">${p.day || ''} | ${p.date || ''} (${p.time || ''})</div>
-                    </div>
-                    ${badge}
-                </div>
-                
-                <div style="background: var(--bg-dark); padding: 12px; border-radius: 6px; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.05);">
-                    <strong>Atividades:</strong><br>
-                    <p style="margin-top: 4px; white-space: pre-line; color: #ddd;">${p.activities || 'Nenhuma atividade descrita.'}</p>
-                </div>
-
-                ${p.skills ? `<div style="font-size: 0.85em; color: var(--text-muted);"><strong>Habilidades BNCC:</strong> ${p.skills}</div>` : ''}
-
-                <div style="display: flex; gap: 10px; margin-top: auto; justify-content: flex-end;">
-                    <button class="btn-secondary btn-edit" data-id="${p.id}" style="padding: 6px 12px; font-size: 0.9rem;">Editar</button>
-                    <button class="btn-danger btn-delete" data-id="${p.id}" style="padding: 6px 12px; font-size: 0.9rem;">Excluir</button>
-                </div>
-            </div>
-        `;
-    });
-
-    container.innerHTML = html;
-
-    // Ações de Editar e Excluir
-    container.querySelectorAll('.btn-edit').forEach(btn => {
-        btn.addEventListener('click', () => openEditModal(btn.dataset.id, planners));
-    });
-
-    container.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', () => deletePlanner(btn.dataset.id));
-    });
-}
-
-function setupPlannerModal() {
+async function editPlannerById(id) {
     const modal = document.getElementById('planner-modal');
-    const btnAdd = document.getElementById('btn-add-plan');
-    const form = document.getElementById('planner-form');
-    
     const cbEspecial = document.getElementById('cb-especial');
     const cbFolga = document.getElementById('cb-folga');
     const cbProva = document.getElementById('cb-prova');
     const labelEndDate = document.getElementById('label-end-date');
-    const btnReplicate = document.getElementById('btn-replicate');
-
-    if (btnAdd) {
-        btnAdd.addEventListener('click', () => {
-            document.getElementById('planner-modal-title').textContent = 'Adicionar Aula';
-            form.reset();
-            document.getElementById('plan-id').value = '';
-            labelEndDate.classList.add('hidden');
-            modal.showModal();
-        });
-    }
-
-    // Controle de exibição do campo de Data Final quando a opção Prova for marcada
-    if (cbProva) {
-        cbProva.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                labelEndDate.classList.remove('hidden');
-                cbEspecial.checked = false;
-                cbFolga.checked = false;
-            } else {
-                labelEndDate.classList.add('hidden');
-            }
-        });
-    }
-
-    if (cbEspecial) {
-        cbEspecial.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                cbProva.checked = false;
-                cbFolga.checked = false;
-                labelEndDate.classList.add('hidden');
-            }
-        });
-    }
-
-    if (cbFolga) {
-        cbFolga.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                cbProva.checked = false;
-                cbEspecial.checked = false;
-                labelEndDate.classList.add('hidden');
-            }
-        });
-    }
-
-    // Ação do Botão Replicar para gerador de Provas por intervalo de datas
-    if (btnReplicate) {
-        btnReplicate.addEventListener('click', async () => {
-            const startDateStr = document.getElementById('plan-date').value.trim();
-            const endDateStr = document.getElementById('plan-end-date').value.trim();
-            const timeVal = document.getElementById('plan-time').value.trim();
-            const serieVal = document.getElementById('plan-serie').value.trim();
-            const teamVal = document.getElementById('plan-team').value.trim();
-            const durationVal = document.getElementById('plan-duration').value.trim();
-            const skillsVal = document.getElementById('plan-skills').value.trim();
-            const activitiesVal = document.getElementById('plan-activities').value.trim();
-
-            if (!startDateStr || !endDateStr) {
-                alert('Preencha a data inicial (no campo Data) e a Data Final (Prova) para replicar.');
-                return;
-            }
-
-            const startDate = parseDate(startDateStr);
-            const endDate = parseDate(endDateStr);
-
-            if (!startDate || !endDate) {
-                alert('Formato de data inválido. Utilize o formato DD/MM/AAAA.');
-                return;
-            }
-
-            if (startDate > endDate) {
-                alert('A data inicial não pode ser maior que a data final.');
-                return;
-            }
-
-            const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-            let currentDate = new Date(startDate);
-            // Avança para o dia seguinte ao inicial para iniciar a replicação conforme solicitado
-            currentDate.setDate(currentDate.getDate() + 1);
-
-            const newRecords = [];
-
-            while (currentDate <= endDate) {
-                const dayName = diasSemana[currentDate.getDay()];
-                const formattedDate = formatDateToString(currentDate);
-
-                newRecords.push({
-                    day: dayName,
-                    date: formattedDate,
-                    time: timeVal,
-                    serie: serieVal,
-                    team: teamVal,
-                    duration: durationVal,
-                    skills: skillsVal,
-                    activities: activitiesVal,
-                    special: '3' // Marcado como prova
-                });
-
-                // Avança um dia
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
-
-            if (newRecords.length === 0) {
-                alert('Nenhum registro para replicar no intervalo informado.');
-                return;
-            }
-
-            try {
-                const { error } = await supabase.from('planner').insert(newRecords);
-                if (error) throw error;
-
-                alert(`${newRecords.length} novas linhas replicadas com sucesso!`);
-                modal.close();
-                loadPlanners();
-            } catch (err) {
-                console.error('Erro ao replicar registros:', err);
-                alert('Erro ao salvar as replicações no banco de dados.');
-            }
-        });
-    }
-
-    // Salvar normal (Formulário)
-    if (form) {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('plan-id').value;
-
-            let specialVal = null;
-            if (cbEspecial.checked) specialVal = '1';
-            else if (cbFolga.checked) specialVal = '2';
-            else if (cbProva.checked) specialVal = '3';
-
-            const payload = {
-                day: document.getElementById('plan-day').value.trim(),
-                date: document.getElementById('plan-date').value.trim(),
-                time: document.getElementById('plan-time').value.trim(),
-                serie: document.getElementById('plan-serie').value.trim(),
-                team: document.getElementById('plan-team').value.trim(),
-                duration: document.getElementById('plan-duration').value.trim(),
-                skills: document.getElementById('plan-skills').value.trim(),
-                activities: document.getElementById('plan-activities').value.trim(),
-                special: specialVal
-            };
-
-            try {
-                let error;
-                if (id) {
-                    const res = await supabase.from('planner').update(payload).eq('id', id);
-                    error = res.error;
-                } else {
-                    const res = await supabase.from('planner').insert([payload]);
-                    error = res.error;
-                }
-
-                if (error) throw error;
-
-                modal.close();
-                loadPlanners();
-            } catch (err) {
-                console.error('Erro ao salvar planejamento:', err);
-                alert('Erro ao salvar dados.');
-            }
-        });
-    }
-}
-
-async function openEditModal(id, planners) {
-    const modal = document.getElementById('planner-modal');
-    const form = document.getElementById('planner-form');
-    const plan = planners.find(p => String(p.id) === String(id));
-    if (!plan) return;
-
-    document.getElementById('planner-modal-title').textContent = 'Editar Aula';
-    form.reset();
-
-    document.getElementById('plan-id').value = plan.id;
-    document.getElementById('plan-day').value = plan.day || '';
-    document.getElementById('plan-date').value = plan.date || '';
-    document.getElementById('plan-time').value = plan.time || '';
-    document.getElementById('plan-serie').value = plan.serie || '';
-    document.getElementById('plan-team').value = plan.team || '';
-    document.getElementById('plan-duration').value = plan.duration || '';
-    document.getElementById('plan-skills').value = plan.skills || '';
-    document.getElementById('plan-activities').value = plan.activities || '';
-
-    const cbEspecial = document.getElementById('cb-especial');
-    const cbFolga = document.getElementById('cb-folga');
-    const cbProva = document.getElementById('cb-prova');
-    const labelEndDate = document.getElementById('label-end-date');
-
-    cbEspecial.checked = (plan.special === '1' || plan.special === 1);
-    cbFolga.checked = (plan.special === '2' || plan.special === 2);
-    cbProva.checked = (plan.special === '3' || plan.special === 3);
-
-    if (cbProva.checked) {
-        labelEndDate.classList.remove('hidden');
-    } else {
-        labelEndDate.classList.add('hidden');
-    }
-
-    modal.showModal();
-}
-
-async function deletePlanner(id) {
-    if (!confirm('Deseja realmente excluir este planejamento?')) return;
 
     try {
-        const { error } = await supabase.from('planner').delete().eq('id', id);
+        const { data, error } = await supabase.from('planner').select('*').eq('id', id).single();
         if (error) throw error;
-        loadPlanners();
+        if (!data) return;
+
+        document.getElementById('planner-modal-title').textContent = 'Editar Aula';
+        document.getElementById('plan-id').value = data.id;
+        document.getElementById('plan-day').value = data.day || '';
+        document.getElementById('plan-date').value = data.date || '';
+        document.getElementById('plan-time').value = data.time || '';
+        document.getElementById('plan-serie').value = data.serie || '';
+        document.getElementById('plan-team').value = data.team || '';
+        document.getElementById('plan-duration').value = data.duration || '';
+        document.getElementById('plan-skills').value = data.skills || '';
+        document.getElementById('plan-activities').value = data.activities || '';
+
+        cbEspecial.checked = (data.special === '1');
+        cbFolga.checked = (data.special === '2');
+        cbProva.checked = (data.special === '3');
+
+        if (cbProva.checked) {
+            labelEndDate.classList.remove('hidden');
+        } else {
+            labelEndDate.classList.add('hidden');
+            document.getElementById('plan-end-date').value = '';
+        }
+
+        modal.showModal();
     } catch (err) {
-        console.error('Erro ao excluir:', err);
-        alert('Erro ao excluir o registro.');
+        console.error('Erro ao buscar planejamento para edição:', err);
     }
-}
-
-function setupPlannerSearch() {
-    const searchInput = document.getElementById('planner-search');
-    if (!searchInput) return;
-
-    searchInput.addEventListener('input', async (e) => {
-        const query = e.target.value.trim();
-        if (query.length < 2) {
-            loadPlanners();
-            return;
-        }
-
-        try {
-            const { data, error } = await supabase
-                .from('planner')
-                .select('*')
-                .or(`date.ilike.%${query}%,time.ilike.%${query}%,team.ilike.%${query}%,serie.ilike.%${query}%,day.ilike.%${query}%`);
-
-            if (error) throw error;
-            if (data) renderPlannersList(data);
-        } catch (err) {
-            console.error('Erro na busca de planejamentos:', err);
-        }
-    });
-}
-
-// Funções auxiliares para manipulação correta de datas DD/MM/AAAA
-function parseDate(dateStr) {
-    const parts = dateStr.split('/');
-    if (parts.length !== 3) return null;
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const year = parseInt(parts[2], 10);
-    const date = new Date(year, month, day);
-    if (isNaN(date.getTime())) return null;
-    return date;
-}
-
-function formatDateToString(dateObj) {
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const year = dateObj.getFullYear();
-    return `${day}/${month}/${year}`;
 }
