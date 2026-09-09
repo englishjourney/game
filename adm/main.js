@@ -3,7 +3,7 @@ import { initPlanner } from './planner.js';
 import { initUsers } from './users.js';
 import { initMissions } from './missions.js';
 import { initFlashcardsAdm } from './flashcardsAdm.js';
-import { supabase } from '../supabaseClient.js'; // Adjust path if necessary
+import { supabase } from '../supabaseClient.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const loggedIn = await isAdmLoggedIn();
@@ -47,9 +47,7 @@ async function setupDashboard() {
     const searchInput = document.getElementById('global-search');
     const resultsContainer = document.getElementById('search-results');
 
-    if (!searchInput || !resultsContainer) {
-        return;
-    }
+    if (!searchInput || !resultsContainer) return;
 
     searchInput.addEventListener('input', async (e) => {
         const query = e.target.value.trim();
@@ -77,7 +75,6 @@ async function setupDashboard() {
 
             if (!html) html = '<div class="search-item">Nenhum resultado.</div>';
             resultsContainer.innerHTML = html;
-
         } catch (err) {
             console.error(err);
         }
@@ -96,17 +93,16 @@ async function loadSchedule() {
     const container = document.getElementById('schedule-container');
     container.innerHTML = 'Carregando horários...';
 
-    // REMOVIDO: o .single() quebrava a lógica e deixava o painel vazio se houvessem múltiplos (ou nenhum) registros. 
-    // CORRIGIDO: usando apenas .limit(1) para buscar o primeiro sem disparar o erro nativo do supabase (PGRST116).
-    const { data: rows, error } = await supabase.from('schedule').select('*').limit(1);
+    const { data: rows, error } = await supabase.from('schedule').select('*');
+    
     if (error || !rows || rows.length === 0) {
-        container.innerHTML = 'Nenhum horário encontrado.';
+        container.innerHTML = 'Nenhum horário encontrado na base de dados.';
         return;
     }
 
-    const data = rows[0];
+    // Pega a linha que efetivamente possui algum dia preenchido
+    const data = rows.find(r => r.seg_mat || r.seg_ves || r.ter_mat || r.ter_ves) || rows[0];
 
-    // Dias da semana para estruturar 1 cartão por dia
     const dias = [
         { id: 'seg', nome: 'Segunda-feira' },
         { id: 'ter', nome: 'Terça-feira' },
@@ -121,55 +117,50 @@ async function loadSchedule() {
         const mat = data[`${dia.id}_mat`];
         const ves = data[`${dia.id}_ves`];
 
-        // Se o dia não tiver informações nem de manhã nem a tarde, pula a criação do cartão
-        if (!mat && !ves) return;
+        if (!mat && !ves) return; // Pula dias 100% vazios
 
-        html += `<div class="schedule-card" style="margin-bottom: 20px; border: 1px solid var(--border); padding: 15px; border-radius: 8px; background: var(--bg-card);">
-            <h3 style="text-align: center; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; color: var(--primary);">${dia.nome}</h3>
-            <div style="display: flex; flex-direction: column; gap: 15px;">`;
+        // Container unificado para o Dia (Manhã e Tarde na mesma tabela/cartão)
+        html += `<div class="schedule-card" style="margin-bottom: 20px; border: 1px solid var(--border); padding: 20px; border-radius: 8px; background: var(--bg-card); box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h3 style="text-align: center; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; color: var(--primary); font-size: 1.4rem;">${dia.nome}</h3>
+            <div style="display: grid; grid-template-columns: ${mat && ves ? '1fr 1fr' : '1fr'}; gap: 20px;">`;
 
-      // Substitua a lógica de leitura dos horários no arquivo onde o Dashboard é renderizado (provavelmente main.js ou dashboard.js):
+        const renderTurno = (turnoStr, turnoNome) => {
+            if (!turnoStr || turnoStr.trim() === '') return '';
+            
+            // Extrai as matérias isolando o que está entre chaves (ou quebra por vírgula se n for possível)
+            const items = turnoStr.match(/\[.*?\]/g) || turnoStr.split(',');
 
-const renderTurno = (turnoStr, turnoNome) => {
-    if (!turnoStr) return '';
-    
-    // CORREÇÃO: Trata como texto simples, dividindo por vírgulas.
-    // Isso evita que erros de digitação como [Intervalo} façam o dado sumir da tela.
-    const items = turnoStr.split(',');
+            let turnoHtml = `<div style="background: var(--bg-dark); padding: 15px; border-radius: 8px;">
+                <strong style="display: block; margin-bottom: 12px; text-align: center; color: var(--primary); font-size: 1.1rem;">${turnoNome}</strong>
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">`;
 
-    let turnoHtml = `<div>
-        <strong style="display: block; margin-bottom: 8px;">${turnoNome}</strong>
-        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px;">`;
+            items.forEach(item => {
+                // Remove os colchetes para exibir só o texto
+                let text = item.trim().replace(/^\[|\]$/g, '');
+                if (!text) return;
 
-    items.forEach(item => {
-        let text = item.trim();
-        if (!text) return;
+                let bg = 'rgba(255, 255, 255, 0.05)';
+                let color = 'white';
 
-        let bg = 'var(--bg-dark)';
-        let color = 'white';
-        let textLower = text.toLowerCase();
+                // Aplica cores baseadas no texto simples
+                if (text.toLowerCase().includes('vago')) {
+                    bg = '#eab308'; // Amarelo
+                    color = 'black';
+                } else if (text.toLowerCase().includes('intervalo')) {
+                    bg = '#ef4444'; // Vermelho
+                    color = 'white';
+                }
 
-        // Localiza Vago e Intervalo independente de colchetes quebrados
-        if (textLower.includes('vago')) {
-            bg = '#eab308'; // Faixa Amarela
-            color = 'black';
-        } else if (textLower.includes('intervalo')) {
-            bg = '#ef4444'; // Faixa Vermelha
-            color = 'white';
-        }
+                turnoHtml += `<li style="background-color: ${bg}; color: ${color}; padding: 10px; border-radius: 6px; text-align: center; font-weight: 500; border: 1px solid rgba(255,255,255,0.1);">${text}</li>`;
+            });
 
-        // Remove colchetes ou chaves das pontas [ ou } para exibição limpa (Texto Simples)
-        text = text.replace(/^[\[{(]\vert{}[\]})]$/g, '').trim();
+            turnoHtml += `</ul></div>`;
+            return turnoHtml;
+        };
 
-        turnoHtml += `<li style="background-color: ${bg}; color: ${color}; padding: 8px; border-radius: 4px; text-align: center; font-weight: 500;">${text}</li>`;
-    });
-
-    turnoHtml += `</ul></div>`;
-    return turnoHtml;
-};
-
-        html += renderTurno(mat, 'Manhã');
-        html += renderTurno(ves, 'Tarde');
+        if (mat) html += renderTurno(mat, 'Manhã');
+        if (ves) html += renderTurno(ves, 'Tarde');
+        
         html += `</div></div>`;
     });
 
