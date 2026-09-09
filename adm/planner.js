@@ -72,28 +72,63 @@ export function initPlanner() {
             current.setDate(current.getDate() + 1);
 
             while (current <= end) {
+                // Envia apenas o estritamente necessário (dia, data em texto simples e special: 3)
                 inserts.push({
                     day: diasSemana[current.getDay()],
                     date: formatDateBR(new Date(current)),
-                    time: '',
-                    serie: '',
-                    team: '',
-                    skills: '',
-                    activities: '',
-                    duration: '',
-                    special: 3 // Define estritamente como prova
+                    special: 3
                 });
                 current.setDate(current.getDate() + 1);
             }
 
             if (inserts.length > 0) {
-                const { error } = await supabase.from('planner').insert(inserts);
-                if (error) {
-                    alert('Erro ao replicar: ' + error.message);
-                } else {
-                    alert(`Provas replicadas com sucesso até o dia ${endDateStr}! Lembre-se de salvar o registro principal.`);
-                    loadPlanners();
+                // Lógica visual da barra de progresso
+                let progressContainer = document.getElementById('replicar-progress-container');
+                if (!progressContainer) {
+                    progressContainer = document.createElement('div');
+                    progressContainer.id = 'replicar-progress-container';
+                    progressContainer.style.marginTop = '10px';
+                    progressContainer.innerHTML = `
+                        <progress id="replicar-progress" value="0" max="100" style="width: 100%;"></progress>
+                        <div id="replicar-progress-text" style="text-align: center; font-size: 0.9em; margin-top: 4px; font-weight: bold;">0%</div>
+                    `;
+                    document.getElementById('plan-end-date').insertAdjacentElement('afterend', progressContainer);
                 }
+                const progressBar = document.getElementById('replicar-progress');
+                const progressText = document.getElementById('replicar-progress-text');
+                
+                progressContainer.style.display = 'block';
+                progressBar.value = 0;
+                progressText.innerText = '0%';
+                
+                btnReplicar.disabled = true;
+                let successCount = 0;
+                let hasError = false;
+
+                // Inserindo linha por linha para animar o progresso
+                for (let i = 0; i < inserts.length; i++) {
+                    const { error } = await supabase.from('planner').insert([inserts[i]]);
+                    if (error) {
+                        alert(`Erro ao replicar a prova no dia ${inserts[i].date}: ${error.message}`);
+                        hasError = true;
+                        break;
+                    }
+                    successCount++;
+                    let percent = Math.round((successCount / inserts.length) * 100);
+                    progressBar.value = percent;
+                    progressText.innerText = percent + '%';
+                }
+
+                btnReplicar.disabled = false;
+
+                if (!hasError) {
+                    alert(`Provas replicadas com sucesso até o dia ${endDateStr}! Lembre-se de salvar o registro principal.`);
+                    setTimeout(() => { progressContainer.style.display = 'none'; }, 2500);
+                    loadPlanners();
+                } else {
+                    progressContainer.style.display = 'none';
+                }
+
             } else {
                 alert('A data final deve ser posterior à data inicial.');
             }
@@ -121,7 +156,6 @@ export function initPlanner() {
         };
 
         let result;
-        // Agora o envio apenas lida com o insert ou update do formulário atual (registro principal)
         if (id) {
             result = await supabase.from('planner').update(planData).eq('id', id);
         } else {
