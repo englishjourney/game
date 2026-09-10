@@ -155,3 +155,34 @@ body {
   justify-content: center;
   box-shadow: 0 0 10px #00f3ff;
 }
+/* Ajustes para o texto em Markdown gerado pelo Yuki */
+.message-bubble .message-text p {
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.message-bubble .message-text p:last-child {
+  margin-bottom: 0;
+}
+
+.message-bubble .message-text strong {
+  font-weight: 700;
+}
+
+.message-bubble .message-text em {
+  font-style: italic;
+}
+
+.message-bubble .message-text ul, 
+.message-bubble .message-text ol {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+
+/* Evita que os títulos criados pela IA fiquem muito grandes e desconfigurem o balão */
+.message-bubble .message-text h1,
+.message-bubble .message-text h2,
+.message-bubble .message-text h3 {
+  font-size: 1.1em;
+  margin: 10px 0 6px 0;
+}
