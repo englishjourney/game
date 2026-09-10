@@ -181,8 +181,14 @@ function renderCompletionButtons(yukiRow, detectedSubject) {
   btnClose.innerText = "Encerrar chat";
   btnClose.className = "chat-action-btn close-btn";
   btnClose.style.cssText = "background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold;";
+  
   btnClose.onclick = async () => {
+    btnClose.innerText = "Salvando chat...";
+    btnClose.disabled = true;
+    btnAnother.disabled = true;
+    
     await saveChatAndRecord(chatHistoryText, detectedSubject || "Encerrado");
+    
     userInput.disabled = true;
     chatForm.querySelector("button").disabled = true;
     buttonContainer.remove();
@@ -194,9 +200,14 @@ function renderCompletionButtons(yukiRow, detectedSubject) {
   btnAnother.innerText = "Fazer outra pergunta";
   btnAnother.className = "chat-action-btn another-btn";
   btnAnother.style.cssText = "background: #a855f7; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold;";
+  
   btnAnother.onclick = async () => {
+    btnAnother.innerText = "Salvando chat...";
+    btnClose.disabled = true;
+    btnAnother.disabled = true;
+    
     await saveChatAndRecord(chatHistoryText, detectedSubject || "Finalizado");
-    // Reseta o histórico para uma nova conversa limpa
+    
     chatHistoryText = "";
     conversationHistory = [];
     currentAssignmentId = null;
