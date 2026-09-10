@@ -68,14 +68,24 @@ function renderMessage(sender, text, avatarUrl) {
   const bubble = document.createElement("div");
   bubble.classList.add("message-bubble");
   
-  const textParagraph = document.createElement("p");
-  textParagraph.innerText = text;
+  // Alterado de 'p' para 'div' e mudado o nome da variável para textContainer. 
+  // Isso evita erros no HTML, já que o Markdown vai gerar novas tags <p> internamente.
+  const textContainer = document.createElement("div");
+  textContainer.classList.add("message-text");
+
+  // Se a mensagem for do Yuki, converte para HTML com a biblioteca marked.
+  // Se for do aluno, mantém innerText por segurança.
+  if (sender === "yuki" && typeof marked !== "undefined") {
+    textContainer.innerHTML = marked.parse(text);
+  } else {
+    textContainer.innerText = text;
+  }
 
   const timeSpan = document.createElement("span");
   timeSpan.classList.add("message-time");
   timeSpan.innerText = getFormattedTimestamp().split(" - ")[1];
 
-  bubble.appendChild(textParagraph);
+  bubble.appendChild(textContainer);
   bubble.appendChild(timeSpan);
 
   row.appendChild(avatarImg);
@@ -91,14 +101,6 @@ function renderMessage(sender, text, avatarUrl) {
 
   return row;
 }
-
-// Envio de mensagem
-chatForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const message = userInput.value.trim();
-  if (!message || !currentUser) return;
-
-  userInput.value = "";
 
   // 1. Renderiza mensagem do Aluno
   renderMessage("user", message, currentUser.avatar_url);
