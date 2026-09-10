@@ -1,7 +1,7 @@
 // Configurações do Supabase e Apps Script
 const SUPABASE_URL = "https://rmsmamzutvxugdbiqsrz.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx";
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw0zJ58Ub-NO9pi45dM-GvfnueT4UJv5R_baG4Z7U-CAE6ouo44_RD17Atv40orQjnOBw/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwmMRL8ajcv0R3ednJhOVW0OY1ydv63MH3_tsbeEMha8ttl1SipHMa6AsVBBHCcjs1E7g/exec";
 
 // Instância com nome 'supabaseClient' para evitar conflito com a biblioteca global
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -99,7 +99,7 @@ function renderMessage(sender, text, avatarUrl) {
   return row;
 }
 
-// Envio de mensagem (Função restaurada)
+// Envio de mensagem
 chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const message = userInput.value.trim();
@@ -133,22 +133,32 @@ chatForm.addEventListener("submit", async (e) => {
       })
     });
 
-    const data = await response.json();
+    const responseText = await response.text();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error("O servidor retornou HTML em vez de JSON:", responseText);
+      throw new Error("Erro interno no servidor do Apps Script.");
+    }
+
     loadingRow.remove();
 
     const yukiReply = data.reply || "Ops, tive um probleminha para responder. Pode repetir?";
     const detectedSubject = data.mainSubject || "Geral";
 
     // 5. Renderiza a resposta do Yuki
-    renderMessage("yuki", yukiReply, "yuki.png");
+    const yukiRow = renderMessage("yuki", yukiReply, "yuki.png");
     
     // 6. Atualiza os históricos com a resposta do assistente
     const yukiTimestamp = getFormattedTimestamp();
     chatHistoryText += `YUKI [${yukiTimestamp}]: ${yukiReply}\n`;
     conversationHistory.push({ role: "assistant", content: yukiReply });
 
-    // 7. Salva ou atualiza os dados no Supabase
-    await saveAssignmentData(chatHistoryText, detectedSubject);
+    // 7. Verifica se o Yuki parabenizou o aluno para exibir os botões finais
+    if (yukiReply.toLowerCase().includes("muito bem") || yukiReply.toLowerCase().includes("você arrasou")) {
+      renderCompletionButtons(yukiRow, detectedSubject);
+    }
 
   } catch (error) {
     console.error("Erro na comunicação com a IA:", error);
@@ -157,29 +167,92 @@ chatForm.addEventListener("submit", async (e) => {
   }
 });
 
-// Salva/Atualiza o registro na tabela 'assignments'
-async function saveAssignmentData(history, mainSubject) {
-  const payload = {
-    chatHistory: history,
-    mainSubject: mainSubject,
-    name: currentUser.name,
-    gradeClass: currentUser.gradeClass
+// Renderiza os botões de encerramento ou nova pergunta ao concluir a atividade
+function renderCompletionButtons(yukiRow, detectedSubject) {
+  const bubble = yukiRow.querySelector(".message-bubble");
+  if (!bubble || bubble.querySelector(".completion-buttons")) return;
+
+  const buttonContainer = document.createElement("div");
+  buttonContainer.classList.add("completion-buttons");
+  buttonContainer.style.cssText = "display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;";
+
+  // Botão Encerrar Chat
+  const btnClose = document.createElement("button");
+  btnClose.innerText = "Encerrar chat";
+  btnClose.className = "chat-action-btn close-btn";
+  btnClose.style.cssText = "background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold;";
+  btnClose.onclick = async () => {
+    await saveChatAndRecord(chatHistoryText, detectedSubject || "Encerrado");
+    userInput.disabled = true;
+    chatForm.querySelector("button").disabled = true;
+    buttonContainer.remove();
+    renderMessage("yuki", "Chat encerrado com sucesso! Bom descanso.", "yuki.png");
   };
 
-  if (currentAssignmentId) {
-    await supabaseClient
-      .from("assignments")
-      .update(payload)
-      .eq("id", currentAssignmentId);
-  } else {
-    const { data, error } = await supabaseClient
-      .from("assignments")
-      .insert([payload])
-      .select("id")
-      .single();
+  // Botão Fazer Outra Pergunta
+  const btnAnother = document.createElement("button");
+  btnAnother.innerText = "Fazer outra pergunta";
+  btnAnother.className = "chat-action-btn another-btn";
+  btnAnother.style.cssText = "background: #a855f7; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold;";
+  btnAnother.onclick = async () => {
+    await saveChatAndRecord(chatHistoryText, detectedSubject || "Finalizado");
+    // Reseta o histórico para uma nova conversa limpa
+    chatHistoryText = "";
+    conversationHistory = [];
+    currentAssignmentId = null;
+    buttonContainer.remove();
+    renderMessage("yuki", "Legal! Mande sua nova dúvida ou questão para começarmos.", "yuki.png");
+  };
 
-    if (!error && data) {
-      currentAssignmentId = data.id;
+  buttonContainer.appendChild(btnClose);
+  buttonContainer.appendChild(btnAnother);
+  bubble.appendChild(buttonContainer);
+}
+
+// Cria o arquivo .txt no Drive via Apps Script e salva o link no Supabase
+async function saveChatAndRecord(historyText, mainSubject) {
+  try {
+    const response = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "saveChat",
+        chatHistory: historyText,
+        mainSubject: mainSubject,
+        userData: {
+          name: currentUser.name,
+          username: currentUser.username,
+          gradeClass: currentUser.gradeClass
+        }
+      })
+    });
+
+    const data = await response.json();
+    const fileUrl = data.fileUrl || "";
+
+    const payload = {
+      chatHistory: fileUrl,
+      mainSubject: mainSubject,
+      name: currentUser.name,
+      gradeClass: currentUser.gradeClass
+    };
+
+    if (currentAssignmentId) {
+      await supabaseClient
+        .from("assignments")
+        .update(payload)
+        .eq("id", currentAssignmentId);
+    } else {
+      const { data: insertData, error } = await supabaseClient
+        .from("assignments")
+        .insert([payload])
+        .select("id")
+        .single();
+
+      if (!error && insertData) {
+        currentAssignmentId = insertData.id;
+      }
     }
+  } catch (err) {
+    console.error("Erro ao salvar o chat no Drive/Supabase:", err);
   }
 }
