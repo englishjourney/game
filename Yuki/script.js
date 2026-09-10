@@ -1,7 +1,7 @@
 // Configurações do Supabase e Apps Script
 const SUPABASE_URL = "https://rmsmamzutvxugdbiqsrz.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx";
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8dqyGcdAZklwHGu38wcndP-GfLa50nHObFKYHBj8HnRVzSkJpfoDpUgbo3KsspAPTwQ/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_RzABVbrGRO2FtLlPONALG8vWkw7rmP8n7UJF5uQvilb3HYAUSOveF-PT2l9YXlNPxQ/exec";
 
 // Instância com nome 'supabaseClient' para evitar conflito com a biblioteca global
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -9,6 +9,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Estado da Aplicação
 let currentUser = null;
 let chatHistoryText = "";
+let conversationHistory = []; // Mantém a estrutura de histórico para a IA
 let currentAssignmentId = null;
 
 // Elementos DOM
@@ -102,19 +103,21 @@ chatForm.addEventListener("submit", async (e) => {
   // 1. Renderiza mensagem do Aluno
   renderMessage("user", message, currentUser.avatar_url);
 
-  // 2. Registra na variável do histórico em texto
+  // 2. Registra nas variáveis de histórico (texto e estruturado)
   const timestamp = getFormattedTimestamp();
   chatHistoryText += `${currentUser.username} [${timestamp}]: ${message}\n`;
+  conversationHistory.push({ role: "user", content: message });
 
   // 3. Renderiza mensagem temporária de digitação do Yuki
   const loadingRow = renderMessage("yuki", "Yuki está digitando...", "yuki.png");
 
   try {
-    // 4. Envia mensagem ao Apps Script sem acionar a requisição Preflight (CORS)
+    // 4. Envia mensagem + histórico ao Apps Script
     const response = await fetch(APPS_SCRIPT_URL, {
       method: "POST",
       body: JSON.stringify({
         message: message,
+        history: conversationHistory,
         userData: {
           name: currentUser.name,
           username: currentUser.username,
@@ -132,11 +135,12 @@ chatForm.addEventListener("submit", async (e) => {
     // 5. Renderiza a resposta do Yuki
     renderMessage("yuki", yukiReply, "yuki.png");
     
-    // 6. Atualiza o histórico
+    // 6. Atualiza os históricos com a resposta do assistente
     const yukiTimestamp = getFormattedTimestamp();
     chatHistoryText += `YUKI [${yukiTimestamp}]: ${yukiReply}\n`;
+    conversationHistory.push({ role: "assistant", content: yukiReply });
 
-    // 7. Salva ou atualiza os dados na tabela 'assignments' do Supabase
+    // 7. Salva ou atualiza os dados no Supabase
     await saveAssignmentData(chatHistoryText, detectedSubject);
 
   } catch (error) {
