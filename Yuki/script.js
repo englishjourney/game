@@ -1,7 +1,7 @@
 // Configurações do Supabase e Apps Script
 const SUPABASE_URL = "https://rmsmamzutvxugdbiqsrz.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx";
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwmMRL8ajcv0R3ednJhOVW0OY1ydv63MH3_tsbeEMha8ttl1SipHMa6AsVBBHCcjs1E7g/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzghQljbfAU-elMKpC3ZZPJt4ZYhPBMtRy68p_NwBk2UuqSN0dE-b30OEN8YHtPEasIBA/exec";
 
 // Instância com nome 'supabaseClient' para evitar conflito com a biblioteca global
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -99,7 +99,7 @@ function renderMessage(sender, text, avatarUrl) {
   return row;
 }
 
-// Envio de mensagem
+// Envio de mensagem (apenas envia para a IA e exibe, sem salvar histórico no Drive/Supabase)
 chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const message = userInput.value.trim();
@@ -110,7 +110,7 @@ chatForm.addEventListener("submit", async (e) => {
   // 1. Renderiza mensagem do Aluno
   renderMessage("user", message, currentUser.avatar_url);
 
-  // 2. Registra nas variáveis de histórico
+  // 2. Registra nas variáveis de histórico local
   const timestamp = getFormattedTimestamp();
   chatHistoryText += `${currentUser.username} [${timestamp}]: ${message}\n`;
   conversationHistory.push({ role: "user", content: message });
@@ -150,7 +150,7 @@ chatForm.addEventListener("submit", async (e) => {
     // 5. Renderiza a resposta do Yuki
     const yukiRow = renderMessage("yuki", yukiReply, "yuki.png");
     
-    // 6. Atualiza os históricos com a resposta do assistente
+    // 6. Atualiza os históricos locais com a resposta do assistente
     const yukiTimestamp = getFormattedTimestamp();
     chatHistoryText += `YUKI [${yukiTimestamp}]: ${yukiReply}\n`;
     conversationHistory.push({ role: "assistant", content: yukiReply });
@@ -209,7 +209,7 @@ function renderCompletionButtons(yukiRow, detectedSubject) {
   bubble.appendChild(buttonContainer);
 }
 
-// Cria o arquivo .txt no Drive via Apps Script e salva o link no Supabase
+// Cria o arquivo .txt no Drive via Apps Script e salva o link no Supabase (Executado SOMENTE nos botões)
 async function saveChatAndRecord(historyText, mainSubject) {
   try {
     const response = await fetch(APPS_SCRIPT_URL, {
@@ -226,7 +226,15 @@ async function saveChatAndRecord(historyText, mainSubject) {
       })
     });
 
-    const data = await response.json();
+    const responseText = await response.text();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error("Retorno inválido do Apps Script ao salvar:", responseText);
+      return;
+    }
+
     const fileUrl = data.fileUrl || "";
 
     const payload = {
