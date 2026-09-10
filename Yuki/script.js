@@ -56,7 +56,7 @@ function getFormattedTimestamp() {
   return `${date} - ${time}`;
 }
 
-// Renderiza a mensagem no chat
+// Renderiza a mensagem no chat com suporte a Markdown
 function renderMessage(sender, text, avatarUrl) {
   const row = document.createElement("div");
   row.classList.add("message-row", sender);
@@ -68,13 +68,10 @@ function renderMessage(sender, text, avatarUrl) {
   const bubble = document.createElement("div");
   bubble.classList.add("message-bubble");
   
-  // Alterado de 'p' para 'div' e mudado o nome da variável para textContainer. 
-  // Isso evita erros no HTML, já que o Markdown vai gerar novas tags <p> internamente.
   const textContainer = document.createElement("div");
   textContainer.classList.add("message-text");
 
-  // Se a mensagem for do Yuki, converte para HTML com a biblioteca marked.
-  // Se for do aluno, mantém innerText por segurança.
+  // Converte a resposta do Yuki usando marked.js
   if (sender === "yuki" && typeof marked !== "undefined") {
     textContainer.innerHTML = marked.parse(text);
   } else {
@@ -102,10 +99,18 @@ function renderMessage(sender, text, avatarUrl) {
   return row;
 }
 
+// Envio de mensagem (Função restaurada)
+chatForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const message = userInput.value.trim();
+  if (!message || !currentUser) return;
+
+  userInput.value = "";
+
   // 1. Renderiza mensagem do Aluno
   renderMessage("user", message, currentUser.avatar_url);
 
-  // 2. Registra nas variáveis de histórico (texto e estruturado)
+  // 2. Registra nas variáveis de histórico
   const timestamp = getFormattedTimestamp();
   chatHistoryText += `${currentUser.username} [${timestamp}]: ${message}\n`;
   conversationHistory.push({ role: "user", content: message });
