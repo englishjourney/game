@@ -179,7 +179,27 @@ export function initPlanner() {
             resultsContainer.classList.add('hidden');
         }
     });
+
+    // --- NOVA LÓGICA: Limpar cache do planner ao Sair ---
+    const btnLogout = document.getElementById('btn-logout');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('planner_state_')) {
+                    localStorage.removeItem(key);
+                }
+            });
+        });
+    }
 }
+
+// --- NOVA LÓGICA: Função global para minimizar/maximizar salvando no cache ---
+window.togglePlannerSection = (btn, title) => {
+    const contentDiv = btn.parentElement.nextElementSibling;
+    const isHidden = contentDiv.classList.toggle('hidden');
+    btn.textContent = isHidden ? 'Maximizar' : 'Minimizar';
+    localStorage.setItem(`planner_state_${title}`, isHidden);
+};
 
 async function loadPlanners() {
     const container = document.getElementById('planner-list');
@@ -208,13 +228,19 @@ async function loadPlanners() {
         return acc;
     }, {});
 
-    container.innerHTML = Object.entries(groups).map(([title, items]) => `
+    container.innerHTML = Object.entries(groups).map(([title, items]) => {
+        // --- NOVA LÓGICA: Verifica o estado no cache ---
+        const isHidden = localStorage.getItem(`planner_state_${title}`) === 'true';
+        const displayClass = isHidden ? 'hidden' : '';
+        const btnText = isHidden ? 'Maximizar' : 'Minimizar';
+
+        return `
         <div class="planner-section" style="margin-bottom: 24px;">
             <h3 class="planner-section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; border-bottom: 2px solid #ccc; padding-bottom: 4px;">
                 <span>${title}</span>
-                <button class="minimize-btn" style="color:var(--text-muted);" onclick="this.parentElement.nextElementSibling.classList.toggle('hidden'); this.textContent = this.textContent === 'Minimizar' ? 'Maximizar' : 'Minimizar'">Minimizar</button>
+                <button class="minimize-btn" style="color:var(--text-muted);" onclick="window.togglePlannerSection(this, '${title}')">${btnText}</button>
             </h3>
-            <div class="planner-section-content">
+            <div class="planner-section-content ${displayClass}">
                 ${items.map(p => {
                     let cardClass = p.special == 1 ? 'card-special-1' : (p.special == 2 ? 'card-special-2' : (p.special == 3 ? 'card-special-3' : ''));
                     let titleHtml = p.special == 2 ? '<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>FOLGA</strong></p>' : (p.special == 3 ? '<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>PROVA</strong></p>' : '');
@@ -237,7 +263,8 @@ async function loadPlanners() {
                 }).join('')}
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 window.editPlanner = (p) => {
