@@ -1,7 +1,7 @@
 // Configurações do Supabase e Apps Script
 const SUPABASE_URL = "https://rmsmamzutvxugdbiqsrz.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx";
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVc49nQohXOEWcsRuCUAoX7yav20TCX-QWY0nblvj2g0MQHrw4ceTye_Q5h4LOG04CIA/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxS9nPyw1nndf2xQ5XjorY5zoqeQjIsBMw3zflDaRcczVZASLdKezNZU8BZJvf3Lf9_PQ/exec";
 
 // Instância com nome 'supabaseClient' para evitar conflito com a biblioteca global
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
