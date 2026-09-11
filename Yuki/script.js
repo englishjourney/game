@@ -21,7 +21,31 @@ const userInput = document.getElementById("user-input");
 document.addEventListener("DOMContentLoaded", async () => {
   await loadUserData();
   setupMobileKeyboardAdjust();
+  setupInputRestrictions(); // <- função de bloqueios chamada aqui
 });
+
+// Ajustes de restrição do campo de texto (Anti-cola e Enter)
+function setupInputRestrictions() {
+  // 1. Previne a ação de colar via atalho (Ctrl+V) ou menu
+  userInput.addEventListener("paste", (e) => {
+    e.preventDefault();
+  });
+
+  // 2. Previne o clique com o botão direito (esconde a opção "Colar")
+  userInput.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+  });
+
+  // 3. Ajusta o comportamento da tecla Enter e Shift + Enter
+  userInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault(); // Evita a quebra de linha normal
+      // Dispara o envio do formulário simulando o clique no botão
+      chatForm.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+    }
+    // Obs: Se for Shift + Enter, o if é ignorado e a linha quebra naturalmente.
+  });
+}
 
 // Busca os dados do usuário do cache do navegador
 async function loadUserData() {
