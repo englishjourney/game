@@ -1,6 +1,9 @@
 import { supabase } from '../supabaseClient.js';
 
 export function initPlanner() {
+    setupCustomOptions();
+    setupDatePickers();
+    setupLastTeamToggle();
     loadPlanners();
 
     const updateRequiredFields = () => {
@@ -16,7 +19,6 @@ export function initPlanner() {
         
         document.getElementById('label-end-date').classList.toggle('hidden', !isPrv);
         
-        // Exibe ou oculta o botão de replicar junto com o campo de data final
         const btnReplicar = document.getElementById('btn-replicar');
         if (btnReplicar) {
             btnReplicar.classList.toggle('hidden', !isPrv);
@@ -35,20 +37,25 @@ export function initPlanner() {
     });
     window.updateRequiredFields = updateRequiredFields;
 
+    // Abrir modal pelo botão flutuante "+ Nova aula"
     document.getElementById('btn-add-plan').addEventListener('click', () => {
-        document.getElementById('planner-form').reset();
+        resetPlannerForm();
         document.getElementById('plan-id').value = '';
         ['cb-especial', 'cb-folga', 'cb-prova'].forEach(id => document.getElementById(id).checked = false);
+        
+        // Aplica "Última turma" se o toggle estiver ativo
+        applyLastTeamIfEnabled();
+
         updateRequiredFields();
         document.getElementById('planner-modal-title').textContent = 'Adicionar Aula';
         document.getElementById('planner-modal').showModal();
     });
 
-    // --- NOVA LÓGICA DO BOTÃO REPLICAR ---
+    // Lógica do botão Replicar
     const btnReplicar = document.getElementById('btn-replicar');
     if (btnReplicar) {
         btnReplicar.addEventListener('click', async (e) => {
-            e.preventDefault(); // <-- CORREÇÃO: Impede que o botão envie o formulário e cancele a replicação
+            e.preventDefault();
 
             const startDateStr = document.getElementById('plan-date').value;
             const endDateStr = document.getElementById('plan-end-date').value;
@@ -63,18 +70,16 @@ export function initPlanner() {
                 return p[2].length === 4 ? new Date(`${p[2]}-${p[1]}-${p[0]}T12:00:00`) : new Date(`${p[0]}-${p[1]}-${p[2]}T12:00:00`);
             };
             const formatDateBR = (d) => `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
-            const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+            const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
             let start = parseDateBR(startDateStr);
             let end = parseDateBR(endDateStr);
             let inserts = [];
 
-            // Inicia do dia SEGUINTE à data atual para não duplicar o registro inicial
             let current = new Date(start);
             current.setDate(current.getDate() + 1);
 
             while (current <= end) {
-                // CORREÇÃO: Enviando APENAS day, date e special. Nada de strings vazias.
                 inserts.push({
                     day: diasSemana[current.getDay()],
                     date: formatDateBR(new Date(current)),
@@ -84,17 +89,14 @@ export function initPlanner() {
             }
 
             if (inserts.length > 0) {
-                // Mostra a progress bar
                 const progressBar = document.getElementById('replicar-progress');
                 if (progressBar) {
                     progressBar.classList.remove('hidden');
-                    progressBar.value = 50; // Indica processamento visualmente
+                    progressBar.value = 50;
                 }
 
-                // Envia tudo de uma vez para o Supabase (Bulk Insert)
                 const { error } = await supabase.from('planner').insert(inserts);
                 
-                // Preenche a barra ao finalizar e a esconde depois de 2 segundos
                 if (progressBar) {
                     progressBar.value = 100;
                     setTimeout(() => progressBar.classList.add('hidden'), 2000);
@@ -112,6 +114,7 @@ export function initPlanner() {
         });
     }
 
+    // Submissão do Formulário
     document.getElementById('planner-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -132,6 +135,13 @@ export function initPlanner() {
             special: specialValue
         };
 
+        // Salvar última turma no cache se o toggle estiver ativo
+        const isLastTeamEnabled = localStorage.getItem('planner_last_team_enabled') === 'true';
+        if (isLastTeamEnabled) {
+            if (planData.serie && planData.serie !== '__ADD_NEW__') localStorage.setItem('planner_last_serie', planData.serie);
+            if (planData.team && planData.team !== '__ADD_NEW__') localStorage.setItem('planner_last_team', planData.team);
+        }
+
         let result;
         if (id) {
             result = await supabase.from('planner').update(planData).eq('id', id);
@@ -146,41 +156,44 @@ export function initPlanner() {
         }
     });
 
+    // Pesquisa no Planner
     const searchInput = document.getElementById('planner-search');
     const resultsContainer = document.getElementById('planner-search-results');
     
-    searchInput.addEventListener('input', (e) => {
-        const q = e.target.value.toLowerCase();
-        resultsContainer.innerHTML = '';
-        if (q.length < 2) { resultsContainer.classList.add('hidden'); return; }
-        
-        let found = false;
-        document.querySelectorAll('.data-card').forEach(card => {
-            if (card.innerText.toLowerCase().includes(q)) {
-                found = true;
-                const info = card.querySelector('.data-card-info').innerText.split('\n')[0];
-                const div = document.createElement('div');
-                div.className = 'search-item';
-                div.innerText = info.substring(0, 50) + '...';
-                div.onclick = () => {
-                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    card.style.outline = '4px solid var(--primary)';
-                    setTimeout(() => card.style.outline = 'none', 2000);
-                    resultsContainer.classList.add('hidden');
-                };
-                resultsContainer.appendChild(div);
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            resultsContainer.innerHTML = '';
+            if (q.length < 2) { resultsContainer.classList.add('hidden'); return; }
+            
+            let found = false;
+            document.querySelectorAll('.data-card').forEach(card => {
+                if (card.innerText.toLowerCase().includes(q)) {
+                    found = true;
+                    const info = card.querySelector('.data-card-info').innerText.split('\n')[0];
+                    const div = document.createElement('div');
+                    div.className = 'search-item';
+                    div.innerText = info.substring(0, 50) + '...';
+                    div.onclick = () => {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        card.style.outline = '4px solid var(--primary)';
+                        setTimeout(() => card.style.outline = 'none', 2000);
+                        resultsContainer.classList.add('hidden');
+                    };
+                    resultsContainer.appendChild(div);
+                }
+            });
+            resultsContainer.classList.toggle('hidden', !found);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#planner-search') && !e.target.closest('#planner-search-results')) {
+                resultsContainer.classList.add('hidden');
             }
         });
-        resultsContainer.classList.toggle('hidden', !found);
-    });
+    }
 
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('#planner-search') && !e.target.closest('#planner-search-results')) {
-            resultsContainer.classList.add('hidden');
-        }
-    });
-
-    // --- NOVA LÓGICA: Limpar cache do planner ao Sair ---
+    // Limpar cache ao sair
     const btnLogout = document.getElementById('btn-logout');
     if (btnLogout) {
         btnLogout.addEventListener('click', () => {
@@ -193,7 +206,178 @@ export function initPlanner() {
     }
 }
 
-// --- NOVA LÓGICA: Função global para minimizar/maximizar salvando no cache ---
+// Helper para redefinir o formulário mantendo integridade
+function resetPlannerForm() {
+    document.getElementById('planner-form').reset();
+    document.getElementById('plan-serie').value = '';
+    document.getElementById('plan-team').value = '';
+    document.getElementById('plan-time').value = '';
+    document.getElementById('plan-day').value = '';
+}
+
+// --- LÓGICA DE GERENCIAMENTO DE DROPDOWNS CUSTOMIZADOS COM PROMPT ---
+function setupCustomOptions() {
+    loadCustomOptionsForSelect('plan-serie', 'planner_custom_series');
+    loadCustomOptionsForSelect('plan-team', 'planner_custom_teams');
+    loadCustomOptionsForSelect('plan-time', 'planner_custom_times');
+
+    setupCustomAddListener('plan-serie', 'planner_custom_series', 'Série');
+    setupCustomAddListener('plan-team', 'planner_custom_teams', 'Turma');
+    setupCustomAddListener('plan-time', 'planner_custom_times', 'Hora');
+}
+
+function loadCustomOptionsForSelect(selectId, storageKey) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    const customItems = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    customItems.forEach(val => {
+        if (!select.querySelector(`option[value="${val}"]`)) {
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.textContent = val;
+            const addNewOpt = select.querySelector('option[value="__ADD_NEW__"]');
+            if (addNewOpt) select.insertBefore(opt, addNewOpt);
+            else select.appendChild(opt);
+        }
+    });
+}
+
+function setupCustomAddListener(selectId, storageKey, labelName) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    select.addEventListener('change', () => {
+        if (select.value === '__ADD_NEW__') {
+            const newVal = prompt(`Digite o novo valor para ${labelName}:`);
+            if (newVal && newVal.trim() !== '') {
+                const cleanVal = newVal.trim();
+                setSelectValueWithCustom(selectId, cleanVal);
+
+                const customItems = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                if (!customItems.includes(cleanVal)) {
+                    customItems.push(cleanVal);
+                    localStorage.setItem(storageKey, JSON.stringify(customItems));
+                }
+
+                // Salva se "Última turma" estiver ativo
+                if ((selectId === 'plan-serie' || selectId === 'plan-team') && localStorage.getItem('planner_last_team_enabled') === 'true') {
+                    if (selectId === 'plan-serie') localStorage.setItem('planner_last_serie', cleanVal);
+                    if (selectId === 'plan-team') localStorage.setItem('planner_last_team', cleanVal);
+                }
+            } else {
+                select.value = '';
+            }
+        } else {
+            if ((selectId === 'plan-serie' || selectId === 'plan-team') && localStorage.getItem('planner_last_team_enabled') === 'true') {
+                if (selectId === 'plan-serie') localStorage.setItem('planner_last_serie', select.value);
+                if (selectId === 'plan-team') localStorage.setItem('planner_last_team', select.value);
+            }
+        }
+    });
+}
+
+function setSelectValueWithCustom(selectId, value) {
+    const select = document.getElementById(selectId);
+    if (!select || !value) {
+        if (select) select.value = '';
+        return;
+    }
+    let opt = select.querySelector(`option[value="${value}"]`);
+    if (!opt) {
+        opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = value;
+        const addNewOpt = select.querySelector('option[value="__ADD_NEW__"]');
+        if (addNewOpt) select.insertBefore(opt, addNewOpt);
+        else select.appendChild(opt);
+    }
+    select.value = value;
+}
+
+// --- LÓGICA DO MÁSCARA E SELEÇÃO DE DATA POR CALENDÁRIO ---
+function setupDatePickers() {
+    setupDateInputAndPicker('plan-date', 'plan-date-picker');
+    setupDateInputAndPicker('plan-end-date', 'plan-end-date-picker');
+}
+
+function setupDateInputAndPicker(inputId, pickerId) {
+    const textInput = document.getElementById(inputId);
+    const datePicker = document.getElementById(pickerId);
+
+    if (textInput) {
+        textInput.addEventListener('input', () => {
+            let v = textInput.value.replace(/\D/g, '');
+            if (v.length > 8) v = v.slice(0, 8);
+            if (v.length >= 5) {
+                textInput.value = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`;
+            } else if (v.length >= 3) {
+                textInput.value = `${v.slice(0, 2)}/${v.slice(2)}`;
+            } else {
+                textInput.value = v;
+            }
+        });
+    }
+
+    if (datePicker && textInput) {
+        datePicker.addEventListener('change', () => {
+            if (datePicker.value) {
+                const parts = datePicker.value.split('-'); // YYYY-MM-DD
+                if (parts.length === 3) {
+                    textInput.value = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                }
+            }
+        });
+    }
+}
+
+// --- LÓGICA DO SWITCHER "ÚLTIMA TURMA" ---
+function setupLastTeamToggle() {
+    const toggle = document.getElementById('last-team-toggle');
+    if (!toggle) return;
+
+    const isEnabled = localStorage.getItem('planner_last_team_enabled') === 'true';
+    toggle.checked = isEnabled;
+
+    toggle.addEventListener('change', () => {
+        if (toggle.checked) {
+            localStorage.setItem('planner_last_team_enabled', 'true');
+        } else {
+            localStorage.setItem('planner_last_team_enabled', 'false');
+            localStorage.removeItem('planner_last_serie');
+            localStorage.removeItem('planner_last_team');
+        }
+    });
+}
+
+function applyLastTeamIfEnabled() {
+    const isEnabled = localStorage.getItem('planner_last_team_enabled') === 'true';
+    if (isEnabled) {
+        const lastSerie = localStorage.getItem('planner_last_serie');
+        const lastTeam = localStorage.getItem('planner_last_team');
+        if (lastSerie) setSelectValueWithCustom('plan-serie', lastSerie);
+        if (lastTeam) setSelectValueWithCustom('plan-team', lastTeam);
+    }
+}
+
+// --- LÓGICA DE ABRIR "+ NOVA AULA" DIRETO DA SEÇÃO DO DIA ---
+window.addPlanForDay = (day, date) => {
+    resetPlannerForm();
+    document.getElementById('plan-id').value = '';
+    ['cb-especial', 'cb-folga', 'cb-prova'].forEach(id => document.getElementById(id).checked = false);
+
+    // Preenche o dia e a data fornecidos pela seção
+    document.getElementById('plan-day').value = day || '';
+    document.getElementById('plan-date').value = date || '';
+
+    // Aplica "Última turma" se o switcher estiver ligado
+    applyLastTeamIfEnabled();
+
+    window.updateRequiredFields();
+    document.getElementById('planner-modal-title').textContent = `Adicionar Aula - ${day} (${date})`;
+    document.getElementById('planner-modal').showModal();
+};
+
+// Minimizar/Maximizar salvando no cache
 window.togglePlannerSection = (btn, title) => {
     const contentDiv = btn.parentElement.nextElementSibling;
     const isHidden = contentDiv.classList.toggle('hidden');
@@ -229,16 +413,22 @@ async function loadPlanners() {
     }, {});
 
     container.innerHTML = Object.entries(groups).map(([title, items]) => {
-        // --- NOVA LÓGICA: Verifica o estado no cache ---
         const isHidden = localStorage.getItem(`planner_state_${title}`) === 'true';
         const displayClass = isHidden ? 'hidden' : '';
         const btnText = isHidden ? 'Maximizar' : 'Minimizar';
+
+        const firstItem = items[0] || {};
+        const itemDay = firstItem.day || '';
+        const itemDate = firstItem.date || '';
 
         return `
         <div class="planner-section" style="margin-bottom: 24px;">
             <h3 class="planner-section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; border-bottom: 2px solid #ccc; padding-bottom: 4px;">
                 <span>${title}</span>
-                <button class="minimize-btn" style="color:var(--text-muted);" onclick="window.togglePlannerSection(this, '${title}')">${btnText}</button>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="btn-small btn-primary" onclick="window.addPlanForDay('${itemDay}', '${itemDate}')">+ Nova aula</button>
+                    <button class="minimize-btn" style="color:var(--text-muted);" onclick="window.togglePlannerSection(this, '${title}')">${btnText}</button>
+                </div>
             </h3>
             <div class="planner-section-content ${displayClass}">
                 ${items.map(p => {
@@ -248,9 +438,8 @@ async function loadPlanners() {
                     return `
                     <div class="data-card ${cardClass}" id="plan-card-${p.id}">
                         <div class="data-card-info">
-                            <p><strong>${p.day} - ${p.date} ${p.time ? `(${p.time})` : ''}</strong> ${p.duration ? `| Duração: ${p.duration}` : ''}</p>
-                            ${titleHtml}
-                            ${p.serie || p.team ? `<p><strong>Turma:</strong> ${p.serie || ''} ${p.team || ''}</p>` : ''}
+                            <p><strong>${p.day} - ${p.date}${p.time ? `(${p.time})` : ''}</strong> ${p.duration ? `| Duração: ${p.duration}` : ''}</p>
+                            ${titleHtml}${p.serie || p.team ? `<p><strong>Turma:</strong> ${p.serie || ''} ${p.team || ''}</p>` : ''}
                             ${p.activities ? `<p><strong>Atividades:</strong> ${p.activities}</p>` : ''}
                             ${p.skills ? `<p><strong>BNCC:</strong> ${p.skills}</p>` : ''}
                         </div>
@@ -269,11 +458,13 @@ async function loadPlanners() {
 
 window.editPlanner = (p) => {
     document.getElementById('plan-id').value = p.id;
-    document.getElementById('plan-day').value = p.day;
-    document.getElementById('plan-date').value = p.date;
-    document.getElementById('plan-time').value = p.time;
-    document.getElementById('plan-serie').value = p.serie;
-    document.getElementById('plan-team').value = p.team;
+    
+    setSelectValueWithCustom('plan-day', p.day || '');
+    document.getElementById('plan-date').value = p.date || '';
+    setSelectValueWithCustom('plan-time', p.time || '');
+    setSelectValueWithCustom('plan-serie', p.serie || '');
+    setSelectValueWithCustom('plan-team', p.team || '');
+
     document.getElementById('plan-skills').value = p.skills || '';
     document.getElementById('plan-activities').value = p.activities || '';
     document.getElementById('plan-duration').value = p.duration || '';
