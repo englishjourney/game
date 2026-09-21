@@ -66,6 +66,15 @@
                     </div>
                     <button id="btn-add-plan" class="btn-primary">+ Nova Aula</button>
                 </div>
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+                    <label class="switch-container" style="font-size: 0.9rem; cursor: pointer;">
+                        <span>Última turma</span>
+                        <label class="switch">
+                            <input type="checkbox" id="last-team-toggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </label>
+                </div>
                 <div id="planner-list" class="cards-container">
                     <!-- Preenchido via JS -->
                 </div>
@@ -108,7 +117,6 @@
     </div>
 
     <!-- MODAL PLANNER -->
-    <!-- MODAL PLANNER -->
     <dialog id="planner-modal">
         <form id="planner-form">
             <h3 id="planner-modal-title">Adicionar Aula</h3>
@@ -121,13 +129,6 @@
                         <label style="flex-direction: row; gap: 5px; align-items: center;"><input type="checkbox" id="cb-folga"> Folga</label>
                         <label style="flex-direction: row; gap: 5px; align-items: center;"><input type="checkbox" id="cb-prova"> Prova</label>
                     </div>
-                    <label class="switch-container" style="font-size: 0.85rem;">
-                        <span>Última turma</span>
-                        <label class="switch">
-                            <input type="checkbox" id="last-team-toggle">
-                            <span class="slider round"></span>
-                        </label>
-                    </label>
                 </div>
 
                 <label id="label-end-date" class="hidden full-width" style="color: var(--primary);">Data Final (Prova): 
