@@ -379,7 +379,9 @@ window.addPlanForDay = (day, date) => {
 
 // Minimizar/Maximizar salvando no cache
 window.togglePlannerSection = (btn, title) => {
-    const contentDiv = btn.parentElement.nextElementSibling;
+    // CORREÇÃO: O closest acha o elemento pai h3 inteiro, 
+    // e o nextElementSibling pega a caixa de conteúdo logo abaixo dele.
+    const contentDiv = btn.closest('.planner-section-title').nextElementSibling;
     const isHidden = contentDiv.classList.toggle('hidden');
     btn.textContent = isHidden ? 'Maximizar' : 'Minimizar';
     localStorage.setItem(`planner_state_${title}`, isHidden);
