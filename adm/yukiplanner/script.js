@@ -175,14 +175,21 @@ function triggerSplitTask(fullText) {
 
 async function processPartChunk(chunkText) {
     try {
-        const { data } = await supabaseClient.functions.invoke('gerenciar-planner', {
+        const { data, error } = await supabaseClient.functions.invoke('gerenciar-planner', {
             body: { textoBruto: chunkText }
         });
-        if (data && data.aulas) {
+
+        if (error) throw new Error(error.message || 'Erro ao invocar Edge Function');
+
+        if (data && data.aulas && data.aulas.length > 0) {
             aulasPendentes = [...aulasPendentes, ...data.aulas];
             renderPreviewTable(aulasPendentes);
+            appendMessage(`[Parte processada] ${data.aulas.length} aula(s) adicionada(s) à prévia.`, 'ai-message');
+        } else {
+            appendMessage(`[Parte processada] Nenhuma aula identificada neste trecho.`, 'ai-message');
         }
     } catch (e) {
         console.error('Erro ao processar parte:', e);
+        appendMessage(`Erro ao processar parte: ${e.message}`, 'ai-message');
     }
 }
