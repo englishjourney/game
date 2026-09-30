@@ -1,0 +1,197 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f4f7f6;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.app-container {
+    width: 100%;
+    max-width: 800px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    height: 90vh;
+    overflow: hidden;
+    margin: 20px;
+}
+
+header {
+    background: #2c3e50;
+    color: white;
+    padding: 15px 20px;
+    text-align: center;
+}
+
+header h1 { font-size: 1.25rem; margin-bottom: 5px; }
+header p { font-size: 0.85rem; color: #bdc3c7; }
+
+.chat-main {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+.chat-container {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #fafbfc;
+}
+
+.message {
+    max-width: 75%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.ai-message {
+    background: #e9ecef;
+    color: #212529;
+    align-self: flex-start;
+    border-top-left-radius: 2px;
+}
+
+.user-message {
+    background: #007bff;
+    color: white;
+    align-self: flex-end;
+    border-top-right-radius: 2px;
+}
+
+.preview-container {
+    background: #fff3cd;
+    border-top: 1px solid #ffeeba;
+    padding: 15px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.preview-container h3 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+    color: #856404;
+}
+
+table.preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+    margin-bottom: 10px;
+}
+
+table.preview-table th, table.preview-table td {
+    border: 1px solid #dee2e6;
+    padding: 6px 8px;
+    text-align: left;
+}
+
+table.preview-table th {
+    background: #e2e6ea;
+}
+
+.btn-primary {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.btn-primary:hover { background: #218838; }
+
+.input-area {
+    display: flex;
+    padding: 15px;
+    background: white;
+    border-top: 1px solid #e9ecef;
+    gap: 10px;
+}
+
+.input-area textarea {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    resize: none;
+    outline: none;
+    font-size: 0.95rem;
+    height: 45px;
+}
+
+.input-area textarea:focus { border-color: #007bff; }
+
+.btn-send {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 0 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-send:hover { background: #0056b3; }
+
+.hidden { display: none !important; }
+
+/* Balão Flutuante Dividir Tarefa */
+.split-balloon {
+    position: absolute;
+    bottom: 80px;
+    right: 20px;
+    background: white;
+    border: 1px solid #dc3545;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 15px;
+    z-index: 100;
+    max-width: 300px;
+}
+
+.split-balloon p {
+    font-size: 0.85rem;
+    color: #721c24;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+#split-buttons-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.btn-split-part {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    text-align: left;
+}
+.btn-split-part:hover { background: #c82333; }
+.btn-split-part.done { background: #6c757d; text-decoration: line-through; }
