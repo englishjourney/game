@@ -45,7 +45,7 @@ async function sendMessage() {
         // Verifica se o backend sinalizou limite de tokens excedido
         if (data.token_limit_exceeded) {
             triggerSplitTask(text);
-            appendMessage('⚠️ A tarefa excedeu o limite de tokens. Utilize o balão flutuante para enviar em partes.', 'ai-message');
+            appendMessage('⚠️ A tarefa excedeu o limite de tokens. Utilize o balão flutuante para enviar em partes divididas inteligentemente.', 'ai-message');
             return;
         }
 
@@ -62,9 +62,9 @@ async function sendMessage() {
         // Tratamento automático caso ocorra erro indicando limite de tamanho/tokens
         if (err.message.includes('token') || text.length > 1500) {
             triggerSplitTask(text);
-            appendMessage('⚠️ Falha por limite de tokens. Use os botões do balão flutuante.', 'ai-message');
+            appendMessage('⚠️ Texto muito longo. Use os botões do balão flutuante para enviar por etapas.', 'ai-message');
         } else {
-            appendMessage(`Erro: ${err.message}`, 'ai-message');
+            appendMessage(`Erro de conexão/CORS: ${err.message}. Verifique se o nome da função no web dashboard é exatamente "gerenciar-planner".`, 'ai-message');
         }
     }
 }
@@ -138,15 +138,35 @@ btnConfirmarSalvar.addEventListener('click', async () => {
     }
 });
 
-// Sistema de divisão de tarefas
+// Sistema de divisão de tarefas (Corrigido para não picotar informações)
 function triggerSplitTask(fullText) {
     splitTaskBalloon.classList.remove('hidden');
     splitButtonsWrapper.innerHTML = '';
     
-    const chunkSize = 300;
+    // Configura um limite seguro de caracteres que o modelo suporta bem em uma chamada
+    const MAX_CHUNK_LENGTH = 800; 
     const parts = [];
-    for (let i = 0; i < fullText.length; i += chunkSize) {
-        parts.push(fullText.substring(i, i + chunkSize));
+    let currentChunk = '';
+    
+    // Divide o texto original usando quebras de linha
+    // Assim garantimos que o planejamento de um dia específico não seja quebrado ao meio
+    const lines = fullText.split('\n');
+
+    for (let line of lines) {
+        if (!line.trim()) continue; // Pula linhas totalmente vazias
+        
+        // Se ao adicionar esta linha formos ultrapassar o limite (e já tivermos conteúdo)
+        // Guardamos o bloco atual e abrimos um novo.
+        if (currentChunk.length + line.length > MAX_CHUNK_LENGTH && currentChunk.length > 0) {
+            parts.push(currentChunk.trim());
+            currentChunk = '';
+        }
+        currentChunk += line + '\n';
+    }
+    
+    // Adiciona o restante que ficou sobrando no final
+    if (currentChunk.trim().length > 0) {
+        parts.push(currentChunk.trim());
     }
 
     totalPartsToComplete = parts.length;
@@ -161,7 +181,7 @@ function triggerSplitTask(fullText) {
             btn.disabled = true;
             completedPartsCount++;
 
-            appendMessage(`[Parte ${index + 1}] Enviando parte dividida...`, 'user-message');
+            appendMessage(`[Parte ${index + 1}] Enviando informações estruturadas...`, 'user-message');
             await processPartChunk(partText);
 
             if (completedPartsCount >= totalPartsToComplete) {
@@ -186,7 +206,7 @@ async function processPartChunk(chunkText) {
             renderPreviewTable(aulasPendentes);
             appendMessage(`[Parte processada] ${data.aulas.length} aula(s) adicionada(s) à prévia.`, 'ai-message');
         } else {
-            appendMessage(`[Parte processada] Nenhuma aula identificada neste trecho.`, 'ai-message');
+            appendMessage(`[Parte processada] Nenhuma aula estruturada identificada neste trecho.`, 'ai-message');
         }
     } catch (e) {
         console.error('Erro ao processar parte:', e);
