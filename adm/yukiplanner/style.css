@@ -62,6 +62,7 @@ header p { font-size: 0.85rem; color: #bdc3c7; }
     font-size: 0.95rem;
     line-height: 1.4;
     word-break: break-word;
+    white-space: pre-wrap;
 }
 
 .ai-message {
@@ -134,10 +135,12 @@ table.preview-table th {
     padding: 10px;
     border: 1px solid #ced4da;
     border-radius: 6px;
-    resize: none;
+    resize: vertical; /* Permite que você puxe a caixa para baixo para aumentar */
     outline: none;
     font-size: 0.95rem;
-    height: 45px;
+    min-height: 80px; /* Altura inicial maior */
+    max-height: 300px; /* Limite de altura */
+    font-family: inherit;
 }
 
 .input-area textarea:focus { border-color: #007bff; }
