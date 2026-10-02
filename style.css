@@ -1112,3 +1112,55 @@ dialog.profile-card-dialog::backdrop {
         text-shadow: none;
     }
 }
+/* ==================================================== */
+/* BOTÃO DE UPGRADE DE PATENTE - ENSINO MÉDIO (NEON/GLITCH) */
+/* ==================================================== */
+
+.upgrade-rank-btn {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: transparent;
+    border: 2px solid #00ffff;
+    box-shadow: 0 0 8px #00ffff, inset 0 0 8px #00ffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    animation: neonFlickerGlitch 5s infinite;
+}
+
+.upgrade-rank-btn:hover {
+    box-shadow: 0 0 15px #00ffff, inset 0 0 15px #00ffff;
+    background: rgba(0, 255, 255, 0.1);
+}
+
+.upgrade-rank-btn:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.upgrade-arrow {
+    color: #00ffff;
+    font-size: 20px;
+    font-weight: bold;
+    text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
+}
+
+@keyframes neonFlickerGlitch {
+    0%, 100% { opacity: 1; transform: translateY(-50%) translate(0, 0); }
+    3% { opacity: 0.4; transform: translateY(-50%) translate(-2px, 1px); }
+    6% { opacity: 1; transform: translateY(-50%) translate(2px, -1px); }
+    7% { opacity: 0.4; transform: translateY(-50%) translate(0, 0); }
+    8% { opacity: 1; }
+    9% { opacity: 1; }
+    10% { opacity: 0.8; }
+    11% { opacity: 1; }
+    45% { opacity: 1; transform: translateY(-50%) translate(0, 0); }
+    46% { transform: translateY(-50%) translate(3px, 0); }
+    47% { transform: translateY(-50%) translate(-3px, 0); }
+    48% { transform: translateY(-50%) translate(0, 0); }
+}
