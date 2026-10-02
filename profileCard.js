@@ -2,6 +2,35 @@
 import { supabase } from './supabaseClient.js';
 import { runWithLoader } from './loader.js';
 
+// Escala progressiva de pontos para fallback
+const ranksScale = [
+    { name: "Dirt", min: 0 },
+    { name: "Wood", min: 101 },
+    { name: "Cobblestone", min: 501 },
+    { name: "Stone", min: 1001 },
+    { name: "Copper", min: 2001 },
+    { name: "Iron", min: 4001 },
+    { name: "Gold", min: 5001 },
+    { name: "Redstone", min: 6001 },
+    { name: "Lapislazulli", min: 7001 },
+    { name: "Emerald", min: 8001 },
+    { name: "Diamond", min: 9001 },
+    { name: "Netherite", min: 10001 }
+];
+
+// Função para calcular o rank caso a coluna 'rank' no banco esteja vazia
+function getRankByScore(score) {
+    let currentRank = ranksScale[0];
+    for (let i = 0; i < ranksScale.length; i++) {
+        if (score >= ranksScale[i].min) {
+            currentRank = ranksScale[i];
+        } else {
+            break;
+        }
+    }
+    return currentRank.name;
+}
+
 export async function openProfileCard(username) {
     let cardModal = document.getElementById('profile-card-modal');
     if (!cardModal) {
@@ -51,8 +80,10 @@ export async function openProfileCard(username) {
         const avatar = data.avatar_url || 'https://via.placeholder.com/150';
         const score = data.score || 0;
         const stars = data.stars || 0;
-        const rank = data.rank || 'dirt'; 
         const hearts = data.hearts || 5;
+
+        // 1. Busca primeiro da coluna 'rank'; se estiver vazia/nula, calcula com base no score
+        const rank = data.rank || getRankByScore(score);
 
         // Mapeia a classe para o símbolo correspondente
         const classSymbols = {
@@ -63,8 +94,8 @@ export async function openProfileCard(username) {
         const userClass = data.class || ''; 
         const symbolDisplay = classSymbols[userClass] || '';
 
-        // Mapeia o nome do rank para o arquivo de escudo correspondente
-        const rankClean = rank.toLowerCase().trim();
+        // Mapeia o nome do rank limpo (sem espaços e em minúsculas) para a imagem
+        const rankClean = rank.toLowerCase().replace(/\s+/g, '');
         const rankEmblem = `shields/${rankClean}.png`;
 
         contentDiv.innerHTML = `
@@ -77,7 +108,7 @@ export async function openProfileCard(username) {
                     <!-- Imagem do Rank solta -->
                     ${rankEmblem ? `<img src="${rankEmblem}" alt="Patente ${rank}" class="card-rank-emblem" title="Patente: ${rank}">` : ''}
                     
-                    <!-- Símbolo da Classe solto (sem container em volta) -->
+                    <!-- Símbolo da Classe solto -->
                     ${symbolDisplay ? `<div class="card-class-symbol" title="Classe: ${userClass}">${symbolDisplay}</div>` : ''}
                 </div>
 
@@ -93,9 +124,7 @@ export async function openProfileCard(username) {
             </div>
         `;
         
-        // ========================================================
-        // TELA CHEIA MÁGICA: Totalmente solta e independente do cartão!
-        // ========================================================
+        // Tela cheia para rank/classe
         const rankImg = contentDiv.querySelector('.card-rank-emblem');
         const classSym = contentDiv.querySelector('.card-class-symbol');
 
@@ -104,57 +133,47 @@ export async function openProfileCard(username) {
                 el.addEventListener('click', (e) => {
                     e.stopPropagation(); 
                     
-                    // ALTERAÇÃO AQUI: Cria um elemento <dialog> ao invés de <div>
                     const overlay = document.createElement('dialog');
                     overlay.style.position = 'fixed';
                     overlay.style.top = '0';
                     overlay.style.left = '0';
                     overlay.style.width = '100vw';
                     overlay.style.height = '100vh';
-                    overlay.style.maxWidth = '100vw'; // Necessário no dialog
-                    overlay.style.maxHeight = '100vh'; // Necessário no dialog
-                    overlay.style.margin = '0'; // Tira as margens padrão do dialog
-                    overlay.style.padding = '0'; // Tira o espaçamento padrão
-                    overlay.style.border = 'none'; // Sem borda
-                    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)'; // Fundo super escuro
-                    overlay.style.display = 'flex'; // Exibe as coisas no centro
+                    overlay.style.maxWidth = '100vw';
+                    overlay.style.maxHeight = '100vh';
+                    overlay.style.margin = '0';
+                    overlay.style.padding = '0';
+                    overlay.style.border = 'none';
+                    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
+                    overlay.style.display = 'flex';
                     overlay.style.alignItems = 'center';
                     overlay.style.justifyContent = 'center';
                     overlay.style.cursor = 'zoom-out';
                     
-                    // Clona a imagem/símbolo clicado
                     const clone = el.cloneNode(true);
-                    
-                    // A mágica: apaga as classes do cartão pra não herdar molduras!
                     clone.className = ''; 
                     
                     if (clone.tagName === 'IMG') {
-                        // Se for a imagem do Rank
                         clone.style.maxWidth = '80vw';
                         clone.style.maxHeight = '80vh';
                         clone.style.objectFit = 'contain';
                         clone.style.filter = 'drop-shadow(0 0 30px rgba(0,0,0,0.5))';
                     } else {
-                        // Se for o símbolo da classe em texto (O Builder das 3 bolinhas)
-                        clone.style.fontSize = '40vw'; // Fica Gigante
-                        clone.style.color = '#ffffff'; // Branco para destacar no fundo preto
-                        clone.style.background = 'transparent'; // Arranca qualquer cor de fundo
-                        clone.style.border = 'none'; // Arranca bordas
+                        clone.style.fontSize = '40vw';
+                        clone.style.color = '#ffffff';
+                        clone.style.background = 'transparent';
+                        clone.style.border = 'none';
                         clone.style.boxShadow = 'none';
                         clone.style.textShadow = '0 0 20px rgba(255, 255, 255, 0.2)';
                     }
 
-                    // Cola a imagem no dialog e adiciona ao site
                     overlay.appendChild(clone);
                     document.body.appendChild(overlay);
-
-                    // ALTERAÇÃO AQUI: Abre o overlay nativamente no Top Layer
                     overlay.showModal();
 
-                    // Clica em qualquer lugar para sumir com tudo
                     overlay.addEventListener('click', () => {
-                        overlay.close(); // Fecha o dialog
-                        overlay.remove(); // Remove o html do site
+                        overlay.close();
+                        overlay.remove();
                     });
                 });
             }
