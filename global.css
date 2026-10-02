@@ -1162,3 +1162,47 @@ dialog.superstar-dialog {
     0%, 100% { transform: translateX(0); }
     50% { transform: translateX(8px); }
 }
+
+/* ==================================================== */
+/* BOTÃO DE UPGRADE DE PATENTE - FUNDAMENTAL (CANDY CRUSH) */
+/* ==================================================== */
+
+.upgrade-rank-btn {
+    position: absolute;
+    right: 15px; /* Ajuste conforme o layout do seu card */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #FFD700;
+    border: 3px solid #DAA520;
+    box-shadow: inset -4px -4px 6px rgba(218, 165, 32, 0.7), 
+                inset 4px 4px 6px rgba(255, 255, 255, 0.9), 
+                0 4px 5px rgba(0,0,0,0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.upgrade-rank-btn:active {
+    transform: translateY(-50%) scale(0.9);
+}
+
+.upgrade-arrow {
+    color: #8B4513;
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1;
+    display: inline-block;
+    animation: jumpArrowCandy 2s infinite cubic-bezier(0.28, 0.84, 0.42, 1);
+}
+
+@keyframes jumpArrowCandy {
+    0%, 60%, 100% { transform: translateY(0); }
+    15% { transform: translateY(-8px); }
+    30% { transform: translateY(0); }
+    45% { transform: translateY(-4px); }
+}
