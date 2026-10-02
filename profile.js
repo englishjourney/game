@@ -21,20 +21,20 @@ const classesMap = {
     "Miner": "፨"
 };
 
-// Escala progressiva de pontos
+// Escala progressiva de pontos atualizada
 const ranksScale = [
     { name: "Dirt", min: 0 },
-    { name: "Wood", min: 300 },
-    { name: "Cobblestone", min: 800 },
-    { name: "Stone", min: 1500 },
-    { name: "Copper", min: 2500 },
-    { name: "Iron", min: 3800 },
-    { name: "Lapis Lazuli", min: 5000 },
-    { name: "Redstone", min: 6500 },
-    { name: "Gold", min: 7800 },
-    { name: "Emerald", min: 9000 },
-    { name: "Diamond", min: 9800 },
-    { name: "Netherite", min: 10000 }
+    { name: "Wood", min: 101 },
+    { name: "Cobblestone", min: 501 },
+    { name: "Stone", min: 1001 },
+    { name: "Copper", min: 2001 },
+    { name: "Iron", min: 4001 },
+    { name: "Gold", min: 5001 },
+    { name: "Redstone", min: 6001 },
+    { name: "Lapislazulli", min: 7001 },
+    { name: "Emerald", min: 8001 },
+    { name: "Diamond", min: 9001 },
+    { name: "Netherite", min: 10001 }
 ];
 
 // 2. Função para descobrir o rank baseado no score
@@ -63,11 +63,11 @@ export async function openProfile() {
     modal.showModal();
 
     try {
-        // Busca dos dados envolvida no LOADER
+        // Busca dos dados envolvida no LOADER (adicionamos 'rank' na busca)
         const { data, error } = await runWithLoader(async () => {
             return await supabase
                 .from('users')
-                .select('username, score, stars, hearts, class, avatar_url')
+                .select('username, score, stars, hearts, class, avatar_url, rank')
                 .eq('username', session.username)
                 .single();
         });
@@ -87,6 +87,14 @@ export async function openProfile() {
         // Cálculos
         const userRank = getRankByScore(userData.score);
         const shieldImg = `shields/${userRank.toLowerCase().replace(" ", "")}.png`; 
+        
+        // Atualiza a coluna rank no banco de dados se houver mudança
+        if (data.rank !== userRank) {
+            await supabase
+                .from('users')
+                .update({ rank: userRank })
+                .eq('username', session.username);
+        }
         
         let starsHTML = '';
         for (let i = 0; i < userData.stars; i++) {
