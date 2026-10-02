@@ -88,12 +88,14 @@ export async function openProfile() {
         const userRank = getRankByScore(userData.score);
         const shieldImg = `shields/${userRank.toLowerCase().replace(" ", "")}.png`; 
         
-        // Atualiza a coluna rank no banco de dados se houver mudança
+        // Verifica se a patente salva está desatualizada para mostrar o botão
+        let upgradeBtnHTML = '';
         if (data.rank !== userRank) {
-            await supabase
-                .from('users')
-                .update({ rank: userRank })
-                .eq('username', session.username);
+            upgradeBtnHTML = `
+                <button id="btn-upgrade-rank" class="upgrade-rank-btn" title="Update de patente disponível!">
+                    <span class="upgrade-arrow">⬆</span>
+                </button>
+            `;
         }
         
         let starsHTML = '';
@@ -134,12 +136,13 @@ export async function openProfile() {
                     <h2 class="profile-username">${userData.username}</h2>
                     
                     <div class="profile-stats-grid">
-                        <div class="stat-card rank-card">
+                        <div class="stat-card rank-card" style="position: relative;">
                             <img src="${shieldImg}" alt="${userRank}" class="rank-shield">
                             <div class="rank-info">
                                 <span class="stat-label">Rank Atual</span>
                                 <span class="rank-name">${userRank}</span>
                             </div>
+                            ${upgradeBtnHTML}
                         </div>
 
                         <div class="stat-card score-card">
@@ -171,6 +174,28 @@ export async function openProfile() {
         `;
 
         // 5. Adiciona Event Listeners
+
+        // Botão de Upgrade de Patente
+        const upgradeBtn = document.getElementById('btn-upgrade-rank');
+        if (upgradeBtn) {
+            upgradeBtn.addEventListener('click', async () => {
+                try {
+                    await runWithLoader(async () => {
+                        const { error: updateError } = await supabase
+                            .from('users')
+                            .update({ rank: userRank })
+                            .eq('username', session.username);
+                        if (updateError) throw updateError;
+                    });
+                    
+                    // Recarrega o perfil para esconder o botão e aplicar o feedback
+                    openProfile(); 
+                } catch (err) {
+                    alert("Erro ao atualizar a patente.");
+                    console.error(err);
+                }
+            });
+        }
 
         // Mudança de Classe (com LOADER)
         document.getElementById('class-select').addEventListener('change', async (e) => {
