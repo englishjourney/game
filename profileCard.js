@@ -2,7 +2,6 @@
 import { supabase } from './supabaseClient.js';
 import { runWithLoader } from './loader.js';
 
-// Escala progressiva de pontos para fallback
 const ranksScale = [
     { name: "Dirt", min: 0 },
     { name: "Wood", min: 101 },
@@ -18,7 +17,6 @@ const ranksScale = [
     { name: "Netherite", min: 10001 }
 ];
 
-// Função para calcular o rank caso a coluna 'rank' no banco esteja vazia
 function getRankByScore(score) {
     let currentRank = ranksScale[0];
     for (let i = 0; i < ranksScale.length; i++) {
@@ -49,7 +47,6 @@ export async function openProfileCard(username) {
             cardModal.close();
         });
 
-        // Fecha ao clicar fora do card
         cardModal.addEventListener('click', (e) => {
             const rect = cardModal.getBoundingClientRect();
             if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
@@ -60,7 +57,7 @@ export async function openProfileCard(username) {
 
     const contentDiv = cardModal.querySelector('#profile-card-content');
     cardModal.showModal();
-    contentDiv.innerHTML = `<p style="text-align:center;">Buscando dados...</p>`;
+    contentDiv.innerHTML = `<div style="padding: 2rem; text-align:center;">Buscando dados...</div>`;
 
     try {
         const { data, error } = await runWithLoader(async () => {
@@ -73,7 +70,7 @@ export async function openProfileCard(username) {
 
         if (error) throw error;
         if (!data) {
-            contentDiv.innerHTML = `<p style="text-align:center;">Usuário não encontrado.</p>`;
+            contentDiv.innerHTML = `<div style="padding: 2rem; text-align:center;">Usuário não encontrado.</div>`;
             return;
         }
 
@@ -81,11 +78,8 @@ export async function openProfileCard(username) {
         const score = data.score || 0;
         const stars = data.stars || 0;
         const hearts = data.hearts || 5;
-
-        // 1. Busca primeiro da coluna 'rank'; se estiver vazia/nula, calcula com base no score
         const rank = data.rank || getRankByScore(score);
 
-        // Mapeia a classe para o símbolo correspondente
         const classSymbols = {
             "Archer": "፠", "Explorer": "᪥", "Builder": "ᚙ", "Farmer": "࿊",
             "Redstone Engineer": "᪣", "Wizard": "߷", "Witch": "߷",
@@ -94,14 +88,16 @@ export async function openProfileCard(username) {
         const userClass = data.class || ''; 
         const symbolDisplay = classSymbols[userClass] || '';
 
-        // Mapeia o nome do rank limpo (sem espaços e em minúsculas) para a imagem
         const rankClean = rank.toLowerCase().replace(/\s+/g, '');
         const rankEmblem = `shields/${rankClean}.png`;
 
-        // Define o fundo do card com base na classe do usuário
-        const bgStyle = userClass 
-            ? `background-image: url('bg/${userClass.toLowerCase()}.png'); background-size: cover; background-position: center; background-repeat: no-repeat;` 
-            : `background-color: white;`;
+        // Limpa o nome da classe removendo espaços (ex: "Redstone Engineer" vira "redstoneengineer")
+        const classClean = userClass.toLowerCase().replace(/\s+/g, '');
+
+        // Aplica o background
+        const bgStyle = classClean 
+            ? `background-image: url('bg/${classClean}.png'); background-size: cover; background-position: center; background-repeat: no-repeat;` 
+            : `background-color: #2c3e50;`; // Cor fallback caso não tenha classe
 
         contentDiv.innerHTML = `
             <div class="vertical-profile-card" style="${bgStyle}">
@@ -109,15 +105,10 @@ export async function openProfileCard(username) {
                 
                 <div class="card-avatar-container">
                     <img src="${avatar}" alt="Avatar" class="card-avatar">
-                    
-                    <!-- Imagem do Rank solta -->
                     ${rankEmblem ? `<img src="${rankEmblem}" alt="Patente ${rank}" class="card-rank-emblem" title="Patente: ${rank}">` : ''}
-                    
-                    <!-- Símbolo da Classe solto -->
                     ${symbolDisplay ? `<div class="card-class-symbol" title="Classe: ${userClass}">${symbolDisplay}</div>` : ''}
                 </div>
 
-                <!-- Nome da classe limpo abaixo do avatar -->
                 ${userClass ? `<div class="profile-class-text">Classe: ${userClass}</div>` : ''}
 
                 <div class="card-stats">
@@ -129,7 +120,6 @@ export async function openProfileCard(username) {
             </div>
         `;
         
-        // Tela cheia para rank/classe
         const rankImg = contentDiv.querySelector('.card-rank-emblem');
         const classSym = contentDiv.querySelector('.card-class-symbol');
 
@@ -185,6 +175,6 @@ export async function openProfileCard(username) {
         });
     } catch (err) {
         console.error(err);
-        contentDiv.innerHTML = `<p style="text-align:center;">Erro ao carregar o perfil.</p>`;
+        contentDiv.innerHTML = `<div style="padding: 2rem; text-align:center;">Erro ao carregar o perfil.</div>`;
     }
 }
