@@ -98,8 +98,13 @@ export async function openProfileCard(username) {
         const rankClean = rank.toLowerCase().replace(/\s+/g, '');
         const rankEmblem = `shields/${rankClean}.png`;
 
+        // Define o fundo do card com base na classe do usuário
+        const bgStyle = userClass 
+            ? `background-image: url('bg/${userClass.toLowerCase()}.png'); background-size: cover; background-position: center; background-repeat: no-repeat;` 
+            : `background-color: white;`;
+
         contentDiv.innerHTML = `
-            <div class="vertical-profile-card">
+            <div class="vertical-profile-card" style="${bgStyle}">
                 <h2 class="card-username">${data.username}</h2>
                 
                 <div class="card-avatar-container">
