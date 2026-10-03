@@ -391,7 +391,7 @@
                 let { data: mission, error } = await supabase
                     .from('missions')
                     .select('*')
-                    .eq('title', 'Connectors') // Altere se o título da missão no seu banco for diferente
+                    .eq('mission_name', 'Connectors') // Altere se o título da missão no seu banco for diferente
                     .single();
 
                 if (error || !mission) {
