@@ -52,6 +52,10 @@
 
 .btn-close {
     background: transparent; color: var(--primary-color); border: 1px solid var(--primary-color); border-radius: 0;
+    position: fixed; 
+    top: 20px;      
+    right: 20px;    
+    z-index: 99999;
 }
 /* ================= FUNDOS ANIMADOS (Ensino Médio) ================= */
 
@@ -392,7 +396,9 @@
 }
 /* --- CORREÇÃO DO BOTÃO DE FECHAR (X) --- */
 .close-btn, .modal-close, #content-modal button, .dialog-close {
-    position: sticky;
+    position: fixed;
+    top: 20px;
+    right: 20px;
     z-index: 99999 !important;
     cursor: pointer;
 }
