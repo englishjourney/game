@@ -182,6 +182,22 @@ body {
     font-weight: bold;
     cursor: pointer; 
     text-transform: uppercase;
+    /* ADICIONADO: Faz a animação acontecer de forma suave */
+    transition: all 0.2s ease-in-out; 
+}
+
+/* Efeito ao passar o mouse (Arcade) */
+.menu-btn:hover {
+    background-color: var(--primary-color); 
+    color: #2c254a; 
+    border-color: #f39c12;
+    transform: scale(1.05) rotate(-2deg); 
+}
+
+/* Efeito ao clicar */
+.menu-btn:active {
+    transform: scale(0.95);
+}
 }
 
 /* ================= JANELAS (DIALOG) ================= */
