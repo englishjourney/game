@@ -180,7 +180,7 @@
             align-items: center;
             justify-content: center;
             user-select: none;
-            transform: translateX(-50%); /* Garante que o centro do elemento seja o ponto X */
+            transform: translateX(-50%);
             white-space: nowrap;
             pointer-events: none;
         }
@@ -330,15 +330,12 @@
             if (!isDragging || !isPlaying) return;
             if (e.cancelable) e.preventDefault(); 
             
-            // Pega a coordenada X (mouse ou touch)
             let clientX = e.type.includes('mouse') ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
             let areaRect = gameArea.getBoundingClientRect();
             
-            // Pega dinamicamente a largura do monstro para a escala atual
             let currentMonsterWidth = monster.offsetWidth || 100;
             let newLeft = clientX - areaRect.left;
             
-            // Limita a posição para o monstro não sair da tela
             let minX = currentMonsterWidth / 2;
             let maxX = areaRect.width - (currentMonsterWidth / 2);
 
@@ -348,7 +345,6 @@
             monster.style.left = `${newLeft}px`;
         };
 
-        // Eventos de Touch e Mouse
         gameArea.addEventListener('mousedown', startDrag);
         gameArea.addEventListener('touchstart', startDrag, { passive: false });
         
@@ -381,7 +377,7 @@
             speedMultiplier = 1;
             isPlaying = true;
             fallingElements = [];
-            monster.style.left = '50%'; // Reset da posição inicial
+            monster.style.left = '50%';
             updateUI();
             
             document.getElementById('login-screen').classList.add('hidden');
@@ -400,7 +396,6 @@
             el.innerText = randomData.word;
             
             const areaWidth = gameArea.clientWidth;
-            // Margem de segurança de 50px de cada lado para evitar corte do texto
             const margin = 50; 
             const minX = margin;
             const maxX = Math.max(minX + 1, areaWidth - margin);
@@ -425,7 +420,6 @@
 
             const monsterRect = monster.getBoundingClientRect();
             
-            // Hitbox proporcional ao tamanho do monstro
             const hitbox = {
                 top: monsterRect.top + (monsterRect.height * 0.25),
                 bottom: monsterRect.bottom,
@@ -442,7 +436,6 @@
 
                     const itemRect = item.element.getBoundingClientRect();
 
-                    // Verifica Colisão
                     if (itemRect.bottom > hitbox.top && 
                         itemRect.top < hitbox.bottom &&
                         itemRect.right > hitbox.left &&
@@ -450,8 +443,6 @@
                             
                         handleCollision(item, i);
                     }
-
-                    // Se passou do limite inferior da área de jogo
                     else if (item.y > gameArea.clientHeight + 50) {
                         item.element.remove();
                         fallingElements.splice(i, 1);
@@ -465,7 +456,6 @@
         function handleCollision(item, index) {
             item.transformed = true;
             
-            // Transforma o texto na imagem correspondente
             item.element.innerHTML = `<img src="${item.data.url}" alt="${item.data.word}">`;
 
             if (item.data.type === 'food') {
@@ -524,43 +514,54 @@
             const message = document.getElementById('end-message');
             const loading = document.getElementById('loading-text');
 
+            loading.classList.remove('hidden');
+
             if (isWin) {
                 title.innerText = "Parabéns, Você Venceu!";
                 title.style.color = "#4CAF50";
                 message.innerText = `Excelente trabalho, ${currentUser}! Capturou as comidas certas.`;
                 
-                loading.classList.remove('hidden');
-                await saveProgressToSupabase();
+                await saveProgressToSupabase(true);
                 loading.innerText = "Progresso salvo com sucesso!";
             } else {
                 title.innerText = "Game Over";
                 title.style.color = "#f44336";
                 message.innerText = `Poxa, ${currentUser}. Você comeu muitos objetos e perdeu suas vidas.`;
+                
+                await saveProgressToSupabase(false);
+                loading.innerText = "Progresso registrado!";
             }
         }
 
-        async function saveProgressToSupabase() {
+        async function saveProgressToSupabase(isWin) {
             try {
-                const { data: userData, error: userError } = await supabaseClient
-                    .from('users')
-                    .select('score')
-                    .eq('username', currentUser)
-                    .single();
+                // Se venceu, adiciona 50 pontos ao usuário
+                if (isWin) {
+                    const { data: userData, error: userError } = await supabaseClient
+                        .from('users')
+                        .select('score')
+                        .eq('username', currentUser)
+                        .single();
 
-                if (userError) throw userError;
+                    if (userError) throw userError;
 
-                const currentScore = userData.score || 0;
-                const newScore = currentScore + 50;
+                    let currentScore = parseInt(userData.score, 10);
+                    if (isNaN(currentScore)) currentScore = 0;
+                    const newScore = currentScore + 50;
 
-                await supabaseClient
-                    .from('users')
-                    .update({ score: newScore })
-                    .eq('username', currentUser);
+                    await supabaseClient
+                        .from('users')
+                        .update({ score: newScore })
+                        .eq('username', currentUser);
+                }
+
+                // Define se vai atualizar a coluna 'done' (vitória) ou 'fail' (derrota)
+                const targetColumn = isWin ? 'done' : 'fail';
 
                 const { data: missionData, error: missionError } = await supabaseClient
                     .from('missions')
-                    .select('done')
-                    .eq('name', 'Catching foods')
+                    .select('*')
+                    .eq('mission_name', 'Catching foods')
                     .single();
 
                 if (missionError && missionError.code !== 'PGRST116') {
@@ -568,16 +569,17 @@
                 }
 
                 if (missionData) {
-                    let doneList = missionData.done || '';
+                    let listStr = missionData[targetColumn] || '';
+                    const usersArray = listStr ? listStr.split(',').map(u => u.trim()).filter(Boolean) : [];
                     
-                    const usersArray = doneList.split(',').map(u => u.trim());
                     if (!usersArray.includes(currentUser)) {
-                        doneList = doneList ? `${doneList},${currentUser}` : currentUser;
+                        usersArray.push(currentUser);
+                        let updatedStr = usersArray.join(', ');
                         
                         await supabaseClient
                             .from('missions')
-                            .update({ done: doneList })
-                            .eq('name', 'Catching foods');
+                            .update({ [targetColumn]: updatedStr })
+                            .eq('id', missionData.id);
                     }
                 }
                 console.log("Banco de dados atualizado com sucesso!");
