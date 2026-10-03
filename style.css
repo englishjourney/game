@@ -28,7 +28,7 @@
 }
 .auth-box input::placeholder { color: #005a8c; }
 
-/* Botões - Estilo Painel de Sistema */
+/* ================= BOTÕES DO MENU (ESTILO NEON/SCAN) ================= */
 .btn-primary, .menu-btn {
     background: rgba(0, 20, 40, 0.8);
     color: var(--primary-color);
@@ -37,11 +37,46 @@
     border-radius: 0;
     text-transform: uppercase;
     letter-spacing: 2px;
-    font-family: 'Courier New', Courier, monospace; /* Fonte mais "sistema" */
+    font-family: 'Courier New', Courier, monospace;
+    
+    /* Propriedades essenciais para a animação funcionar */
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
+/* Efeito ao passar o mouse */
+.menu-btn:hover {
+    background: rgba(0, 225, 255, 0.15);
+    box-shadow: 0 0 15px var(--primary-color), inset 0 0 10px var(--primary-color);
+    letter-spacing: 4px; /* O texto dá uma leve expandida */
+    color: #ffffff;
+}
+
+/* Efeito ao clicar */
 .btn-primary:active, .menu-btn:active {
-    transform: scale(0.98); background: var(--primary-color); color: black; box-shadow: none;
+    transform: scale(0.98); 
+    background: var(--primary-color); 
+    color: black; 
+    box-shadow: none;
+}
+
+/* Efeito de "Scan" ou linha passando pelo botão */
+.menu-btn::after {
+    content: '';
+    position: absolute;
+    top: 0; 
+    left: -100%; 
+    width: 50%; 
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(0, 225, 255, 0.4), transparent);
+    transform: skewX(-20deg);
+    transition: 0s;
+}
+
+.menu-btn:hover::after {
+    left: 200%;
+    transition: 0.7s ease-in-out;
 }
 
 /* Avatar circular garantido e Fechar */
