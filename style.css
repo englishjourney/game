@@ -480,7 +480,7 @@
     border-radius: 12px;
     width: 320px; /* Largura fixa típica de um card mobile/vertical */
     max-width: 90vw; /* Garante que não vaze em telas muito pequenas */
-    padding: 20px;
+    padding: 0px;
 }
 .profile-card-dialog::backdrop {
     background: rgba(0, 0, 0, 0.8);
@@ -488,7 +488,7 @@
 .profile-card-wrapper {
     background: #121212;
     border-radius: 12px;
-    padding: 25px;
+    overflow: hidden;
     position: relative;
     box-shadow: 0 0 25px rgba(0, 229, 255, 0.3);
     border: 1px solid var(--primary-color, #00E5FF);
@@ -520,6 +520,9 @@
     flex-direction: column;
     align-items: center;
     width: 100%;
+    padding: 25px; 
+    box-sizing: border-box;
+    box-shadow: inset 0 0 0 2000px rgba(0, 0, 0, 0.45);
 }
 .card-username {
     font-size: 20px;
