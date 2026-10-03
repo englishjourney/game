@@ -471,7 +471,7 @@ body {
 /* ================= CORREÇÕES GERAIS DE MODAL ================= */
 .close-btn, 
 .modal-close, 
-#content-modal button, 
+#btn-close-modal, 
 .dialog-close {
     position: fixed; 
     top: 15px;     
