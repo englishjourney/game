@@ -167,7 +167,6 @@
         import { supabase } from '../supabaseClient.js';
 
         // --- DADOS DAS FRASES E REGRAS DE INTERCAMBIALIDADE ---
-        // As pontuações foram removidas das palavras para permitir a intercambialidade perfeita.
         const gameData = [
             {
                 cards: ["Although", "it", "was", "raining", "we", "decided", "to", "go", "for", "a", "walk"],
@@ -306,7 +305,6 @@
             answerCards = [];
             poolCards = shuffleArray(currentData.cards);
             
-            // Garantir que não comece na ordem correta por acidente
             const correctString = currentData.valid[0];
             while(poolCards.join(" ").toLowerCase() === correctString && poolCards.length > 1) {
                 poolCards = shuffleArray(currentData.cards);
@@ -366,7 +364,6 @@
             const currentData = gameData[currentLevelIndex];
             const userAnswerStr = answerCards.join(" ").toLowerCase();
 
-            // Verifica se a resposta dada está entre as respostas válidas
             const isCorrect = currentData.valid.some(validAnswer => validAnswer === userAnswerStr);
 
             if (isCorrect) {
@@ -378,7 +375,6 @@
                 feedbackDiv.className = "incorrect";
             }
 
-            // Aguarda 1.5s para leitura do feedback e avança
             setTimeout(() => {
                 currentLevelIndex++;
                 if (currentLevelIndex < gameData.length) {
@@ -388,6 +384,38 @@
                 }
             }, 1800);
         });
+
+        // Função auxiliar para gerenciar a lista separada por vírgula na tabela missions
+        async function updateMissionRecord(columnName, username) {
+            try {
+                let { data: mission, error } = await supabase
+                    .from('missions')
+                    .select('*')
+                    .eq('title', 'Connectors') // Altere se o título da missão no seu banco for diferente
+                    .single();
+
+                if (error || !mission) {
+                    console.error("Missão não encontrada na tabela missions:", error);
+                    return;
+                }
+
+                let listStr = mission[columnName] || '';
+                let listArray = listStr ? listStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+                // Adiciona o usuário apenas se ele já não estiver na lista
+                if (!listArray.includes(username)) {
+                    listArray.push(username);
+                    let updatedStr = listArray.join(', ');
+
+                    await supabase
+                        .from('missions')
+                        .update({ [columnName]: updatedStr })
+                        .eq('id', mission.id);
+                }
+            } catch (err) {
+                console.error("Erro ao atualizar tabela missions:", err);
+            }
+        }
 
         async function finishGame() {
             gameScreen.classList.add('hidden');
@@ -401,12 +429,10 @@
                 rewardText.className = "correct";
                 
                 try {
-                    // Prevenção extra para garantir que a soma será 100% numérica:
-                    // Converte para Int na base 10, se vier nulo/vazio, inicia com 0.
                     let currentScore = parseInt(currentUser.score, 10);
                     if (isNaN(currentScore)) currentScore = 0;
                     
-                    const newScore = currentScore + 100;
+                    const newScore = currentScore + 300; // +300 pontos adicionados
 
                     const { error } = await supabase
                         .from('users')
@@ -418,7 +444,10 @@
                         rewardText.textContent = "Você ganhou o jogo, mas houve um erro ao salvar a pontuação.";
                         rewardText.className = "incorrect";
                     } else {
-                        rewardText.innerHTML = `Parabéns! Você alcançou o mínimo necessário.<br><b>+100 Pontos adicionados à sua conta!</b>`;
+                        rewardText.innerHTML = `Parabéns! Você alcançou o mínimo necessário.<br><b>+300 Pontos adicionados à sua conta!</b>`;
+                        
+                        // Salva o usuário na coluna 'done' da tabela missions
+                        await updateMissionRecord('done', currentUser.username);
                     }
                 } catch (err) {
                     console.error(err);
@@ -428,6 +457,9 @@
             } else {
                 rewardText.textContent = "Você precisava de pelo menos 5 acertos para ganhar pontos. Continue praticando!";
                 rewardText.className = "incorrect";
+
+                // Salva o usuário na coluna 'fail' da tabela missions
+                await updateMissionRecord('fail', currentUser.username);
             }
         }
     </script>
