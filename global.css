@@ -182,7 +182,6 @@ body {
     font-weight: bold;
     cursor: pointer; 
     text-transform: uppercase;
-    /* ADICIONADO: Faz a animação acontecer de forma suave */
     transition: all 0.2s ease-in-out; 
 }
 
@@ -197,7 +196,6 @@ body {
 /* Efeito ao clicar */
 .menu-btn:active {
     transform: scale(0.95);
-}
 }
 
 /* ================= JANELAS (DIALOG) ================= */
@@ -570,7 +568,6 @@ body {
 
 
 /* ================= DIALOGS GERAIS E CENTRALIZAÇÃO ================= */
-/* Deixa o HTML5 centralizar os modais nativamente (sem bugs de margin ou fixed) */
 dialog.superstar-dialog,
 dialog.profile-card-dialog {
     margin: auto;
@@ -584,7 +581,6 @@ dialog.profile-card-dialog {
     overflow-x: hidden;
 }
 
-/* Fundo escuro atrás dos modais */
 dialog.superstar-dialog::backdrop,
 dialog.profile-card-dialog::backdrop {
     background-color: rgba(0, 0, 0, 0.6);
@@ -725,7 +721,6 @@ dialog.profile-card-dialog {
 }
 
 /* ================= TRUQUE DE MESTRE: TELA CHEIA (FULLSCREEN) ================= */
-/* Se a imagem dentro da dialog for ativada, a própria dialog cresce para cobrir tudo! */
 dialog:has(.fullscreen-preview) {
     width: 100vw !important;
     height: 100vh !important;
@@ -737,7 +732,6 @@ dialog:has(.fullscreen-preview) {
     overflow: hidden !important; 
 }
 
-/* O emblema cresce e cobre a nova dialog que encheu a tela */
 .card-rank-emblem.fullscreen-preview,
 .card-class-symbol.fullscreen-preview {
     position: fixed !important;
@@ -919,7 +913,7 @@ dialog.superstar-dialog {
 /* Botão de áudio */
 .audio-btn { cursor: pointer; padding: 5px 10px; }
 .audio-btn .loader-mini { display: block; }
-.audio-btn.ready .loader-mini { display: none; } /* Esconde o "Carregando" quando áudio estiver pronto */
+.audio-btn.ready .loader-mini { display: none; } 
 
 /* ================= BOTÃO FLASHCARDS (ARCADE) ================= */
 #btn-flashcards {
@@ -927,18 +921,17 @@ dialog.superstar-dialog {
 }
 
 #btn-flashcards:hover {
-    background-color: var(--primary-color); /* Fica Amarelo */
-    color: #2c254a; /* Texto escuro */
+    background-color: var(--primary-color); 
+    color: #2c254a; 
     border-color: #f39c12;
-    transform: scale(1.05) rotate(-2deg); /* Dá uma leve inclinada "divertida" */
+    transform: scale(1.05) rotate(-2deg); 
 }
 
 #btn-flashcards:active {
     transform: scale(0.95);
 }
-/* ================= FLASHCARDS UI ================= */
 
-/* Botões dos Stacks (Formato de Carta) */
+/* ================= FLASHCARDS UI ================= */
 .stack-card-btn {
     width: 120px;
     height: 160px;
@@ -973,12 +966,11 @@ dialog.superstar-dialog {
     opacity: 0.8;
 }
 
-/* Área da Carta Empilhada */
 .flashcard-container {
     width: 100%;
     max-width: 350px;
     aspect-ratio: 3 / 4;
-    perspective: 1000px; /* Cria profundidade para o 3D */
+    perspective: 1000px; 
     cursor: pointer;
 }
 
@@ -993,12 +985,10 @@ dialog.superstar-dialog {
     border-radius: 16px;
 }
 
-/* Estado da carta virada */
 .flashcard-inner.flipped {
     transform: rotateY(180deg);
 }
 
-/* Faces da Carta */
 .flashcard-front, .flashcard-back {
     position: absolute;
     width: 100%;
@@ -1014,14 +1004,12 @@ dialog.superstar-dialog {
     box-sizing: border-box;
 }
 
-/* Frente */
 .flashcard-front {
     background-color: #ffffff;
     color: #2c2c2c;
     border: 2px solid #ddd;
 }
 
-/* Trás (Invertida inicialmente) */
 .flashcard-back {
     background-color: var(--primary-color, #5b5b8c);
     color: white;
@@ -1029,7 +1017,6 @@ dialog.superstar-dialog {
     border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Botão de Áudio */
 .fc-audio-btn {
     position: absolute;
     top: 15px;
@@ -1046,7 +1033,6 @@ dialog.superstar-dialog {
     transform: scale(1.2);
 }
 
-/* Texto das Cartas */
 .fc-text {
     font-size: 2em;
     margin: 0;
@@ -1054,18 +1040,16 @@ dialog.superstar-dialog {
     max-width: 100%;
     text-align: center;
 }
-/* ================= ATUALIZAÇÕES FLASHCARDS (VERTICAL & ANIMAÇÕES) ================= */
 
-/* Retângulo vertical ajustado para os cards dos alunos */
+/* ================= ATUALIZAÇÕES FLASHCARDS (VERTICAL & ANIMAÇÕES) ================= */
 .flashcard-container.vertical-card {
     width: 260px;
     height: 380px;
     perspective: 1000px;
     transition: transform 0.3s ease, opacity 0.3s ease;
-    cursor: default; /* Remove o ponteiro de clique já que agora viramos pelas setas */
+    cursor: default; 
 }
 
-/* Classes de Animação de Deslizar (Cima / Baixo) */
 .slide-out-up {
     transform: translateY(-50px);
     opacity: 0;
@@ -1111,7 +1095,8 @@ dialog.superstar-dialog {
         opacity: 1;
     }
 }
-/* ================== DIALOG DE APPS (GRADE) ================== */
+
+/* ================== DIALOG DE APPS (GRADE) ================= */
 .apps-grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -1153,15 +1138,15 @@ dialog.superstar-dialog {
     text-shadow: 1px 1px 2px #000;
 }
 
-/* ================== BOTÃO LATERAL (GLOBAL - BUBBLE STYLE) ================== */
+/* ================== BOTÃO LATERAL (GLOBAL - BUBBLE STYLE) ================= */
 .sidebar-btn-apps {
     position: fixed;
-    left: -15px; /* Esconde um pedaço para parecer que sai da borda */
+    left: -15px; 
     top: 50%;
     transform: translateY(-50%);
-    background: #ffcc00; /* Amarelo estilo cartoon/Brawl Stars */
+    background: #ffcc00; 
     border: 4px solid #333;
-    border-radius: 0 50px 50px 0; /* Arredondado só na direita (bubble) */
+    border-radius: 0 50px 50px 0; 
     padding: 15px 20px 15px 25px;
     cursor: pointer;
     z-index: 1000;
@@ -1170,7 +1155,7 @@ dialog.superstar-dialog {
 }
 
 .sidebar-btn-apps:hover {
-    left: -5px; /* Revela um pouco mais no hover */
+    left: -5px; 
 }
 
 .sidebar-btn-apps .arrow-icon {
@@ -1189,10 +1174,9 @@ dialog.superstar-dialog {
 /* ==================================================== */
 /* BOTÃO DE UPGRADE DE PATENTE - FUNDAMENTAL (CANDY CRUSH) */
 /* ==================================================== */
-
 .upgrade-rank-btn {
     position: absolute;
-    right: 15px; /* Ajuste conforme o layout do seu card */
+    right: 15px; 
     top: 50%;
     transform: translateY(-50%);
     width: 40px;
