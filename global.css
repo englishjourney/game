@@ -576,12 +576,12 @@ dialog.profile-card-dialog::backdrop {
 dialog.profile-card-dialog {
     background: transparent;
     width: 320px;
+    padding: 0;
 }
 
 .profile-card-wrapper {
     background: white;
     border-radius: 20px;
-    padding: 25px;
     position: relative;
     border: 4px solid var(--primary-color, #FF9800);
 }
@@ -612,6 +612,9 @@ dialog.profile-card-dialog {
     flex-direction: column;
     align-items: center;
     width: 100%;
+    min-height: 100%;
+    padding: 25px;
+    box-sizing: border-box;
 }
 
 .card-username {
