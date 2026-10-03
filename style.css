@@ -395,7 +395,7 @@
     text-transform: uppercase;
 }
 /* --- CORREÇÃO DO BOTÃO DE FECHAR (X) --- */
-.close-btn, .modal-close, .dialog-close {
+.close-btn, .modal-close, .dialog-close, #btn-close-modal {
     position: fixed;
     top: 20px;
     right: 20px;
