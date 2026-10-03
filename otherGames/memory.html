@@ -171,7 +171,6 @@
             <h1>Fim de Jogo!</h1>
             <h2 id="final-score-text">Você encontrou todos os pares.</h2>
             <p id="reward-text" style="font-size: 18px; margin: 20px 0;"></p>
-            <!-- Sem botão de jogar novamente conforme solicitado -->
         </div>
     </div>
 
@@ -259,7 +258,6 @@
         function buildDeck() {
             cardsArray = [];
             
-            // Para cada animal cria duas cartas: uma de texto e uma de imagem
             animalPairs.forEach(animal => {
                 cardsArray.push({ type: 'text', id: animal.id, content: animal.text });
                 cardsArray.push({ type: 'image', id: animal.id, content: animal.img });
@@ -282,11 +280,9 @@
                 cardEl.classList.add('memory-card');
                 cardEl.dataset.id = cardData.id;
 
-                // Lado que fica escondido inicialmente
                 const hiddenFace = document.createElement('div');
                 hiddenFace.classList.add('card-face', 'card-hidden');
 
-                // Lado que revela o conteúdo
                 const revealedFace = document.createElement('div');
                 revealedFace.classList.add('card-face', 'card-revealed');
 
@@ -314,13 +310,11 @@
             this.classList.add('flip');
 
             if (!hasFlippedCard) {
-                // Primeiro clique
                 hasFlippedCard = true;
                 firstCard = this;
                 return;
             }
 
-            // Segundo clique
             secondCard = this;
             checkForMatch();
         }
@@ -331,7 +325,6 @@
         }
 
         function disableCards() {
-            // Remove evento de click das cartas combinadas
             firstCard.removeEventListener('click', flipCard);
             secondCard.removeEventListener('click', flipCard);
             
@@ -340,7 +333,6 @@
 
             resetBoard();
 
-            // Verifica se o jogo acabou
             if (matchedPairs === totalPairs) {
                 setTimeout(() => {
                     finishGame();
@@ -351,7 +343,6 @@
         function unflipCards() {
             lockBoard = true;
 
-            // Retorna as cartas caso não sejam iguais (espera 1s para o jogador ver)
             setTimeout(() => {
                 firstCard.classList.remove('flip');
                 secondCard.classList.remove('flip');
@@ -364,6 +355,37 @@
             [firstCard, secondCard] = [null, null];
         }
 
+        // Função para atualizar a lista separada por vírgula na tabela missions
+        async function updateMissionRecord(columnName, username) {
+            try {
+                let { data: mission, error } = await supabase
+                    .from('missions')
+                    .select('*')
+                    .eq('mission_name', 'Memory game - Animals')
+                    .single();
+
+                if (error || !mission) {
+                    console.error("ERRO: Missão 'Memory game - Animals' não encontrada no banco de dados:", error);
+                    return;
+                }
+
+                let listStr = mission[columnName] || '';
+                let listArray = listStr ? listStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+                if (!listArray.includes(username)) {
+                    listArray.push(username);
+                    let updatedStr = listArray.join(', ');
+
+                    await supabase
+                        .from('missions')
+                        .update({ [columnName]: updatedStr })
+                        .eq('id', mission.id);
+                }
+            } catch (err) {
+                console.error("Erro ao atualizar tabela missions:", err);
+            }
+        }
+
         async function finishGame() {
             gameScreen.classList.add('hidden');
             resultScreen.classList.remove('hidden');
@@ -373,12 +395,10 @@
             rewardText.className = "correct-msg";
             
             try {
-                // Prevenção extra para garantir que a soma será 100% numérica:
-                // Converte para Int na base 10, se vier nulo/vazio, inicia com 0.
                 let currentScore = parseInt(currentUser.score, 10);
                 if (isNaN(currentScore)) currentScore = 0;
                 
-                const newScore = currentScore + 100;
+                const newScore = currentScore + 50; // +50 pontos adicionados
 
                 const { error } = await supabase
                     .from('users')
@@ -390,7 +410,10 @@
                     rewardText.textContent = "Você ganhou o jogo, mas houve um erro ao salvar a pontuação.";
                     rewardText.className = "incorrect-msg";
                 } else {
-                    rewardText.innerHTML = `Parabéns! Excelente memória.<br><b>+100 Pontos adicionados à sua conta!</b>`;
+                    rewardText.innerHTML = `Parabéns! Excelente memória.<br><b>+50 Pontos adicionados à sua conta!</b>`;
+                    
+                    // Salva o usuário na coluna 'done' da tabela missions
+                    await updateMissionRecord('done', currentUser.username);
                 }
             } catch (err) {
                 console.error(err);
