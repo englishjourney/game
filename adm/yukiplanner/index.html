@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yuki Planner</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Removido o import do Supabase daqui já que usaremos via fetch no JS para a Edge Function -->
 </head>
 <body>
     <div class="yuki-container">
@@ -29,18 +29,20 @@
         <main class="main-content">
             <header class="main-header">
                 <h1>Processador em Massa de Planos de Aula</h1>
-                <p>Cole o texto completo. Cada dia ou aula separado por uma quebra de linha em branco será convertido em uma tarefa individual.</p>
+                <p>Cole o texto completo. Cada dia ou aula separado por <strong>uma linha em branco (dois Enters)</strong> será convertido em uma tarefa individual.</p>
             </header>
 
             <!-- CAIXA DE TEXTO E PREVIEW -->
             <div class="input-section" id="input-section">
                 <textarea id="raw-planner-text" placeholder="Exemplo:
-Segunda-feira, 21/09/2026 às 07:00 para o 9B. Aula de 50 min. Atividades: Leitura do Capítulo 3 e resolução dos exercícios 1 a 5 da página 42. Habilidades: EF09LI01.
+
+Segunda-feira, 21/09/2026 às 07:00 para o 9B. Aula de 50 min. Atividades: Leitura do Capítulo 3. Habilidades: EF09LI01.
 
 Terça-feira, 22/09/2026 às 08:30 para o 7A. Duração: 50 min. Prova bimestral de inglês. Special: 3."></textarea>
                 
                 <div class="action-bar">
-                    <button type="button" class="btn-secondary" id="btn-parse-preview">Analisar tarefas</button>
+                    <!-- Adicionado 'disabled' como estado inicial -->
+                    <button type="button" class="btn-secondary" id="btn-parse-preview" disabled>Analisar tarefas</button>
                     <button type="button" class="btn-primary" id="btn-start-processing" disabled>Processar e Salvar Tudo</button>
                 </div>
             </div>
@@ -53,6 +55,7 @@ Terça-feira, 22/09/2026 às 08:30 para o 7A. Duração: 50 min. Prova bimestral
         </main>
     </div>
 
-    <script type="module" src="app.js"></script>
+    <!-- MUDANÇA AQUI: Removido o type="module" e adicionado defer -->
+    <script src="app.js" defer></script>
 </body>
 </html>
