@@ -1,4 +1,5 @@
-const EDGE_FUNCTION_URL = "https://rmsmamzutvxugdbiqsrz.supabase.co/functions/v1/yuki-parser";
+const SUPABASE_URL = "https://rmsmamzutvxugdbiqsrz.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx";
 
 let tasks = [];
 let isProcessing = false;
@@ -109,7 +110,11 @@ async function startSequentialProcessing() {
         try {
             const response = await fetch(EDGE_FUNCTION_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    'apikey': SUPABASE_ANON_KEY
+                },
                 body: JSON.stringify({ taskText: task.text })
             });
 
