@@ -9,6 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnStart = document.getElementById('btn-start-processing');
     const btnReset = document.getElementById('btn-reset');
 
+    // Validação inicial caso a página recarregue e já tenha texto na caixa
+    if (rawTextArea.value.trim() !== '') {
+        btnParse.disabled = false;
+    }
+
     rawTextArea.addEventListener('input', () => {
         btnParse.disabled = rawTextArea.value.trim() === '';
     });
@@ -29,12 +34,18 @@ document.addEventListener('DOMContentLoaded', () => {
 function parseInputToTasks() {
     const text = document.getElementById('raw-planner-text').value;
     
-    // Separa o texto por 2 ou mais quebras de linha para isolar blocos de cada dia/aula
-    const blocks = text.split(/\n\s*\n/).map(b => b.trim()).filter(b => b.length > 0);
+    // Separa o texto por 2 ou mais quebras de linha (linha em branco entre as aulas)
+    // O \r? previne bugs caso o texto venha do Windows
+    const blocks = text.split(/\n\s*\r?\n/).map(b => b.trim()).filter(b => b.length > 0);
 
     if (blocks.length === 0) {
-        alert('Nenhum bloco de texto válido foi identificado.');
+        alert('Nenhum texto foi identificado. Digite ou cole algo na caixa.');
         return;
+    }
+
+    // Se só identificou 1 bloco, avisa o usuário (pode ser que ele esqueceu de dar duplo Enter)
+    if (blocks.length === 1) {
+        console.warn("Atenção: Apenas 1 bloco identificado. Certifique-se de deixar uma linha em branco entre cada aula.");
     }
 
     tasks = blocks.map((block, index) => ({
