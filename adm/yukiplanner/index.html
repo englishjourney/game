@@ -1,47 +1,58 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yuki Planner</title>
+    <title>Yuki Planner - Assistente de Planejamento com IA</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div class="app-container">
-        <header>
-            <h1>Planner Escolar com IA</h1>
-            <p>Converse com a IA para gerenciar sua tabela de planejamentos no Supabase.</p>
-        </header>
+    <div class="yuki-container">
+        <!-- BARRA LATERAL (SIDEBAR DE TAREFAS) -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Yuki Planner</h2>
+                <span class="status-badge" id="overall-status">Aguardando</span>
+            </div>
 
-        <main class="chat-main">
-            <div id="chat-container" class="chat-container">
-                <div class="message ai-message">
-                    Olá! Envie seu texto de planejamento de aulas. Vou estruturar os dados e exibi-los para sua confirmação antes de salvar no Supabase.
+            <div class="task-list" id="task-list">
+                <div class="empty-state">Cole o plano de aula no campo de texto para fragmentar as tarefas.</div>
+            </div>
+
+            <div class="sidebar-footer hidden" id="completion-footer">
+                <button type="button" class="btn-primary" id="btn-reset">Deseja adicionar novas tarefas?</button>
+            </div>
+        </aside>
+
+        <!-- ÁREA PRINCIPAL (CHAT / ENTRADA) -->
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Processador em Massa de Planos de Aula</h1>
+                <p>Cole o texto completo. Cada dia ou aula separado por uma quebra de linha em branco será convertido em uma tarefa individual.</p>
+            </header>
+
+            <!-- CAIXA DE TEXTO E PREVIEW -->
+            <div class="input-section" id="input-section">
+                <textarea id="raw-planner-text" placeholder="Exemplo:
+Segunda-feira, 21/09/2026 às 07:00 para o 9B. Aula de 50 min. Atividades: Leitura do Capítulo 3 e resolução dos exercícios 1 a 5 da página 42. Habilidades: EF09LI01.
+
+Terça-feira, 22/09/2026 às 08:30 para o 7A. Duração: 50 min. Prova bimestral de inglês. Special: 3."></textarea>
+                
+                <div class="action-bar">
+                    <button type="button" class="btn-secondary" id="btn-parse-preview">Analisar tarefas</button>
+                    <button type="button" class="btn-primary" id="btn-start-processing" disabled>Processar e Salvar Tudo</button>
                 </div>
             </div>
 
-            <!-- Prévia / Confirmação -->
-            <div id="preview-container" class="preview-container hidden">
-                <h3>Prévia dos Dados Identificados</h3>
-                <div id="preview-table-wrapper"></div>
-                <button id="btn-confirmar-salvar" class="btn-primary">Confirmar e Salvar no Supabase</button>
-            </div>
-
-            <div class="input-area">
-                <textarea id="user-input" placeholder="Digite sua mensagem ou cole o texto das aulas..." rows="2"></textarea>
-                <button id="btn-send" class="btn-send">Enviar</button>
+            <!-- PAINEL DE VISUALIZAÇÃO EM TEMPO REAL -->
+            <div class="preview-section hidden" id="preview-section">
+                <h3>Visualização das Tarefas Identificadas</h3>
+                <div id="cards-preview-container" class="cards-grid"></div>
             </div>
         </main>
     </div>
 
-    <!-- Balão Flutuante para "Dividir Tarefa" -->
-    <div id="split-task-balloon" class="split-balloon hidden">
-        <p>⚠️ Limite de tokens excedido / Tarefa longa.</p>
-        <div id="split-buttons-wrapper"></div>
-    </div>
-
-    <script src="script.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
