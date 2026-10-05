@@ -1,215 +1,159 @@
-const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co'; 
-const SUPABASE_ANON_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
+const EDGE_FUNCTION_URL = "https://rmsmamzutvxugdbiqsrz.supabase.co/functions/v1/yuki-parser";
 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let tasks = [];
+let isProcessing = false;
 
-const chatContainer = document.getElementById('chat-container');
-const userInput = document.getElementById('user-input');
-const btnSend = document.getElementById('btn-send');
-const previewContainer = document.getElementById('preview-container');
-const previewTableWrapper = document.getElementById('preview-table-wrapper');
-const btnConfirmarSalvar = document.getElementById('btn-confirmar-salvar');
-const splitTaskBalloon = document.getElementById('split-task-balloon');
-const splitButtonsWrapper = document.getElementById('split-buttons-wrapper');
+document.addEventListener('DOMContentLoaded', () => {
+    const rawTextArea = document.getElementById('raw-planner-text');
+    const btnParse = document.getElementById('btn-parse-preview');
+    const btnStart = document.getElementById('btn-start-processing');
+    const btnReset = document.getElementById('btn-reset');
 
-let aulasPendentes = [];
-let totalPartsToComplete = 0;
-let completedPartsCount = 0;
+    rawTextArea.addEventListener('input', () => {
+        btnParse.disabled = rawTextArea.value.trim() === '';
+    });
 
-btnSend.addEventListener('click', sendMessage);
-userInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-    }
+    btnParse.addEventListener('click', () => {
+        parseInputToTasks();
+    });
+
+    btnStart.addEventListener('click', () => {
+        startSequentialProcessing();
+    });
+
+    btnReset.addEventListener('click', () => {
+        resetApp();
+    });
 });
 
-async function sendMessage() {
-    const text = userInput.value.trim();
-    if (!text) return;
+function parseInputToTasks() {
+    const text = document.getElementById('raw-planner-text').value;
+    
+    // Separa o texto por 2 ou mais quebras de linha para isolar blocos de cada dia/aula
+    const blocks = text.split(/\n\s*\n/).map(b => b.trim()).filter(b => b.length > 0);
 
-    appendMessage(text, 'user-message');
-    userInput.value = '';
-
-    const loadingId = appendMessage('Processando com a IA...', 'ai-message');
-
-    try {
-        const { data, error } = await supabaseClient.functions.invoke('gerenciar-planner', {
-            body: { textoBruto: text }
-        });
-
-        removeMessage(loadingId);
-
-        if (error) throw new Error(error.message || 'Erro ao invocar Edge Function');
-
-        // Verifica se o backend sinalizou limite de tokens excedido
-        if (data.token_limit_exceeded) {
-            triggerSplitTask(text);
-            appendMessage('⚠️ A tarefa excedeu o limite de tokens. Utilize o balão flutuante para enviar em partes divididas inteligentemente.', 'ai-message');
-            return;
-        }
-
-        if (data.aulas && data.aulas.length > 0) {
-            aulasPendentes = data.aulas;
-            renderPreviewTable(aulasPendentes);
-            appendMessage(`IA processou com sucesso! ${aulasPendentes.length} registro(s) identificado(s). Revise a prévia e clique em confirmar.`, 'ai-message');
-        } else {
-            appendMessage('Nenhuma aula foi identificada no texto enviado.', 'ai-message');
-        }
-
-    } catch (err) {
-        removeMessage(loadingId);
-        // Tratamento automático caso ocorra erro indicando limite de tamanho/tokens
-        if (err.message.includes('token') || text.length > 1500) {
-            triggerSplitTask(text);
-            appendMessage('⚠️ Texto muito longo. Use os botões do balão flutuante para enviar por etapas.', 'ai-message');
-        } else {
-            appendMessage(`Erro de conexão/CORS: ${err.message}. Verifique se o nome da função no web dashboard é exatamente "gerenciar-planner".`, 'ai-message');
-        }
+    if (blocks.length === 0) {
+        alert('Nenhum bloco de texto válido foi identificado.');
+        return;
     }
+
+    tasks = blocks.map((block, index) => ({
+        id: index + 1,
+        text: block,
+        status: 'pending' // 'pending' | 'processing' | 'success' | 'error'
+    }));
+
+    renderSidebarTasks();
+    renderPreviewCards();
+
+    document.getElementById('btn-start-processing').disabled = false;
+    document.getElementById('preview-section').classList.remove('hidden');
 }
 
-function appendMessage(text, className) {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message ${className}`;
-    msgDiv.textContent = text;
-    const id = 'msg-' + Date.now() + Math.random();
-    msgDiv.id = id;
-    chatContainer.appendChild(msgDiv);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-    return id;
-}
+function renderSidebarTasks() {
+    const container = document.getElementById('task-list');
+    container.innerHTML = '';
 
-function removeMessage(id) {
-    const el = document.getElementById(id);
-    if (el) el.remove();
-}
+    tasks.forEach(task => {
+        const item = document.createElement('div');
+        item.className = `task-item ${task.status}`;
+        item.id = `sidebar-task-${task.id}`;
 
-function renderPreviewTable(aulas) {
-    previewContainer.classList.remove('hidden');
-    let html = `
-        <table class="preview-table">
-            <thead>
-                <tr>
-                    <th>Dia</th>
-                    <th>Data</th>
-                    <th>Hora</th>
-                    <th>Série/Turma</th>
-                    <th>Habilidades</th>
-                    <th>Atividades</th>
-                    <th>Duração</th>
-                    <th>Special</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
-    aulas.forEach(a => {
-        html += `
-            <tr>
-                <td>${a.day || ''}</td>
-                <td>${a.date || ''}</td>
-                <td>${a.time || ''}</td>
-                <td>${a.serie}${a.team}</td>
-                <td>${a.skills || ''}</td>
-                <td>${a.activities || ''}</td>
-                <td>${a.duration}m</td>
-                <td>${a.special}</td>
-            </tr>
+        let statusText = 'Pendente';
+        if (task.status === 'processing') statusText = 'Processando...';
+        if (task.status === 'success') statusText = 'Concluído';
+        if (task.status === 'error') statusText = 'Erro';
+
+        item.innerHTML = `
+            <div class="task-item-header">
+                <span>Tarefa ${task.id}</span>
+                <span style="font-weight: normal;">${statusText}</span>
+            </div>
+            <div class="task-item-body">${task.text}</div>
         `;
+        container.appendChild(item);
     });
-    html += `</tbody></table>`;
-    previewTableWrapper.innerHTML = html;
 }
 
-btnConfirmarSalvar.addEventListener('click', async () => {
-    if (aulasPendentes.length === 0) return;
+function renderPreviewCards() {
+    const container = document.getElementById('cards-preview-container');
+    container.innerHTML = '';
 
-    const { error } = await supabaseClient
-        .from('planner')
-        .insert(aulasPendentes);
+    tasks.forEach(task => {
+        const card = document.createElement('div');
+        card.className = 'preview-card';
+        card.innerHTML = `
+            <h4>Tarefa ${task.id}</h4>
+            <p>${task.text}</p>
+        `;
+        container.appendChild(card);
+    });
+}
 
-    if (error) {
-        alert('Erro ao salvar no Supabase: ' + error.message);
-    } else {
-        alert('Registros salvos com sucesso na tabela planner!');
-        aulasPendentes = [];
-        previewContainer.classList.add('hidden');
-        appendMessage('Registros salvos com sucesso no banco de dados!', 'ai-message');
-    }
-});
+async function startSequentialProcessing() {
+    if (isProcessing || tasks.length === 0) return;
 
-// Sistema de divisão de tarefas (Corrigido para não picotar informações)
-function triggerSplitTask(fullText) {
-    splitTaskBalloon.classList.remove('hidden');
-    splitButtonsWrapper.innerHTML = '';
-    
-    // Configura um limite seguro de caracteres que o modelo suporta bem em uma chamada
-    const MAX_CHUNK_LENGTH = 800; 
-    const parts = [];
-    let currentChunk = '';
-    
-    // Divide o texto original usando quebras de linha
-    // Assim garantimos que o planejamento de um dia específico não seja quebrado ao meio
-    const lines = fullText.split('\n');
+    isProcessing = true;
+    document.getElementById('btn-start-processing').disabled = true;
+    document.getElementById('btn-parse-preview').disabled = true;
+    document.getElementById('raw-planner-text').disabled = true;
 
-    for (let line of lines) {
-        if (!line.trim()) continue; // Pula linhas totalmente vazias
-        
-        // Se ao adicionar esta linha formos ultrapassar o limite (e já tivermos conteúdo)
-        // Guardamos o bloco atual e abrimos um novo.
-        if (currentChunk.length + line.length > MAX_CHUNK_LENGTH && currentChunk.length > 0) {
-            parts.push(currentChunk.trim());
-            currentChunk = '';
-        }
-        currentChunk += line + '\n';
-    }
-    
-    // Adiciona o restante que ficou sobrando no final
-    if (currentChunk.trim().length > 0) {
-        parts.push(currentChunk.trim());
-    }
+    const overallBadge = document.getElementById('overall-status');
+    overallBadge.textContent = 'Processando...';
+    overallBadge.className = 'status-badge processing';
 
-    totalPartsToComplete = parts.length;
-    completedPartsCount = 0;
+    for (let i = 0; i < tasks.length; i++) {
+        const task = tasks[i];
+        task.status = 'processing';
+        renderSidebarTasks();
 
-    parts.forEach((partText, index) => {
-        const btn = document.createElement('button');
-        btn.className = 'btn-split-part';
-        btn.textContent = `Enviar Parte ${index + 1} de ${parts.length}`;
-        btn.onclick = async () => {
-            btn.classList.add('done');
-            btn.disabled = true;
-            completedPartsCount++;
+        try {
+            const response = await fetch(EDGE_FUNCTION_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ taskText: task.text })
+            });
 
-            appendMessage(`[Parte ${index + 1}] Enviando informações estruturadas...`, 'user-message');
-            await processPartChunk(partText);
+            const result = await response.json();
 
-            if (completedPartsCount >= totalPartsToComplete) {
-                splitTaskBalloon.classList.add('hidden');
-                appendMessage('Todas as partes foram processadas com sucesso!', 'ai-message');
+            if (response.ok && result.success) {
+                task.status = 'success';
+            } else {
+                task.status = 'error';
+                console.error(`Erro na Tarefa ${task.id}:`, result.error);
             }
-        };
-        splitButtonsWrapper.appendChild(btn);
-    });
+        } catch (err) {
+            task.status = 'error';
+            console.error(`Falha ao conectar com a API na Tarefa ${task.id}:`, err);
+        }
+
+        renderSidebarTasks();
+    }
+
+    isProcessing = false;
+    overallBadge.textContent = 'Concluído';
+    overallBadge.className = 'status-badge completed';
+
+    document.getElementById('completion-footer').classList.remove('hidden');
 }
 
-async function processPartChunk(chunkText) {
-    try {
-        const { data, error } = await supabaseClient.functions.invoke('gerenciar-planner', {
-            body: { textoBruto: chunkText }
-        });
+function resetApp() {
+    tasks = [];
+    isProcessing = false;
 
-        if (error) throw new Error(error.message || 'Erro ao invocar Edge Function');
+    document.getElementById('raw-planner-text').value = '';
+    document.getElementById('raw-planner-text').disabled = false;
+    document.getElementById('btn-parse-preview').disabled = true;
+    document.getElementById('btn-start-processing').disabled = true;
 
-        if (data && data.aulas && data.aulas.length > 0) {
-            aulasPendentes = [...aulasPendentes, ...data.aulas];
-            renderPreviewTable(aulasPendentes);
-            appendMessage(`[Parte processada] ${data.aulas.length} aula(s) adicionada(s) à prévia.`, 'ai-message');
-        } else {
-            appendMessage(`[Parte processada] Nenhuma aula estruturada identificada neste trecho.`, 'ai-message');
-        }
-    } catch (e) {
-        console.error('Erro ao processar parte:', e);
-        appendMessage(`Erro ao processar parte: ${e.message}`, 'ai-message');
-    }
+    document.getElementById('completion-footer').classList.add('hidden');
+    document.getElementById('preview-section').classList.add('hidden');
+
+    const overallBadge = document.getElementById('overall-status');
+    overallBadge.textContent = 'Aguardando';
+    overallBadge.className = 'status-badge';
+
+    document.getElementById('task-list').innerHTML = `
+        <div class="empty-state">Cole o plano de aula no campo de texto para fragmentar as tarefas.</div>
+    `;
 }
