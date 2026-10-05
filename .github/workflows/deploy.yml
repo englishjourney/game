@@ -1,17 +1,18 @@
-name: Deploy to GitHub Pages
+name: Deploy Alternativo Direct
 
 on:
   push:
     branches:
-      - main # Altere para 'master' se a sua branch principal tiver esse nome
+      - main # Altere para 'master' se for o nome da sua branch
 
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# MUDANÇA CHAVE: Nome de grupo novo para ignorar os jobs travados da fila 'pages'
 concurrency:
-  group: 'pages'
+  group: 'deploy-direto-furafila'
   cancel-in-progress: true
 
 jobs:
@@ -21,16 +22,16 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout do repositório
+      - name: Checkout do código
         uses: actions/checkout@v4
 
-      - name: Configurar GitHub Pages
+      - name: Configurar Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload dos arquivos para publicação
+      - name: Upload dos arquivos
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.' # Se os arquivos HTML/CSS/JS estiverem em uma pasta específica, troque por './pasta'
+          path: '.'
 
       - name: Deploy no GitHub Pages
         id: deployment
