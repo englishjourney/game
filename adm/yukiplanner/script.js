@@ -4,19 +4,9 @@ let tasks = [];
 let isProcessing = false;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const rawTextArea = document.getElementById('raw-planner-text');
     const btnParse = document.getElementById('btn-parse-preview');
     const btnStart = document.getElementById('btn-start-processing');
     const btnReset = document.getElementById('btn-reset');
-
-    // Validação inicial caso a página recarregue e já tenha texto na caixa
-    if (rawTextArea.value.trim() !== '') {
-        btnParse.disabled = false;
-    }
-
-    rawTextArea.addEventListener('input', () => {
-        btnParse.disabled = rawTextArea.value.trim() === '';
-    });
 
     btnParse.addEventListener('click', () => {
         parseInputToTasks();
@@ -34,8 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function parseInputToTasks() {
     const text = document.getElementById('raw-planner-text').value;
     
-    // Separa o texto por 2 ou mais quebras de linha (linha em branco entre as aulas)
-    // O \r? previne bugs caso o texto venha do Windows
+    // Separa o texto por 2 ou mais quebras de linha
     const blocks = text.split(/\n\s*\r?\n/).map(b => b.trim()).filter(b => b.length > 0);
 
     if (blocks.length === 0) {
@@ -43,7 +32,6 @@ function parseInputToTasks() {
         return;
     }
 
-    // Se só identificou 1 bloco, avisa o usuário (pode ser que ele esqueceu de dar duplo Enter)
     if (blocks.length === 1) {
         console.warn("Atenção: Apenas 1 bloco identificado. Certifique-se de deixar uma linha em branco entre cada aula.");
     }
@@ -51,7 +39,7 @@ function parseInputToTasks() {
     tasks = blocks.map((block, index) => ({
         id: index + 1,
         text: block,
-        status: 'pending' // 'pending' | 'processing' | 'success' | 'error'
+        status: 'pending'
     }));
 
     renderSidebarTasks();
@@ -154,7 +142,7 @@ function resetApp() {
 
     document.getElementById('raw-planner-text').value = '';
     document.getElementById('raw-planner-text').disabled = false;
-    document.getElementById('btn-parse-preview').disabled = true;
+    document.getElementById('btn-parse-preview').disabled = false; // Removida a trava aqui também
     document.getElementById('btn-start-processing').disabled = true;
 
     document.getElementById('completion-footer').classList.add('hidden');
