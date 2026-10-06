@@ -65,6 +65,7 @@ export function showAdmPanel() {
     initUsers();
     initMissions();
     initFlashcardsAdm();
+    initReminders(); // INSERIDO AQUI: Inicialização dos lembretes
     
     document.getElementById('btn-logout').addEventListener('click', logout);
 }
@@ -233,4 +234,212 @@ async function loadSchedule() {
         console.error("Erro ao carregar horários do schedule:", err);
         container.innerHTML = '<div style="color: #ef4444; padding: 20px; text-align: center;">Erro ao carregar os horários. Verifique a conexão com o Supabase e a tabela "schedule".</div>';
     }
+}
+// Conjunto para evitar disparar o toast repetidamente na mesma sessão
+const notifiedReminderIds = new Set();
+
+export function initReminders() {
+    const btnReminders = document.getElementById('btn-reminders');
+    const dropdown = document.getElementById('reminders-dropdown');
+    const btnNew = document.getElementById('btn-dropdown-new-reminder');
+    const btnSee = document.getElementById('btn-dropdown-see-reminders');
+
+    const modalForm = document.getElementById('modal-reminder-form');
+    const modalList = document.getElementById('modal-reminder-list');
+    
+    const btnSaveForm = document.getElementById('btn-save-reminder-form');
+    const btnCancelForm = document.getElementById('btn-cancel-reminder-form');
+    const btnCloseList = document.getElementById('btn-close-reminder-list');
+
+    if (!btnReminders) return;
+
+    // Toggle Dropdown
+    btnReminders.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('hidden');
+    });
+
+    // Fechar dropdown ao clicar fora
+    document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target) && e.target !== btnReminders) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    // Botão +New no Dropdown
+    btnNew.addEventListener('click', () => {
+        dropdown.classList.add('hidden');
+        openReminderFormModal();
+    });
+
+    // Botão See my reminders no Dropdown
+    btnSee.addEventListener('click', () => {
+        dropdown.classList.add('hidden');
+        openReminderListModal();
+    });
+
+    // Salvar Lembrete (Inserção / Edição)
+    btnSaveForm.addEventListener('click', async () => {
+        const id = document.getElementById('reminder-edit-id').value;
+        const remindMeTo = document.getElementById('reminder-text').value.trim();
+        const date = document.getElementById('reminder-date').value;
+        const time = document.getElementById('reminder-time').value;
+
+        if (!remindMeTo || !date || !time) {
+            alert('Por favor, preencha todos os campos do lembrete.');
+            return;
+        }
+
+        try {
+            if (id) {
+                // Atualizar / Adiar
+                const { error } = await supabase.from('reminders').update({ remindMeTo, date, time }).eq('id', id);
+                if (error) throw error;
+            } else {
+                // Criar Novo
+                const { error } = await supabase.from('reminders').insert([{ remindMeTo, date, time }]);
+                if (error) throw error;
+            }
+
+            modalForm.classList.add('hidden');
+            await checkRemindersStatus();
+            
+            // Se o modal de lista estiver aberto, recarrega ele
+            if (!modalList.classList.contains('hidden')) {
+                openReminderListModal();
+            }
+        } catch (err) {
+            console.error('Erro ao salvar lembrete:', err);
+            alert('Erro ao salvar o lembrete.');
+        }
+    });
+
+    btnCancelForm.addEventListener('click', () => modalForm.classList.add('hidden'));
+    btnCloseList.addEventListener('click', () => modalList.classList.add('hidden'));
+
+    // Inicia a verificação contínua (a cada 10 segundos)
+    checkRemindersStatus();
+    setInterval(checkRemindersStatus, 10000);
+}
+
+// Abrir modal de formulário
+function openReminderFormModal(data = null) {
+    const modalForm = document.getElementById('modal-reminder-form');
+    document.getElementById('reminder-modal-title').innerText = data ? 'Editar / Adiar Lembrete' : 'Novo Lembrete';
+    document.getElementById('reminder-edit-id').value = data ? data.id : '';
+    document.getElementById('reminder-text').value = data ? data.remindMeTo : '';
+    document.getElementById('reminder-date').value = data ? data.date : '';
+    document.getElementById('reminder-time').value = data ? data.time : '';
+    modalForm.classList.remove('hidden');
+}
+
+// Abrir e renderizar modal de lista de lembretes
+async function openReminderListModal() {
+    const modalList = document.getElementById('modal-reminder-list');
+    const container = document.getElementById('reminder-items-container');
+    container.innerHTML = '<div style="color: #888; text-align: center;">Carregando lembretes...</div>';
+    modalList.classList.remove('hidden');
+
+    try {
+        const { data: reminders, error } = await supabase.from('reminders').select('*').order('date', { ascending: true });
+        if (error) throw error;
+
+        if (!reminders || reminders.length === 0) {
+            container.innerHTML = '<div style="color: #888; text-align: center; padding: 20px;">Nenhum lembrete agendado.</div>';
+            return;
+        }
+
+        let html = '';
+        reminders.forEach(item => {
+            html += `
+                <div style="background: var(--bg-dark, #0f172a); border: 1px solid rgba(255,255,255,0.08); padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong style="color: #fff; display: block; margin-bottom: 4px;">${item.remindMeTo}</strong>
+                        <small style="color: var(--primary, #3b82f6);"><i class="fa-regular fa-clock"></i> ${item.date} às ${item.time}</small>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="window.editReminder('${item.id}', '${encodeURIComponent(item.remindMeTo)}', '${item.date}', '${item.time}')" style="background: #eab308; color: #000; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">Adiar / Editar</button>
+                        <button onclick="window.deleteReminder('${item.id}')" style="background: #ef4444; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Excluir</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    } catch (err) {
+        console.error('Erro ao buscar lembretes:', err);
+        container.innerHTML = '<div style="color: #ef4444; text-align: center;">Erro ao carregar lembretes.</div>';
+    }
+}
+
+// Funções globais para escutar os cliques dentro da lista HTML
+window.deleteReminder = async function(id) {
+    if (!confirm('Deseja realmente excluir este lembrete?')) return;
+    try {
+        const { error } = await supabase.from('reminders').delete().eq('id', id);
+        if (error) throw error;
+        openReminderListModal();
+        checkRemindersStatus();
+    } catch (err) {
+        console.error('Erro ao excluir:', err);
+    }
+};
+
+window.editReminder = function(id, text, date, time) {
+    openReminderFormModal({ id, remindMeTo: decodeURIComponent(text), date, time });
+};
+
+// Checa expiração, dispara os toasts e gerencia a bolinha indicadora
+async function checkRemindersStatus() {
+    try {
+        const { data: reminders, error } = await supabase.from('reminders').select('*');
+        if (error || !reminders) return;
+
+        const now = new Date();
+        let hasExpired = false;
+
+        reminders.forEach(r => {
+            const reminderDate = new Date(`${r.date}T${r.time}`);
+
+            // Se o horário do lembrete já passou ou é o momento exato
+            if (reminderDate <= now) {
+                hasExpired = true;
+
+                // Dispara o toast no canto inferior esquerdo se ainda não foi avisado nesta sessão
+                if (!notifiedReminderIds.has(r.id)) {
+                    notifiedReminderIds.add(r.id);
+                    triggerToastNotification(r.remindMeTo);
+                }
+            }
+        });
+
+        // Alterna a exibição da bolinha verde/vermelha
+        const badge = document.getElementById('reminders-badge');
+        if (badge) {
+            if (hasExpired) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+    } catch (err) {
+        console.error('Erro na checagem de lembretes:', err);
+    }
+}
+
+// Janela temporária no canto inferior esquerdo (some em 5s)
+function triggerToastNotification(text) {
+    const container = document.getElementById('reminder-toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'reminder-toast';
+    toast.innerHTML = `<strong>🔔 Lembrete:</strong><div style="margin-top: 4px;">${text}</div>`;
+
+    container.appendChild(toast);
+
+    // Remove do DOM após 5 segundos
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
 }
