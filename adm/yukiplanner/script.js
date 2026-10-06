@@ -2,6 +2,8 @@ const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwau-jxEfWW8pQ7
 
 let tasks = [];
 let isProcessing = false;
+let isPaused = false;
+let isAborted = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     const btnParse = document.getElementById('btn-parse-preview');
@@ -93,51 +95,107 @@ async function startSequentialProcessing() {
     if (isProcessing || tasks.length === 0) return;
 
     isProcessing = true;
+    isPaused = false;
+    isAborted = false;
+
     document.getElementById('btn-start-processing').disabled = true;
     document.getElementById('btn-parse-preview').disabled = true;
     document.getElementById('raw-planner-text').disabled = true;
+    
+    // Exibe os botões de Pausa e Interromper
+    document.getElementById('btn-pause-processing').classList.remove('hidden');
+    document.getElementById('btn-abort-processing').classList.remove('hidden');
+    document.getElementById('btn-pause-processing').textContent = 'Pausar';
 
     const overallBadge = document.getElementById('overall-status');
     overallBadge.textContent = 'Processando...';
     overallBadge.className = 'status-badge processing';
 
     for (let i = 0; i < tasks.length; i++) {
+        // Verifica se o usuário clicou em Interromper
+        if (isAborted) break;
+
+        // Verifica se o usuário clicou em Pausar
+        while (isPaused) {
+            if (isAborted) break;
+            await new Promise(resolve => setTimeout(resolve, 500)); // Aguarda checando o estado
+        }
+        if (isAborted) break;
+
         const task = tasks[i];
+        if (task.status === 'success') continue; // Pula as que já deram certo se retomar
+
         task.status = 'processing';
         renderSidebarTasks();
 
-        try {
-            // Chamando o Google Apps Script que faz a ponte com a Groq e o Supabase
-            const response = await fetch(GAS_WEB_APP_URL, {
-                method: 'POST',
-                // O GAS com ContentService lida bem com text/plain ou application/json se tratado, 
-                // mas para evitar preflight complexo de CORS em alguns navegadores com Apps Script, 
-                // enviamos como JSON padrão:
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ taskText: task.text })
-            });
+        let tentativa = 0;
+        let sucesso = false;
 
-            const result = await response.json();
+        while (!sucesso && !isAborted) {
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ taskText: task.text })
+                });
 
-            if (response.ok && result.success) {
-                task.status = 'success';
-            } else {
-                task.status = 'error';
-                console.error(`Erro na Tarefa ${task.id}:`, result.error);
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    task.status = 'success';
+                    sucesso = true;
+                } else {
+                    throw new Error(result.error || "Erro desconhecido no servidor.");
+                }
+            } catch (err) {
+                tentativa++;
+                console.warn(`Tentativa ${tentativa} falhou na Tarefa ${task.id}:`, err);
+
+                // Se for erro de rate limit ou falha de rede, aguarda 1 minuto na primeira falha antes de desistir/pausar
+                if (tentativa === 1) {
+                    overallBadge.textContent = 'Aguardando rate limite...';
+                    
+                    // Atualiza visualmente o item para indicar espera
+                    const sidebarItem = document.getElementById(`sidebar-task-${task.id}`);
+                    if(sidebarItem) {
+                        sidebarItem.querySelector('.task-item-header span:last-child').textContent = 'Aguardando rate limite (1 min)...';
+                    }
+
+                    // Aguarda 60 segundos (1 minuto) para o TPM da Groq resetar
+                    for (let s = 60; s > 0; s--) {
+                        if (isAborted) break;
+                        overallBadge.textContent = `Aguardando rate limite (${s}s)...`;
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                } else {
+                    // Se falhar na segunda tentativa consecutiva, pausa o fluxo e avisa o usuário
+                    task.status = 'error';
+                    isPaused = true;
+                    document.getElementById('btn-pause-processing').textContent = 'Retomar';
+                    overallBadge.textContent = 'Pausado por Erro';
+                    alert(`Ação pausada devido a um erro na Tarefa ${task.id}:\n${err.message}`);
+                    renderSidebarTasks();
+                    break;
+                }
             }
-        } catch (err) {
-            task.status = 'error';
-            console.error(`Falha ao conectar com o GAS na Tarefa ${task.id}:`, err);
         }
 
         renderSidebarTasks();
+        
+        // Pausa pequena de 1.5 segundo entre tarefas normais para evitar disparar o limite de requisições por minuto (RPM)
+        if (!isAborted && !isPaused) {
+            await new Promise(resolve => setTimeout(resolve, 1500));
+        }
     }
 
-    isProcessing = false;
-    overallBadge.textContent = 'Concluído';
-    overallBadge.className = 'status-badge completed';
-
-    document.getElementById('completion-footer').classList.remove('hidden');
+    if (!isAborted && !isPaused) {
+        isProcessing = false;
+        overallBadge.textContent = 'Concluído';
+        overallBadge.className = 'status-badge completed';
+        document.getElementById('btn-pause-processing').classList.add('hidden');
+        document.getElementById('btn-abort-processing').classList.add('hidden');
+        document.getElementById('completion-footer').classList.remove('hidden');
+    }
 }
 
 function resetApp() {
@@ -159,4 +217,18 @@ function resetApp() {
     document.getElementById('task-list').innerHTML = `
         <div class="empty-state">Cole o plano de aula no campo de texto para fragmentar as tarefas.</div>
     `;
+}
+function pauseProcessing() {
+    isPaused = true;
+    document.getElementById('btn-pause-processing').textContent = 'Retomando...';
+    document.getElementById('overall-status').textContent = 'Pausado';
+}
+
+function abortProcessing() {
+    isAborted = true;
+    isProcessing = false;
+    document.getElementById('overall-status').textContent = 'Interrompido';
+    document.getElementById('btn-pause-processing').classList.add('hidden');
+    document.getElementById('btn-abort-processing').classList.add('hidden');
+    document.getElementById('completion-footer').classList.remove('hidden');
 }
