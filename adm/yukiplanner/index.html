@@ -41,10 +41,11 @@ Segunda-feira, 21/09/2026 às 07:00 para o 9B. Aula de 50 min. Atividades: Leitu
 Terça-feira, 22/09/2026 às 08:30 para o 7A. Duração: 50 min. Prova bimestral de inglês. Special: 3."></textarea>
                 
                 <div class="action-bar">
-                    <!-- Adicionado 'disabled' como estado inicial -->
-                    <button type="button" class="btn-secondary" id="btn-parse-preview">Analisar tarefas</button>
-                    <button type="button" class="btn-primary" id="btn-start-processing">Processar e Salvar Tudo</button>
-                </div>
+    <button type="button" class="btn-secondary" id="btn-parse-preview" onclick="parseInputToTasks()">Analisar tarefas</button>
+    <button type="button" class="btn-primary" id="btn-start-processing" onclick="startSequentialProcessing()">Processar e Salvar Tudo</button>
+    <button type="button" class="btn-secondary hidden" id="btn-pause-processing" onclick="pauseProcessing()">Pausar</button>
+    <button type="button" class="btn-danger hidden" id="btn-abort-processing" onclick="abortProcessing()">Interromper</button>
+</div>
             </div>
 
             <!-- PAINEL DE VISUALIZAÇÃO EM TEMPO REAL -->
