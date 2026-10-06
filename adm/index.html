@@ -31,6 +31,55 @@
                     </label>
                 </label>
                 <button id="btn-logout" class="btn-danger">Sair</button>
+                <!-- === BOTÃO COM DROPDOWN NO CABEÇALHO (Adicionar ao lado do botão #btn-logout) === -->
+<div class="reminders-wrapper" style="position: relative; display: inline-block; margin-right: 10px;">
+    <button id="btn-reminders" class="nav-btn" title="Reminders" style="position: relative; background: transparent; border: none; cursor: pointer; padding: 8px 12px;">
+        <i class="fa-solid fa-bell" style="color: white; font-size: 1.2rem;"></i>
+        <span id="reminders-badge" class="reminders-badge hidden"></span>
+    </button>
+    <div id="reminders-dropdown" class="reminders-dropdown hidden">
+        <button id="btn-dropdown-new-reminder" class="dropdown-item"><i class="fa-solid fa-plus"></i> +New</button>
+        <button id="btn-dropdown-see-reminders" class="dropdown-item"><i class="fa-solid fa-list"></i> See my reminders</button>
+    </div>
+</div>
+
+<!-- === CONTAINER DE TOASTS (Canto inferior esquerdo) === -->
+<div id="reminder-toast-container" class="reminder-toast-container"></div>
+
+<!-- === MODAL 1: NOVO / EDITAR LEMBRETE === -->
+<div id="modal-reminder-form" class="reminder-modal-overlay hidden">
+    <div class="reminder-modal">
+        <h3 id="reminder-modal-title">Novo Lembrete</h3>
+        <input type="hidden" id="reminder-edit-id" value="">
+        
+        <label for="reminder-text">Lembrete (remindMeTo):</label>
+        <textarea id="reminder-text" rows="3" placeholder="O que você precisa lembrar?"></textarea>
+
+        <label for="reminder-date">Data (date):</label>
+        <input type="date" id="reminder-date">
+
+        <label for="reminder-time">Hora (time):</label>
+        <input type="time" id="reminder-time">
+
+        <div class="reminder-modal-buttons">
+            <button id="btn-cancel-reminder-form" class="btn-secondary">Cancelar</button>
+            <button id="btn-save-reminder-form" class="btn-primary">Salvar Lembrete</button>
+        </div>
+    </div>
+</div>
+
+<!-- === MODAL 2: LISTAR LEMBRETES === -->
+<div id="modal-reminder-list" class="reminder-modal-overlay hidden">
+    <div class="reminder-modal" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+        <h3>Meus Lembretes Agendados</h3>
+        <div id="reminder-items-container" style="margin-top: 15px;">
+            <!-- Itens renderizados dinamicamente pelo JS -->
+        </div>
+        <div class="reminder-modal-buttons">
+            <button id="btn-close-reminder-list" class="btn-secondary">Fechar</button>
+        </div>
+    </div>
+</div>
             </div>
         </header>
 
