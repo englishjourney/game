@@ -1,5 +1,4 @@
-const SUPABASE_URL = "https://rmsmamzutvxugdbiqsrz.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwjWK_ODC9bFmXmd6OUZu9DuwHaAWuPfDlv0keZ-qxQwQW8W8AH9KUwvnw3EBtdTQC4fw/exec";
 
 let tasks = [];
 let isProcessing = false;
@@ -108,13 +107,13 @@ async function startSequentialProcessing() {
         renderSidebarTasks();
 
         try {
-            const response = await fetch(EDGE_FUNCTION_URL, {
+            // Chamando o Google Apps Script que faz a ponte com a Groq e o Supabase
+            const response = await fetch(GAS_WEB_APP_URL, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'apikey': SUPABASE_ANON_KEY
-                },
+                // O GAS com ContentService lida bem com text/plain ou application/json se tratado, 
+                // mas para evitar preflight complexo de CORS em alguns navegadores com Apps Script, 
+                // enviamos como JSON padrão:
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({ taskText: task.text })
             });
 
@@ -128,7 +127,7 @@ async function startSequentialProcessing() {
             }
         } catch (err) {
             task.status = 'error';
-            console.error(`Falha ao conectar com a API na Tarefa ${task.id}:`, err);
+            console.error(`Falha ao conectar com o GAS na Tarefa ${task.id}:`, err);
         }
 
         renderSidebarTasks();
