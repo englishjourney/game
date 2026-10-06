@@ -6,6 +6,18 @@ import { initFlashcardsAdm } from './flashcardsAdm.js';
 import { supabase } from '../supabaseClient.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // 1. REGISTRA O SERVICE WORKER NA PASTA ADM
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+            .then((registration) => {
+                console.log('Service Worker da ADM registrado com sucesso!');
+                verificarESalvarAulasNoCache(registration);
+            })
+            .catch((error) => {
+                console.error('Falha ao registrar o Service Worker:', error);
+            });
+    }
+
     const loggedIn = await isAdmLoggedIn();
     if (!loggedIn) {
         initAuth();
@@ -13,6 +25,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         showAdmPanel();
     }
 });
+
+function verificarESalvarAulasNoCache(swRegistration) {
+    if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        Notification.requestPermission();
+    }
+
+    let cacheAulas = localStorage.getItem('yuki_planejamento_semana');
+
+    if (!cacheAulas) {
+        const dadosExemplo = [
+            { date: "06/10/2026", time: "07:00", serie: "9", team: "B", activities: "Leitura do Capítulo 3 e gramática." },
+            { date: "06/10/2026", time: "08:30", serie: "7", team: "A", activities: "Introdução ao vocabulário de saúde." }
+        ];
+        localStorage.setItem('yuki_planejamento_semana', JSON.stringify(dadosExemplo));
+        cacheAulas = JSON.stringify(dadosExemplo);
+    }
+
+    const aulas = JSON.parse(cacheAulas);
+    const hojeStr = new Date().toLocaleDateString('pt-BR');
+
+    const aulasDeHoje = aulas.filter(a => a.date === hojeStr);
+
+    if (aulasDeHoje.length > 0 && swRegistration.active) {
+        swRegistration.active.postMessage({
+            type: 'SCHEDULE_NOTIFICATIONS',
+            aulas: aulasDeHoje
+        });
+    }
+}
 
 export function showAdmPanel() {
     document.getElementById('login-container').classList.add('hidden');
