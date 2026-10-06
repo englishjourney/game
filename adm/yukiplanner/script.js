@@ -1,4 +1,4 @@
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwau-jxEfWW8pQ72NXNc9oef9UBysU8qu2hel_DyJSJSnlmipjCkmaJSe0PpulGQ5Q4/exec";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyPRkyl3_iT3XjSlODmEiZRRryr7V3fLm-7CfLxQlCX08ZcFvTb4pC3ldjWMAOgD0Q8/exec";
 
 let tasks = [];
 let isProcessing = false;
