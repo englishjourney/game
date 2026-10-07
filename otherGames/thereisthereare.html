@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogo: There is / There are</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #f0f4f8;
+      --card-bg: #ffffff;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --secondary: #06b6d4;
+      --success: #10b981;
+      --error: #ef4444;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border-radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+      padding: 32px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    h1, h2 {
+      font-family: 'Fredoka', sans-serif;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: var(--text-muted);
+      font-size: 1rem;
+      margin-bottom: 24px;
+    }
+
+    .screen {
+      display: none;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Tela de Login */
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary);
+    }
+
+    .btn {
+      background-color: var(--primary);
+      color: white;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+      box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+    }
+
+    .btn:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn:disabled {
+      background-color: #cbd5e1;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Barra de Progresso e Placar */
+    .header-status {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 12px;
+      background-color: #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--secondary), var(--primary));
+      transition: width 0.3s ease;
+    }
+
+    /* Cartão da Questão */
+    .card {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 24px 16px;
+      margin-bottom: 24px;
+    }
+
+    .emoji-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+    }
+
+    .sentence {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .sentence .blank {
+      display: inline-block;
+      min-width: 90px;
+      border-bottom: 3px stroke var(--primary);
+      color: var(--primary);
+    }
+
+    .translation {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Botões de Escolha */
+    .options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .btn-option {
+      background-color: white;
+      color: var(--text-main);
+      border: 2px solid #e2e8f0;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 16px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-option:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background-color: #f0fdf4;
+    }
+
+    /* Feedback */
+    .feedback {
+      min-height: 28px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      margin-top: 8px;
+    }
+
+    .feedback.correct {
+      color: var(--success);
+    }
+
+    .feedback.wrong {
+      color: var(--error);
+    }
+
+    /* Tela Final */
+    .final-score {
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin: 16px 0;
+    }
+
+    .stats-box {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .stats-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+
+    .stats-item:last-child {
+      margin-bottom: 0;
+      padding-top: 8px;
+      border-top: 1px dashed #cbd5e1;
+      font-weight: 700;
+    }
+
+    .status-msg {
+      font-size: 0.85rem;
+      margin-top: 12px;
+      min-height: 20px;
+    }
+
+    canvas#confetti {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <canvas id="confetti"></canvas>
+
+    <!-- TELA 1: LOGIN -->
+    <div id="screen-login" class="screen active">
+      <h1>There is / There are</h1>
+      <p>Aprenda a dizer "Existe" e "Existem" em inglês jogando!</p>
+      
+      <div class="input-group">
+        <input type="text" id="username-input" placeholder="Digite seu nome de usuário..." autocomplete="off">
+        <button id="btn-start" class="btn">Começar Jogo</button>
+      </div>
+      <div id="login-msg" class="status-msg"></div>
+    </div>
+
+    <!-- TELA 2: GAMEPLAY -->
+    <div id="screen-game" class="screen">
+      <div class="header-status">
+        <span id="player-tag"></span>
+        <span>Pontos: <span id="current-score">0</span></span>
+      </div>
+
+      <div class="progress-bar-bg">
+        <div id="progress-bar" class="progress-bar-fill"></div>
+      </div>
+
+      <div class="card">
+        <div id="card-emoji" class="emoji-icon">🍎</div>
+        <div class="sentence" id="card-sentence">___ an apple on the table.</div>
+        <div class="translation" id="card-translation">Existe uma maçã na mesa.</div>
+      </div>
+
+      <div class="options">
+        <button class="btn-option" onclick="submitAnswer('There is')">There is</button>
+        <button class="btn-option" onclick="submitAnswer('There are')">There are</button>
+      </div>
+
+      <div id="feedback" class="feedback"></div>
+    </div>
+
+    <!-- TELA 3: RESULTADOS -->
+    <div id="screen-result" class="screen">
+      <h2>Parabéns! 🎉</h2>
+      <p>Você concluiu o desafio com sucesso!</p>
+
+      <div class="final-score" id="round-points">+0</div>
+
+      <div class="stats-box">
+        <div class="stats-item">
+          <span>Pontuação nesta partida:</span>
+          <strong id="stat-round">0 pts</strong>
+        </div>
+        <div class="stats-item">
+          <span>Pontuação anterior:</span>
+          <strong id="stat-previous">0 pts</strong>
+        </div>
+        <div class="stats-item">
+          <span>Nova Pontuação Total:</span>
+          <strong id="stat-total" style="color: var(--primary);">0 pts</strong>
+        </div>
+      </div>
+
+      <div id="save-status" class="status-msg"></div>
+
+      <button class="btn" onclick="restartGame()" style="margin-top: 12px;">Jogar Novamente</button>
+    </div>
+  </div>
+
+  <!-- Importação do módulo Supabase vindo da raiz (../supabaseClient.js) -->
+  <script type="module">
+    import { supabase } from '../supabaseClient.js';
+
+    // Questões do Jogo (10 pts cada)
+    const questions = [
+      { sentence: "___ a book on the desk.", answer: "There is", translation: "Existe um livro sobre a escrivaninha.", emoji: "📚" },
+      { sentence: "___ three dogs in the park.", answer: "There are", translation: "Existem três cães no parque.", emoji: "🐕" },
+      { sentence: "___ an apple in the basket.", answer: "There is", translation: "Existe uma maçã na cesta.", emoji: "🍎" },
+      { sentence: "___ many students in class.", answer: "There are", translation: "Existem muitos alunos na aula.", emoji: "👨‍🎓" },
+      { sentence: "___ a cat under the chair.", answer: "There is", translation: "Existe um gato debaixo da cadeira.", emoji: "🐱" },
+      { sentence: "___ two cars in the garage.", answer: "There are", translation: "Existem dois carros na garagem.", emoji: "🚗" },
+      { sentence: "___ a computer on the table.", answer: "There is", translation: "Existe um computador na mesa.", emoji: "💻" },
+      { sentence: "___ five birds in the tree.", answer: "There are", translation: "Existem cinco passarinhos na árvore.", emoji: "🐦" },
+      { sentence: "___ a teacher in the classroom.", answer: "There is", translation: "Existe um professor na sala de aula.", emoji: "👩‍🏫" },
+      { sentence: "___ four chairs in the room.", answer: "There are", translation: "Existem quatro cadeiras no quarto.", emoji: "🪑" }
+    ];
+
+    let currentUser = null;
+    let currentQuestionIndex = 0;
+    let scoreEarned = 0;
+    let isProcessing = false;
+
+    // Elementos da DOM
+    const screenLogin = document.getElementById('screen-login');
+    const screenGame = document.getElementById('screen-game');
+    const screenResult = document.getElementById('screen-result');
+    
+    const usernameInput = document.getElementById('username-input');
+    const btnStart = document.getElementById('btn-start');
+    const loginMsg = document.getElementById('login-msg');
+
+    const playerTag = document.getElementById('player-tag');
+    const currentScoreEl = document.getElementById('current-score');
+    const progressBar = document.getElementById('progress-bar');
+    const cardEmoji = document.getElementById('card-emoji');
+    const cardSentence = document.getElementById('card-sentence');
+    const cardTranslation = document.getElementById('card-translation');
+    const feedbackEl = document.getElementById('feedback');
+
+    const roundPointsEl = document.getElementById('round-points');
+    const statRoundEl = document.getElementById('stat-round');
+    const statPreviousEl = document.getElementById('stat-previous');
+    const statTotalEl = document.getElementById('stat-total');
+    const saveStatusEl = document.getElementById('save-status');
+
+    // Inicialização dos eventos
+    btnStart.addEventListener('click', handleLogin);
+    usernameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+
+    // Torna a função de resposta global para os botões onclick
+    window.submitAnswer = submitAnswer;
+    window.restartGame = restartGame;
+
+    // 1. VERIFICAÇÃO E LOGIN DO USUÁRIO
+    async function handleLogin() {
+      const username = usernameInput.value.trim();
+      if (!username) {
+        showMsg(loginMsg, 'Por favor, informe seu nome de usuário.', 'error');
+        return;
+      }
+
+      btnStart.disabled = true;
+      showMsg(loginMsg, 'Buscando usuário no Supabase...', 'info');
+
+      try {
+        // Consulta o usuário na tabela 'users' na coluna 'username'
+        const { data: user, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('username', username)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (!user) {
+          showMsg(loginMsg, `Usuário "${username}" não foi encontrado no banco de dados.`, 'error');
+          btnStart.disabled = false;
+          return;
+        }
+
+        currentUser = user;
+        startGame();
+
+      } catch (err) {
+        console.error('Erro ao conectar ao Supabase:', err);
+        showMsg(loginMsg, 'Erro ao conectar. Verifique o Supabase ou a conexão.', 'error');
+        btnStart.disabled = false;
+      }
+    }
+
+    // 2. INÍCIO DO JOGO
+    function startGame() {
+      currentQuestionIndex = 0;
+      scoreEarned = 0;
+      
+      playerTag.textContent = `👤 ${currentUser.username}`;
+      currentScoreEl.textContent = '0';
+      
+      switchScreen(screenGame);
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      isProcessing = false;
+      feedbackEl.textContent = '';
+      feedbackEl.className = 'feedback';
+
+      const q = questions[currentQuestionIndex];
+      cardEmoji.textContent = q.emoji;
+      cardSentence.textContent = q.sentence;
+      cardTranslation.textContent = q.translation;
+
+      const progressPct = ((currentQuestionIndex) / questions.length) * 100;
+      progressBar.style.width = `${progressPct}%`;
+    }
+
+    // 3. PROCESSAMENTO DAS RESPOSTAS
+    function submitAnswer(selectedOption) {
+      if (isProcessing) return;
+      isProcessing = true;
+
+      const currentQ = questions[currentQuestionIndex];
+      if (selectedOption === currentQ.answer) {
+        scoreEarned += 10;
+        currentScoreEl.textContent = scoreEarned;
+        feedbackEl.textContent = '✨ Parabéns! Resposta Correta!';
+        feedbackEl.className = 'feedback correct';
+        playAudio(true);
+      } else {
+        feedbackEl.textContent = `❌ Ops! O correto é "${currentQ.answer}".`;
+        feedbackEl.className = 'feedback wrong';
+        playAudio(false);
+      }
+
+      setTimeout(() => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questions.length) {
+          loadQuestion();
+        } else {
+          finishGame();
+        }
+      }, 1400);
+    }
+
+    // 4. FINALIZAÇÃO E REGISTRO NO SUPABASE
+    async function finishGame() {
+      progressBar.style.width = '100%';
+      switchScreen(screenResult);
+
+      const previousScore = currentUser.score || 0;
+      const newTotalScore = previousScore + scoreEarned;
+
+      roundPointsEl.textContent = `+${scoreEarned} pts`;
+      statRoundEl.textContent = `${scoreEarned} pts`;
+      statPreviousEl.textContent = `${previousScore} pts`;
+      statTotalEl.textContent = `${newTotalScore} pts`;
+
+      showMsg(saveStatusEl, 'Salvando seu progresso no Supabase...', 'info');
+      triggerConfetti();
+
+      try {
+        // A) Atualiza o score do usuário na tabela 'users'
+        const { error: userUpdateError } = await supabase
+          .from('users')
+          .update({ score: newTotalScore })
+          .eq('username', currentUser.username);
+
+        if (userUpdateError) throw userUpdateError;
+
+        // B) Busca a missão "There is/There are" na tabela 'missions'
+        const { data: mission, error: missionFetchError } = await supabase
+          .from('missions')
+          .select('*')
+          .ilike('title', '%There is%')
+          .maybeSingle();
+
+        if (missionFetchError) console.warn('Erro ao buscar missão:', missionFetchError);
+
+        if (mission) {
+          // Extrai os usernames existentes da coluna 'done'
+          let doneUsers = mission.done 
+            ? mission.done.split(',').map(name => name.trim()).filter(Boolean) 
+            : [];
+
+          // Adiciona o usuário se ele ainda não estiver na lista
+          if (!doneUsers.includes(currentUser.username)) {
+            doneUsers.push(currentUser.username);
+            const updatedDoneString = doneUsers.join(', ');
+
+            // Atualiza a coluna 'done' da tabela 'missions'
+            const { error: missionUpdateError } = await supabase
+              .from('missions')
+              .update({ done: updatedDoneString })
+              .eq('id', mission.id);
+
+            if (missionUpdateError) console.warn('Erro ao atualizar missão:', missionUpdateError);
+          }
+        }
+
+        // Atualiza os dados locais do usuário
+        currentUser.score = newTotalScore;
+        showMsg(saveStatusEl, '✅ Progresso e missão salvos com sucesso!', 'success');
+
+      } catch (err) {
+        console.error('Erro ao salvar no Supabase:', err);
+        showMsg(saveStatusEl, '⚠️ Não foi possível salvar o progresso no banco de dados.', 'error');
+      }
+    }
+
+    function restartGame() {
+      switchScreen(screenLogin);
+      usernameInput.value = '';
+      btnStart.disabled = false;
+      loginMsg.textContent = '';
+    }
+
+    // Auxiliares de Interface
+    function switchScreen(targetScreen) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      targetScreen.classList.add('active');
+    }
+
+    function showMsg(element, msg, type) {
+      element.textContent = msg;
+      element.style.color = type === 'error' ? 'var(--error)' : type === 'success' ? 'var(--success)' : 'var(--text-muted)';
+    }
+
+    // Sintentizador de Som com Web Audio API
+    function playAudio(isCorrect) {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (isCorrect) {
+          osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+          osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); // E5
+          gain.gain.fadeOut(ctx.currentTime + 0.3);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.3);
+        } else {
+          osc.frequency.setValueAtTime(220, ctx.currentTime); // A3
+          osc.frequency.setValueAtTime(196, ctx.currentTime + 0.15); // G3
+          gain.gain.fadeOut(ctx.currentTime + 0.35);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.35);
+        }
+      } catch (e) {
+        // Ignora caso o áudio esteja bloqueado
+      }
+    }
+
+    // Efeito Visual de Confeti
+    function triggerConfetti() {
+      const canvas = document.getElementById('confetti');
+      const ctx = canvas.getContext('2d');
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+
+      const particles = Array.from({ length: 60 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        color: ['#4f46e5', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'][Math.floor(Math.random() * 5)],
+        size: Math.random() * 6 + 4,
+        speedY: Math.random() * 3 + 2,
+        speedX: Math.random() * 2 - 1
+      }));
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.y += p.speedY;
+          p.x += p.speedX;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        if (particles.some(p => p.y < canvas.height)) {
+          requestAnimationFrame(animate);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      animate();
+    }
+  </script>
+</body>
+</html>
