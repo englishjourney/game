@@ -336,7 +336,6 @@
 
       <div id="save-status" class="status-msg"></div>
 
-      <button class="btn" onclick="restartGame()" style="margin-top: 12px;">Jogar Novamente</button>
     </div>
   </div>
 
@@ -516,7 +515,7 @@
         const { data: mission, error: missionFetchError } = await supabase
           .from('missions')
           .select('*')
-          .ilike('title', '%There is%')
+          .ilike('mission_name', '%There is%')
           .maybeSingle();
 
         if (missionFetchError) console.warn('Erro ao buscar missão:', missionFetchError);
