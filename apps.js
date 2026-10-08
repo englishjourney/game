@@ -46,16 +46,38 @@ export async function openAppsDialog() {
         return;
     }
 
-    // Criando a grade de aplicativos
-    let gridHtml = '<div class="apps-grid-container">';
+    // Criando a grade de aplicativos (máximo 5 por linha, scrollview se necessário)
+    let gridHtml = `
+        <div class="apps-grid-container" style="
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr); 
+            gap: 20px; 
+            max-height: 60vh; 
+            overflow-y: auto; 
+            padding: 10px; 
+            justify-items: center; 
+            align-items: start;
+        ">
+    `;
     
     apps.forEach(app => {
         gridHtml += `
-            <div class="app-item">
-                <a href="${app.url}" target="_blank" title="${app.description}" class="app-link">
-                    <!-- Tamanho fixo e bem menor definido no atributo style -->
-                    <img src="${app.image}" alt="Ícone do ${app.name}" class="app-image" style="width: 50px; height: 50px; object-fit: cover; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
-                    <span class="app-name" style="font-size: 0.9rem; margin-top: 5px;">${app.name}</span>
+            <div class="app-item" style="display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%;">
+                <a href="${app.url}" target="_blank" title="${app.description}" class="app-link" style="display: flex; flex-direction: column; align-items: center; text-decoration: none; color: inherit;">
+                    <!-- Círculo invisível com tamanho fixo padronizado para o ícone -->
+                    <div class="app-icon-circle" style="
+                        width: 60px; 
+                        height: 60px; 
+                        border-radius: 50%; 
+                        overflow: hidden; 
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        background: transparent;
+                    ">
+                        <img src="${app.image}" alt="Ícone do ${app.name}" class="app-image" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;">
+                    </div>
+                    <span class="app-name" style="font-size: 0.85rem; margin-top: 8px; word-break: break-word; text-align: center;">${app.name}</span>
                 </a>
             </div>
         `;
