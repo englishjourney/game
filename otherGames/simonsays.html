@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Symon Says - Listening Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #ffffff;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      color: #2c3e50;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    /* Telas do jogo */
+    .screen {
+      display: none;
+      width: 100%;
+      max-width: 400px;
+      animation: fadeIn 0.3s ease-in-out;
+      flex-direction: column;
+      align-items: center;
+    }
+    .screen.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Elementos Genéricos */
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 15px;
+      outline: none;
+    }
+    input[type="text"]:focus {
+      border-color: #3498db;
+    }
+
+    .btn {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+    .btn:hover { background-color: #2980b9; }
+    .btn:disabled { background-color: #95a5a6; cursor: not-allowed; }
+
+    /* Header do Jogo */
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 15px;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    .lives { color: #e74c3c; }
+    .timer { color: #f39c12; }
+
+    /* Container do Jogo (Retangular no centro) */
+    .game-container {
+      width: 320px;
+      height: 240px; /* Container retangular */
+      background-image: url('bg.png');
+      background-size: cover;
+      background-position: center;
+      border: 3px solid #2c3e50;
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    #gif-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    /* Botão de Áudio (Speaker) */
+    .audio-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: none;
+      background-color: #ecf0f1;
+      font-size: 28px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+      position: relative;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .audio-btn:hover { transform: scale(1.05); }
+    
+    /* Animação de pulsar do áudio */
+    .audio-btn.pulsing {
+      animation: pulse 1.2s infinite;
+      background-color: #d0e8f2;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7); }
+      70% { box-shadow: 0 0 0 15px rgba(52, 152, 219, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); }
+    }
+
+    /* Loader do botão de áudio */
+    .loader {
+      border: 4px solid #bdc3c7;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+    .audio-btn.loading .speaker-icon { display: none; }
+    .audio-btn.loading .loader { display: block; }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* D-Pad (Controles das setas) */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .controls-middle {
+      display: flex;
+      gap: 60px;
+    }
+    .arrow-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      border: none;
+      background-color: #34495e;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 0 #2c3e50;
+      transition: all 0.1s;
+    }
+    .arrow-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 0 0 #2c3e50;
+    }
+
+    .msg-feedback {
+      margin-top: 15px;
+      font-weight: bold;
+      min-height: 24px;
+      text-align: center;
+    }
+    .text-error { color: #e74c3c; }
+    .text-success { color: #2ecc71; }
+    .text-info { color: #3498db; }
+
+    /* Tela Final */
+    .stats-box {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 15px;
+      width: 100%;
+      margin: 20px 0;
+    }
+    .stats-box p {
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Tela 1: Login -->
+  <div id="screen-login" class="screen active">
+    <h1>Symon Says 🎮</h1>
+    <p style="margin-bottom: 20px; text-align: center;">Treine seu listening! Ouça as instruções e clique nas setas corretas.</p>
+    <input type="text" id="username-input" placeholder="Digite seu nome de usuário" autocomplete="off">
+    <button id="btn-login" class="btn">Jogar</button>
+    <div id="login-msg" class="msg-feedback"></div>
+  </div>
+
+  <!-- Tela 2: Game -->
+  <div id="screen-game" class="screen">
+    <div class="game-header">
+      <span>Score: <span id="ui-score">0</span></span>
+      <span class="timer">Tempo: <span id="ui-timer">10</span>s</span>
+      <span class="lives">Vidas: <span id="ui-lives">❤️❤️❤️❤️</span></span>
+    </div>
+
+    <button id="audio-btn" class="audio-btn">
+      <span class="speaker-icon">🔊</span>
+      <div class="loader"></div>
+    </button>
+
+    <div class="game-container">
+      <img id="gif-overlay" src="" alt="Action GIF">
+    </div>
+
+    <div class="controls">
+      <button class="arrow-btn" onclick="handleArrowClick('up')">▲</button>
+      <div class="controls-middle">
+        <button class="arrow-btn" onclick="handleArrowClick('left')">◀</button>
+        <button class="arrow-btn" onclick="handleArrowClick('right')">▶</button>
+      </div>
+      <button class="arrow-btn" onclick="handleArrowClick('down')">▼</button>
+    </div>
+
+    <div id="game-feedback" class="msg-feedback"></div>
+  </div>
+
+  <!-- Tela 3: Game Over -->
+  <div id="screen-result" class="screen">
+    <h2>Game Over! 💀</h2>
+    
+    <div class="stats-box">
+      <p><span>Pontuação Final:</span> <strong id="final-score">0</strong></p>
+      <p><span>Seu Score Total:</span> <strong id="total-score">0</strong></p>
+    </div>
+
+    <div id="sync-msg" class="msg-feedback" style="margin-bottom: 15px;"></div>
+    
+    <button class="btn" onclick="restartGame()">Jogar Novamente</button>
+  </div>
+
+  <!-- Importando e configurando Supabase -->
+  <script type="module">
+    import { supabase } from '../supabaseClient.js';
+
+    // Lista de Comandos Disponíveis
+    const availableCommands = [
+      'up', 'down', 'left', 'right', 'up-down', 'up-left', 'up-right', 
+      'down-left', 'down-right', 'down-up', 'left-right', 'left-right-up', 
+      'left-right-down', 'right-down-up', 'right-down-left'
+    ];
+
+    // Variáveis de Jogo
+    let currentUser = null;
+    let currentCommand = null;
+    let targetSequence = [];
+    let playerSequence = [];
+    let score = 0;
+    let lives = 4;
+    let timeLeft = 10;
+    let timerInterval = null;
+    let isRoundActive = false;
+    let previousCommand = null;
+
+    // Configuração de Áudio (TTS Google)
+    const audioPlayer = new Audio();
+    
+    // Seletores DOM
+    const screens = {
+      login: document.getElementById('screen-login'),
+      game: document.getElementById('screen-game'),
+      result: document.getElementById('screen-result')
+    };
+    
+    const ui = {
+      usernameInput: document.getElementById('username-input'),
+      btnLogin: document.getElementById('btn-login'),
+      loginMsg: document.getElementById('login-msg'),
+      score: document.getElementById('ui-score'),
+      timer: document.getElementById('ui-timer'),
+      lives: document.getElementById('ui-lives'),
+      audioBtn: document.getElementById('audio-btn'),
+      gifOverlay: document.getElementById('gif-overlay'),
+      feedback: document.getElementById('game-feedback'),
+      finalScore: document.getElementById('final-score'),
+      totalScore: document.getElementById('total-score'),
+      syncMsg: document.getElementById('sync-msg')
+    };
+
+    // Eventos DOM
+    ui.btnLogin.addEventListener('click', handleLogin);
+    ui.usernameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+    
+    ui.audioBtn.addEventListener('click', () => {
+      if(isRoundActive && currentCommand) playTTSAudio();
+    });
+
+    // Eventos do Audio para animação
+    audioPlayer.addEventListener('playing', () => {
+      ui.audioBtn.classList.remove('loading');
+      ui.audioBtn.classList.add('pulsing');
+    });
+    audioPlayer.addEventListener('ended', () => {
+      ui.audioBtn.classList.remove('pulsing');
+    });
+    audioPlayer.addEventListener('error', () => {
+      ui.audioBtn.classList.remove('loading');
+      console.error('Erro ao carregar o áudio TTS.');
+    });
+
+    // Deixando funcões globais para rodarem nos onclicks do HTML
+    window.handleArrowClick = handleArrowClick;
+    window.restartGame = restartGame;
+
+    // 1. LOGIN
+    async function handleLogin() {
+      const username = ui.usernameInput.value.trim();
+      if (!username) {
+        showMsg(ui.loginMsg, 'Por favor, insira um nome de usuário.', 'text-error');
+        return;
+      }
+
+      ui.btnLogin.disabled = true;
+      showMsg(ui.loginMsg, 'Conectando...', 'text-info');
+
+      try {
+        const { data: user, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('username', username)
+          .maybeSingle();
+
+        if (error) throw error;
+        
+        if (!user) {
+          showMsg(ui.loginMsg, 'Usuário não encontrado!', 'text-error');
+          ui.btnLogin.disabled = false;
+          return;
+        }
+
+        currentUser = user;
+        startGame();
+
+      } catch (err) {
+        console.error(err);
+        showMsg(ui.loginMsg, 'Erro ao acessar banco de dados.', 'text-error');
+        ui.btnLogin.disabled = false;
+      }
+    }
+
+    // 2. INÍCIO DE JOGO
+    function startGame() {
+      score = 0;
+      lives = 4;
+      previousCommand = null;
+      updateHeader();
+      switchScreen(screens.game);
+      startRound();
+    }
+
+    function updateHeader() {
+      ui.score.textContent = score;
+      ui.lives.textContent = '❤️'.repeat(lives) + '🖤'.repeat(4 - lives);
+      ui.timer.textContent = timeLeft;
+    }
+
+    // 3. LÓGICA DE RODADA
+    function startRound() {
+      isRoundActive = true;
+      playerSequence = [];
+      ui.gifOverlay.style.display = 'none';
+      ui.gifOverlay.src = '';
+      ui.feedback.textContent = '';
+
+      // Selecionar um comando que NÃO seja o anterior
+      do {
+        currentCommand = availableCommands[Math.floor(Math.random() * availableCommands.length)];
+      } while (currentCommand === previousCommand);
+      
+      previousCommand = currentCommand;
+      targetSequence = currentCommand.split('-'); 
+
+      playTTSAudio();
+
+      // Reset Timer
+      timeLeft = 10;
+      updateHeader();
+      clearInterval(timerInterval);
+      timerInterval = setInterval(handleTimer, 1000);
+    }
+
+    function handleTimer() {
+      timeLeft--;
+      ui.timer.textContent = timeLeft;
+      
+      if (timeLeft <= 0) {
+        processWrong("O tempo esgotou!");
+      }
+    }
+
+    function playTTSAudio() {
+      // Troca os hífens por espaço para a fala ficar natural
+      const textToSpeak = currentCommand.split('-').join(' ');
+      const encodedText = encodeURIComponent(textToSpeak);
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=${encodedText}`;
+      
+      ui.audioBtn.classList.add('loading');
+      audioPlayer.src = url;
+      
+      audioPlayer.play().catch(e => {
+        // Se autoplay for bloqueado pelo navegador, apenas removemos o loader
+        ui.audioBtn.classList.remove('loading');
+        ui.feedback.textContent = "Clique no alto-falante para ouvir!";
+        ui.feedback.className = "msg-feedback text-info";
+      });
+    }
+
+    // 4. INTERAÇÃO DO JOGADOR
+    function handleArrowClick(direction) {
+      if (!isRoundActive) return;
+
+      playerSequence.push(direction);
+      
+      // Monta e atualiza o GIF da sequência clicada até agora
+      const currentGifString = playerSequence.join('-');
+      // O truque de adicionar o timestamp resolve o problema do cache do GIF para reiniciar a animação
+      ui.gifOverlay.src = `gifs/${currentGifString}.gif?t=${new Date().getTime()}`;
+      ui.gifOverlay.style.display = 'block';
+
+      checkSequence();
+    }
+
+    function checkSequence() {
+      // Verifica se o array que o jogador está construindo corresponde ao alvo
+      for (let i = 0; i < playerSequence.length; i++) {
+        if (playerSequence[i] !== targetSequence[i]) {
+          processWrong("Sequência Errada!");
+          return;
+        }
+      }
+
+      // Se passou pelo for sem errar e tem o mesmo tamanho, ele acertou tudo!
+      if (playerSequence.length === targetSequence.length) {
+        processCorrect();
+      }
+    }
+
+    function processCorrect() {
+      isRoundActive = false;
+      clearInterval(timerInterval);
+      score += 10;
+      updateHeader();
+      
+      showMsg(ui.feedback, "✨ Muito Bem! +10 pontos", "text-success");
+      
+      setTimeout(() => {
+        startRound();
+      }, 1200);
+    }
+
+    function processWrong(reasonMsg) {
+      isRoundActive = false;
+      clearInterval(timerInterval);
+      lives--;
+      updateHeader();
+      
+      showMsg(ui.feedback, `❌ ${reasonMsg}`, "text-error");
+
+      setTimeout(() => {
+        if (lives <= 0) {
+          endGame();
+        } else {
+          startRound();
+        }
+      }, 1200);
+    }
+
+    // 5. FINALIZANDO JOGO & SINCRONIZAÇÃO
+    async function endGame() {
+      switchScreen(screens.result);
+      ui.finalScore.textContent = score;
+      ui.totalScore.textContent = "...";
+      showMsg(ui.syncMsg, "Salvando seus dados no servidor...", "text-info");
+
+      const newTotalScore = (currentUser.score || 0) + score;
+
+      try {
+        // 1. Atualiza pontuação do usuário
+        const { error: userError } = await supabase
+          .from('users')
+          .update({ score: newTotalScore })
+          .eq('username', currentUser.username);
+        
+        if (userError) throw userError;
+        ui.totalScore.textContent = newTotalScore;
+        currentUser.score = newTotalScore; // Atualiza dado local
+
+        // 2. Registra na missão "Symon Says" na tabela "missions"
+        const { data: mission, error: missionFetchError } = await supabase
+          .from('missions')
+          .select('*')
+          .eq('mission_name', 'Symon Says')
+          .maybeSingle();
+
+        if (missionFetchError) console.warn('Erro ao buscar a missão:', missionFetchError);
+
+        if (mission) {
+          let doneUsers = mission.done 
+            ? mission.done.split(',').map(name => name.trim()).filter(Boolean) 
+            : [];
+
+          if (!doneUsers.includes(currentUser.username)) {
+            doneUsers.push(currentUser.username);
+            
+            const { error: missionUpdateError } = await supabase
+              .from('missions')
+              .update({ done: doneUsers.join(', ') })
+              .eq('id', mission.id);
+
+            if (missionUpdateError) console.warn('Erro ao atualizar missão:', missionUpdateError);
+          }
+        }
+
+        showMsg(ui.syncMsg, "✅ Progresso salvo com sucesso!", "text-success");
+
+      } catch (err) {
+        console.error('Erro de Supabase:', err);
+        showMsg(ui.syncMsg, "⚠️ Não foi possível salvar o seu progresso.", "text-error");
+      }
+    }
+
+    function restartGame() {
+      ui.btnLogin.disabled = false;
+      ui.loginMsg.textContent = '';
+      ui.usernameInput.value = '';
+      switchScreen(screens.login);
+    }
+
+    // 6. UTILITÁRIOS
+    function switchScreen(targetScreen) {
+      Object.values(screens).forEach(s => s.classList.remove('active'));
+      targetScreen.classList.add('active');
+    }
+
+    function showMsg(element, msg, classColor) {
+      element.textContent = msg;
+      element.className = `msg-feedback ${classColor}`;
+    }
+  </script>
+</body>
+</html>
