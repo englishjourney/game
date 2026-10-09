@@ -293,3 +293,28 @@ body {
   background: #9333ea;
   transform: translateY(-2px);
 }
+/* ESTILOS DO BOTÃO DE DOWNLOAD (SALVAR CHAT) */
+.chat-header {
+  display: flex;
+  align-items: center;
+}
+
+#download-chat-btn {
+  margin-left: auto; /* Empurra o botão para o extremo direito */
+  background: transparent;
+  border: none;
+  color: #a855f7;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: color 0.3s ease, transform 0.2s ease, background 0.3s ease;
+}
+
+#download-chat-btn:hover {
+  color: #ffffff;
+  background: #a855f7;
+  transform: scale(1.05);
+}
