@@ -299,3 +299,49 @@ async function saveChatAndRecord(historyText, mainSubject) {
     console.error("Erro ao salvar o chat no Drive/Supabase:", err);
   }
 }
+
+// ==========================================
+// FUNÇÃO PARA BAIXAR CHAT EM .MD (NO DISPOSITIVO)
+// ==========================================
+const downloadChatBtn = document.getElementById("download-chat-btn");
+
+if (downloadChatBtn) {
+  downloadChatBtn.addEventListener("click", () => {
+    if (!currentUser) {
+      alert("Usuário não identificado. Faça login primeiro.");
+      return;
+    }
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('pt-BR');
+    const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    const formattedChat = chatHistoryText.split('\n').join('\n\n');
+
+    const markdownContent = `# Histórico de Conversa com Yuki
+
+**Aluno(a):** ${currentUser.name}
+**Série e Turma:** ${currentUser.gradeClass}
+**Data do Download:** ${dateStr} às ${timeStr}
+
+---
+
+## Histórico de Mensagens:
+
+${formattedChat || "*Nenhuma mensagem foi trocada ainda.*"}
+`;
+
+    const blob = new Blob([markdownContent], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    const safeName = currentUser.name.replace(/\s+/g, '_');
+    a.download = `Chat_Yuki_${safeName}_${now.getTime()}.md`;
+    
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+}
