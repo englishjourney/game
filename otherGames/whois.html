@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Superlatives H.U.D. // English Journey</title>
+  <!-- Google Fonts: Orbitron & Inter for futuristic HUD look -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg-deep: #030712;
+      --bg-card: rgba(10, 22, 45, 0.85);
+      --neon-cyan: #00f0ff;
+      --neon-blue: #3b82f6;
+      --neon-purple: #8b5cf6;
+      --neon-green: #10b981;
+      --neon-pink: #ec4899;
+      --text-main: #f3f4f6;
+      --text-muted: #94a3b8;
+      --border-glow: rgba(0, 240, 255, 0.4);
+      --border-glow-focus: rgba(0, 240, 255, 0.9);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-deep);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    /* Cyberpunk Holographic Grid Background Effect */
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-image: 
+        linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: -1;
+    }
+
+    /* Scanline effect */
+    body::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+      background-size: 100% 4px;
+      z-index: 999;
+      pointer-events: none;
+      opacity: 0.3;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      padding: 20px;
+      z-index: 10;
+    }
+
+    .hud-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glow);
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.15), inset 0 0 15px rgba(0, 240, 255, 0.05);
+      backdrop-filter: blur(12px);
+      position: relative;
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+
+    /* Holographic corner accents */
+    .hud-panel::before, .hud-panel::after {
+      content: '';
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      border-color: var(--neon-cyan);
+      border-style: solid;
+      pointer-events: none;
+    }
+    .hud-panel::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+    .hud-panel::after { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+    h1, h2, h3 {
+      font-family: 'Orbitron', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      color: var(--neon-cyan);
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 25px;
+      letter-spacing: 1px;
+    }
+
+    /* Form & Inputs */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+      color: var(--neon-cyan);
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 14px 18px;
+      background: rgba(3, 7, 18, 0.8);
+      border: 1px solid var(--border-glow);
+      border-radius: 6px;
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    input[type="text"]:focus, select:focus {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+    }
+
+    select option {
+      background: var(--bg-deep);
+      color: var(--text-main);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan));
+      border: none;
+      border-radius: 6px;
+      color: var(--bg-deep);
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+
+    .btn:hover {
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.8);
+      transform: translateY(-2px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    /* HUD Header inside Game */
+    .hud-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .hud-header span {
+      color: var(--neon-cyan);
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      width: 100%;
+      background: rgba(3, 7, 18, 0.9);
+      height: 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      margin-bottom: 25px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--neon-blue), var(--neon-cyan));
+      width: 0%;
+      box-shadow: 0 0 10px var(--neon-cyan);
+      transition: width 0.4s ease;
+    }
+
+    /* Question Box */
+    .question-box {
+      background: rgba(3, 7, 18, 0.5);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .adjective-badge {
+      display: inline-block;
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--neon-cyan);
+      color: var(--neon-cyan);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-family: 'Orbitron', sans-serif;
+      margin-bottom: 12px;
+    }
+
+    .sentence-display {
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .sentence-display strong {
+      color: var(--neon-cyan);
+    }
+
+    /* Feedback Banner */
+    .feedback-banner {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 6px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      text-align: center;
+      display: none;
+    }
+
+    .feedback-correct {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid var(--neon-green);
+      color: var(--neon-green);
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+    }
+
+    .feedback-incorrect {
+      background: rgba(236, 72, 153, 0.15);
+      border: 1px solid var(--neon-pink);
+      color: var(--neon-pink);
+      box-shadow: 0 0 15px rgba(236, 72, 153, 0.2);
+    }
+
+    .status-msg {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 0.85rem;
+      color: var(--neon-cyan);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Victory stats */
+    .victory-stats {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .victory-stats p {
+      font-size: 1.1rem;
+      margin: 10px 0;
+      color: var(--text-muted);
+    }
+
+    .victory-stats span {
+      color: var(--neon-cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="hud-panel">
+      <h1>Superlative H.U.D.</h1>
+      <p class="subtitle">English Journey // Global Class Challenge</p>
+      
+      <div class="form-group">
+        <label for="username-input">Username (Supabase ID)</label>
+        <input type="text" id="username-input" placeholder="Enter your username...">
+      </div>
+
+      <button id="start-btn" class="btn">Initialize Mission</button>
+      <div id="login-status" class="status-msg"></div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="game-screen" class="hud-panel hidden">
+      <div class="hud-header">
+        <div>Operator: <span id="hud-user">---</span></div>
+        <div>Turma: <span id="hud-turma">---</span></div>
+        <div>Score: <span id="hud-score">0</span> pts</div>
+      </div>
+
+      <div class="progress-container">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+
+      <div class="question-box">
+        <div id="adj-badge" class="adjective-badge">Adjective: BOLD</div>
+        <div class="sentence-display" id="sentence-text">
+          Who is _____ (bold) guy in this class?
+        </div>
+
+        <div class="form-group">
+          <label for="superlative-input">1. Complete the Superlative (e.g. "the boldest" or "most adaptable"):</label>
+          <input type="text" id="superlative-input" placeholder="Type superlative form...">
+        </div>
+
+        <div class="form-group">
+          <label for="classmate-select">2. Select Classmate for this Superlative:</label>
+          <select id="classmate-select">
+            <option value="">-- Choose Classmate --</option>
+          </select>
+        </div>
+
+        <button id="submit-btn" class="btn">Submit Answer</button>
+        <div id="feedback-banner" class="feedback-banner"></div>
+      </div>
+    </div>
+
+    <!-- VICTORY SCREEN -->
+    <div id="victory-screen" class="hud-panel hidden">
+      <h1>Mission Accomplished</h1>
+      <p class="subtitle">Superlative Training Sequence Complete</p>
+
+      <div class="victory-stats">
+        <p>Correct Answers: <span id="final-correct">0</span> / 50</p>
+        <p>Earned Points: <span id="final-earned">0</span></p>
+        <p>Updated Total Score: <span id="final-total">0</span></p>
+      </div>
+
+      <button id="restart-btn" class="btn">Reboot Sequence</button>
+    </div>
+
+  </div>
+
+  <script>
+    // Supabase Configuration
+    const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 50 Questions Data (Adjectives provided)
+    const questionsData = [
+      { adj: "Bold", meaning: "Audacioso / Corajoso", answer: "the boldest", shortAns: "boldest" },
+      { adj: "Bright", meaning: "Brilhante / Inteligente", answer: "the brightest", shortAns: "brightest" },
+      { adj: "Calm", meaning: "Calmo / Centrado", answer: "the calmest", shortAns: "calmest" },
+      { adj: "Clean", meaning: "Organizado / Impecável", answer: "the cleanest", shortAns: "cleanest" },
+      { adj: "Clever", meaning: "Esperto / Sagaz", answer: "the cleverest", shortAns: "cleverest" },
+      { adj: "Fast", meaning: "Rápido / Ágil", answer: "the fastest", shortAns: "fastest" },
+      { adj: "Fine", meaning: "Excelente / Refinado", answer: "the finest", shortAns: "finest" },
+      { adj: "Keen", meaning: "Entusiasmado / Atento", answer: "the keenest", shortAns: "keenest" },
+      { adj: "Kind", meaning: "Gentil / Bondoso", answer: "the kindest", shortAns: "kindest" },
+      { adj: "Loud", meaning: "Comunicativo / Expressivo", answer: "the loudest", shortAns: "loudest" },
+      { adj: "Nice", meaning: "Simpático / Agradável", answer: "the nicest", shortAns: "nicest" },
+      { adj: "Quick", meaning: "Rápido nas respostas", answer: "the quickest", shortAns: "quickest" },
+      { adj: "Sharp", meaning: "Perspicaz / Inteligente", answer: "the sharpest", shortAns: "sharpest" },
+      { adj: "Smart", meaning: "Esperto / Inteligente", answer: "the smartest", shortAns: "smartest" },
+      { adj: "Strong", meaning: "Forte / Resiliente", answer: "the strongest", shortAns: "strongest" },
+      { adj: "Busy", meaning: "Produtivo / Ocupado", answer: "the busiest", shortAns: "busiest" },
+      { adj: "Early", meaning: "Pontual / Antecipado", answer: "the earliest", shortAns: "earliest" },
+      { adj: "Friendly", meaning: "Amigável / Sociável", answer: "the friendliest", shortAns: "friendliest" },
+      { adj: "Funny", meaning: "Divertido / Bem-humorado", answer: "the funniest", shortAns: "funniest" },
+      { adj: "Adaptable", meaning: "Adaptável", answer: "the most adaptable", shortAns: "most adaptable" },
+      { adj: "Analytical", meaning: "Analítico", answer: "the most analytical", shortAns: "most analytical" },
+      { adj: "Articulate", meaning: "Articulado", answer: "the most articulate", shortAns: "most articulate" },
+      { adj: "Creative", meaning: "Criativo", answer: "the most creative", shortAns: "most creative" },
+      { adj: "Innovative", meaning: "Inovador", answer: "the most innovative", shortAns: "most innovative" },
+      { adj: "Methodical", meaning: "Metódico", answer: "the most methodical", shortAns: "most methodical" },
+      { adj: "Organized", meaning: "Organizado", answer: "the most organized", shortAns: "most organized" },
+      { adj: "Practical", meaning: "Prático / Resolutivo", answer: "the most practical", shortAns: "most practical" },
+      { adj: "Proactive", meaning: "Proativo", answer: "the most proactive", shortAns: "most proactive" },
+      { adj: "Resourceful", meaning: "Engenhoso", answer: "the most resourceful", shortAns: "most resourceful" },
+      { adj: "Versatile", meaning: "Versátil", answer: "the most versatile", shortAns: "most versatile" },
+      { adj: "Capable", meaning: "Capaz / Competente", answer: "the most capable", shortAns: "most capable" },
+      { adj: "Competent", meaning: "Competente", answer: "the most competent", shortAns: "most competent" },
+      { adj: "Detail-oriented", meaning: "Atento aos detalhes", answer: "the most detail-oriented", shortAns: "most detail-oriented" },
+      { adj: "Experienced", meaning: "Experiente", answer: "the most experienced", shortAns: "most experienced" },
+      { adj: "Insightful", meaning: "Perspicaz / Profundo", answer: "the most insightful", shortAns: "most insightful" },
+      { adj: "Knowledgeable", meaning: "Entendedor do assunto", answer: "the most knowledgeable", shortAns: "most knowledgeable" },
+      { adj: "Ambitious", meaning: "Ambicioso", answer: "the most ambitious", shortAns: "most ambitious" },
+      { adj: "Committed", meaning: "Comprometido", answer: "the most committed", shortAns: "most committed" },
+      { adj: "Dedicated", meaning: "Dedicado", answer: "the most dedicated", shortAns: "most dedicated" },
+      { adj: "Diligent", meaning: "Diligente / Esforçado", answer: "the most diligent", shortAns: "most diligent" },
+      { adj: "Driven", meaning: "Motivado / Focado", answer: "the most driven", shortAns: "most driven" },
+      { adj: "Efficient", meaning: "Eficiente", answer: "the most efficient", shortAns: "most efficient" },
+      { adj: "Hardworking", meaning: "Trabalhador", answer: "the most hardworking", shortAns: "most hardworking" },
+      { adj: "Productive", meaning: "Produtivo", answer: "the most productive", shortAns: "most productive" },
+      { adj: "Punctual", meaning: "Pontual", answer: "the most punctual", shortAns: "most punctual" },
+      { adj: "Approachable", meaning: "Acessível / Aberto", answer: "the most approachable", shortAns: "most approachable" },
+      { adj: "Collaborative", meaning: "Colaborativo", answer: "the most collaborative", shortAns: "most collaborative" },
+      { adj: "Dependable", meaning: "Confiável", answer: "the most dependable", shortAns: "most dependable" },
+      { adj: "Empathetic", meaning: "Empático", answer: "the most empathetic", shortAns: "most empathetic" },
+      { adj: "Inspiring", meaning: "Inspirador", answer: "the most inspiring", shortAns: "most inspiring" }
+    ];
+
+    // State Variables
+    let currentUser = null;
+    let classmates = [];
+    let currentQuestionIndex = 0;
+    let correctCount = 0;
+    let earnedPoints = 0;
+    let isWaitingNext = false;
+
+    // DOM Elements
+    const loginScreen = document.getElementById('login-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const victoryScreen = document.getElementById('victory-screen');
+    const usernameInput = document.getElementById('username-input');
+    const startBtn = document.getElementById('start-btn');
+    const loginStatus = document.getElementById('login-status');
+
+    const hudUser = document.getElementById('hud-user');
+    const hudTurma = document.getElementById('hud-turma');
+    const hudScore = document.getElementById('hud-score');
+    const progressBar = document.getElementById('progress-bar');
+
+    const adjBadge = document.getElementById('adj-badge');
+    const sentenceText = document.getElementById('sentence-text');
+    const superlativeInput = document.getElementById('superlative-input');
+    const classmateSelect = document.getElementById('classmate-select');
+    const submitBtn = document.getElementById('submit-btn');
+    const feedbackBanner = document.getElementById('feedback-banner');
+
+    const finalCorrect = document.getElementById('final-correct');
+    const finalEarned = document.getElementById('final-earned');
+    const finalTotal = document.getElementById('final-total');
+    const restartBtn = document.getElementById('restart-btn');
+
+    // Check Cache on Load
+    window.addEventListener('DOMContentLoaded', () => {
+      const cachedUsername = localStorage.getItem('englishjourney_username');
+      if (cachedUsername) {
+        usernameInput.value = cachedUsername;
+        loginStatus.textContent = 'Detected cached session. Ready to initialize.';
+      }
+    });
+
+    // Start Button Click
+    startBtn.addEventListener('click', async () => {
+      const username = usernameInput.value.trim();
+      if (!username) {
+        loginStatus.textContent = 'ERROR: Please enter a valid username.';
+        return;
+      }
+
+      loginStatus.textContent = 'Querying database...';
+      startBtn.disabled = true;
+
+      try {
+        // Fetch user from Supabase
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('username', username)
+          .single();
+
+        if (userError || !userData) {
+          // If user not found in test environment, fallback gracefully or show error
+          loginStatus.textContent = 'User not found in Supabase. Creating temporary session...';
+          currentUser = {
+            username: username,
+            name: username,
+            turma: 'A',
+            series: '1',
+            score: 0
+          };
+        } else {
+          currentUser = userData;
+        }
+
+        // Save to cache
+        localStorage.setItem('englishjourney_username', currentUser.username);
+
+        // Fetch classmates in same turma
+        const turmaVal = currentUser.turma || 'A';
+        const { data: classData, error: classError } = await supabase
+          .from('users')
+          .select('name, username')
+          .eq('turma', turmaVal);
+
+        if (classError || !classData || classData.length === 0) {
+          classmates = [
+            { name: currentUser.name || currentUser.username },
+            { name: "Alex Mercer" },
+            { name: "Sarah Connor" },
+            { name: "John Matrix" }
+          ];
+        } else {
+          classmates = classData;
+        }
+
+        // Initialize HUD
+        hudUser.textContent = currentUser.name || currentUser.username;
+        hudTurma.textContent = currentUser.turma || 'N/A';
+        hudScore.textContent = currentUser.score || 0;
+
+        populateClassmatesDropdown();
+        loadQuestion();
+
+        // Switch screens
+        loginScreen.classList.add('hidden');
+        gameScreen.classList.remove('hidden');
+
+      } catch (err) {
+        console.error(err);
+        loginStatus.textContent = 'Connection error. Please try again.';
+        startBtn.disabled = false;
+      }
+    });
+
+    function populateClassmatesDropdown() {
+      classmateSelect.innerHTML = '<option value="">-- Choose Classmate --</option>';
+      classmates.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.name;
+        opt.textContent = c.name;
+        classmateSelect.appendChild(opt);
+      });
+    }
+
+    function loadQuestion() {
+      if (currentQuestionIndex >= questionsData.length) {
+        finishGame();
+        return;
+      }
+
+      const q = questionsData[currentQuestionIndex];
+      adjBadge.textContent = `${q.adj} — ${q.meaning}`;
+      sentenceText.innerHTML = `Who is <strong>_____</strong> (${q.adj.toLowerCase()}) in this class?`;
+      
+      superlativeInput.value = '';
+      classmateSelect.value = '';
+      feedbackBanner.style.display = 'none';
+      feedbackBanner.className = 'feedback-banner';
+      submitBtn.textContent = 'Submit Answer';
+      isWaitingNext = false;
+
+      // Update progress bar
+      const progressPercent = ((currentQuestionIndex) / questionsData.length) * 100;
+      progressBar.style.width = `${progressPercent}%`;
+    }
+
+    submitBtn.addEventListener('click', () => {
+      if (isWaitingNext) {
+        currentQuestionIndex++;
+        loadQuestion();
+        return;
+      }
+
+      const userSuperlative = superlativeInput.value.trim().toLowerCase();
+      const userClassmate = classmateSelect.value;
+
+      if (!userSuperlative || !userClassmate) {
+        alert('Please fill both the superlative form and select a classmate.');
+        return;
+      }
+
+      const q = questionsData[currentQuestionIndex];
+      const correctAns1 = q.answer.toLowerCase();
+      const correctAns2 = q.shortAns.toLowerCase();
+
+      const isSuperlativeCorrect = (userSuperlative === correctAns1 || userSuperlative === correctAns2);
+
+      if (isSuperlativeCorrect) {
+        correctCount++;
+        earnedPoints += 2;
+        hudScore.textContent = (currentUser.score || 0) + earnedPoints;
+        feedbackBanner.textContent = 'CORRECT! +2 Points acquired.';
+        feedbackBanner.className = 'feedback-banner feedback-correct';
+      } else {
+        feedbackBanner.textContent = `INCORRECT. Expected: "${q.answer}"`;
+        feedbackBanner.className = 'feedback-banner feedback-incorrect';
+      }
+
+      feedbackBanner.style.display = 'block';
+      submitBtn.textContent = currentQuestionIndex < questionsData.length - 1 ? 'Next Question >>' : 'Finish Mission >>';
+      isWaitingNext = true;
+    });
+
+    async function finishGame() {
+      gameScreen.classList.add('hidden');
+      victoryScreen.classList.remove('hidden');
+
+      finalCorrect.textContent = correctCount;
+      finalEarned.textContent = earnedPoints;
+
+      const currentScore = currentUser.score || 0;
+      const newTotalScore = currentScore + earnedPoints;
+      finalTotal.textContent = newTotalScore;
+
+      // Update Supabase
+      try {
+        await supabase
+          .from('users')
+          .update({ score: newTotalScore })
+          .eq('username', currentUser.username);
+      } catch (err) {
+        console.error('Failed to sync score to Supabase:', err);
+      }
+    }
+
+    restartBtn.addEventListener('click', () => {
+      location.reload();
+    });
+  </script>
+</body>
+</html>
