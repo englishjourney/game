@@ -383,7 +383,7 @@
     // Supabase Configuration
     const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // 50 Questions Data (Adjectives provided)
     const questionsData = [
@@ -493,8 +493,8 @@
       startBtn.disabled = true;
 
       try {
-        // Fetch user from Supabase
-        const { data: userData, error: userError } = await supabase
+        // Fetch user from Supabase using supabaseClient
+        const { data: userData, error: userError } = await supabaseClient
           .from('users')
           .select('*')
           .eq('username', username)
@@ -517,9 +517,9 @@
         // Save to cache
         localStorage.setItem('englishjourney_username', currentUser.username);
 
-        // Fetch classmates in same turma
+        // Fetch classmates in same turma using supabaseClient
         const turmaVal = currentUser.turma || 'A';
-        const { data: classData, error: classError } = await supabase
+        const { data: classData, error: classError } = await supabaseClient
           .from('users')
           .select('name, username')
           .eq('turma', turmaVal);
@@ -634,9 +634,9 @@
       const newTotalScore = currentScore + earnedPoints;
       finalTotal.textContent = newTotalScore;
 
-      // Update Supabase
+      // Update Supabase using supabaseClient
       try {
-        await supabase
+        await supabaseClient
           .from('users')
           .update({ score: newTotalScore })
           .eq('username', currentUser.username);
