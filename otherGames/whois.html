@@ -320,7 +320,7 @@
       <p class="subtitle">English Journey // Global Class Challenge</p>
       
       <div class="form-group">
-        <label for="username-input">Username (Supabase ID)</label>
+        <label for="username-input">Username</label>
         <input type="text" id="username-input" placeholder="Enter your username...">
       </div>
 
@@ -332,7 +332,7 @@
     <div id="game-screen" class="hud-panel hidden">
       <div class="hud-header">
         <div>Operator: <span id="hud-user">---</span></div>
-        <div>Turma: <span id="hud-turma">---</span></div>
+        <div>Série / Turma: <span id="hud-team">---</span></div>
         <div>Score: <span id="hud-score">0</span> pts</div>
       </div>
 
@@ -347,7 +347,7 @@
         </div>
 
         <div class="form-group">
-          <label for="superlative-input">1. Complete the Superlative (e.g. "the boldest" or "most adaptable"):</label>
+          <label for="superlative-input">1. Complete the Superlative (e.g. "the boldest" or "the most adaptable"):</label>
           <input type="text" id="superlative-input" placeholder="Type superlative form...">
         </div>
 
@@ -456,7 +456,7 @@
     const loginStatus = document.getElementById('login-status');
 
     const hudUser = document.getElementById('hud-user');
-    const hudTurma = document.getElementById('hud-turma');
+    const hudTeam = document.getElementById('hud-team');
     const hudScore = document.getElementById('hud-score');
     const progressBar = document.getElementById('progress-bar');
 
@@ -493,7 +493,7 @@
       startBtn.disabled = true;
 
       try {
-        // Fetch user from Supabase using supabaseClient
+        // Fetch user from Supabase using username
         const { data: userData, error: userError } = await supabaseClient
           .from('users')
           .select('*')
@@ -501,43 +501,40 @@
           .single();
 
         if (userError || !userData) {
-          // If user not found in test environment, fallback gracefully or show error
-          loginStatus.textContent = 'User not found in Supabase. Creating temporary session...';
-          currentUser = {
-            username: username,
-            name: username,
-            turma: 'A',
-            series: '1',
-            score: 0
-          };
-        } else {
-          currentUser = userData;
+          loginStatus.textContent = `User "${username}" not found in database.`;
+          startBtn.disabled = false;
+          return;
         }
+
+        currentUser = userData;
 
         // Save to cache
         localStorage.setItem('englishjourney_username', currentUser.username);
 
-        // Fetch classmates in same turma using supabaseClient
-        const turmaVal = currentUser.turma || 'A';
-        const { data: classData, error: classError } = await supabaseClient
-          .from('users')
-          .select('name, username')
-          .eq('turma', turmaVal);
+        // Fetch classmates matching BOTH serie AND team
+        let classQuery = supabaseClient.from('users').select('name, username');
+        
+        if (currentUser.serie !== undefined && currentUser.serie !== null) {
+          classQuery = classQuery.eq('serie', currentUser.serie);
+        }
+        if (currentUser.team !== undefined && currentUser.team !== null) {
+          classQuery = classQuery.eq('team', currentUser.team);
+        }
+
+        const { data: classData, error: classError } = await classQuery;
 
         if (classError || !classData || classData.length === 0) {
-          classmates = [
-            { name: currentUser.name || currentUser.username },
-            { name: "Alex Mercer" },
-            { name: "Sarah Connor" },
-            { name: "John Matrix" }
-          ];
+          // Fallback if no classmates found
+          classmates = [{ name: currentUser.name || currentUser.username }];
         } else {
           classmates = classData;
         }
 
-        // Initialize HUD
+        // Initialize HUD Info
         hudUser.textContent = currentUser.name || currentUser.username;
-        hudTurma.textContent = currentUser.turma || 'N/A';
+        const serieText = currentUser.serie ? `${currentUser.serie}ª` : 'N/A';
+        const teamText = currentUser.team ? currentUser.team : 'N/A';
+        hudTeam.textContent = `${serieText} - Turma ${teamText}`;
         hudScore.textContent = currentUser.score || 0;
 
         populateClassmatesDropdown();
@@ -558,8 +555,9 @@
       classmateSelect.innerHTML = '<option value="">-- Choose Classmate --</option>';
       classmates.forEach(c => {
         const opt = document.createElement('option');
-        opt.value = c.name;
-        opt.textContent = c.name;
+        const displayName = c.name || c.username;
+        opt.value = displayName;
+        opt.textContent = displayName;
         classmateSelect.appendChild(opt);
       });
     }
