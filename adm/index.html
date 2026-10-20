@@ -31,7 +31,7 @@
                     </label>
                 </label>
                 <button id="btn-logout" class="btn-danger">Sair</button>
-                <!-- === BOTÃO COM DROPDOWN NO CABEÇALHO (Adicionar ao lado do botão #btn-logout) === -->
+                <!-- === BOTÃO COM DROPDOWN NO CABEÇALHO === -->
 <div class="reminders-wrapper" style="position: relative; display: inline-block; margin-right: 10px;">
     <button id="btn-reminders" class="nav-btn" title="Reminders" style="position: relative; background: transparent; border: none; cursor: pointer; padding: 8px 12px;">
         <i class="fa-solid fa-bell" style="color: white; font-size: 1.2rem;"></i>
@@ -46,7 +46,7 @@
 <!-- === CONTAINER DE TOASTS (Canto inferior esquerdo) === -->
 <div id="reminder-toast-container" class="reminder-toast-container"></div>
 
-<!-- === MODAL 1: NOVO / EDITAR LEMBRETE === -->
+<!-- === MODAL: NOVO / EDITAR LEMBRETE === -->
 <div id="modal-reminder-form" class="reminder-modal-overlay hidden">
     <div class="reminder-modal">
         <h3 id="reminder-modal-title">Novo Lembrete</h3>
@@ -67,19 +67,6 @@
         </div>
     </div>
 </div>
-
-<!-- === MODAL 2: LISTAR LEMBRETES === -->
-<div id="modal-reminder-list" class="reminder-modal-overlay hidden">
-    <div class="reminder-modal" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
-        <h3>Meus Lembretes Agendados</h3>
-        <div id="reminder-items-container" style="margin-top: 15px;">
-            <!-- Itens renderizados dinamicamente pelo JS -->
-        </div>
-        <div class="reminder-modal-buttons">
-            <button id="btn-close-reminder-list" class="btn-secondary">Fechar</button>
-        </div>
-    </div>
-</div>
             </div>
         </header>
 
@@ -89,9 +76,10 @@
             <button class="nav-btn" data-target="users-section">Usuários</button>
             <button class="nav-btn" data-target="missions-section">Missões</button>
             <button class="nav-btn" data-target="flashcards-section">Flashcards</button>
-            <button class="nav-btn" id="btn-yuki-planner" title="Yuki Planner" onclick="window.open('https://englishjourney.github.io/game/adm/yukiplanner/index.html', '_blank')">
-    <i class="fa-solid fa-robot" style="font-size: 1.2rem; display: inline-block; width: auto; height: auto;"></i>
-</button>
+            <button class="nav-btn" data-target="reminders-section">Lembretes</button>
+            <button id="btn-yuki-planner" title="Yuki Planner" onclick="window.open('https://englishjourney.github.io/game/adm/yukiplanner/index.html', '_blank')" style="background: transparent; color: var(--text-muted); border: none; padding: 10px 15px; cursor: pointer; font-size: 1rem; border-bottom: 2px solid transparent;">
+                <i class="fa-solid fa-robot" style="font-size: 1.2rem; display: inline-block; width: auto; height: auto;"></i>
+            </button>
         </nav>
 
         <main>
@@ -163,6 +151,17 @@
                     <button id="btn-add-flashcard" class="btn-primary">+ Novo Flashcard</button>
                 </div>
                 <div id="flashcards-list" class="cards-container">
+                    <!-- Preenchido via JS -->
+                </div>
+            </section>
+
+            <!-- REMINDERS SECTION (Guia do menu dedicada) -->
+            <section id="reminders-section" class="content-section hidden">
+                <div class="section-header">
+                    <h2>Meus Lembretes Agendados</h2>
+                    <button id="btn-add-reminder-from-section" class="btn-primary">+ Novo Lembrete</button>
+                </div>
+                <div id="reminder-items-container" style="margin-top: 20px;">
                     <!-- Preenchido via JS -->
                 </div>
             </section>
