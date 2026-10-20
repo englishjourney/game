@@ -361,3 +361,66 @@ button:disabled {
     padding: 8px 14px;
     font-size: 0.85rem;
 }
+/* AVATAR E LOADER DO CHAT */
+.chat-msg {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    max-width: 90%;
+}
+
+.chat-msg.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.chat-avatar {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 4px;
+}
+
+.loading-gif {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+.orange-dot {
+    width: 12px;
+    height: 12px;
+    background-color: #f97316;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 6px rgba(249, 115, 22, 0.6);
+}
+
+/* Suporte básico a elementos Markdown dentro da mensagem */
+.msg-content p {
+    margin-bottom: 8px;
+}
+.msg-content p:last-child {
+    margin-bottom: 0;
+}
+.msg-content ul, .msg-content ol {
+    padding-left: 20px;
+    margin-bottom: 8px;
+}
+.msg-content code {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+.msg-content pre {
+    background: rgba(0, 0, 0, 0.4);
+    padding: 8px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin-bottom: 8px;
+}
