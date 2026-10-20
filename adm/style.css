@@ -1,259 +1,53 @@
-:root {
-    --bg-dark: #0f172a;
-    --bg-card: #1e293b;
-    --primary: #38bdf8;
-    --primary-hover: #0284c7;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --border: #334155;
-    --danger: #ef4444;
-    --success: #22c55e;
+/* =========================================================
+   GUIA DE LEMBRETES (Modo Guia/Menu - Não é mais Modal)
+   ========================================================= */
+.tab-content#reminders-tab,
+#reminders-container {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+    display: none; /* Controlado pela alternância de guias do menu */
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; }
+.tab-content#reminders-tab.active,
+#reminders-container.active {
+    display: block;
+}
 
-.hidden { display: none !important; }
-
-/* Login */
-#login-container { display: flex; justify-content: center; align-items: center; height: 100vh; }
-#login-form { background: var(--bg-card); padding: 30px; border-radius: 12px; text-align: center; width: 300px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5); }
-#login-form h2 { margin-bottom: 20px; color: var(--primary); }
-#login-form input { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: white; }
-#login-form button { width: 100%; padding: 10px; border-radius: 6px; border: none; background: var(--primary); color: #000; font-weight: bold; cursor: pointer; }
-#login-error { color: var(--danger); margin-top: 10px; font-size: 0.9em; }
-
-/* Layout Geral */
-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border); background: var(--bg-card); }
-header h1 { color: var(--primary); font-size: 1.5rem; }
-.header-controls { display: flex; align-items: center; gap: 20px; }
-
-nav { display: flex; gap: 10px; padding: 10px 20px; background: var(--bg-card); border-bottom: 1px solid var(--border); }
-.nav-btn { background: transparent; color: var(--text-muted); border: none; padding: 10px 15px; cursor: pointer; font-size: 1rem; border-bottom: 2px solid transparent; }
-.nav-btn.active, .nav-btn:hover { color: var(--primary); border-bottom-color: var(--primary); }
-
-main { padding: 20px; }
-.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-
-/* Botões Gerais */
-button { cursor: pointer; border-radius: 6px; font-weight: 500; transition: opacity 0.2s; border: none; padding: 8px 16px; }
-button:hover { opacity: 0.9; }
-.btn-primary { background: var(--primary); color: #000; }
-.btn-secondary { background: var(--border); color: white; }
-.btn-danger { background: var(--danger); color: white; }
-.btn-small { padding: 4px 8px; font-size: 0.8rem; }
-
-/* Switch (Toggle) */
-.switch-container { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
-.switch { position: relative; display: inline-block; width: 40px; height: 20px; }
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border); transition: .4s; border-radius: 20px; }
-.slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-input:checked + .slider { background-color: var(--success); }
-input:checked + .slider:before { transform: translateX(20px); }
-
-/* Dashboard - Busca e Cards */
-.search-bar { position: relative; margin-bottom: 30px; }
-#global-search { width: 100%; max-width: 600px; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: white; font-size: 1rem; }
-#search-results { position: absolute; top: 100%; left: 0; width: 100%; max-width: 600px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; margin-top: 5px; max-height: 300px; overflow-y: auto; z-index: 10; }
-.search-item { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; }
-.search-item:hover { background: var(--border); }
-
-.grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
-.schedule-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 15px; }
-.schedule-card h3 { color: var(--primary); margin-bottom: 10px; font-size: 1.1rem; text-transform: uppercase; }
-.schedule-card ul { list-style: none; padding-left: 5px; }
-.schedule-card li { font-size: 0.9rem; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-
-/* Planner & Missions Cards */
-.cards-container { display: flex; flex-direction: column; gap: 15px; }
-.data-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: flex-start; }
-.data-card-info { flex: 1; }
-.data-card-info p { margin-bottom: 4px; font-size: 0.9rem; color: var(--text-muted); }
-.data-card-info strong { color: var(--text-main); }
-.data-card-actions { display: flex; gap: 8px; }
-
-/* Users Tabela */
-.team-section { margin-bottom: 30px; background: var(--bg-card); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
-.team-header { background: var(--border); padding: 10px 15px; font-weight: bold; color: var(--primary); }
-.users-table { width: 100%; border-collapse: collapse; }
-.users-table th, .users-table td { padding: 10px 15px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-.users-table th { color: var(--text-muted); font-weight: normal; }
-.users-table tr:last-child td { border-bottom: none; }
-.editable-input { width: 50px; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 4px; border-radius: 4px; text-align: center; }
-
-/* Modais */
-dialog { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); border-radius: 12px; padding: 20px; width: 90%; max-width: 500px; margin: auto; }
-dialog::backdrop { background: rgba(0,0,0,0.7); }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
-.form-grid label { display: flex; flex-direction: column; font-size: 0.9rem; color: var(--text-muted); }
-.form-grid .full-width { grid-column: 1 / -1; }
-.form-grid input, .form-grid textarea, .form-grid select { margin-top: 5px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: white; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
-/* Botão Flutuante e Fixo */
-#btn-add-plan {
+/* =========================================================
+   MODAL DE CRIAÇÃO / EDIÇÃO DE LEMBRETES (Permaneces sobreposto)
+   ========================================================= */
+#reminder-form-modal,
+.reminder-editor-modal {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
-    z-index: 1000;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-    padding: 15px 25px;
-    font-size: 1.1rem;
-    border-radius: 50px;
-}
-
-/* Cores dos Cartões Especiais */
-.card-special-1, .card-special-1 * { background-color: #facc15 !important; color: #000 !important; border-color: #ca8a04 !important; }
-.card-special-2, .card-special-2 * { background-color: #ef4444 !important; color: #fff !important; border-color: #b91c1c !important; }
-.card-special-3, .card-special-3 * { background-color: #f97316 !important; color: #fff !important; border-color: #c2410c !important; }
-
-/* Botões de Minimizar/Maximizar */
-.minimize-btn {
-    background: transparent;
-    border: 1px solid currentColor;
-    border-radius: 4px;
-    padding: 4px 10px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: 0.2s;
-}
-.minimize-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-/* Reminders Wrapper & Dropdown */
-.reminders-wrapper {
-    position: relative;
-}
-.reminders-dropdown {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    margin-top: 8px;
-    background: var(--bg-card, #1e1e2e);
-    border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
-    border-radius: 8px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    min-width: 170px;
-    overflow: hidden;
-}
-.reminders-dropdown.hidden {
-    display: none !important;
-}
-.reminders-dropdown .dropdown-item {
-    background: transparent;
-    color: #fff;
-    border: none;
-    padding: 10px 15px;
-    text-align: left;
-    cursor: pointer;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: background 0.2s;
-}
-.reminders-dropdown .dropdown-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-/* Bolinha indicadora de pendência */
-.reminders-badge {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 10px;
-    height: 10px;
-    background-color: #22c55e; /* Verde (ou #ef4444 para vermelho) */
-    border-radius: 50%;
-    border: 2px solid var(--bg-card, #1e1e2e);
-}
-.reminders-badge.hidden {
-    display: none !important;
-}
-
-/* Toast Canto Inferior Esquerdo (some em 5s) */
-.reminder-toast-container {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    pointer-events: none;
-}
-.reminder-toast {
-    pointer-events: auto;
-    background: #1e293b;
-    color: #fff;
-    border-left: 4px solid #22c55e;
-    padding: 14px 18px;
-    border-radius: 8px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-    min-width: 260px;
-    max-width: 340px;
-    animation: slideInLeft 0.3s ease, fadeOut 0.5s ease 4.5s forwards;
-}
-@keyframes slideInLeft {
-    from { transform: translateX(-100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-@keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
-}
-
-/* Modal Overlays */
-.reminder-modal-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: none;
     align-items: center;
     justify-content: center;
-    z-index: 2000;
+    /* Garanter que o modal de formulário/edição fique acima de qualquer outra guia */
+    z-index: 10000 !important; 
 }
-.reminder-modal-overlay.hidden {
-    display: none !important;
-}
-.reminder-modal {
-    background: var(--bg-card, #1e1e2e);
-    color: #fff;
-    padding: 24px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 480px;
-    border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-}
-.reminder-modal h3 {
-    margin-top: 0;
-    color: var(--primary, #3b82f6);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding-bottom: 10px;
-}
-.reminder-modal label {
-    display: block;
-    margin-top: 12px;
-    font-size: 0.85rem;
-    color: #aaa;
-}
-.reminder-modal input, .reminder-modal textarea {
-    width: 100%;
-    padding: 10px;
-    margin-top: 4px;
-    background: #0f172a;
-    border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
-    color: #fff;
-    border-radius: 6px;
-    box-sizing: border-box;
-}
-.reminder-modal-buttons {
+
+#reminder-form-modal.active,
+.reminder-editor-modal.active,
+#reminder-form-modal.show,
+.reminder-editor-modal.show {
     display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
+}
+
+.reminder-modal-content {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 10001;
 }
