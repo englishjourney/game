@@ -1,4 +1,5 @@
 // Gerenciamento da Janela de Chat com IA
+const GAS_CHAT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz8H7VvZyOgjBnNCcOqj3Vc86Xoc5SxotA8IrysKcU2hhp2EXOfAfyWnTwRf0u7aQoF8g/exec";
 
 document.addEventListener('DOMContentLoaded', () => {
     const chatToggleBtn = document.getElementById('ai-chat-toggle');
@@ -46,8 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const loadingId = appendMessage('assistant', 'Pensando...');
 
         try {
-            // Envio para a Edge Function / Apps Script
-            const response = await fetch(GAS_WEB_APP_URL, {
+            // Envio para o Apps Script dedicado ao chat
+            const response = await fetch(GAS_CHAT_WEB_APP_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({
@@ -61,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok && result.success) {
                 if (loadingElement) {
-                    loadingElement.querySelector('.msg-content').innerText = result.reply || result.response || "Resposta recebida com sucesso.";
+                    loadingElement.querySelector('.msg-content').innerText = result.reply || "Resposta recebida com sucesso.";
                 }
             } else {
                 if (loadingElement) {
