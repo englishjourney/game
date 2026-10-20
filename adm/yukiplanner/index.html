@@ -56,7 +56,31 @@ Terça-feira, 22/09/2026 às 08:30 para o 7A. Duração: 50 min. Prova bimestral
         </main>
     </div>
 
+    <!-- BOTÃO FLUTUANTE E JANELA DE CHAT COM IA -->
+    <button id="ai-chat-toggle" class="ai-chat-toggle-btn" title="Conversar com a IA sobre o Banco de Dados">
+        💬 Assistente IA
+    </button>
+
+    <div id="ai-chat-window" class="ai-chat-window hidden">
+        <div class="ai-chat-header">
+            <div class="ai-chat-title">
+                <span>🤖 Consultor de Planejamento & DB</span>
+            </div>
+            <button id="ai-chat-close" class="ai-chat-close-btn">&times;</button>
+        </div>
+        <div id="ai-chat-messages" class="ai-chat-messages">
+            <div class="chat-msg assistant">
+                <div class="msg-content">Olá! Sou o assistente do Yuki Planner. Pode me perguntar sobre o banco de dados, visão geral do planejamento, dicas de melhoria e adaptação!</div>
+            </div>
+        </div>
+        <div class="ai-chat-footer">
+            <input type="text" id="ai-chat-input" placeholder="Digite sua mensagem..." autocomplete="off">
+            <button id="ai-chat-send" class="btn-primary">Enviar</button>
+        </div>
+    </div>
+
     <!-- MUDANÇA AQUI: Removido o type="module" e adicionado defer -->
     <script src="script.js" defer></script>
+    <script src="chat.js" defer></script>
 </body>
 </html>
