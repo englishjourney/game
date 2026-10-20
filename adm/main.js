@@ -80,7 +80,14 @@ function setupNavigation() {
             sections.forEach(s => s.classList.add('hidden'));
             
             btn.classList.add('active');
-            document.getElementById(btn.dataset.target).classList.remove('hidden');
+            const target = btn.dataset.target;
+            const targetSection = document.getElementById(target);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+                if (target === 'reminders-section') {
+                    loadRemindersSection();
+                }
+            }
         });
     });
 }
@@ -245,11 +252,9 @@ export function initReminders() {
     const btnSee = document.getElementById('btn-dropdown-see-reminders');
 
     const modalForm = document.getElementById('modal-reminder-form');
-    const modalList = document.getElementById('modal-reminder-list');
     
     const btnSaveForm = document.getElementById('btn-save-reminder-form');
     const btnCancelForm = document.getElementById('btn-cancel-reminder-form');
-    const btnCloseList = document.getElementById('btn-close-reminder-list');
 
     if (!btnReminders) return;
 
@@ -272,11 +277,20 @@ export function initReminders() {
         openReminderFormModal();
     });
 
-    // Botão See my reminders no Dropdown
+    // Botão See my reminders no Dropdown (abre a guia do menu)
     btnSee.addEventListener('click', () => {
         dropdown.classList.add('hidden');
-        openReminderListModal();
+        const remindersNavBtn = document.querySelector('[data-target="reminders-section"]');
+        if (remindersNavBtn) remindersNavBtn.click();
     });
+
+    // Botão para adicionar lembrete dentro da seção de lembretes
+    const btnAddReminderFromSection = document.getElementById('btn-add-reminder-from-section');
+    if (btnAddReminderFromSection) {
+        btnAddReminderFromSection.addEventListener('click', () => {
+            openReminderFormModal();
+        });
+    }
 
     // Salvar Lembrete (Inserção / Edição)
     btnSaveForm.addEventListener('click', async () => {
@@ -303,11 +317,7 @@ export function initReminders() {
 
             modalForm.classList.add('hidden');
             await checkRemindersStatus();
-            
-            // Se o modal de lista estiver aberto, recarrega ele
-            if (!modalList.classList.contains('hidden')) {
-                openReminderListModal();
-            }
+            await loadRemindersSection();
         } catch (err) {
             console.error('Erro ao salvar lembrete:', err);
             alert('Erro ao salvar o lembrete.');
@@ -315,7 +325,6 @@ export function initReminders() {
     });
 
     btnCancelForm.addEventListener('click', () => modalForm.classList.add('hidden'));
-    btnCloseList.addEventListener('click', () => modalList.classList.add('hidden'));
 
     // Inicia a verificação contínua (a cada 10 segundos)
     checkRemindersStatus();
@@ -333,12 +342,12 @@ function openReminderFormModal(data = null) {
     modalForm.classList.remove('hidden');
 }
 
-// Abrir e renderizar modal de lista de lembretes
-async function openReminderListModal() {
-    const modalList = document.getElementById('modal-reminder-list');
+// Carregar e renderizar lembretes na guia dedicada do menu
+export async function loadRemindersSection() {
     const container = document.getElementById('reminder-items-container');
-    container.innerHTML = '<div style="color: #888; text-align: center;">Carregando lembretes...</div>';
-    modalList.classList.remove('hidden');
+    if (!container) return;
+    
+    container.innerHTML = '<div style="color: #888; text-align: center; padding: 20px;">Carregando lembretes...</div>';
 
     try {
         const { data: reminders, error } = await supabase.from('reminders').select('*').order('date', { ascending: true });
@@ -352,14 +361,14 @@ async function openReminderListModal() {
         let html = '';
         reminders.forEach(item => {
             html += `
-                <div style="background: var(--bg-dark, #0f172a); border: 1px solid rgba(255,255,255,0.08); padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="background: var(--bg-card, #1e293b); border: 1px solid var(--border, #334155); padding: 15px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <strong style="color: #fff; display: block; margin-bottom: 4px;">${item.remindMeTo}</strong>
-                        <small style="color: var(--primary, #3b82f6);"><i class="fa-regular fa-clock"></i> ${item.date} às ${item.time}</small>
+                        <strong style="color: #fff; display: block; margin-bottom: 4px; font-size: 1rem;">${item.remindMeTo}</strong>
+                        <small style="color: var(--primary, #38bdf8);"><i class="fa-regular fa-clock"></i> ${item.date} às ${item.time}</small>
                     </div>
                     <div style="display: flex; gap: 8px;">
-                        <button onclick="window.editReminder('${item.id}', '${encodeURIComponent(item.remindMeTo)}', '${item.date}', '${item.time}')" style="background: #eab308; color: #000; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">Adiar / Editar</button>
-                        <button onclick="window.deleteReminder('${item.id}')" style="background: #ef4444; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Excluir</button>
+                        <button onclick="window.editReminder('${item.id}', '${encodeURIComponent(item.remindMeTo)}', '${item.date}', '${item.time}')" style="background: #eab308; color: #000; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold;">Adiar / Editar</button>
+                        <button onclick="window.deleteReminder('${item.id}')" style="background: #ef4444; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">Excluir</button>
                     </div>
                 </div>
             `;
@@ -368,7 +377,7 @@ async function openReminderListModal() {
         container.innerHTML = html;
     } catch (err) {
         console.error('Erro ao buscar lembretes:', err);
-        container.innerHTML = '<div style="color: #ef4444; text-align: center;">Erro ao carregar lembretes.</div>';
+        container.innerHTML = '<div style="color: #ef4444; text-align: center; padding: 20px;">Erro ao carregar lembretes.</div>';
     }
 }
 
@@ -378,7 +387,7 @@ window.deleteReminder = async function(id) {
     try {
         const { error } = await supabase.from('reminders').delete().eq('id', id);
         if (error) throw error;
-        openReminderListModal();
+        await loadRemindersSection();
         checkRemindersStatus();
     } catch (err) {
         console.error('Erro ao excluir:', err);
