@@ -43,8 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
         appendMessage('user', messageText);
         chatInput.value = '';
 
-        // Feedback visual de carregamento
-        const loadingId = appendMessage('assistant', 'Pensando...');
+        // Feedback visual de carregamento com o GIF animado como avatar
+        const loadingId = appendMessage('assistant', 'Pensando...', true);
 
         try {
             // Envio para o Apps Script dedicado ao chat
@@ -60,33 +60,70 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             const loadingElement = document.getElementById(loadingId);
 
-            if (response.ok && result.success) {
-                if (loadingElement) {
-                    loadingElement.querySelector('.msg-content').innerText = result.reply || "Resposta recebida com sucesso.";
+            if (loadingElement) {
+                // Atualiza o avatar para o círculo laranja estático
+                const avatarDiv = loadingElement.querySelector('.chat-avatar');
+                if (avatarDiv) {
+                    avatarDiv.innerHTML = `<span class="orange-dot"></span>`;
                 }
-            } else {
-                if (loadingElement) {
-                    loadingElement.querySelector('.msg-content').innerText = "Erro: " + (result.error || "Não foi possível obter resposta da IA.");
+
+                const contentDiv = loadingElement.querySelector('.msg-content');
+
+                if (response.ok && result.success) {
+                    const replyText = result.reply || "Resposta recebida com sucesso.";
+                    // Renderiza com Markdown se a biblioteca marked estiver disponível
+                    if (typeof marked !== 'undefined') {
+                        contentDiv.innerHTML = marked.parse(replyText);
+                    } else {
+                        contentDiv.innerText = replyText;
+                    }
+                } else {
+                    contentDiv.innerText = "Erro: " + (result.error || "Não foi possível obter resposta da IA.");
                 }
             }
         } catch (err) {
             console.error("Erro no chat:", err);
             const loadingElement = document.getElementById(loadingId);
             if (loadingElement) {
+                const avatarDiv = loadingElement.querySelector('.chat-avatar');
+                if (avatarDiv) {
+                    avatarDiv.innerHTML = `<span class="orange-dot"></span>`;
+                }
                 loadingElement.querySelector('.msg-content').innerText = "Erro ao conectar com o servidor da IA.";
             }
         }
     }
 
-    function appendMessage(sender, text) {
+    function appendMessage(sender, text, isLoading = false) {
         const msgId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
         const msgDiv = document.createElement('div');
         msgDiv.id = msgId;
         msgDiv.className = `chat-msg ${sender}`;
 
+        // Se for assistente, adiciona o avatar (GIF animado se estiver carregando, círculo laranja se for mensagem estática)
+        if (sender === 'assistant') {
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'chat-avatar';
+            if (isLoading) {
+                avatarDiv.innerHTML = `<img src="https://mir-s3-cdn-cf.behance.net/project_modules/source/04de2e31234507.564a1d23645bf.gif" alt="Pensando..." class="loading-gif">`;
+            } else {
+                avatarDiv.innerHTML = `<span class="orange-dot"></span>`;
+            }
+            msgDiv.appendChild(avatarDiv);
+        }
+
         const contentDiv = document.createElement('div');
         contentDiv.className = 'msg-content';
-        contentDiv.innerText = text;
+        
+        if (isLoading) {
+            contentDiv.innerText = text;
+        } else {
+            if (sender === 'assistant' && typeof marked !== 'undefined') {
+                contentDiv.innerHTML = marked.parse(text);
+            } else {
+                contentDiv.innerText = text;
+            }
+        }
 
         msgDiv.appendChild(contentDiv);
         chatMessages.appendChild(msgDiv);
