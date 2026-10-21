@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindness Quest // English Journey</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg-color: #f0fdf4;
+      --card-bg: #ffffff;
+      --primary-green: #16a34a;
+      --primary-red: #dc2626;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border-color: #cbd5e1;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 650px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 30px;
+      border: 1px solid var(--border-color);
+    }
+
+    h1, h2 {
+      font-family: 'Fredoka', sans-serif;
+      color: #15803d;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 2rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 25px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary-green);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary-green);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: #15803d;
+      transform: translateY(-2px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    /* HUD Header inside Game */
+    .hud-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      padding: 12px 18px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .hud-header span {
+      color: var(--primary-green);
+      font-weight: 700;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      width: 100%;
+      background: #e2e8f0;
+      height: 8px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--primary-green);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Image Display Area */
+    .image-card {
+      background: #f8fafc;
+      border: 2px dashed var(--border-color);
+      border-radius: 14px;
+      padding: 15px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .image-card img {
+      max-width: 100%;
+      max-height: 280px;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+
+    .question-prompt {
+      text-align: center;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+      color: var(--text-main);
+    }
+
+    /* Choice Buttons Grid */
+    .choices-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .btn-kind {
+      background: #22c55e;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    }
+    .btn-kind:hover {
+      background: #16a34a;
+    }
+
+    .btn-unkind {
+      background: #ef4444;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+    .btn-unkind:hover {
+      background: #dc2626;
+    }
+
+    .feedback-banner {
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-align: center;
+      font-size: 0.95rem;
+      display: none;
+      margin-top: 15px;
+    }
+
+    .feedback-correct {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+
+    .feedback-incorrect {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+
+    .status-msg {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 0.85rem;
+      color: var(--primary-green);
+      font-weight: 500;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .victory-stats {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .victory-stats p {
+      font-size: 1.1rem;
+      margin: 10px 0;
+      color: var(--text-muted);
+    }
+
+    .victory-stats span {
+      color: var(--primary-green);
+      font-weight: 700;
+      font-family: 'Fredoka', sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen">
+      <h1>Kindness Quest</h1>
+      <p class="subtitle">English Journey // Avaliação de Atitudes & Bullying</p>
+      
+      <div class="form-group">
+        <label for="username-input">Nome de Usuário (Supabase)</label>
+        <input type="text" id="username-input" placeholder="Digite seu username cadastrado...">
+      </div>
+
+      <button id="start-btn" class="btn">Iniciar Missão</button>
+      <div id="login-status" class="status-msg"></div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="game-screen" class="hidden">
+      <div class="hud-header">
+        <div>Jogador: <span id="hud-user">---</span></div>
+        <div>Série/Turma: <span id="hud-serie-turma">---</span></div>
+        <div>Pontos: <span id="hud-score">0</span> / 200</div>
+      </div>
+
+      <div class="progress-container">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+
+      <div class="question-prompt">Is this action Kind or Unkind?</div>
+
+      <div class="image-card">
+        <img id="mission-image" src="" alt="Situação Bullying ou Kind">
+      </div>
+
+      <div class="choices-grid" id="choices-container">
+        <button id="kind-btn" class="btn btn-kind">💚 Kind (Boa Ação)</button>
+        <button id="unkind-btn" class="btn btn-unkind">🛑 Unkind (Bullying/Mal)</button>
+      </div>
+
+      <button id="next-btn" class="btn hidden">Próxima Imagem &gt;&gt;</button>
+      <div id="feedback-banner" class="feedback-banner"></div>
+    </div>
+
+    <!-- VICTORY SCREEN -->
+    <div id="victory-screen" class="hidden">
+      <h1>Missão Concluída!</h1>
+      <p class="subtitle">Você completou todas as avaliações de atitudes com sucesso.</p>
+
+      <div class="victory-stats">
+        <p>Acertos: <span id="final-correct">0</span> / 10</p>
+        <p>Pontos Obtidos: <span id="final-earned">0</span> / 200</p>
+        <p>Pontuação Total Acumulada: <span id="final-total">0</span></p>
+      </div>
+
+      <button id="restart-btn" class="btn">Reiniciar Missão</button>
+    </div>
+
+  </div>
+
+  <script>
+    // Supabase Configuration
+    const SUPABASE_URL = 'https://rmsmamzutvxugdbiqsrz.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // List of 10 images with expected answers based on file name prefix
+    const rawImagesList = [
+      { file: 'kind1.png', type: 'kind' },
+      { file: 'kind2.png', type: 'kind' },
+      { file: 'kind3.png', type: 'kind' },
+      { file: 'kind4.png', type: 'kind' },
+      { file: 'kind5.png', type: 'kind' },
+      { file: 'kind6.png', type: 'kind' },
+      { file: 'unkind1.png', type: 'unkind' },
+      { file: 'unkind2.png', type: 'unkind' },
+      { file: 'unkind3.png', type: 'unkind' },
+      { file: 'unkind4.png', type: 'unkind' }
+    ];
+
+    let gameImages = [];
+    let currentUser = null;
+    let currentIndex = 0;
+    let correctCount = 0;
+    let earnedPoints = 0;
+    let answeredCurrent = false;
+
+    // DOM Elements
+    const loginScreen = document.getElementById('login-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const victoryScreen = document.getElementById('victory-screen');
+    const usernameInput = document.getElementById('username-input');
+    const startBtn = document.getElementById('start-btn');
+    const loginStatus = document.getElementById('login-status');
+
+    const hudUser = document.getElementById('hud-user');
+    const hudSerieTurma = document.getElementById('hud-serie-turma');
+    const hudScore = document.getElementById('hud-score');
+    const progressBar = document.getElementById('progress-bar');
+
+    const missionImage = document.getElementById('mission-image');
+    const kindBtn = document.getElementById('kind-btn');
+    const unkindBtn = document.getElementById('unkind-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const choicesContainer = document.getElementById('choices-container');
+    const feedbackBanner = document.getElementById('feedback-banner');
+
+    const finalCorrect = document.getElementById('final-correct');
+    const finalEarned = document.getElementById('final-earned');
+    const finalTotal = document.getElementById('final-total');
+    const restartBtn = document.getElementById('restart-btn');
+
+    // Check Cache on Load
+    window.addEventListener('DOMContentLoaded', () => {
+      const cachedUsername = localStorage.getItem('englishjourney_username');
+      if (cachedUsername) {
+        usernameInput.value = cachedUsername;
+        loginStatus.textContent = 'Usuário recuperado do cache. Pronto para iniciar.';
+      }
+    });
+
+    // Start Button Click & Supabase Verification
+    startBtn.addEventListener('click', async () => {
+      const username = usernameInput.value.trim();
+      if (!username) {
+        loginStatus.textContent = 'Por favor, insira seu nome de usuário.';
+        return;
+      }
+
+      loginStatus.textContent = 'Verificando usuário no Supabase...';
+      startBtn.disabled = true;
+
+      try {
+        const { data: userData, error: userError } = await supabaseClient
+          .from('users')
+          .select('*')
+          .eq('username', username)
+          .single();
+
+        if (userError || !userData) {
+          loginStatus.textContent = 'Erro: Usuário não encontrado no banco de dados. Verifique o nome.';
+          startBtn.disabled = false;
+          return;
+        }
+
+        currentUser = userData;
+        localStorage.setItem('englishjourney_username', currentUser.username);
+
+        // Setup HUD Info
+        hudUser.textContent = currentUser.name || currentUser.username;
+        hudSerieTurma.textContent = `Série: ${currentUser.serie || 'N/A'} | Turma: ${currentUser.team || 'N/A'}`;
+        hudScore.textContent = currentUser.score || 0;
+
+        // Shuffle images for randomness
+        gameImages = [...rawImagesList].sort(() => Math.random() - 0.5);
+
+        // Switch screens
+        loginScreen.classList.add('hidden');
+        gameScreen.classList.remove('hidden');
+
+        loadQuestion();
+
+      } catch (err) {
+        console.error(err);
+        loginStatus.textContent = 'Erro de conexão ao acessar o Supabase.';
+        startBtn.disabled = false;
+      }
+    });
+
+    function loadQuestion() {
+      if (currentIndex >= gameImages.length) {
+        finishGame();
+        return;
+      }
+
+      const currentItem = gameImages[currentIndex];
+      missionImage.src = `bullying/${currentItem.file}`;
+      
+      answeredCurrent = false;
+      feedbackBanner.style.display = 'none';
+      feedbackBanner.className = 'feedback-banner';
+      choicesContainer.classList.remove('hidden');
+      nextBtn.classList.add('hidden');
+
+      // Update progress bar
+      const progressPercent = (currentIndex / gameImages.length) * 100;
+      progressBar.style.width = `${progressPercent}%`;
+    }
+
+    function handleChoice(selectedType) {
+      if (answeredCurrent) return;
+      answeredCurrent = true;
+
+      const currentItem = gameImages[currentIndex];
+      const isCorrect = (selectedType === currentItem.type);
+
+      if (isCorrect) {
+        correctCount++;
+        earnedPoints += 20; // 10 questions * 20 points = 200 total points
+        hudScore.textContent = (currentUser.score || 0) + earnedPoints;
+        feedbackBanner.textContent = 'Correto! Excelente percepção (+20 pts).';
+        feedbackBanner.className = 'feedback-banner feedback-correct';
+      } else {
+        feedbackBanner.textContent = `Incorreto. Esta imagem representa uma atitude "${currentItem.type.toUpperCase()}".`;
+        feedbackBanner.className = 'feedback-banner feedback-incorrect';
+      }
+
+      feedbackBanner.style.display = 'block';
+      choicesContainer.classList.add('hidden');
+      nextBtn.classList.remove('hidden');
+    }
+
+    kindBtn.addEventListener('click', () => handleChoice('kind'));
+    unkindBtn.addEventListener('click', () => handleChoice('unkind'));
+
+    nextBtn.addEventListener('click', () => {
+      currentIndex++;
+      loadQuestion();
+    });
+
+    async function finishGame() {
+      gameScreen.classList.add('hidden');
+      victoryScreen.classList.remove('hidden');
+
+      finalCorrect.textContent = correctCount;
+      finalEarned.textContent = earnedPoints;
+
+      const currentScore = currentUser.score || 0;
+      const newTotalScore = currentScore + earnedPoints;
+      finalTotal.textContent = newTotalScore;
+
+      // Update Supabase Score
+      try {
+        await supabaseClient
+          .from('users')
+          .update({ score: newTotalScore })
+          .eq('username', currentUser.username);
+      } catch (err) {
+        console.error('Falha ao atualizar pontuação no Supabase:', err);
+      }
+    }
+
+    restartBtn.addEventListener('click', () => {
+      location.reload();
+    });
+  </script>
+</body>
+</html>
