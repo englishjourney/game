@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberGlossary - Glossário de Segurança e Verificação</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        google: {
+                            blue: '#1a73e8',
+                            hoverBlue: '#1557b0',
+                            darkBg: '#202124',
+                            darkCard: '#2d2e30',
+                            darkBorder: '#3c4043',
+                            lightBg: '#f8f9fa',
+                            lightCard: '#ffffff',
+                            lightBorder: '#dadce0',
+                            textDark: '#e8eaed',
+                            textLight: '#3c4043'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for better appearance */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #bdc1c6;
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #5f6368;
+        }
+    </style>
+</head>
+<body class="bg-google-lightBg dark:bg-google-darkBg text-google-textLight dark:text-google-textDark min-h-full flex flex-col transition-colors duration-200">
+
+    <!-- Header Navigation Bar -->
+    <header class="border-b border-google-lightBorder dark:border-google-darkBorder bg-white dark:bg-google-darkCard px-4 py-3 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-google-blue text-white p-2.5 rounded-xl shadow-md flex items-center justify-center">
+                    <i class="fa-solid me-0 fa-shield-halved text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-semibold tracking-tight leading-tight flex items-center gap-2">
+                        CyberGlossary 
+                        <span class="text-xs bg-blue-100 dark:bg-blue-900/50 text-google-blue dark:text-blue-300 px-2 py-0.5 rounded-full font-medium">Translate Style</span>
+                    </h1>
+                    <p class="text-xs text-gray-5-00 dark:text-gray-400">Glossário de Segurança, Engenharia Social & Fact-Checking</p>
+                </div>
+            </div>
+
+            <!-- Theme Toggle & Stats -->
+            <div class="flex items-center space-x-2">
+                <button id="themeToggleBtn" title="Alternar Modo Escuro/Claro" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-google-darkBorder text-gray-600 dark:text-gray-300 transition-colors">
+                    <i class="fa-solid fa-moon text-lg dark:hidden"></i>
+                    <i class="fa-solid fa-sun text-lg hidden dark:block text-yellow-400"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Category Selector Tabs -->
+    <div class="max-w-7xl mx-auto w-full px-4 pt-4 pb-2">
+        <div class="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-none" id="categoryChips">
+            <button data-cat="all" class="cat-chip active-chip px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap bg-google-blue text-white shadow-sm">
+                <i class="fa-solid fa-border-all mr-1.5 text-xs"></i> Todos os Termos
+            </button>
+            <button data-cat="Cybersecurity" class="cat-chip px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap bg-white dark:bg-google-darkCard border border-google-lightBorder dark:border-google-darkBorder hover:bg-gray-50 dark:hover:bg-google-darkBorder text-gray-700 dark:text-gray-300">
+                <i class="fa-solid fa-lock mr-1.5 text-xs text-blue-500"></i> Segurança Cibernética
+            </button>
+            <button data-cat="Phishing" class="cat-chip px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap bg-white dark:bg-google-darkCard border border-google-lightBorder dark:border-google-darkBorder hover:bg-gray-50 dark:hover:bg-google-darkBorder text-gray-700 dark:text-gray-300">
+                <i class="fa-solid fa-fish-fins mr-1.5 text-xs text-red-500"></i> Phishing
+            </button>
+            <button data-cat="Social Engineering" class="cat-chip px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap bg-white dark:bg-google-darkCard border border-google-lightBorder dark:border-google-darkBorder hover:bg-gray-50 dark:hover:bg-google-darkBorder text-gray-700 dark:text-gray-300">
+                <i class="fa-solid fa-user-ninja mr-1.5 text-xs text-amber-500"></i> Engenharia Social
+            </button>
+            <button data-cat="Fake News" class="cat-chip px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap bg-white dark:bg-google-darkCard border border-google-lightBorder dark:border-google-darkBorder hover:bg-gray-50 dark:hover:bg-google-darkBorder text-gray-700 dark:text-gray-300">
+                <i class="fa-solid fa-newspaper mr-1.5 text-xs text-purple-500"></i> Fake News
+            </button>
+            <button data-cat="Fontes Confiáveis" class="cat-chip px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap bg-white dark:bg-google-darkCard border border-google-lightBorder dark:border-google-darkBorder hover:bg-gray-50 dark:hover:bg-google-darkBorder text-gray-700 dark:text-gray-300">
+                <i class="fa-solid fa-circle-check mr-1.5 text-xs text-emerald-500"></i> Fontes Confiáveis
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Container: Split Translator Panel -->
+    <main class="max-w-7xl mx-auto w-full px-4 py-2 flex-grow flex flex-col">
+        
+        <!-- Google Translate Card Box -->
+        <div class="bg-white dark:bg-google-darkCard rounded-2xl border border-google-lightBorder dark:border-google-darkBorder shadow-lg overflow-hidden flex flex-col md:flex-row transition-all duration-200 min-h-[380px]">
+            
+            <!-- LEFT PANEL: Search Input & Auto-suggestions -->
+            <div class="w-full md:w-1/2 p-5 border-b md:border-b-0 md:border-r border-google-lightBorder dark:border-google-darkBorder flex flex-col relative">
+                
+                <!-- Panel Header Bar -->
+                <div class="flex items-center justify-between pb-3 mb-2 border-b border-gray-100 dark:border-google-darkBorder">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-google-blue dark:text-blue-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-font text-xs"></i> Termo em Inglês / Pesquisa
+                    </span>
+                    <button id="clearBtn" class="hidden text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 flex items-center gap-1 px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-google-darkBorder">
+                        <i class="fa-solid fa-xmark"></i> Limpar
+                    </button>
+                </div>
+
+                <!-- Input Textarea with Live Search -->
+                <div class="relative flex-grow flex flex-col">
+                    <textarea 
+                        id="searchInput" 
+                        rows="4" 
+                        placeholder="Digite um termo em inglês ou português (ex: Phishing, Fake News, Trojan)..." 
+                        class="w-full bg-transparent text-xl font-medium outline-none resize-none placeholder-gray-400 dark:placeholder-gray-500 text-gray-800 dark:text-gray-100 flex-grow py-1"
+                        spellcheck="false"
+                    ></textarea>
+
+                    <!-- Did You Mean Prompt Container -->
+                    <div id="didYouMeanBox" class="hidden mt-2 p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl text-sm animate-fade-in">
+                        <span class="text-amber-800 dark:text-amber-300">Você quis dizer: </span>
+                        <button id="suggestedTermBtn" class="font-semibold text-google-blue dark:text-blue-400 underline hover:text-google-hoverBlue ml-1">
+                            <!-- Dynamic text -->
+                        </button>?
+                    </div>
+
+                    <!-- Autocomplete Dropdown List -->
+                    <div id="suggestionsList" class="hidden absolute top-full left-0 right-0 z-20 mt-1 bg-white dark:bg-google-darkCard border border-google-lightBorder dark:border-google-darkBorder rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                        <!-- Suggestions appended dynamically -->
+                    </div>
+                </div>
+
+                <!-- Action Bar Left -->
+                <div class="flex items-center justify-between pt-3 mt-2 border-t border-gray-100 dark:border-google-darkBorder">
+                    <div class="flex items-center space-x-1">
+                        <button id="speakEnglishBtn" title="Ouvir pronúncia em Inglês" class="p-2 rounded-full text-gray-500 hover:text-google-blue hover:bg-blue-50 dark:hover:bg-google-darkBorder transition-colors disabled:opacity-40 disabled:hover:bg-transparent">
+                            <i class="fa-solid fa-volume-high text-lg"></i>
+                        </button>
+                        <button id="copyInputBtn" title="Copiar texto digitado" class="p-2 rounded-full text-gray-500 hover:text-google-blue hover:bg-blue-50 dark:hover:bg-google-darkBorder transition-colors disabled:opacity-40">
+                            <i class="fa-regular fa-copy text-lg"></i>
+                        </button>
+                    </div>
+                    <span id="charCount" class="text-xs text-gray-400 font-mono">0 caracteres</span>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: Translation & Definition Result -->
+            <div class="w-full md:w-1/2 p-5 bg-gray-50/60 dark:bg-google-darkCard/50 flex flex-col justify-between">
+                <div>
+                    <!-- Result Panel Header Bar -->
+                    <div class="flex items-center justify-between pb-3 mb-2 border-b border-google-lightBorder dark:border-google-darkBorder">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-language text-xs"></i> Tradução & Significado (Português)
+                        </span>
+                        <span id="resultCategoryBadge" class="hidden text-xs font-medium px-2 py-0.5 rounded-full bg-gray-200 dark:bg-google-darkBorder text-gray-700 dark:text-gray-300">
+                            <!-- Category Badge -->
+                        </span>
+                    </div>
+
+                    <!-- Result Output Box -->
+                    <div id="resultContainer" class="py-2">
+                        <!-- Placeholder State -->
+                        <div id="emptyResultState" class="text-gray-400 dark:text-gray-500 py-10 flex flex-col items-center justify-center text-center">
+                            <i class="fa-solid fa-book-open text-4xl mb-3 opacity-40"></i>
+                            <p class="text-base font-medium">Selecione ou digite um termo para ver a tradução</p>
+                            <p class="text-xs mt-1 text-gray-400">Suporta ignorar maiúsculas, acentos e correção de erros</p>
+                        </div>
+
+                        <!-- Active Definition Content -->
+                        <div id="activeResultState" class="hidden">
+                            <h2 id="resultTermTitle" class="text-2xl font-bold text-google-blue dark:text-blue-400 mb-1 tracking-tight"></h2>
+                            <p id="resultTranslationText" class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3"></p>
+                            
+                            <div id="resultDefinitionBox" class="p-3.5 bg-white dark:bg-google-darkCard rounded-xl border border-google-lightBorder dark:border-google-darkBorder text-sm leading-relaxed text-gray-700 dark:text-gray-300 shadow-sm">
+                                <!-- Definition detail -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Bar Right -->
+                <div class="flex items-center justify-between pt-3 mt-4 border-t border-google-lightBorder dark:border-google-darkBorder">
+                    <div class="flex items-center space-x-1">
+                        <button id="copyResultBtn" title="Copiar Tradução" class="p-2 rounded-full text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-google-darkBorder transition-colors disabled:opacity-40">
+                            <i class="fa-regular fa-copy text-lg"></i>
+                        </button>
+                    </div>
+                    <div id="toastMessage" class="hidden text-xs bg-gray-800 text-white dark:bg-white dark:text-gray-800 px-3 py-1 rounded-full shadow transition-all">
+                        Copiado para a área de transferência!
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Dictionary Explorer List (Below Main Translator Card) -->
+        <div class="mt-8 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                    <i class="fa-solid fa-list-ul text-google-blue"></i>
+                    Explorar Todos os Termos (<span id="termCountDisplay">0</span>)
+                </h3>
+                <span class="text-xs text-gray-500 dark:text-gray-400">Clique em qualquer card para carregar</span>
+            </div>
+
+            <!-- Grid of Cards -->
+            <div id="dictionaryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Cards will be populated dynamically -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Toast / Notification Popover -->
+    <div id="toastNotification" class="fixed bottom-5 right-5 bg-gray-900 text-white dark:bg-google-lightCard dark:text-gray-900 px-4 py-2.5 rounded-xl shadow-2xl text-sm font-medium transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
+        <i class="fa-solid fa-circle-info text-google-blue"></i>
+        <span id="toastText">Mensagem</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-google-lightBorder dark:border-google-darkBorder py-4 px-4 text-center text-xs text-gray-500 dark:text-gray-400">
+        <p>CyberGlossary &copy; 2026 — Base de Conhecimento em Segurança Cibernética & Proteção Digital.</p>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // ----------------------------------------------------
+        // 1. DATASET OF 44 DICTIONARY TERMS
+        // ----------------------------------------------------
+        const dictionary = [
+            {
+                id: 1,
+                term: "Cybersecurity",
+                category: "Cybersecurity",
+                translation: "Segurança cibernética",
+                definition: "Conjunto de práticas, tecnologias e processos projetados para proteger computadores, redes, programas e dados contra ataques, danos ou acesso não autorizado."
+            },
+            {
+                id: 2,
+                term: "Data Breach",
+                category: "Cybersecurity",
+                translation: "Vazamento / violação de dados",
+                definition: "Incidente de segurança no qual dados confidenciais, protegidos ou sensíveis são copiados, transmitidos, visualizados ou roubados por uma pessoa não autorizada."
+            },
+            {
+                id: 3,
+                term: "Malware",
+                category: "Cybersecurity",
+                translation: "Softwares maliciosos (vírus, spyware, ransomware)",
+                definition: "Qualquer software intencionalmente projetado para causar danos a um computador, servidor, cliente ou rede de computadores."
+            },
+            {
+                id: 4,
+                term: "Ransomware",
+                category: "Cybersecurity",
+                translation: "Tipo de vírus sequestrador",
+                definition: "Tipo de malware que criptografa os arquivos do computador e cobra um resgate (geralmente em criptomoedas) para reestabelecer o acesso."
+            },
+            {
+                id: 5,
+                term: "Spyware",
+                category: "Cybersecurity",
+                translation: "Programa espião",
+                definition: "Software malicioso que monitora e coleta remotamente suas atividades, senhas e informações pessoais sem a sua permissão."
+            },
+            {
+                id: 6,
+                term: "Two-Factor Authentication (2FA) / Multi-Factor Authentication (MFA)",
+                category: "Cybersecurity",
+                aliases: ["2FA", "MFA", "Two-Factor Authentication", "Multi-Factor Authentication"],
+                translation: "Autenticação em duas etapas / de múltiplos fatores",
+                definition: "Método de verificação de identidade que exige duas ou mais provas independentes para conceder acesso a uma conta."
+            },
+            {
+                id: 7,
+                term: "Encryption",
+                category: "Cybersecurity",
+                translation: "Criptografia",
+                definition: "Processo de codificação de informações para que apenas partes autorizadas com uma chave secreta consigam ler o conteúdo."
+            },
+            {
+                id: 8,
+                term: "Firewall",
+                category: "Cybersecurity",
+                translation: "Barreira de segurança de rede",
+                definition: "Dispositivo ou software de segurança que monitora e filtra o tráfego de rede de entrada e saída com base em regras estabelecidas."
+            },
+            {
+                id: 9,
+                term: "Strong Password",
+                category: "Cybersecurity",
+                translation: "Senha forte",
+                definition: "Senha complexa contendo combinação de números, letras maiúsculas/minúsculas e símbolos especiais para dificultar invasões."
+            },
+            {
+                id: 10,
+                term: "Data Privacy",
+                category: "Cybersecurity",
+                translation: "Privacidade de dados",
+                definition: "Área focada no tratamento e manipulação correta de dados pessoais, garantindo o consentimento e a segurança do titular."
+            },
+            {
+                id: 11,
+                term: "Phishing",
+                category: "Phishing",
+                translation: "Golpe de roubo de dados por fraude",
+                definition: "Golpe digital projetado para enganar o usuário (via links ou e-mails falsos) e roubar dados confidenciais como senhas e cartões de crédito."
+            },
+            {
+                id: 12,
+                term: "Spear Phishing",
+                category: "Phishing",
+                translation: "Phishing direcionado e personalizado",
+                definition: "Ataque de phishing altamente específico e direcionado a um indivíduo, cargo ou empresa específica para aumentar as chances de sucesso."
+            },
+            {
+                id: 13,
+                term: "Smishing",
+                category: "Phishing",
+                translation: "Phishing por mensagens de texto (SMS)",
+                definition: "Variante do phishing realizada especificamente por meio de mensagens SMS maliciosas em celulares."
+            },
+            {
+                id: 14,
+                term: "Vishing",
+                category: "Phishing",
+                translation: "Phishing por chamadas de voz",
+                definition: "Prática de phishing por telefone (Voice Phishing) onde o golpista finge ser de uma instituição confiável via ligação telefônica."
+            },
+            {
+                id: 15,
+                term: "Spoofing",
+                category: "Phishing",
+                translation: "Falsificação de identidade digital",
+                definition: "Técnica onde o invasor se disfarça de outra entidade/endereço (ex: Email Spoofing onde o e-mail parece vir de um banco legítimo)."
+            },
+            {
+                id: 16,
+                term: "Malicious Link / Suspicious Link",
+                category: "Phishing",
+                aliases: ["Malicious Link", "Suspicious Link"],
+                translation: "Link malicioso / link suspeito",
+                definition: "Hiperlink criado para redirecionar a vítima para sites fraudulentos, infectados ou preparados para capturar credenciais."
+            },
+            {
+                id: 17,
+                term: "Bait / Baiting",
+                category: "Phishing",
+                aliases: ["Bait", "Baiting"],
+                translation: "Isca / uso de isca para atração",
+                definition: "Tática de seduzir a vítima oferecendo algo atraente (como downloads grátis ou pen drives 'achados') contendo malware."
+            },
+            {
+                id: 18,
+                term: "Scam / Scammer",
+                category: "Phishing",
+                aliases: ["Scam", "Scammer"],
+                translation: "Golpe / Golpista",
+                definition: "Termo geral para esquemas ou fraudes desonestas na internet / pessoa ou grupo que executa tais golpes."
+            },
+            {
+                id: 19,
+                term: "Credential Stuffing",
+                category: "Phishing",
+                translation: "Uso automatizado de senhas vazadas",
+                definition: "Ataque automatizado onde hackers testam grandes listas de pares de e-mail e senhas vazadas em múltiplos outros sites."
+            },
+            {
+                id: 20,
+                term: "Social Engineering",
+                category: "Social Engineering",
+                translation: "Engenharia social",
+                definition: "Manipulação psicológica de pessoas para fazê-las executar ações involuntárias ou divulgar informações confidenciais."
+            },
+            {
+                id: 21,
+                term: "Pretexting",
+                category: "Social Engineering",
+                translation: "Criação de história/cenário falso",
+                definition: "Prática de inventar uma história ou situação convincente (pretexto) para enganar a vítima e obter dados confidenciais."
+            },
+            {
+                id: 22,
+                term: "Impersonation / Impersonate",
+                category: "Social Engineering",
+                aliases: ["Impersonation", "Impersonate"],
+                translation: "Falsificação de identidade / se passar por outro",
+                definition: "Ação de fingir ser outra pessoa, funcionário de TI ou autoridade para manipular a confiança de uma vítima."
+            },
+            {
+                id: 23,
+                term: "Urgency / Sense of Urgency",
+                category: "Social Engineering",
+                aliases: ["Urgency", "Sense of Urgency"],
+                translation: "Senso de urgência artificial",
+                definition: "Tática que induz medo ou pressa na vítima para que ela tome uma decisão precipitada sem checar os fatos."
+            },
+            {
+                id: 24,
+                term: "Trust",
+                category: "Social Engineering",
+                translation: "Confiança",
+                definition: "Relação de credibilidade explorada por golpistas para que a vítima baixe a guarda durante uma interação."
+            },
+            {
+                id: 25,
+                term: "Authority",
+                category: "Social Engineering",
+                translation: "Abuso de autoridade",
+                definition: "Estratégia de se passar por figuras de liderança, policiais ou suporte técnico para forçar obediência rápida."
+            },
+            {
+                id: 26,
+                term: "Quid Pro Quo",
+                category: "Social Engineering",
+                translation: "Troca de favores ilusória",
+                definition: "Oferta de um benefício ou serviço falso (ex: suporte técnico gratuito) em troca de senhas ou acesso."
+            },
+            {
+                id: 27,
+                term: "Fake News",
+                category: "Fake News",
+                translation: "Notícias falsas",
+                definition: "Informações deliberadamente falsas ou enganosas apresentadas como se fossem notícias reais para manipular a opinião pública."
+            },
+            {
+                id: 28,
+                term: "Misinformation",
+                category: "Fake News",
+                translation: "Informação incorreta sem má intenção",
+                definition: "Compartilhamento de informações errôneas sem a intenção direta de prejudicar (ex: engano ou mal-entendido)."
+            },
+            {
+                id: 29,
+                term: "Disinformation",
+                category: "Fake News",
+                translation: "Desinformação intencional",
+                definition: "Criação e difusão de informações falsas criadas intencionalmente para enganar, prejudicar ou desestabilizar."
+            },
+            {
+                id: 30,
+                term: "Deepfake",
+                category: "Fake News",
+                translation: "Mídia sintética hiper-realista",
+                definition: "Vídeo, áudio ou foto alterados por Inteligência Artificial de alta precisão para simular alguém dizendo ou fazendo algo irreal."
+            },
+            {
+                id: 31,
+                term: "Clickbait",
+                category: "Fake News",
+                translation: "Conteúdo caça-clique",
+                definition: "Títulos ou imagens apelativas e exageradas criadas unicamente para atiçar curiosidade e gerar acessos a sites."
+            },
+            {
+                id: 32,
+                term: "Bias / Unbiased",
+                category: "Fake News",
+                aliases: ["Bias", "Unbiased"],
+                translation: "Viés / Imparcial",
+                definition: "Tendência pré-conceituosa ou parcial em relatar fatos / Atitude neutra e sem viés ideológico."
+            },
+            {
+                id: 33,
+                term: "Echo Chamber",
+                category: "Fake News",
+                translation: "Câmara de eco",
+                definition: "Ambiente (como redes sociais) onde o usuário consome apenas opiniões que concordam com as suas próprias crenças."
+            },
+            {
+                id: 34,
+                term: "Out of Context",
+                category: "Fake News",
+                translation: "Fora de contexto",
+                definition: "Citação, foto ou vídeo real removido do seu contexto original para distorcer o seu significado verdadeiro."
+            },
+            {
+                id: 35,
+                term: "Sensationalism",
+                category: "Fake News",
+                translation: "Sensacionalismo",
+                definition: "Estilo de apelo emocional exagerado focado em causar impacto, medo ou escândalo ao invés da verdade dos fatos."
+            },
+            {
+                id: 36,
+                term: "Fact-Checking",
+                category: "Fontes Confiáveis",
+                translation: "Checagem de fatos",
+                definition: "Processo metódico de investigação e verificação de alegações e dados para confirmar se são verdadeiros."
+            },
+            {
+                id: 37,
+                term: "Reliable / Credible Source",
+                category: "Fontes Confiáveis",
+                aliases: ["Reliable Source", "Credible Source"],
+                translation: "Fonte confiável / credível",
+                definition: "Origem de informação respaldada por especialistas, histórico de precisão, transparência e reputação sólida."
+            },
+            {
+                id: 38,
+                term: "Unreliable Source",
+                category: "Fontes Confiáveis",
+                translation: "Fonte não confiável",
+                definition: "Veículo de informação sem credibilidade, com histórico de erros, anonimato suspeito ou viés extremado."
+            },
+            {
+                id: 39,
+                term: "Cross-reference / Cross-check",
+                category: "Fontes Confiáveis",
+                aliases: ["Cross-reference", "Cross-check"],
+                translation: "Cruzar informações / checagem dupla",
+                definition: "Comparar a mesma notícia em múltiplos veículos confiáveis e independentes para confirmar a veracidade."
+            },
+            {
+                id: 40,
+                term: "Primary Source",
+                category: "Fontes Confiáveis",
+                translation: "Fonte primária",
+                definition: "Documento, testemunha direta ou gravação original sem intermediários ou interpretações secundárias."
+            },
+            {
+                id: 41,
+                term: "Domain Name",
+                category: "Fontes Confiáveis",
+                translation: "Nome de domínio de site",
+                definition: "Endereço web oficial. Deve ser verificado se possui extensões confiáveis (ex: .gov, .edu) ou caracteres alterados."
+            },
+            {
+                id: 42,
+                term: "Byline / Author Credentials",
+                category: "Fontes Confiáveis",
+                aliases: ["Byline", "Author Credentials"],
+                translation: "Assinatura e credenciais do autor",
+                definition: "Identificação formal do jornalista ou especialista responsável pelo artigo e suas qualificações profissionais."
+            },
+            {
+                id: 43,
+                term: "Correction Policy",
+                category: "Fontes Confiáveis",
+                translation: "Política de correção",
+                definition: "Diretrizes públicas do veículo que demonstram transparência na retificação clara de erros cometidos em publicações."
+            },
+            {
+                id: 44,
+                term: "Reverse Image Search",
+                category: "Fontes Confiáveis",
+                translation: "Pesquisa reversa de imagem",
+                definition: "Técnica de busca para descobrir a data original, contexto e fonte real onde uma foto foi publicada originalmente."
+            }
+        ];
+
+        // ----------------------------------------------------
+        // 2. HELPER UTILITIES: NORMALIZATION & LEVENSHTEIN DISTANCE
+        // ----------------------------------------------------
+
+        // Remove accents and normalize string to lowercase
+        function normalizeStr(str) {
+            if (!str) return '';
+            return str
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .trim();
+        }
+
+        // Levenshtein Distance Algorithm for Typo Tolerance
+        function levenshteinDistance(a, b) {
+            const matrix = [];
+            let i, j;
+
+            if (a.length === 0) return b.length;
+            if (b.length === 0) return a.length;
+
+            for (i = 0; i <= b.length; i++) {
+                matrix[i] = [i];
+            }
+
+            for (j = 0; j <= a.length; j++) {
+                matrix[0][j] = j;
+            }
+
+            for (i = 1; i <= b.length; i++) {
+                for (j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1, // substitution
+                            Math.min(
+                                matrix[i][j - 1] + 1, // insertion
+                                matrix[i - 1][j] + 1  // deletion
+                            )
+                        );
+                    }
+                }
+            }
+
+            return matrix[b.length][a.length];
+        }
+
+        // ----------------------------------------------------
+        // 3. APPLICATION STATE & DOM ELEMENTS
+        // ----------------------------------------------------
+        let currentFilter = 'all';
+        let activeSelectedTerm = null;
+
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearBtn');
+        const suggestionsList = document.getElementById('suggestionsList');
+        const didYouMeanBox = document.getElementById('didYouMeanBox');
+        const suggestedTermBtn = document.getElementById('suggestedTermBtn');
+        const charCount = document.getElementById('charCount');
+
+        const emptyResultState = document.getElementById('emptyResultState');
+        const activeResultState = document.getElementById('activeResultState');
+        const resultTermTitle = document.getElementById('resultTermTitle');
+        const resultTranslationText = document.getElementById('resultTranslationText');
+        const resultDefinitionBox = document.getElementById('resultDefinitionBox');
+        const resultCategoryBadge = document.getElementById('resultCategoryBadge');
+
+        const copyInputBtn = document.getElementById('copyInputBtn');
+        const copyResultBtn = document.getElementById('copyResultBtn');
+        const speakEnglishBtn = document.getElementById('speakEnglishBtn');
+        const dictionaryGrid = document.getElementById('dictionaryGrid');
+        const termCountDisplay = document.getElementById('termCountDisplay');
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+
+        // ----------------------------------------------------
+        // 4. CORE SEARCH & MATCHING LOGIC
+        // ----------------------------------------------------
+        function handleSearchInput() {
+            const rawQuery = searchInput.value;
+            const query = normalizeStr(rawQuery);
+            charCount.textContent = `${rawQuery.length} caracteres`;
+
+            // Toggle clear button
+            if (rawQuery.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+                hideSuggestions();
+                hideDidYouMean();
+                showEmptyState();
+                return;
+            }
+
+            if (query.length < 1) return;
+
+            // 1. Direct or Partial Substring Matches
+            const directMatches = dictionary.filter(item => {
+                const termNorm = normalizeStr(item.term);
+                const transNorm = normalizeStr(item.translation);
+                const aliasesNorm = (item.aliases || []).map(a => normalizeStr(a));
+                
+                return termNorm.includes(query) || 
+                       transNorm.includes(query) || 
+                       aliasesNorm.some(a => a.includes(query));
+            });
+
+            if (directMatches.length > 0) {
+                hideDidYouMean();
+                renderSuggestions(directMatches, query);
+
+                // Auto select if exact match or single result
+                const exactMatch = directMatches.find(item => 
+                    normalizeStr(item.term) === query || 
+                    normalizeStr(item.translation) === query ||
+                    (item.aliases && item.aliases.some(a => normalizeStr(a) === query))
+                );
+
+                if (exactMatch) {
+                    displayResult(exactMatch);
+                } else {
+                    displayResult(directMatches[0]);
+                }
+            } else {
+                // 2. Fuzzy Match via Levenshtein Distance for "Did You Mean?"
+                hideSuggestions();
+                let closestItem = null;
+                let minDistance = Infinity;
+
+                dictionary.forEach(item => {
+                    const termsToTest = [item.term, item.translation, ...(item.aliases || [])];
+                    termsToTest.forEach(testTerm => {
+                        const normTest = normalizeStr(testTerm);
+                        const dist = levenshteinDistance(query, normTest);
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            closestItem = item;
+                        }
+                    });
+                });
+
+                // Threshold based on query length (allow typos if distance <= 4)
+                if (closestItem && minDistance <= Math.max(3, Math.floor(query.length * 0.5))) {
+                    showDidYouMean(closestItem);
+                    showEmptyState();
+                } else {
+                    hideDidYouMean();
+                    showEmptyState("Nenhum termo encontrado. Tente pesquisar outra palavra.");
+                }
+            }
+        }
+
+        function renderSuggestions(matches, query) {
+            suggestionsList.innerHTML = '';
+            matches.slice(0, 6).forEach(item => {
+                const li = document.createElement('div');
+                li.className = 'px-4 py-2.5 hover:bg-blue-50 dark:hover:bg-google-darkBorder cursor-pointer flex items-center justify-between border-b last:border-0 border-gray-100 dark:border-google-darkBorder transition-colors';
+                li.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-magnifying-glass text-xs text-gray-400"></i>
+                        <span class="font-medium text-sm text-gray-800 dark:text-gray-200">${item.term}</span>
+                    </div>
+                    <span class="text-xs text-gray-400 truncate max-w-[150px]">${item.translation}</span>
+                `;
+                li.addEventListener('click', () => {
+                    searchInput.value = item.term;
+                    displayResult(item);
+                    hideSuggestions();
+                    hideDidYouMean();
+                });
+                suggestionsList.appendChild(li);
+            });
+            suggestionsList.classList.remove('hidden');
+        }
+
+        function hideSuggestions() {
+            suggestionsList.classList.add('hidden');
+        }
+
+        function showDidYouMean(suggestedItem) {
+            didYouMeanBox.classList.remove('hidden');
+            suggestedTermBtn.textContent = suggestedItem.term;
+            suggestedTermBtn.onclick = () => {
+                searchInput.value = suggestedItem.term;
+                displayResult(suggestedItem);
+                hideDidYouMean();
+                handleSearchInput();
+            };
+        }
+
+        function hideDidYouMean() {
+            didYouMeanBox.classList.add('hidden');
+        }
+
+        // ----------------------------------------------------
+        // 5. DISPLAY & RESULT HANDLING
+        // ----------------------------------------------------
+        function displayResult(item) {
+            activeSelectedTerm = item;
+            emptyResultState.classList.add('hidden');
+            activeResultState.classList.remove('hidden');
+
+            resultTermTitle.textContent = item.term;
+            resultTranslationText.textContent = item.translation;
+            resultDefinitionBox.textContent = item.definition;
+
+            // Category Badge Tag
+            resultCategoryBadge.classList.remove('hidden');
+            resultCategoryBadge.textContent = item.category;
+
+            // Enable action buttons
+            speakEnglishBtn.disabled = false;
+            copyResultBtn.disabled = false;
+        }
+
+        function showEmptyState(msg) {
+            activeSelectedTerm = null;
+            activeResultState.classList.add('hidden');
+            resultCategoryBadge.classList.add('hidden');
+            emptyResultState.classList.remove('hidden');
+            
+            if (msg) {
+                emptyResultState.querySelector('p').textContent = msg;
+            } else {
+                emptyResultState.querySelector('p').textContent = "Selecione ou digite um termo para ver a tradução";
+            }
+
+            speakEnglishBtn.disabled = true;
+            copyResultBtn.disabled = true;
+        }
+
+        // ----------------------------------------------------
+        // 6. TEXT-TO-SPEECH (SPEECH SYNTHESIS)
+        // ----------------------------------------------------
+        function speakEnglishText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop active speech
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            } else {
+                showToast("Síntese de voz não suportada pelo navegador.");
+            }
+        }
+
+        // ----------------------------------------------------
+        // 7. DICTIONARY GRID EXPLORER & CATEGORIES
+        // ----------------------------------------------------
+        function renderDictionaryGrid() {
+            dictionaryGrid.innerHTML = '';
+            
+            const filteredItems = currentFilter === 'all' 
+                ? dictionary 
+                : dictionary.filter(item => item.category === currentFilter);
+
+            termCountDisplay.textContent = filteredItems.length;
+
+            filteredItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-google-darkCard p-4 rounded-xl border border-google-lightBorder dark:border-google-darkBorder hover:border-google-blue dark:hover:border-google-blue transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md flex flex-col justify-between group";
+                
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-google-blue dark:text-blue-300">
+                                ${item.category}
+                            </span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-300 dark:text-gray-600 group-hover:text-google-blue transition-colors"></i>
+                        </div>
+                        <h4 class="font-bold text-base text-gray-800 dark:text-gray-100 group-hover:text-google-blue dark:group-hover:text-blue-400 transition-colors">
+                            ${item.term}
+                        </h4>
+                        <p class="text-sm font-medium text-emerald-600 dark:text-emerald-400 mt-0.5 mb-2">
+                            ${item.translation}
+                        </p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                            ${item.definition}
+                        </p>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => {
+                    searchInput.value = item.term;
+                    displayResult(item);
+                    hideDidYouMean();
+                    hideSuggestions();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+
+                dictionaryGrid.appendChild(card);
+            });
+        }
+
+        // ----------------------------------------------------
+        // 8. CLIPBOARD COPY UTILITY (FALLBACK COMPATIBLE)
+        // ----------------------------------------------------
+        function copyToClipboard(text) {
+            if (!text) return;
+            
+            // Temporary textarea fallback for standard compatibility
+            const tempTextarea = document.createElement('textarea');
+            tempTextarea.value = text;
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+            
+            try {
+                document.execCommand('copy');
+                showToast("Copiado para a área de transferência!");
+            } catch (err) {
+                showToast("Erro ao copiar.");
+            }
+            
+            document.body.removeChild(tempTextarea);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            const toastText = document.getElementById('toastText');
+            toastText.textContent = message;
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        // ----------------------------------------------------
+        // 9. EVENT LISTENERS SETUP
+        // ----------------------------------------------------
+        window.addEventListener('DOMContentLoaded', () => {
+
+            // Search listeners
+            searchInput.addEventListener('input', handleSearchInput);
+
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                handleSearchInput();
+                searchInput.focus();
+            });
+
+            // Action Buttons
+            speakEnglishBtn.addEventListener('click', () => {
+                if (activeSelectedTerm) {
+                    speakEnglishText(activeSelectedTerm.term);
+                } else if (searchInput.value) {
+                    speakEnglishText(searchInput.value);
+                }
+            });
+
+            copyInputBtn.addEventListener('click', () => {
+                copyToClipboard(searchInput.value);
+            });
+
+            copyResultBtn.addEventListener('click', () => {
+                if (activeSelectedTerm) {
+                    const textToCopy = `${activeSelectedTerm.term}: ${activeSelectedTerm.translation}\n${activeSelectedTerm.definition}`;
+                    copyToClipboard(textToCopy);
+                }
+            });
+
+            // Category Chips
+            document.querySelectorAll('.cat-chip').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.cat-chip').forEach(c => {
+                        c.classList.remove('bg-google-blue', 'text-white', 'shadow-sm');
+                        c.classList.add('bg-white', 'dark:bg-google-darkCard', 'text-gray-700', 'dark:text-gray-300');
+                    });
+
+                    btn.classList.remove('bg-white', 'dark:bg-google-darkCard', 'text-gray-700', 'dark:text-gray-300');
+                    btn.classList.add('bg-google-blue', 'text-white', 'shadow-sm');
+
+                    currentFilter = btn.getAttribute('data-cat');
+                    renderDictionaryGrid();
+                });
+            });
+
+            // Theme Toggle
+            themeToggleBtn.addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+            });
+
+            // Hide autocomplete when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !suggestionsList.contains(e.target)) {
+                    hideSuggestions();
+                }
+            });
+
+            // Initial Render
+            renderDictionaryGrid();
+        });
+    </script>
+</body>
+</html>
