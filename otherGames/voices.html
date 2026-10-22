@@ -662,12 +662,45 @@
       finalTotal.textContent = newTotalScore;
 
       try {
+        // 1. Atualizar pontuação do usuário
         await supabaseClient
           .from('users')
           .update({ score: newTotalScore })
           .eq('username', currentUser.username);
+
+        // 2. Buscar a linha da missão "Voices" na tabela missions
+        const { data: missionData, error: missionError } = await supabaseClient
+          .from('missions')
+          .select('done, fail')
+          .eq('mission_name', 'Voices')
+          .single();
+
+        if (!missionError && missionData) {
+          const usernameToSave = currentUser.username;
+          const targetColumn = correctCount >= 4 ? 'done' : 'fail';
+          
+          // Pega o valor atual da coluna respectiva (ou string vazia se null)
+          const currentListStr = missionData[targetColumn] || '';
+          
+          // Converte a string separada por vírgulas em um array, removendo espaços vazios
+          let usersArray = currentListStr
+            ? currentListStr.split(',').map(u => u.trim()).filter(u => u.length > 0)
+            : [];
+
+          // Verifica se o usuário já está na lista para evitar duplicatas
+          if (!usersArray.includes(usernameToSave)) {
+            usersArray.push(usernameToSave);
+            const updatedListStr = usersArray.join(', ');
+
+            // Atualiza a tabela missions com a nova lista formatada
+            await supabaseClient
+              .from('missions')
+              .update({ [targetColumn]: updatedListStr })
+              .eq('mission_name', 'Voices');
+          }
+        }
       } catch (err) {
-        console.error('Falha ao sincronizar pontuação com Supabase:', err);
+        console.error('Falha ao sincronizar dados com o Supabase:', err);
       }
     }
 
