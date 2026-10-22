@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History of Video Games & Arts/Dance Vocabulary</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@500;700;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Particles.js -->
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  
+  <!-- Anime.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #0d0f18;
+      --bg-card: #16192b;
+      --accent-neon: #00f0ff;
+      --accent-purple: #7000ff;
+      --accent-pink: #ff007f;
+      --text-main: #f0f4f8;
+      --text-muted: #a0aec0;
+      --gold: #ffd700;
+      --font-title: 'Orbitron', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-display: 'Outfit', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      position: relative;
+    }
+
+    /* Background Particles Canvas */
+    #particles-js {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Presentation Slide Container (16:9 Desktop Ratio) */
+    .slide-viewport {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2;
+    }
+
+    .slide-stage {
+      width: 92vw;
+      max-width: 1600px;
+      height: 88vh;
+      max-height: 900px;
+      aspect-ratio: 16 / 9;
+      position: relative;
+      background: rgba(22, 25, 43, 0.75);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      border-radius: 20px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(112, 0, 255, 0.1);
+      overflow: hidden;
+    }
+
+    /* Individual Slide */
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 3rem 4rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    /* Animations Triggered via CSS on Slide Active */
+    .reveal-item {
+      opacity: 0;
+      transform: translateY(25px);
+      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .slide.active .reveal-item {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .slide.active .reveal-item:nth-child(1) { transition-delay: 0.05s; }
+    .slide.active .reveal-item:nth-child(2) { transition-delay: 0.1s; }
+    .slide.active .reveal-item:nth-child(3) { transition-delay: 0.15s; }
+    .slide.active .reveal-item:nth-child(4) { transition-delay: 0.2s; }
+    .slide.active .reveal-item:nth-child(5) { transition-delay: 0.25s; }
+
+    /* Header Elements */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 1rem;
+    }
+
+    .slide-title {
+      font-family: var(--font-title);
+      font-size: 2.2rem;
+      background: linear-gradient(90deg, var(--accent-neon), var(--accent-pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .slide-tag {
+      font-family: var(--font-display);
+      background: rgba(112, 0, 255, 0.3);
+      border: 1px solid var(--accent-purple);
+      color: #d8b4fe;
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Content Layouts */
+  .slide-body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: stretch;
+      margin: 1rem 0;
+      min-height: 0; /* Impede estouro de container flex */
+      overflow: hidden; /* Mantém a rolagem restrita à grid interna */
+    }
+
+   .slide-body > .content-box {
+      overflow-y: auto;
+      max-height: 100%;
+      padding-right: 10px;
+    }
+
+    .slide-body.full-width {
+      grid-template-columns: 1fr;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      margin-top: 1rem;
+      padding-bottom: 2rem;
+      overflow-y: auto; /* Garante rolagem livre nos slides cheios 6, 7 e 8 */
+    }
+
+    .content-box {
+      background: rgba(10, 12, 20, 0.5);
+      border-left: 4px solid var(--accent-neon);
+      padding: 1.8rem;
+      border-radius: 0 12px 12px 0;
+      font-size: 1.05rem;
+      line-height: 1.7;
+    }
+
+    .vocab-card {
+      background: rgba(112, 0, 255, 0.12);
+      border: 1px solid rgba(112, 0, 255, 0.3);
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .vocab-title {
+      font-family: var(--font-title);
+      color: var(--accent-neon);
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .highlight-en {
+      color: var(--accent-neon);
+      font-weight: 600;
+    }
+
+    .highlight-pt {
+      color: #ffa500;
+      font-weight: 600;
+    }
+
+    .img-frame {
+      width: 100%;
+      height: 320px;
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .img-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Timeline Section (Slide 6) */
+   .sources-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      height: 100%;
+      max-height: 100%;
+      overflow-y: auto;
+      padding-right: 10px;
+      padding-top: 5px; /* Margem de segurança para evitar colisão visual no topo */
+    }
+
+    .source-card {
+      background: rgba(22, 25, 43, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      transition: border-color 0.3s ease, transform 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .source-card:hover {
+      border-color: var(--accent-neon);
+      transform: translateY(-2px);
+    }
+
+    .source-card h4 {
+      font-size: 0.95rem;
+      color: var(--accent-neon);
+      margin-bottom: 0.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .source-card p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 0.8rem;
+    }
+
+    .source-link {
+      color: var(--accent-pink);
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .source-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Games Showcase Grid (Slide 7) */
+  .games-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      height: 100%;
+      max-height: 100%;
+      overflow-y: auto;
+      padding-right: 8px;
+      padding-top: 5px; /* Margem de segurança para evitar colisão visual no topo */
+    }
+
+    .game-card {
+      background: rgba(15, 18, 30, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 1rem;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .game-card:hover {
+      border-color: var(--accent-pink);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(255, 0, 127, 0.25);
+    }
+
+    .game-year {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--accent-purple);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 0.2rem 0.5rem;
+      border-radius: 20px;
+      font-family: var(--font-title);
+    }
+
+    .game-title {
+      font-family: var(--font-title);
+      font-size: 1rem;
+      color: #fff;
+      margin-top: 0.4rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .game-platform {
+      font-size: 0.75rem;
+      color: var(--accent-neon);
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .game-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    /* Modal for Detailed Game Info */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-box {
+      background: var(--bg-card);
+      border: 2px solid var(--accent-neon);
+      border-radius: 20px;
+      width: 90%;
+      max-width: 600px;
+      padding: 2.5rem;
+      position: relative;
+      box-shadow: 0 0 50px rgba(0, 240, 255, 0.3);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    /* Navigation Floating Controls */
+    .nav-controls {
+      position: absolute;
+      bottom: 25px;
+      right: 40px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      z-index: 10;
+    }
+
+    .btn-nav {
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--accent-neon);
+      color: var(--accent-neon);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-nav:hover {
+      background: var(--accent-neon);
+      color: #000;
+      box-shadow: 0 0 15px var(--accent-neon);
+      transform: scale(1.05);
+    }
+
+    .slide-counter {
+      font-family: var(--font-title);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      background: rgba(0,0,0,0.4);
+      padding: 0.5rem 1rem;
+      border-radius: 30px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* Bottom Progress Bar */
+    .progress-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 12.5%;
+      background: linear-gradient(90deg, var(--accent-neon), var(--accent-pink));
+      transition: width 0.3s ease;
+    }
+
+    /* Quick Jumper Floating Bar */
+    .quick-jump {
+      position: absolute;
+      top: 20px;
+      right: 40px;
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .dot-step {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .dot-step.active {
+      background: var(--accent-neon);
+      box-shadow: 0 0 10px var(--accent-neon);
+      transform: scale(1.3);
+    }
+
+    /* Interactive Quiz Section */
+    .quiz-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .quiz-question {
+      font-size: 1.1rem;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    .quiz-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .quiz-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 0.8rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+
+    .quiz-btn:hover {
+      border-color: var(--accent-neon);
+      background: rgba(0, 240, 255, 0.1);
+    }
+
+    .quiz-feedback {
+      margin-top: 1rem;
+      font-weight: 600;
+      min-height: 24px;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 240, 255, 0.3);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-neon);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Animated Particles -->
+  <div id="particles-js"></div>
+
+  <!-- Main Presentation Viewport (16:9 Desktop Frame) -->
+  <div class="slide-viewport">
+    <div class="slide-stage">
+      
+      <!-- Quick Navigation Dots -->
+      <div class="quick-jump" id="quickJumpDots"></div>
+
+      <!-- SLIDE 1: Title & Hero -->
+      <section class="slide active" id="slide-1">
+        <div class="slide-header reveal-item">
+          <h1 class="slide-title"><i class="fa-solid fa-gamepad"></i> Gaming & Performing Arts</h1>
+          <span class="slide-tag">Intro / Apresentação</span>
+        </div>
+        <div class="slide-body reveal-item">
+          <div class="content-box">
+            <p style="font-size: 1.2rem; margin-bottom: 1rem;">
+              Welcome to this interactive presentation! Vamos explorar a história dos jogos eletrônicos combinada com o vocabulário de <span class="highlight-en">Arts and Dance</span>.
+            </p>
+            <p>
+              Games are not just software; eles representam expressões de <span class="highlight-en">visual composition</span>, narração de histórias, sonoridade e <span class="highlight-pt">coreografia digital</span>.
+            </p>
+            <div class="vocab-card">
+              <div class="vocab-title"><i class="fa-solid fa-palette"></i> Key Arts Terms</div>
+              <p><strong class="highlight-en">Visual Composition:</strong> A organização dos elementos visuais na tela (color, balance, movement).</p>
+              <p><strong class="highlight-en">Choreography:</strong> A sequência planejada de movimentos e dança nos jogos.</p>
+            </div>
+          </div>
+          <div class="img-frame">
+            <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80" alt="Retro Gaming Setup">
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 2: Primórdios (1947 - 1972) -->
+      <section class="slide" id="slide-2">
+        <div class="slide-header reveal-item">
+          <h1 class="slide-title"><i class="fa-solid fa-tv"></i> Era Inicial (1947–1972)</h1>
+          <span class="slide-tag">Os Primórdios</span>
+        </div>
+        <div class="slide-body reveal-item">
+          <div class="content-box">
+            <p>
+              In the early days, researchers created simple simulations em computadores de grande porte e tubos de raios catódicos. Experiments like <span class="highlight-en">Spacewar!</span> (1962) e <span class="highlight-pt">Tennis for Two</span> marcaram o início do interatividade digital.
+            </p>
+            <p style="margin-top: 0.8rem;">
+              Em 1972, Nolan Bushnell founded Atari e lançou o famoso arcade <span class="highlight-en">Pong</span>, enquanto o Magnavox Odyssey se tornou o primeiro home console.
+            </p>
+            <div class="vocab-card">
+              <div class="vocab-title"><i class="fa-solid fa-mask-scream"></i> Arts Connection: Scenography & Canvas</div>
+              <p><strong class="highlight-en">Canvas (Tela/Tela de pintura):</strong> The blank display surface where graphics come to life.</p>
+              <p><strong class="highlight-pt">Cenografia (Scenography):</strong> A criação visual do espaço interativo no jogo.</p>
+            </div>
+          </div>
+          <div class="img-frame">
+            <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80" alt="Arcade Cabinet Machine">
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 3: Arcades & 8-Bit (1978 - 1985) -->
+      <section class="slide" id="slide-3">
+        <div class="slide-header reveal-item">
+          <h1 class="slide-title"><i class="fa-solid fa-ghost"></i> Golden Age of Arcades & 8-Bit</h1>
+          <span class="slide-tag">Anos 70 e 80</span>
+        </div>
+        <div class="slide-body reveal-item">
+          <div class="content-box">
+            <p>
+              The Golden Age of Arcades começou com <span class="highlight-en">Space Invaders</span> em 1978. No entanto, em 1983, a indústria sofreu um grande <span class="highlight-pt">crash nos EUA</span> devido ao excesso de jogos de baixa qualidade.
+            </p>
+            <p style="margin-top: 0.8rem;">
+              A liderança da indústria mudou para o Japão quando o <span class="highlight-en">Nintendo Entertainment System (NES)</span> revitalizou o mercado global com títulos icônicos.
+            </p>
+            <div class="vocab-card">
+              <div class="vocab-title"><i class="fa-solid fa-music"></i> Dance & Sound: Rhythm & Sprite</div>
+              <p><strong class="highlight-en">Rhythm (Ritmo):</strong> The beat and tempo that guide player movement and audio design.</p>
+              <p><strong class="highlight-en">Sprite Animation:</strong> Sequência rápida de quadros que cria a ilusão de dança ou movimento.</p>
+            </div>
+          </div>
+          <div class="img-frame">
+            <img src="https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=800&q=80" alt="Retro Gaming Controller">
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 4: 16-Bit & 3D Revolution (1990s) -->
+      <section class="slide" id="slide-4">
+        <div class="slide-header reveal-item">
+          <h1 class="slide-title"><i class="fa-solid fa-cube"></i> A Revolução 3D & 16-Bit</h1>
+          <span class="slide-tag">Década de 90</span>
+        </div>
+        <div class="slide-body reveal-item">
+          <div class="content-box">
+            <p>
+              The 1990s introduced a intensa rivalidade entre SEGA e Nintendo. A chegada de mídias ópticas (CD-ROMs) e processadores de 32/64 bits permitiu a transição dos gráficos 2D para modelos em <span class="highlight-en">3D polygon graphics</span>.
+            </p>
+            <p style="margin-top: 0.8rem;">
+              Consoles como PlayStation e Nintendo 64 transformaram os jogos em <span class="highlight-pt">experiências cinematográficas completas</span>.
+            </p>
+            <div class="vocab-card">
+              <div class="vocab-title"><i class="fa-solid fa-person-dancing"></i> Dance Vocabulary: Motion Capture</div>
+              <p><strong class="highlight-en">Motion Capture (MoCap):</strong> Digital recording of human dancers or actors to animate 3D avatars.</p>
+              <p><strong class="highlight-pt">Perspective (Perspectiva):</strong> O ângulo de câmera que altera a percepção do cenário.</p>
+            </div>
+          </div>
+          <div class="img-frame">
+            <img src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=800&q=80" alt="Virtual Reality and 3D Art">
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 5: Modern Era, Mobile & VR (2000s - Present) -->
+      <section class="slide" id="slide-5">
+        <div class="slide-header reveal-item">
+          <h1 class="slide-title"><i class="fa-solid fa-vr-cardboard"></i> Era Moderna, Mobile & VR</h1>
+          <span class="slide-tag">Século XXI</span>
+        </div>
+        <div class="slide-body reveal-item">
+          <div class="content-box">
+            <p>
+              In the 21st century, high-speed internet viabilizou partidas multijogador em massa, plataformas digitais, jogos em nuvem e e-Sports globais.
+            </p>
+            <p style="margin-top: 0.8rem;">
+              Smartphones popularizaram os <span class="highlight-en">mobile games</span> para todas as idades, enquanto tecnologias de <span class="highlight-pt">Realidade Virtual (VR)</span> transformam a presença física e artística do jogador.
+            </p>
+            <div class="vocab-card">
+              <div class="vocab-title"><i class="fa-solid fa-theater-masks"></i> Performance Art & Stagecraft</div>
+              <p><strong class="highlight-en">Performance Art:</strong> Live artistic expression combining body movement, sound, and technology.</p>
+              <p><strong class="highlight-pt">Iluminação Cênica (Lighting Design):</strong> O uso de luzes virtuais para criar emoção e drama.</p>
+            </div>
+          </div>
+          <div class="img-frame">
+            <img src="https://images.unsplash.com/photo-1592478411213-6153e4ebc07d?auto=format&fit=crop&w=800&q=80" alt="Modern VR Gaming Headset">
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 6: Sources & Research Timeline -->
+      <section class="slide" id="slide-6">
+        <div class="slide-header reveal-item">
+          <h1 class="slide-title"><i class="fa-solid fa-book-bookmark"></i> Fontes & Preservação Histórica</h1>
+          <span class="slide-tag">10 Fontes Selecionadas</span>
+        </div>
+        <div class="slide-body full-width reveal-item">
+          <div class="sources-grid">
+            <div class="source-card">
+              <h4>1. History of video games – Wikipedia <i class="fa-solid fa-globe"></i></h4>
+              <p>Visão global sobre todas as gerações de consoles, computadores mainframe e a evolução da indústria internacional.</p>
+              <a href="https://en.wikipedia.org/wiki/History_of_video_games" target="_blank" class="source-link">Acessar Fonte <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            </div>
+            <div class="source-card">
+              <h4>2. História dos jogos eletrônicos – Wikipédia <i class="fa-solid fa-globe"></i></h4>
+              <p>Panorama detalhado em português, desde os primeiros testes em osciloscópios até e-Sports e jogos em nuvem.</p>
+              <a href="https://pt.wikipedia.org/wiki/Hist%C3%B3ria_dos_jogos_eletr%C3%B4nicos" target="_blank" class="source-link">Acessar Fonte <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            </div>
+            <div class="source-card">
+              <h4>3. Jogos eletrônicos no Brasil – Wikipédia <i class="fa-solid fa-flag"></i></h4>
+              <p>História da reserva de mercado nos anos 70/80, o sucesso dos clones do Atari, Tectoy, Playtronic e estúdios nacionais.</p>
+              <a href="https://pt.wikipedia.org/wiki/Jogos_eletr%C3%B4nicos_no_Brasil" target="_blank" class="source-link">Acessar Fonte <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            </div>
+            <div class="source-card">
+              <h4>4. Lista de consoles de jogos – Wikipédia <i class="fa-solid fa-list-ol"></i></h4>
+              <p>Catálogo cronológico das 9 gerações de hardware, listando consoles de mesa e portáteis desde 1972.</p>
+              <a href="https://pt.wikipedia.org/wiki/Lista_de_consoles_de_jogos_eletr%C3%B4nicos" target="_blank" class="source-link">Acessar Fonte <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            </div>
+            <div class="source-card">
+              <h4>5. National Videogame Museum (UK) <i class="fa-solid fa-building-columns"></i></h4>
+              <p>Acervo histórico no Reino Unido dedicado à preservação cultural de arcades, consoles e bastidores de desenvolvimento.</p>
+              <a href="https://thenvm.org/collection-catalogue/" target="_blank" class="source-link">Acessar Fonte <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            </div>
+            <div class="source-card">
+              <h4>6. Primórdios dos jogos eletrônicos – Wikipédia <i class="fa-solid fa-hourglass-start"></i></h4>
+              <p>Análise focada no período inicial (1947–1972), incluindo programas experimentais como OXO, Tennis for Two e Spacewar!</p>
+              <a href="https://pt.wikipedia.org/wiki/Prim%C3%B3rdios_dos_jogos_eletr%C3%B4nicos" target="_blank" class="source-link">Acessar Fonte <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            </div>
+            <div class="source-card">
+              <h4>7. Timeline Gamer Home <i class="fa-solid fa-timeline"></i></h4>
+              <p>Portal educacional sobre momentos marcantes, evolução de mecânicas de jogo e personagens emblemáticos.</p>
+              <a href="https://gametimeline.com.br/" target="_blank" class="source-link">Acessar Fonte <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            </div>
+            <div class="source-card">
+              <h4>8. VGHF Digital Library – GamesBeat <i class="fa-solid fa-newspaper"></i></h4>
+              <p>Reportagem sobre a biblioteca digital da Video Game History Foundation, focada em guardar revistas e documentos raros.</p>
+              <a href="https://gamesbeat.com/video-game-history-museum-launches-vghf-digital-library/" target="_blank" class="source-link">Acessar Fonte <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            </div>
+            <div class="source-card">
+              <h4>9. The Strong National Museum of Play <i class="fa-solid fa-landmark"></i></h4>
+              <p>Museu mundialmente famoso dedicado à preservação do brincar, brinquedos e história interativa dos videogames.</p>
+              <a href="https://www.museumofplay.org/" target="_blank" class="source-link">Acessar Fonte <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            </div>
+            <div class="source-card">
+              <h4>10. Videogame Timeline | Genially <i class="fa-solid fa-chart-line"></i></h4>
+              <p>Modelo gráfico e interativo com a evolução cronológica das tecnologias, mídias e plataformas digitais.</p>
+              <a href="https://genially.com/pt-br/" target="_blank" class="source-link">Acessar Fonte <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 7: Chronological Hall of Fame -->
+      <section class="slide" id="slide-7">
+        <div class="slide-header reveal-item">
+          <h1 class="slide-title"><i class="fa-solid fa-trophy"></i> Hall of Fame: Maiores Jogos</h1>
+          <span class="slide-tag">Ordem Cronológica</span>
+        </div>
+        <div class="slide-body full-width reveal-item">
+          <div class="games-grid">
+            
+            <!-- 1. Tetris (1984) -->
+            <div class="game-card" onclick="openGameModal('Tetris (1984)', 'Elektronika 60 / Game Boy / Multiplataforma', 'Criado por Alexey Pajitnov na União Soviética, Tetris is a tile-matching puzzle game lendário. Ele usa spatial composition e um ritmo constante de blocos em queda.')">
+              <span class="game-year">1984</span>
+              <div class="game-title">Tetris</div>
+              <div class="game-platform"><i class="fa-solid fa-desktop"></i> PC / Game Boy</div>
+              <p class="game-desc">Tile-matching puzzle game icônico focado em arranjo espacial e reação rápida.</p>
+            </div>
+
+            <!-- 2. Super Mario Bros. (1985) -->
+            <div class="game-card" onclick="openGameModal('Super Mario Bros. (1985)', 'Nintendo Entertainment System (NES)', 'Desenvolvido pela Nintendo, this platformer revolutionized level design and smooth character choreography. Mario definiu as regras dos jogos de plataforma 2D.')">
+              <span class="game-year">1985</span>
+              <div class="game-title">Super Mario Bros.</div>
+              <div class="game-platform"><i class="fa-solid fa-gamepad"></i> NES</div>
+              <p class="game-desc">A aventura que estabeleceu o padrão para platformer e animação de personagens.</p>
+            </div>
+
+            <!-- 3. The Legend of Zelda (1986) -->
+            <div class="game-card" onclick="openGameModal('The Legend of Zelda (1986)', 'NES / Famicom Disk System', 'Created by Shigeru Miyamoto, this title introduced open-world exploration, puzzles e save states em cartuchos.')">
+              <span class="game-year">1986</span>
+              <div class="game-title">The Legend of Zelda</div>
+              <div class="game-platform"><i class="fa-solid fa-gamepad"></i> NES</div>
+              <p class="game-desc">Pioneiro na exploração livre e narrativa épica de fantasia e aventura.</p>
+            </div>
+
+            <!-- 4. Sonic the Hedgehog (1991) -->
+            <div class="game-card" onclick="openGameModal('Sonic the Hedgehog (1991)', 'Sega Genesis / Mega Drive', 'SEGA created Sonic to show high-speed scrolling e acrobatic momentum, trazendo uma dança veloz e vibrante para o Mega Drive.')">
+              <span class="game-year">1991</span>
+              <div class="game-title">Sonic the Hedgehog</div>
+              <div class="game-platform"><i class="fa-solid fa-gamepad"></i> Mega Drive</div>
+              <p class="game-desc">Mecânicas ultra-rápidas e animação acrobática cheia de estilo 16-bit.</p>
+            </div>
+
+            <!-- 5. Mortal Kombat (1992) -->
+            <div class="game-card" onclick="openGameModal('Mortal Kombat (1992)', 'Arcade / SNES / Mega Drive', 'Famous for digitized sprites from real actors, combining martial arts choreography with striking special effects and controversy.')">
+              <span class="game-year">1992</span>
+              <div class="game-title">Mortal Kombat</div>
+              <div class="game-platform"><i class="fa-solid fa-vr-cardboard"></i> Arcade / Consoles</div>
+              <p class="game-desc">Sprites digitalizados de atores reais e coreografias marcantes de artes marciais.</p>
+            </div>
+
+            <!-- 6. FIFA International Soccer (1993) -->
+            <div class="game-card" onclick="openGameModal('FIFA Soccer (1993)', 'Mega Drive / SNES / PC', 'EA Sports launched this title with an isometric perspective, trazendo animações realistas dos movimentos e ritmo de jogo de futebol.')">
+              <span class="game-year">1993</span>
+              <div class="game-title">FIFA Football</div>
+              <div class="game-platform"><i class="fa-solid fa-futbol"></i> Multiplataforma</div>
+              <p class="game-desc">Visão isométrica e simulação dos movimentos de dança e tática nos gramados.</p>
+            </div>
+
+            <!-- 7. Grand Theft Auto - GTA (1997) -->
+            <div class="game-card" onclick="openGameModal('GTA (1997)', 'PC / PlayStation', 'Starting as a top-down open-world game, GTA evolved into full 3D environments, redefinindo liberdade e exploração urbana.')">
+              <span class="game-year">1997</span>
+              <div class="game-title">GTA (Grand Theft Auto)</div>
+              <div class="game-platform"><i class="fa-solid fa-car"></i> PC / PlayStation</div>
+              <p class="game-desc">Mundo aberto e narrativa livre, revolucionando a ação urbana em 2D e 3D.</p>
+            </div>
+
+            <!-- 8. Roblox (2006) -->
+            <div class="game-card" onclick="openGameModal('Roblox (2006)', 'PC / Mobile / Xbox / VR', 'An online creation platform where users build 3D worlds and custom avatars, incorporando danças e animações criadas pela própria comunidade.')">
+              <span class="game-year">2006</span>
+              <div class="game-title">Roblox</div>
+              <div class="game-platform"><i class="fa-solid fa-cubes"></i> Multiplataforma / Mobile</div>
+              <p class="game-desc">Plataforma de criação 3D e experiências virtuais focada na comunidade.</p>
+            </div>
+
+            <!-- 9. Minecraft (2009) -->
+            <div class="game-card" onclick="openGameModal('Minecraft (2009)', 'PC / Consoles / Mobile / VR', 'Created by Markus Persson (Notch), Minecraft is a sandbox game centered on 3D spatial building and creative freedom.')">
+              <span class="game-year">2009</span>
+              <div class="game-title">Minecraft</div>
+              <div class="game-platform"><i class="fa-solid fa-cubes"></i> Multiplataforma</div>
+              <p class="game-desc">O jogo sandbox definitivo baseado em blocos, arquitetura e criatividade ilimitada.</p>
+            </div>
+
+            <!-- 10. Pou (2012) -->
+            <div class="game-card" onclick="openGameModal('Pou (2012)', 'Android / iOS', 'A virtual pet game developed by Paul Salameh, popularizing casual mobile touch interactions e cuidados diários em dispositivos móveis.')">
+              <span class="game-year">2012</span>
+              <div class="game-title">Pou</div>
+              <div class="game-platform"><i class="fa-solid fa-mobile-screen"></i> Android / iOS</div>
+              <p class="game-desc">Mascote virtual mobile que conquistou gerações com mini-games casuais.</p>
+            </div>
+
+            <!-- 11. Subway Surfers (2012) -->
+            <div class="game-card" onclick="openGameModal('Subway Surfers (2012)', 'Android / iOS', 'Co-developed by Kiloo and SYBO Games, this endless runner features vibrant urban graffiti art, acrobatic jumps and rhythmic dodging.')">
+              <span class="game-year">2012</span>
+              <div class="game-title">Subway Surfers</div>
+              <div class="game-platform"><i class="fa-solid fa-mobile-screen"></i> Mobile</div>
+              <p class="game-desc">Endless runner vibrante com estética de graffiti urbano e ritmo acrobático.</p>
+            </div>
+
+            <!-- 12. Flappy Bird (2013) -->
+            <div class="game-card" onclick="openGameModal('Flappy Bird (2013)', 'iOS / Android', 'Created by Dong Nguyen, this minimalist mobile game relied on precise tap timing e ritmo desafiador para desviar de canos.')">
+              <span class="game-year">2013</span>
+              <div class="game-title">Flappy Bird</div>
+              <div class="game-platform"><i class="fa-solid fa-mobile-screen"></i> Mobile</div>
+              <p class="game-desc">Fenômeno viral ultracasual focado em tempo de toque e física simples.</p>
+            </div>
+
+            <!-- 13. Cuphead (2017) -->
+            <div class="game-card" onclick="openGameModal('Cuphead (2017)', 'PC / Xbox / Switch / PS4', 'Developed by Studio MDHR, featuring hand-drawn 1930s rubber hose animation, watercolor backgrounds and live jazz music.')">
+              <span class="game-year">2017</span>
+              <div class="game-title">Cuphead</div>
+              <div class="game-platform"><i class="fa-solid fa-paint-brush"></i> Multiplataforma</div>
+              <p class="game-desc">Estilo de arte desenhado à mão estilo 1930 com trilha sonora de Jazz ao vivo.</p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 8: Interactive Vocabulary Quiz -->
+      <section class="slide" id="slide-8">
+        <div class="slide-header reveal-item">
+          <h1 class="slide-title"><i class="fa-solid fa-graduation-cap"></i> Interactive Quiz</h1>
+          <span class="slide-tag">Prática de Vocabulário</span>
+        </div>
+        <div class="slide-body reveal-item">
+          <div class="content-box quiz-container">
+            <div class="quiz-question" id="quizQuestion">
+              Qual termo descreve o processo digital de gravar os movimentos de bailarinos ou atores reais para animar personagens 3D nos jogos?
+            </div>
+            <div class="quiz-options">
+              <button class="quiz-btn" onclick="checkAnswer(false, this)">A) Pixel Art Sequence</button>
+              <button class="quiz-btn" onclick="checkAnswer(true, this)">B) Motion Capture (MoCap)</button>
+              <button class="quiz-btn" onclick="checkAnswer(false, this)">C) Scenography Setup</button>
+              <button class="quiz-btn" onclick="checkAnswer(false, this)">D) Chiptune Sound Engine</button>
+            </div>
+            <div class="quiz-feedback" id="quizFeedback"></div>
+          </div>
+          <div class="content-box" style="border-left-color: var(--accent-pink);">
+            <h3 style="font-family: var(--font-title); color: var(--accent-pink); margin-bottom: 0.8rem;">
+              <i class="fa-solid fa-lightbulb"></i> Inferência Contextual
+            </h3>
+            <p>
+              Ao estudar artes, dança e jogos, você percebeu como termos como <span class="highlight-en">Choreography</span>, <span class="highlight-en">Motion Capture</span>, e <span class="highlight-en">Rhythm</span> conectam o palco ao mundo digital sem precisar de tradução direta.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bottom Slide Navigation Bar -->
+      <div class="nav-controls">
+        <span class="slide-counter" id="slideCounter">Slide 1 / 8</span>
+        <button class="btn-nav" id="btnPrev" onclick="prevSlide()"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="btn-nav" id="btnNext" onclick="nextSlide()"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+
+      <!-- Bottom Progress Bar -->
+      <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal Display for Detailed Game Information -->
+  <div class="modal-overlay" id="gameModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeGameModal()"><i class="fa-solid fa-xmark"></i></button>
+      <h2 id="modalTitle" style="font-family: var(--font-title); color: var(--accent-neon); margin-bottom: 0.5rem;">Game Title</h2>
+      <p id="modalPlatform" style="color: var(--accent-pink); font-weight: 600; font-size: 0.9rem; margin-bottom: 1.2rem;">Platform</p>
+      <p id="modalDesc" style="color: var(--text-main); line-height: 1.6; font-size: 1rem;">Description text...</p>
+    </div>
+  </div>
+
+  <script>
+    // Slide Management Variables
+    let currentSlide = 1;
+    const totalSlides = 8;
+      // Web Audio API Sound Effects Engine
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playBeepSound(type = 'nav') {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'nav') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime); // Nota A4
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.08); // Subida rápida
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.08);
+      } else if (type === 'card') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // Nota C5
+        osc.frequency.exponentialRampToValueAtTime(659.25, audioCtx.currentTime + 0.12); // Efeito Blip
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.12);
+      }
+    }
+
+    // Initialize Particles.js
+    particlesJS('particles-js', {
+      particles: {
+        number: { value: 50, density: { enable: true, value_area: 800 } },
+        color: { value: ['#00f0ff', '#7000ff', '#ff007f'] },
+        shape: { type: 'circle' },
+        opacity: { value: 0.4, random: true },
+        size: { value: 3, random: true },
+        line_linked: {
+          enable: true,
+          distance: 140,
+          color: '#7000ff',
+          opacity: 0.25,
+          width: 1
+        },
+        move: { enable: true, speed: 1.5, direction: 'none', random: true }
+      },
+      interactivity: {
+        detect_on: 'canvas',
+        events: { onhover: { enable: true, mode: 'grab' } }
+      }
+    });
+
+    // Build Quick Jump Navigation Dots
+    const dotsContainer = document.getElementById('quickJumpDots');
+    for (let i = 1; i <= totalSlides; i++) {
+      const dot = document.createElement('div');
+      dot.className = `dot-step ${i === 1 ? 'active' : ''}`;
+      dot.title = `Ir para o Slide ${i}`;
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    }
+
+    // Slide Navigation Functions
+    function updateSlideUI() {
+      // Update Slide Visibility
+      document.querySelectorAll('.slide').forEach((slide, index) => {
+        if (index + 1 === currentSlide) {
+          slide.classList.add('active');
+        } else {
+          slide.classList.remove('active');
+        }
+      });
+
+      // Update Slide Counter
+      document.getElementById('slideCounter').innerText = `Slide ${currentSlide} / ${totalSlides}`;
+
+      // Update Bottom Progress Bar
+      const progressPercent = (currentSlide / totalSlides) * 100;
+      document.getElementById('progressBar').style.width = `${progressPercent}%`;
+
+      // Update Quick Navigation Dots
+      document.querySelectorAll('.dot-step').forEach((dot, index) => {
+        if (index + 1 === currentSlide) {
+          dot.classList.add('active');
+        } else {
+          dot.classList.remove('active');
+        }
+      });
+
+      // Trigger Subtle Anime.js scale effect on active slide title
+      anime({
+        targets: `#slide-${currentSlide} .slide-title`,
+        scale: [0.95, 1],
+        duration: 400,
+        easing: 'easeOutQuad'
+      });
+    }
+
+   function nextSlide() {
+      if (currentSlide < totalSlides) {
+        currentSlide++;
+        playBeepSound('nav');
+        updateSlideUI();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        playBeepSound('nav');
+        updateSlideUI();
+      }
+    }
+
+    function goToSlide(slideNum) {
+      currentSlide = slideNum;
+      playBeepSound('nav');
+      updateSlideUI();
+    }
+
+    // Keyboard Arrow Keys Navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'Space') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        prevSlide();
+      }
+    });
+
+    // Modal Functions for Games Showcase
+    function openGameModal(title, platform, desc) {
+        playBeepSound('card');
+      document.getElementById('modalTitle').innerText = title;
+      document.getElementById('modalPlatform').innerText = `Plataforma: ${platform}`;
+      document.getElementById('modalDesc').innerText = desc;
+      document.getElementById('gameModal').classList.add('active');
+    }
+
+    function closeGameModal() {
+      document.getElementById('gameModal').classList.remove('active');
+    }
+
+    // Quiz Check Logic
+    function checkAnswer(isCorrect, btnElement) {
+      const feedback = document.getElementById('quizFeedback');
+      document.querySelectorAll('.quiz-btn').forEach(b => {
+        b.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+        b.style.background = 'rgba(255, 255, 255, 0.05)';
+      });
+
+      if (isCorrect) {
+        btnElement.style.borderColor = '#00f0ff';
+        btnElement.style.background = 'rgba(0, 240, 255, 0.25)';
+        feedback.style.color = '#00f0ff';
+        feedback.innerHTML = '<i class="fa-solid fa-circle-check"></i> Exactly! Motion Capture (MoCap) grava os movimentos reais de dança e performance!';
+      } else {
+        btnElement.style.borderColor = '#ff007f';
+        btnElement.style.background = 'rgba(255, 0, 127, 0.25)';
+        feedback.style.color = '#ff007f';
+        feedback.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Tente novamente! Pense na tecnologia que grava dançarinos para o 3D.';
+      }
+    }
+  </script>
+</body>
+</html>
