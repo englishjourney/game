@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprenda Preposições em Inglês</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Glassmorphism effects */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .light .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.5);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen transition-colors duration-300 flex flex-col justify-between selection:bg-brand-500 selection:text-white">
+
+    <!-- Header Section -->
+    <header class="sticky top-0 z-30 backdrop-blur-md bg-slate-900/80 border-b border-slate-800 px-4 lg:px-8 py-4 transition-all">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-brand-500/30">
+                    <i class="fa-solid font-bold text-xl text-white">In</i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-300 bg-clip-text text-transparent">
+                        Preposições em Inglês
+                    </h1>
+                    <p class="text-xs text-slate-400">Guia interativo e ilustrado de preposições de lugar</p>
+                </div>
+            </div>
+
+            <!-- Controles: Busca e Tema -->
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <div class="relative w-full md:w-72">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="searchInput" placeholder="Buscar preposição..." 
+                        class="w-full pl-10 pr-4 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all text-slate-200 placeholder-slate-400">
+                </div>
+                <button id="themeToggle" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors border border-slate-700 shrink-0" title="Alternar Tema">
+                    <i class="fa-solid fa-moon" id="themeIcon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Content Container -->
+    <main class="max-w-7xl mx-auto px-4 lg:px-8 py-8 flex-1 w-full">
+
+        <!-- Banner Explicativo -->
+        <div class="mb-8 p-6 rounded-2xl bg-gradient-to-r from-brand-900/40 via-indigo-900/30 to-purple-900/30 border border-slate-800 relative overflow-hidden">
+            <div class="relative z-10 max-w-3xl">
+                <span class="px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-brand-500/20 text-brand-400 rounded-full border border-brand-500/30">
+                    Aprenda na Prática
+                </span>
+                <h2 class="text-xl md:text-2xl font-bold mt-3 mb-2 text-slate-100">
+                    Clique em qualquer preposição para visualizar o exemplo visual e pronúncia
+                </h2>
+                <p class="text-sm text-slate-300 leading-relaxed">
+                    As preposições indicam relações de posição, direção e tempo. Explore a lista abaixo para aprender onde e como aplicar cada preposição corretamente.
+                </p>
+            </div>
+            <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl font-black select-none pointer-events-none">
+                PREP
+            </div>
+        </div>
+
+        <!-- Grid de Preposições -->
+        <div id="cardsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <!-- Os cards serão injetados via JS -->
+        </div>
+
+        <!-- Estado de busca vazia -->
+        <div id="noResults" class="hidden text-center py-16">
+            <i class="fa-solid fa-ghost text-5xl text-slate-600 mb-4"></i>
+            <h3 class="text-lg font-semibold text-slate-400">Nenhuma preposição encontrada</h3>
+            <p class="text-sm text-slate-500 mt-1">Tente pesquisar por outro termo ou limpe a busca.</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500 mt-12">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>Guia Interativo de Inglês &copy; 2026. Imagens em <code class="text-brand-400 bg-slate-800 px-1.5 py-0.5 rounded">tools/pics/[preposicao].jpeg</code></p>
+        </div>
+    </footer>
+
+    <!-- Modal para Detalhes da Preposição -->
+    <div id="modalOverlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div id="modalContainer" class="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar transform scale-95 transition-transform duration-300 shadow-2xl relative">
+            
+            <!-- Botão Fechar -->
+            <button id="closeModal" class="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-300 flex items-center justify-center border border-slate-700 transition-colors">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <!-- Conteúdo do Modal -->
+            <div class="p-6 md:p-8">
+                
+                <!-- Cabeçalho do Card -->
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="px-4 py-2 rounded-2xl bg-brand-600/20 border border-brand-500/30">
+                        <span id="modalTitle" class="text-2xl md:text-3xl font-black tracking-wide text-brand-400">IN</span>
+                    </div>
+                    <div>
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Preposição</span>
+                        <h3 id="modalSubTitle" class="text-lg font-medium text-slate-200">Definição detalhada</h3>
+                    </div>
+                </div>
+
+                <!-- Imagem com Fallback -->
+                <div class="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden bg-slate-800 border border-slate-700/60 mb-6 flex items-center justify-center">
+                    <img id="modalImage" src="" alt="Representação visual da preposição" class="w-full h-full object-contain p-2 transition-all duration-300">
+                    
+                    <!-- Fallback Visual caso a imagem não exista localmente -->
+                    <div id="imageFallback" class="hidden absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-slate-800/90 text-slate-400">
+                        <i class="fa-regular fa-image text-4xl mb-3 text-slate-500"></i>
+                        <p class="text-sm font-medium text-slate-300">Imagem não encontrada no diretório local</p>
+                        <p id="modalPathText" class="text-xs text-slate-500 mt-1 font-mono bg-slate-900 px-2 py-1 rounded border border-slate-800">tools/pics/in.jpeg</p>
+                    </div>
+                </div>
+
+                <!-- Definição -->
+                <div class="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 mb-4">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-info text-brand-400"></i> Definição
+                    </h4>
+                    <p id="modalDefinition" class="text-base text-slate-200 font-medium leading-relaxed">
+                        Indica que algo está dentro de um espaço ou lugar.
+                    </p>
+                </div>
+
+                <!-- Exemplo Prático & Pronúncia -->
+                <div class="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                            <i class="fa-solid fa-quote-left text-brand-400"></i> Exemplo de Uso
+                        </h4>
+                        <button id="speakBtn" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold transition-all shadow-md shadow-brand-600/20">
+                            <i class="fa-solid fa-volume-high"></i>
+                            <span>Ouvir Pronúncia</span>
+                        </button>
+                    </div>
+                    <p id="modalExampleEn" class="text-lg font-semibold text-brand-300 italic mb-1">
+                        "The cat is in the box."
+                    </p>
+                    <p id="modalExamplePt" class="text-sm text-slate-400">
+                        "O gato está dentro da caixa."
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Principal -->
+    <script>
+        // Dados das Preposições com exemplos práticos integrados
+        const prepositions = [
+            {
+                name: "IN",
+                fileName: "in.jpeg",
+                definition: "Indica que algo está dentro de um espaço ou lugar.",
+                exampleEn: "The cat is in the box.",
+                examplePt: "O gato está dentro da caixa."
+            },
+            {
+                name: "ON",
+                fileName: "on.jpeg",
+                definition: "Indica que algo está sobre uma superfície, geralmente em contato com ela.",
+                exampleEn: "The book is on the table.",
+                examplePt: "O livro está sobre a mesa."
+            },
+            {
+                name: "AT",
+                fileName: "at.jpeg",
+                definition: "Indica um ponto ou local específico.",
+                exampleEn: "She is standing at the bus stop.",
+                examplePt: "Ela está parada no ponto de ônibus."
+            },
+            {
+                name: "ABOVE",
+                fileName: "above.jpeg",
+                definition: "Indica que algo está acima de outra coisa, sem necessariamente tocá-la.",
+                exampleEn: "The picture hangs above the sofa.",
+                examplePt: "O quadro está pendurado acima do sofá."
+            },
+            {
+                name: "UNDER",
+                fileName: "under.jpeg",
+                definition: "Indica que algo está abaixo de outra coisa, geralmente coberto ou diretamente sob ela.",
+                exampleEn: "The dog is sleeping under the bed.",
+                examplePt: "O cachorro está dormindo debaixo da cama."
+            },
+            {
+                name: "INSIDE",
+                fileName: "inside.jpeg",
+                definition: "Indica que algo está no interior de um espaço ou objeto.",
+                exampleEn: "Keep the key inside your pocket.",
+                examplePt: "Mantenha a chave no interior do seu bolso."
+            },
+            {
+                name: "BESIDE",
+                fileName: "beside.jpeg",
+                definition: "Indica que algo está ao lado de outra coisa.",
+                exampleEn: "Sit beside me.",
+                examplePt: "Sente-se ao meu lado."
+            },
+            {
+                name: "BEHIND",
+                fileName: "behind.jpeg",
+                definition: "Indica que algo está atrás de outra coisa.",
+                exampleEn: "The sun disappeared behind the clouds.",
+                examplePt: "O sol desapareceu atrás das nuvens."
+            },
+            {
+                name: "IN FRONT OF",
+                fileName: "in front of.jpeg",
+                definition: "Indica que algo está à frente de outra coisa.",
+                exampleEn: "There is a park in front of the house.",
+                examplePt: "Há um parque à frente da casa."
+            },
+            {
+                name: "NEAR",
+                fileName: "near.jpeg",
+                definition: "Indica que algo está perto de outra coisa, sem necessariamente estar ao lado dela.",
+                exampleEn: "The school is near the supermarket.",
+                examplePt: "A escola é perto do supermercado."
+            },
+            {
+                name: "NEXT TO",
+                fileName: "next to.jpeg",
+                definition: "Indica que algo está imediatamente ao lado de outra coisa.",
+                exampleEn: "The bank is next to the pharmacy.",
+                examplePt: "O banco é ao lado da farmácia."
+            },
+            {
+                name: "AMONG",
+                fileName: "among.jpeg",
+                definition: "Indica que algo está em meio a um grupo de três ou mais elementos.",
+                exampleEn: "She found her friend among the crowd.",
+                examplePt: "Ela encontrou seu amigo em meio à multidão."
+            },
+            {
+                name: "BETWEEN",
+                fileName: "between.jpeg",
+                definition: "Indica que algo está entre dois elementos ou pontos de referência.",
+                exampleEn: "The letter 'B' is between 'A' and 'C'.",
+                examplePt: "A letra 'B' está entre 'A' e 'C'."
+            },
+            {
+                name: "IN THE MIDDLE",
+                fileName: "in the middle.jpeg",
+                definition: "Indica que algo está no meio de um espaço ou grupo, geralmente ocupando uma posição central.",
+                exampleEn: "There is a fountain in the middle of the square.",
+                examplePt: "Há uma fonte no meio da praça."
+            }
+        ];
+
+        // Elementos DOM
+        const cardsGrid = document.getElementById('cardsGrid');
+        const searchInput = document.getElementById('searchInput');
+        const noResults = document.getElementById('noResults');
+        
+        // Elementos Modal
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalContainer = document.getElementById('modalContainer');
+        const closeModalBtn = document.getElementById('closeModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalDefinition = document.getElementById('modalDefinition');
+        const modalExampleEn = document.getElementById('modalExampleEn');
+        const modalExamplePt = document.getElementById('modalExamplePt');
+        const modalImage = document.getElementById('modalImage');
+        const imageFallback = document.getElementById('imageFallback');
+        const modalPathText = document.getElementById('modalPathText');
+        const speakBtn = document.getElementById('speakBtn');
+
+        // Estado do tema
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        let currentPrep = null;
+
+        // Função para carregar Cards na interface
+        function renderCards(list) {
+            cardsGrid.innerHTML = '';
+            if (list.length === 0) {
+                noResults.classList.remove('hidden');
+                return;
+            }
+            noResults.classList.add('hidden');
+
+            list.forEach((item) => {
+                const card = document.createElement('button');
+                card.className = `glass-card group p-5 rounded-2xl text-left transition-all duration-300 hover:scale-[1.03] hover:shadow-xl hover:shadow-brand-500/10 hover:border-brand-500/50 flex flex-col justify-between h-36 border border-slate-800 bg-slate-800/40 relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-brand-500`;
+                
+                card.innerHTML = `
+                    <div class="flex items-center justify-between w-full">
+                        <span class="text-xl font-extrabold tracking-wide text-slate-100 group-hover:text-brand-400 transition-colors">
+                            ${item.name}
+                        </span>
+                        <div class="w-8 h-8 rounded-full bg-slate-700/50 group-hover:bg-brand-600 group-hover:text-white flex items-center justify-center text-slate-400 text-xs transition-all">
+                            <i class="fa-solid fa-arrow-right -rotate-45 group-hover:rotate-0 transition-transform"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400 line-clamp-2 mt-2 group-hover:text-slate-300 transition-colors">
+                        ${item.definition}
+                    </p>
+                `;
+
+                card.addEventListener('click', () => openModal(item));
+                cardsGrid.appendChild(card);
+            });
+        }
+
+        // Função para abrir modal com detalhes
+        function openModal(prep) {
+            currentPrep = prep;
+            modalTitle.innerText = prep.name;
+            modalDefinition.innerText = prep.definition;
+            modalExampleEn.innerText = `"${prep.exampleEn}"`;
+            modalExamplePt.innerText = `"${prep.examplePt}"`;
+
+            // Tratar caminho e encode para espaços
+            const encodedFileName = encodeURIComponent(prep.fileName).replace(/%20/g, ' ');
+            const imagePath = `tools/pics/${prep.fileName}`;
+            modalPathText.innerText = imagePath;
+
+            // Esconder fallback inicialmente e carregar imagem
+            imageFallback.classList.add('hidden');
+            modalImage.classList.remove('hidden');
+            modalImage.src = imagePath;
+
+            // Manipulação de erro no carregamento da imagem local
+            modalImage.onerror = () => {
+                modalImage.classList.add('hidden');
+                imageFallback.classList.remove('hidden');
+            };
+
+            // Mostrar modal com animação
+            modalOverlay.classList.remove('opacity-0', 'pointer-events-none');
+            modalContainer.classList.remove('scale-95');
+            modalContainer.classList.add('scale-100');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Fechar modal
+        function closeModal() {
+            modalOverlay.classList.add('opacity-0', 'pointer-events-none');
+            modalContainer.classList.remove('scale-100');
+            modalContainer.classList.add('scale-95');
+            document.body.style.overflow = 'auto';
+            if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
+        }
+
+        // Recurso de Fala (SpeechSynthesis API)
+        function speakCurrentPreposition() {
+            if (!currentPrep) return;
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Cancela falas anteriores
+                
+                // Fala primeiro o nome da preposição e depois a frase de exemplo
+                const textToSpeak = `${currentPrep.name}. ${currentPrep.exampleEn}`;
+                const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9; // Velocidade levemente reduzida para facilidade de entendimento
+
+                // Efeito visual no botão enquanto fala
+                speakBtn.classList.add('animate-pulse', 'bg-indigo-600');
+                utterance.onend = () => {
+                    speakBtn.classList.remove('animate-pulse', 'bg-indigo-600');
+                };
+
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert('Seu navegador não suporta a síntese de voz (Web Speech API).');
+            }
+        }
+
+        // Filtro em tempo real
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            const filtered = prepositions.filter(p => 
+                p.name.toLowerCase().includes(query) || 
+                p.definition.toLowerCase().includes(query)
+            );
+            renderCards(filtered);
+        });
+
+        // Alternador de Tema
+        let isDark = true;
+        themeToggle.addEventListener('click', () => {
+            isDark = !isDark;
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                themeIcon.className = 'fa-solid fa-moon';
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeIcon.className = 'fa-solid fa-sun';
+            }
+        });
+
+        // Event Listeners adicionais
+        closeModalBtn.addEventListener('click', closeModal);
+        speakBtn.addEventListener('click', speakCurrentPreposition);
+
+        // Fechar ao clicar fora do conteúdo
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeModal();
+        });
+
+        // Atalhos de Teclado (ESC para fechar modal)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Renderização Inicial
+        renderCards(prepositions);
+    </script>
+</body>
+</html>
