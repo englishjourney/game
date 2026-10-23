@@ -126,7 +126,7 @@
     <!-- Footer -->
     <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500 mt-12">
         <div class="max-w-7xl mx-auto px-4">
-            <p>Guia Interativo de Inglês &copy; 2026. Imagens em <code class="text-brand-400 bg-slate-800 px-1.5 py-0.5 rounded">tools/pics/[preposicao].jpeg</code></p>
+            <p>Guia Interativo de Inglês &copy; 2026. Imagens em <code class="text-brand-400 bg-slate-800 px-1.5 py-0.5 rounded">tools/pics/[fileName]</code></p>
         </div>
     </footer>
 
@@ -200,105 +200,105 @@
 
     <!-- Script Principal -->
     <script>
-        // Dados das Preposições com exemplos práticos integrados
+        // Dados das Preposições com os nomes de arquivo mapeados diretamente
         const prepositions = [
             {
                 name: "IN",
                 fileName: "in.jpeg",
                 definition: "Indica que algo está dentro de um espaço ou lugar.",
-                exampleEn: "The cat is in the box.",
-                examplePt: "O gato está dentro da caixa."
+                exampleEn: "The ball is in the box.",
+                examplePt: "A bola está dentro da caixa."
             },
             {
                 name: "ON",
                 fileName: "on.jpeg",
                 definition: "Indica que algo está sobre uma superfície, geralmente em contato com ela.",
-                exampleEn: "The book is on the table.",
-                examplePt: "O livro está sobre a mesa."
+                exampleEn: "The ball is on the box.",
+                examplePt: "A bola está sobre a caixa."
             },
             {
                 name: "AT",
                 fileName: "at.jpeg",
                 definition: "Indica um ponto ou local específico.",
-                exampleEn: "She is standing at the bus stop.",
-                examplePt: "Ela está parada no ponto de ônibus."
+                exampleEn: "The ball is at the box.",
+                examplePt: "A bola está junto/ao lado da caixa."
             },
             {
                 name: "ABOVE",
                 fileName: "above.jpeg",
                 definition: "Indica que algo está acima de outra coisa, sem necessariamente tocá-la.",
-                exampleEn: "The picture hangs above the sofa.",
-                examplePt: "O quadro está pendurado acima do sofá."
+                exampleEn: "The ball is above the box.",
+                examplePt: "A bola está acima da caixa."
             },
             {
                 name: "UNDER",
                 fileName: "under.jpeg",
                 definition: "Indica que algo está abaixo de outra coisa, geralmente coberto ou diretamente sob ela.",
-                exampleEn: "The dog is sleeping under the bed.",
-                examplePt: "O cachorro está dormindo debaixo da cama."
+                exampleEn: "The ball is under the box.",
+                examplePt: "A bola está debaixo da caixa."
             },
             {
                 name: "INSIDE",
                 fileName: "inside.jpeg",
                 definition: "Indica que algo está no interior de um espaço ou objeto.",
-                exampleEn: "Keep the key inside your pocket.",
-                examplePt: "Mantenha a chave no interior do seu bolso."
+                exampleEn: "The ball is inside the box.",
+                examplePt: "A bola está no interior da caixa."
             },
             {
                 name: "BESIDE",
                 fileName: "beside.jpeg",
                 definition: "Indica que algo está ao lado de outra coisa.",
-                exampleEn: "Sit beside me.",
-                examplePt: "Sente-se ao meu lado."
+                exampleEn: "The ball is beside the box.",
+                examplePt: "A bola está ao lado da caixa."
             },
             {
                 name: "BEHIND",
                 fileName: "behind.jpeg",
                 definition: "Indica que algo está atrás de outra coisa.",
-                exampleEn: "The sun disappeared behind the clouds.",
-                examplePt: "O sol desapareceu atrás das nuvens."
+                exampleEn: "The ball is behind the box.",
+                examplePt: "A bola está atrás da caixa."
             },
             {
                 name: "IN FRONT OF",
                 fileName: "infrontof.jpeg",
                 definition: "Indica que algo está à frente de outra coisa.",
-                exampleEn: "There is a park in front of the house.",
-                examplePt: "Há um parque à frente da casa."
+                exampleEn: "The ball is in front of the box.",
+                examplePt: "A bola está à frente da caixa."
             },
             {
                 name: "NEAR",
                 fileName: "near.jpeg",
                 definition: "Indica que algo está perto de outra coisa, sem necessariamente estar ao lado dela.",
-                exampleEn: "The school is near the supermarket.",
-                examplePt: "A escola é perto do supermercado."
+                exampleEn: "The ball is near the box.",
+                examplePt: "A bola está perto da caixa."
             },
             {
                 name: "NEXT TO",
                 fileName: "nextto.jpeg",
                 definition: "Indica que algo está imediatamente ao lado de outra coisa.",
-                exampleEn: "The bank is next to the pharmacy.",
-                examplePt: "O banco é ao lado da farmácia."
+                exampleEn: "The ball is next to the box.",
+                examplePt: "A bola está imediatamente ao lado da caixa."
             },
             {
                 name: "AMONG",
                 fileName: "among.jpeg",
                 definition: "Indica que algo está em meio a um grupo de três ou mais elementos.",
-                exampleEn: "She found her friend among the crowd.",
-                examplePt: "Ela encontrou seu amigo em meio à multidão."
+                exampleEn: "The ball is among the boxes.",
+                examplePt: "A bola está entre/em meio às caixas."
             },
             {
                 name: "BETWEEN",
                 fileName: "between.jpeg",
                 definition: "Indica que algo está entre dois elementos ou pontos de referência.",
-                exampleEn: "The letter 'B' is between 'A' and 'C'.",
-                examplePt: "A letra 'B' está entre 'A' e 'C'."
+                exampleEn: "The ball is between the boxes.",
+                examplePt: "A bola está entre as duas caixas."
             },
             {
                 name: "IN THE MIDDLE",
                 fileName: "inthemiddleof.jpeg",
                 definition: "Indica que algo está no meio de um espaço ou grupo, geralmente ocupando uma posição central.",
-                exampleEn: "There is a fountain in the middle of the square.",
-                examplePt: "Há uma fonte no meio da praça."
+                exampleEn: "The ball is in the middle of the boxes.",
+                examplePt: "A bola está no centro/meio das caixas."
             }
         ];
 
@@ -365,8 +365,7 @@
             modalExampleEn.innerText = `"${prep.exampleEn}"`;
             modalExamplePt.innerText = `"${prep.examplePt}"`;
 
-            // Tratar caminho e encode para espaços
-            const encodedFileName = encodeURIComponent(prep.fileName).replace(/%20/g, ' ');
+            // Caminho exato apontando para tools/pics/nomeDoArquivo.jpeg
             const imagePath = `tools/pics/${prep.fileName}`;
             modalPathText.innerText = imagePath;
 
@@ -410,7 +409,7 @@
                 const textToSpeak = `${currentPrep.name}. ${currentPrep.exampleEn}`;
                 const utterance = new SpeechSynthesisUtterance(textToSpeak);
                 utterance.lang = 'en-US';
-                utterance.rate = 0.9; // Velocidade levemente reduzida para facilidade de entendimento
+                utterance.rate = 0.9;
 
                 // Efeito visual no botão enquanto fala
                 speakBtn.classList.add('animate-pulse', 'bg-indigo-600');
