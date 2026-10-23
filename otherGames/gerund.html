@@ -45,7 +45,6 @@
 
     body {
       font-family: 'Montserrat', 'Inter', sans-serif;
-      background: linear-[#46178f];
       background: linear-gradient(135deg, #25076b 0%, #46178f 60%, #5d1fb1 100%);
       min-height: 100vh;
       color: #333;
@@ -90,15 +89,6 @@
     ::-webkit-scrollbar-thumb:hover {
       background: rgba(255,255,255,0.5);
     }
-
-    .pulse-animation {
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
   </style>
 </head>
 <body class="flex flex-col min-h-screen text-white relative overflow-x-hidden">
@@ -116,7 +106,7 @@
     <div class="flex items-center gap-4 text-xs sm:text-sm">
       <div id="connectionStatus" class="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/20">
         <span class="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse" id="statusDot"></span>
-        <span id="statusText" class="font-medium">Conectando ao Supabase...</span>
+        <span id="statusText" class="font-medium">Conectando ao Servidor...</span>
       </div>
 
       <button id="toggleDemoBtn" onclick="toggleDemoMode()" class="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/20 transition font-semibold text-white flex items-center gap-2">
@@ -129,7 +119,7 @@
   <!-- Main Container -->
   <main class="flex-1 flex flex-col justify-center items-center p-4 sm:p-6 max-w-6xl w-full mx-auto z-10">
 
-    <!-- 1. INITIAL LOGIN SCREEN (UNIFIED USERNAME AUTH) -->
+    <!-- 1. INITIAL LOGIN SCREEN -->
     <section id="screenRoleSelect" class="w-full max-w-xl bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 shadow-2xl text-center">
       <div class="mb-8">
         <span class="bg-yellow-400 text-kahoot-darkPurple font-extrabold text-xs tracking-wider uppercase px-4 py-1.5 rounded-full">Inglês - Gerúndio vs Infinitivo</span>
@@ -139,13 +129,12 @@
 
       <form id="initialAuthForm" onsubmit="handleInitialAuth(event)" class="space-y-5 text-left">
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-gray-200 mb-2">Nome de Usuário (Supabase Username)</label>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-200 mb-2">Nome de Usuário</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 font-bold">@</span>
             <input type="text" id="inputInitialUsername" required placeholder="Digite seu username" 
                    class="w-full pl-10 pr-4 py-3.5 bg-black/40 text-white rounded-xl border border-white/30 focus:border-yellow-400 focus:outline-none text-lg">
           </div>
-          <p class="text-xs text-gray-300 mt-2">Dica: Digite <span class="text-yellow-400 font-bold">micael.svg</span> para entrar direto como Host / Professor.</p>
         </div>
 
         <button type="submit" id="btnAuthSubmit" class="w-full py-4 bg-kahoot-blue hover:bg-blue-600 font-black text-xl rounded-2xl btn-kahoot flex items-center justify-center gap-3">
@@ -155,7 +144,7 @@
       </form>
     </section>
 
-    <!-- 2. PLAYER SETUP SCREEN (NICKNAME & AVATAR) -->
+    <!-- 2. PLAYER SETUP SCREEN -->
     <section id="screenPlayerSetup" class="hidden w-full max-w-2xl bg-white/10 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/20 shadow-2xl">
       <h2 class="text-2xl sm:text-3xl font-black text-center mb-2 flex items-center justify-center gap-2">
         <i class="fa-solid fa-user-gear text-yellow-400"></i> Perfil do Jogador
@@ -187,9 +176,8 @@
     <section id="screenHostLobby" class="hidden w-full max-w-4xl bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 shadow-2xl text-center">
       <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8 border-b border-white/10 pb-6">
         <div class="text-left">
-          <span class="bg-yellow-400 text-kahoot-darkPurple font-black text-xs px-3 py-1 rounded-full uppercase">Painel do Host</span>
+          <span class="bg-yellow-400 text-kahoot-darkPurple font-black text-xs px-3 py-1 rounded-full uppercase">Painel de Controle</span>
           <h2 class="text-3xl font-black mt-1">SALA DE ESPERA</h2>
-          <p class="text-gray-300 text-sm">Organizador: <span class="font-bold text-yellow-400">micael.svg</span></p>
         </div>
 
         <div class="bg-black/40 px-6 py-3 rounded-2xl border border-white/20 flex items-center gap-3">
@@ -223,16 +211,14 @@
 
         <div class="bg-black/30 px-6 py-4 rounded-2xl border border-white/10 w-full mb-6">
           <p class="text-lg font-extrabold animate-pulse text-white">Você está conectado!</p>
-          <p class="text-sm text-gray-300 mt-1">Veja seu nome na tela principal do Host (micael.svg) e aguarde o início do quiz.</p>
+          <p class="text-sm text-gray-300 mt-1">Aguarde o início da partida na tela principal.</p>
         </div>
       </div>
     </section>
 
-    <!-- 5. QUESTION VIEW (Host View & Player Controls) -->
+    <!-- 5. QUESTION VIEW -->
     <section id="screenQuestion" class="hidden w-full flex flex-col items-center">
-      <!-- Question Header bar -->
       <div class="w-full bg-white/10 backdrop-blur-md p-4 sm:p-6 rounded-3xl border border-white/20 shadow-2xl mb-6 text-center relative">
-        <!-- Timer Badge -->
         <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 bg-yellow-400 text-kahoot-darkPurple font-black text-2xl rounded-full flex items-center justify-center border-4 border-kahoot-purple shadow-lg" id="questionTimer">
           20
         </div>
@@ -247,12 +233,10 @@
         </h2>
       </div>
 
-      <!-- Question Content / Answer Options -->
       <div id="optionsGrid" class="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <!-- Buttons generated dynamically -->
+        <!-- Dynamic Options -->
       </div>
 
-      <!-- Host Control Panel during Question -->
       <div id="hostQuestionControls" class="hidden w-full mt-6 flex justify-between items-center bg-black/40 p-4 rounded-2xl border border-white/20">
         <div class="text-sm font-semibold text-gray-200">
           Respostas recebidas: <span id="answersSubmitted" class="font-black text-yellow-400 text-lg">0</span> / <span id="totalPlayersInRoom" class="font-black text-white text-lg">0</span>
@@ -263,21 +247,15 @@
       </div>
     </section>
 
-    <!-- 6. QUESTION REVEAL & RESULT FEEDBACK SCREEN -->
+    <!-- 6. QUESTION REVEAL & FEEDBACK -->
     <section id="screenReveal" class="hidden w-full max-w-4xl flex flex-col items-center">
       <div class="w-full bg-white/10 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/20 shadow-2xl text-center mb-6">
         <h2 id="revealTitle" class="text-3xl font-black mb-2">Tempo Esgotado!</h2>
         <p id="correctAnswerText" class="text-lg font-bold text-yellow-400 mb-6"></p>
 
-        <!-- Player Feedback Card -->
-        <div id="playerFeedbackCard" class="hidden p-6 rounded-2xl mb-6 text-2xl font-black">
-          <!-- Dynamically populated correct/wrong -->
-        </div>
+        <div id="playerFeedbackCard" class="hidden p-6 rounded-2xl mb-6 text-2xl font-black"></div>
 
-        <!-- Answer Stats Breakdown for Host -->
-        <div id="statsBreakdown" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-4 my-6">
-          <!-- Filled JS -->
-        </div>
+        <div id="statsBreakdown" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-4 my-6"></div>
 
         <div id="hostNextContainer" class="hidden mt-4">
           <button onclick="hostNextQuestion()" class="px-8 py-4 bg-kahoot-green hover:bg-green-600 font-black text-xl rounded-2xl btn-kahoot uppercase tracking-wider">
@@ -292,10 +270,9 @@
       <div class="mb-8">
         <i class="fa-solid fa-trophy text-6xl text-yellow-400 mb-2 animate-bounce"></i>
         <h1 class="text-4xl font-black text-white">PÓDIO FINAL</h1>
-        <p class="text-gray-300">Pontuação salva no banco de dados do Supabase!</p>
+        <p class="text-gray-300">Pontuações salvas com sucesso!</p>
       </div>
 
-      <!-- Podium Graphic -->
       <div id="podiumContainer" class="flex justify-center items-end gap-3 sm:gap-6 mb-8 min-h-[220px]">
         <!-- 2nd Place -->
         <div id="podium2" class="flex flex-col items-center flex-1 max-w-[140px]">
@@ -336,17 +313,16 @@
 
   </main>
 
-  <!-- Footer -->
   <footer class="bg-black/40 py-3 text-center text-xs text-gray-400 border-t border-white/10">
-    <p>English Verbs Realtime Quiz • Integrado com Supabase & Realtime Broadcast</p>
+    <p>English Verbs Realtime Quiz • Integrado com Servidor & Realtime Broadcast</p>
   </footer>
 
-  <!-- SCRIPT LOGIC -->
   <script>
     // --- SUPABASE CONFIGURATION ---
     const SUPABASE_URL = "https://rmsmamzutvxugdbiqsrz.supabase.co";
     const SUPABASE_KEY = "sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx";
     
+    // Global variable renamed to avoid collisions with library namespaces
     let supabaseClient = null;
     let realtimeChannel = null;
     let isDemoMode = false;
@@ -361,8 +337,314 @@
       hasAnswered: false
     };
 
-    let connectedPlayers = []; // List of player objects in room
-    // --- INITIAL LOGIN / AUTH HANDLER ---
+    let connectedPlayers = [];
+    let currentQuestionIndex = 0;
+    let playerAnswersSubmitted = {};
+    let questionTimerInterval = null;
+    let timerSeconds = 20;
+
+    // --- AVATARS LIST ---
+    const AVATARS = [
+      "https://img.magnific.com/vetores-gratis/personagem-de-desenho-animado-de-monstro-vermelho-fofo-e-alegre_1308-157153.jpg?semt=ais_hybrid&w=740&q=80",
+      "https://img.magnific.com/vetores-gratis/ilustracao-de-personagens-de-desenhos-animados-alienigenas-adoraveis_1308-157225.jpg?semt=ais_hybrid&w=740&q=80",
+      "https://www.pngarts.com/files/11/Cute-Green-Monster-PNG-Image.png",
+      "https://i.pinimg.com/236x/66/ec/b2/66ecb2a83b379483c703e7566437aaee.jpg",
+      "https://cdn-icons-png.flaticon.com/512/1492/1492545.png",
+      "https://cdn-icons-png.flaticon.com/512/4925/4925740.png",
+      "https://png.pngtree.com/png-vector/20231018/ourmid/pngtree-happy-cartoon-monster-png-image_10304844.png",
+      "https://img.magnific.com/vetores-gratis/four-eyes-pluffy-cartoon-character-uma-ilustracao-vetorial-brincalhona_1308-159963.jpg?semt=ais_hybrid&w=740&q=80"
+    ];
+    const PLACEHOLDER_AVATAR = "https://cdn-icons-png.flaticon.com/512/1492/1492545.png";
+
+    // --- GENERATE 150 QUESTIONS ---
+    function buildQuestionBank() {
+      const q = [];
+      const verbPairs = [
+        { inf: "To accept", ger: "Accepting", ptInf: "Aceitar", ptGer: "Aceitando" },
+        { inf: "To agree", ger: "Agreeing", ptInf: "Concordar", ptGer: "Concordando" },
+        { inf: "To allow", ger: "Allowing", ptInf: "Permitir", ptGer: "Permitindo" },
+        { inf: "To ask", ger: "Asking", ptInf: "Perguntar", ptGer: "Perguntando" },
+        { inf: "To become", ger: "Becoming", ptInf: "Tornar-se", ptGer: "Tornando-se" },
+        { inf: "To begin", ger: "Beginning", ptInf: "Começar", ptGer: "Começando" },
+        { inf: "To call", ger: "Calling", ptInf: "Ligar/Chamar", ptGer: "Ligando/Chamando" },
+        { inf: "To choose", ger: "Choosing", ptInf: "Escolher", ptGer: "Escolhendo" },
+        { inf: "To come", ger: "Coming", ptInf: "Vir", ptGer: "Vindo" },
+        { inf: "To do", ger: "Doing", ptInf: "Fazer", ptGer: "Fazendo" },
+        { inf: "To feel", ger: "Feeling", ptInf: "Sentir", ptGer: "Sentindo" },
+        { inf: "To find", ger: "Finding", ptInf: "Encontrar", ptGer: "Encontrando" },
+        { inf: "To get", ger: "Getting", ptInf: "Obter/Conseguir", ptGer: "Obtendo" },
+        { inf: "To give", ger: "Giving", ptInf: "Dar", ptGer: "Dando" },
+        { inf: "To go", ger: "Going", ptInf: "Ir", ptGer: "Indo" },
+        { inf: "To have", ger: "Having", ptInf: "Ter", ptGer: "Tendo" },
+        { inf: "To know", ger: "Knowing", ptInf: "Saber/Conhecer", ptGer: "Sabendo" },
+        { inf: "To make", ger: "Making", ptInf: "Fazer/Criar", ptGer: "Fazendo/Criando" },
+        { inf: "To need", ger: "Needing", ptInf: "Precisar", ptGer: "Precisando" },
+        { inf: "To say", ger: "Saying", ptInf: "Dizer", ptGer: "Dizendo" },
+        { inf: "To see", ger: "Seeing", ptInf: "Ver", ptGer: "Vendo" },
+        { inf: "To take", ger: "Taking", ptInf: "Pegar/Levar", ptGer: "Pegando" },
+        { inf: "To think", ger: "Thinking", ptInf: "Pensar", ptGer: "Pensando" },
+        { inf: "To use", ger: "Using", ptInf: "Usar", ptGer: "Usando" },
+        { inf: "To want", ger: "Wanting", ptInf: "Querer", ptGer: "Querendo" },
+
+        { inf: "To be", ger: "Being", ptInf: "Ser/Estar", ptGer: "Sendo/Estando" },
+        { inf: "To breathe", ger: "Breathing", ptInf: "Respirar", ptGer: "Respirando" },
+        { inf: "To build", ger: "Building", ptInf: "Construir", ptGer: "Construindo" },
+        { inf: "To buy", ger: "Buying", ptInf: "Comprar", ptGer: "Comprando" },
+        { inf: "To cook", ger: "Cooking", ptInf: "Cozinhar", ptGer: "Cozinhando" },
+        { inf: "To dance", ger: "Dancing", ptInf: "Dançar", ptGer: "Dançando" },
+        { inf: "To drink", ger: "Drinking", ptInf: "Beber", ptGer: "Bebendo" },
+        { inf: "To eat", ger: "Eating", ptInf: "Comer", ptGer: "Comendo" },
+        { inf: "To fly", ger: "Flying", ptInf: "Voar", ptGer: "Voando" },
+        { inf: "To help", ger: "Helping", ptInf: "Ajudar", ptGer: "Ajudando" },
+        { inf: "To learn", ger: "Learning", ptInf: "Aprender", ptGer: "Aprendendo" },
+        { inf: "To listen", ger: "Listening", ptInf: "Ouvir", ptGer: "Ouvindo" },
+        { inf: "To live", ger: "Living", ptInf: "Viver/Morar", ptGer: "Vivendo" },
+        { inf: "To look", ger: "Looking", ptInf: "Olhar", ptGer: "Olhando" },
+        { inf: "To play", ger: "Playing", ptInf: "Jogar/Tocar", ptGer: "Jogando/Tocando" },
+        { inf: "To read", ger: "Reading", ptInf: "Ler", ptGer: "Lendo" },
+        { inf: "To run", ger: "Running", ptInf: "Correr", ptGer: "Correndo" },
+        { inf: "To sing", ger: "Singing", ptInf: "Cantar", ptGer: "Cantando" },
+        { inf: "To sleep", ger: "Sleeping", ptInf: "Dormir", ptGer: "Dormindo" },
+        { inf: "To speak", ger: "Speaking", ptInf: "Falar", ptGer: "Falando" },
+        { inf: "To study", ger: "Studying", ptInf: "Estudar", ptGer: "Estudando" },
+        { inf: "To swim", ger: "Swimming", ptInf: "Nadar", ptGer: "Nadando" },
+        { inf: "To walk", ger: "Walking", ptInf: "Caminhar", ptGer: "Caminhando" },
+        { inf: "To work", ger: "Working", ptInf: "Trabalhar", ptGer: "Trabalhando" },
+        { inf: "To write", ger: "Writing", ptInf: "Escrever", ptGer: "Escrevendo" }
+      ];
+
+      // Part 1: Classification (50 questions)
+      verbPairs.forEach((v, idx) => {
+        const isGerund = idx % 2 === 0;
+        const targetWord = isGerund ? v.ger : v.inf;
+        q.push({
+          category: "1. Classificação Gramatical",
+          text: `A palavra "${targetWord}" está classificada em qual forma verbal?`,
+          options: ["Gerúndio (Gerund)", "Infinitivo (Infinitive)", "Passado Simples", "Particípio Passado"],
+          correct: isGerund ? 0 : 1
+        });
+      });
+
+      // Part 2: Context Application (50 questions)
+      verbPairs.forEach((v, idx) => {
+        if (idx % 2 === 0) {
+          q.push({
+            category: "2. Aplicação em Frase",
+            text: `Qual forma completa corretamente: "She is ________ a new book right now." (${v.ptInf})`,
+            options: [v.inf, v.ger, v.inf.replace('To ', ''), `${v.ger}s`],
+            correct: 1
+          });
+        } else {
+          q.push({
+            category: "2. Aplicação em Frase",
+            text: `Qual forma completa corretamente: "I need ________ English every day." (${v.ptInf})`,
+            options: [v.ger, v.inf, v.ger.toLowerCase(), "Ed-form"],
+            correct: 1
+          });
+        }
+      });
+
+      // Part 3: Conversion (50 questions)
+      verbPairs.forEach((v, idx) => {
+        if (idx % 2 === 0) {
+          q.push({
+            category: "3. Conversão de Forma",
+            text: `Qual é a conversão do Gerúndio "${v.ger}" para o Infinitivo?`,
+            options: [v.inf, `${v.ger}ed`, v.inf.replace('To ', ''), `For ${v.ger}`],
+            correct: 0
+          });
+        } else {
+          q.push({
+            category: "3. Conversão de Forma",
+            text: `Qual é a conversão do Infinitivo "${v.inf}" para o Gerúndio?`,
+            options: [`To ${v.ger}`, v.ger, `${v.inf}ing`, `Been ${v.ger}`],
+            correct: 1
+          });
+        }
+      });
+
+      return q;
+    }
+
+    const QUESTIONS = buildQuestionBank();
+
+    // --- AUDIO SYSTEM (Web Audio API) ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'correct') {
+          osc.frequency.setValueAtTime(523.25, now); // C5
+          osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'wrong') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(150, now);
+          osc.frequency.setValueAtTime(110, now + 0.15);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'tick') {
+          osc.frequency.setValueAtTime(800, now);
+          gain.gain.setValueAtTime(0.05, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        } else if (type === 'fanfare') {
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.setValueAtTime(554.37, now + 0.15);
+          osc.frequency.setValueAtTime(659.25, now + 0.3);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+          osc.start(now);
+          osc.stop(now + 0.6);
+        }
+      } catch (e) {
+        console.warn("Audio playback error:", e);
+      }
+    }
+
+    // --- INITIALIZATION ---
+    window.onload = () => {
+      initSupabase();
+      renderAvatarSelector();
+    };
+
+    function initSupabase() {
+      try {
+        if (window.supabase && window.supabase.createClient) {
+          // Properly stored in supabaseClient
+          supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+          setupRealtime();
+          updateStatus(true, "Servidor Conectado");
+        } else {
+          throw new Error("Supabase SDK not loaded");
+        }
+      } catch (err) {
+        console.warn("Realtime error, activating offline demo mode:", err);
+        enableDemoMode();
+      }
+    }
+
+    function setupRealtime() {
+      if (!supabaseClient) return;
+
+      realtimeChannel = supabaseClient.channel('kahoot_room_global', {
+        config: { presence: { key: 'user' } }
+      });
+
+      // Track player presences
+      realtimeChannel.on('presence', { event: 'sync' }, () => {
+        const state = realtimeChannel.presenceState();
+        connectedPlayers = [];
+        Object.values(state).forEach(presences => {
+          presences.forEach(p => {
+            if (p.nickname) connectedPlayers.push(p);
+          });
+        });
+        if (userRole === 'host') {
+          renderHostLobby();
+        }
+      });
+
+      // Broadcast events (Game Commands)
+      realtimeChannel.on('broadcast', { event: 'game_event' }, payload => {
+        handleBroadcastEvent(payload.payload);
+      });
+
+      realtimeChannel.subscribe(status => {
+        if (status === 'SUBSCRIBED') {
+          updateStatus(true, "Servidor Pronto");
+        }
+      });
+    }
+
+    function enableDemoMode() {
+      isDemoMode = true;
+      document.getElementById('demoModeLabel').innerText = "Modo Demo: ON";
+      updateStatus(false, "Modo Demo (Offline)");
+    }
+
+    function toggleDemoMode() {
+      isDemoMode = !isDemoMode;
+      document.getElementById('demoModeLabel').innerText = `Modo Demo: ${isDemoMode ? 'ON' : 'OFF'}`;
+      if (isDemoMode) {
+        updateStatus(false, "Modo Demo Ativo");
+      } else {
+        initSupabase();
+      }
+    }
+
+    function updateStatus(online, text) {
+      const dot = document.getElementById('statusDot');
+      const txt = document.getElementById('statusText');
+      txt.innerText = text;
+      if (online) {
+        dot.className = "w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse";
+      } else {
+        dot.className = "w-2.5 h-2.5 rounded-full bg-yellow-400";
+      }
+    }
+
+    // --- RENDER AVATAR GRID ---
+    function renderAvatarSelector() {
+      const container = document.getElementById('avatarGrid');
+      container.innerHTML = '';
+      currentUser.avatarUrl = AVATARS[0];
+
+      AVATARS.forEach((url, idx) => {
+        const div = document.createElement('div');
+        div.className = `avatar-option cursor-pointer p-2 rounded-full border-4 bg-white flex items-center justify-center w-20 h-20 mx-auto ${idx === 0 ? 'selected border-yellow-400' : 'border-transparent'}`;
+        div.onclick = () => {
+          document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected', 'border-yellow-400'));
+          div.classList.add('selected', 'border-yellow-400');
+          currentUser.avatarUrl = url;
+        };
+
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = `Avatar ${idx + 1}`;
+        img.className = "w-full h-full object-contain rounded-full";
+        img.onerror = () => { img.src = PLACEHOLDER_AVATAR; };
+
+        div.appendChild(img);
+        container.appendChild(div);
+      });
+    }
+
+    // --- UI NAVIGATION ---
+    function showScreen(screenId) {
+      const screens = [
+        'screenRoleSelect', 'screenPlayerSetup', 'screenHostLobby', 
+        'screenPlayerWaiting', 'screenQuestion', 'screenReveal', 'screenPodium'
+      ];
+      screens.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+      document.getElementById(screenId).classList.remove('hidden');
+    }
+
+    function resetToHome() {
+      if (questionTimerInterval) clearInterval(questionTimerInterval);
+      currentQuestionIndex = 0;
+      currentUser.score = 0;
+      currentUser.hasAnswered = false;
+      showScreen('screenRoleSelect');
+    }
+
+    // --- AUTH & SETUP ---
     async function handleInitialAuth(e) {
       e.preventDefault();
       const usernameInput = document.getElementById('inputInitialUsername').value.trim();
@@ -374,7 +656,7 @@
 
       currentUser.dbUsername = usernameInput;
 
-      // Check if Host
+      // Secret Host check logic
       if (usernameInput.toLowerCase() === 'micael.svg') {
         userRole = 'host';
         currentUser.nickname = 'micael.svg';
@@ -410,21 +692,19 @@
             currentUser.score = data.score || 0;
           }
         } catch (err) {
-          console.warn("Supabase auth check error:", err);
+          console.warn("Servidor auth check error:", err);
         }
       }
 
       btn.innerHTML = originalText;
       btn.disabled = false;
 
-      // Proceed to Player Setup (Avatar & Nickname)
       userRole = 'player';
       document.getElementById('displayAuthUser').innerText = `@${usernameInput}`;
       document.getElementById('inputNickname').value = usernameInput.split('.')[0] || usernameInput;
       showScreen('screenPlayerSetup');
     }
 
-    // --- PLAYER SETUP COMPLETION HANDLER ---
     async function handlePlayerJoin(e) {
       e.preventDefault();
       const nickname = document.getElementById('inputNickname').value.trim();
@@ -442,7 +722,6 @@
 
       showScreen('screenPlayerWaiting');
 
-      // Track presence in channel
       if (realtimeChannel && !isDemoMode) {
         await realtimeChannel.track({
           dbUsername: currentUser.dbUsername,
@@ -480,7 +759,7 @@
 
       playersOnly.forEach(player => {
         const card = document.createElement('div');
-        card.className = "flex flex-col items-center bg-black/40 p-3 rounded-2xl border border-white/10 animate-fade-in";
+        card.className = "flex flex-col items-center bg-black/40 p-3 rounded-2xl border border-white/10";
         card.innerHTML = `
           <div class="w-14 h-14 bg-white rounded-full p-1 border-2 border-yellow-400 mb-2">
             <img class="w-full h-full object-contain rounded-full" src="${player.avatarUrl || PLACEHOLDER_AVATAR}" onerror="this.src='${PLACEHOLDER_AVATAR}'">
@@ -494,6 +773,49 @@
 
     function hostStartGame() {
       broadcastState('START_GAME', {});
+    }
+
+    // --- BROADCAST MESSAGING ---
+    function broadcastState(action, data) {
+      const payload = { action, ...data };
+      if (realtimeChannel && !isDemoMode) {
+        realtimeChannel.send({
+          type: 'broadcast',
+          event: 'game_event',
+          payload: payload
+        });
+      }
+      handleBroadcastEvent(payload);
+    }
+
+    function handleBroadcastEvent(data) {
+      switch (data.action) {
+        case 'START_GAME':
+          currentQuestionIndex = 0;
+          showScreen('screenQuestion');
+          renderQuestion(currentQuestionIndex);
+          startQuestionTimer();
+          break;
+        case 'SUBMIT_ANSWER':
+          playerAnswersSubmitted[data.nickname] = data.optionIndex;
+          if (userRole === 'host') {
+            const count = Object.keys(playerAnswersSubmitted).length;
+            document.getElementById('answersSubmitted').innerText = count;
+          }
+          break;
+        case 'REVEAL_ANSWERS':
+          showAnswerReveal(data.questionIndex);
+          break;
+        case 'NEXT_QUESTION':
+          currentQuestionIndex = data.questionIndex;
+          showScreen('screenQuestion');
+          renderQuestion(currentQuestionIndex);
+          startQuestionTimer();
+          break;
+        case 'GAME_OVER':
+          showFinalPodium(data.topPlayers);
+          break;
+      }
     }
 
     // --- QUESTION RENDER & TIMER ---
@@ -516,7 +838,6 @@
         const btn = document.createElement('button');
         btn.className = `p-6 rounded-2xl text-white font-black text-xl sm:text-2xl flex items-center gap-4 btn-kahoot text-left ${colors[idx % 4]}`;
         
-        // Host gets non-clickable reference buttons
         if (userRole === 'host') {
           btn.onclick = null;
         } else {
@@ -551,7 +872,7 @@
 
         if (timerSeconds <= 0) {
           clearInterval(questionTimerInterval);
-          hostRevealAnswers();
+          if (userRole === 'host') hostRevealAnswers();
         }
       }, 1000);
     }
@@ -560,7 +881,6 @@
       if (currentUser.hasAnswered) return;
       currentUser.hasAnswered = true;
 
-      // Visual lock on buttons
       const btns = document.querySelectorAll('#optionsGrid button');
       btns.forEach((btn, idx) => {
         if (idx !== optionIndex) btn.classList.add('opacity-40');
@@ -577,14 +897,13 @@
       broadcastState('REVEAL_ANSWERS', { questionIndex: currentQuestionIndex });
     }
 
-    // --- REVEAL ANSWERS & CALCULATE SCORES ---
+    // --- REVEAL ANSWERS & SCORES ---
     function showAnswerReveal(qIndex) {
       const q = QUESTIONS[qIndex];
       showScreen('screenReveal');
 
       document.getElementById('correctAnswerText').innerText = `Resposta Correta: ${q.options[q.correct]}`;
 
-      // Calculate score for player
       if (userRole === 'player') {
         const myAnswer = playerAnswersSubmitted[currentUser.nickname];
         const card = document.getElementById('playerFeedbackCard');
@@ -605,7 +924,6 @@
         document.getElementById('playerFeedbackCard').classList.add('hidden');
       }
 
-      // Host Stats Breakdown
       if (userRole === 'host') {
         document.getElementById('statsBreakdown').classList.remove('hidden');
         document.getElementById('hostNextContainer').classList.remove('hidden');
@@ -639,25 +957,21 @@
       if (currentQuestionIndex < QUESTIONS.length) {
         broadcastState('NEXT_QUESTION', { questionIndex: currentQuestionIndex });
       } else {
-        // Game Finished -> Podiums
         const topPlayers = connectedPlayers
           .filter(p => !p.isHost)
           .sort((a, b) => (b.score || 0) - (a.score || 0));
 
-        // Save scores to Supabase table
         updateDatabaseScores();
-
         broadcastState('GAME_OVER', { topPlayers });
       }
     }
 
-    // --- SUPABASE DATABASE UPDATE ---
+    // --- DATABASE UPDATE ---
     async function updateDatabaseScores() {
       if (!supabaseClient || isDemoMode) return;
 
       if (userRole === 'player' && currentUser.dbUsername) {
         try {
-          // Fetch current score
           const { data } = await supabaseClient
             .from('users')
             .select('score')
@@ -667,7 +981,6 @@
           const existingScore = data ? (data.score || 0) : 0;
           const newTotalScore = existingScore + currentUser.score;
 
-          // Update back to table
           await supabaseClient
             .from('users')
             .update({ score: newTotalScore })
@@ -675,7 +988,7 @@
 
           console.log(`Score updated for @${currentUser.dbUsername}: +${currentUser.score} pts`);
         } catch (e) {
-          console.error("Error updating score in Supabase:", e);
+          console.error("Error updating score in database:", e);
         }
       }
     }
