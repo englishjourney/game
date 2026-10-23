@@ -126,7 +126,7 @@
     <!-- Footer -->
     <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500 mt-12">
         <div class="max-w-7xl mx-auto px-4">
-            <p>Guia Interativo de Inglês &copy; 2026. Imagens em <code class="text-brand-400 bg-slate-800 px-1.5 py-0.5 rounded">tools/pics/[fileName]</code></p>
+            <p>Guia Interativo de Inglês &copy; 2026. Imagens em <code class="text-brand-400 bg-slate-800 px-1.5 py-0.5 rounded">pics/[fileName]</code></p>
         </div>
     </footer>
 
@@ -161,7 +161,7 @@
                     <div id="imageFallback" class="hidden absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-slate-800/90 text-slate-400">
                         <i class="fa-regular fa-image text-4xl mb-3 text-slate-500"></i>
                         <p class="text-sm font-medium text-slate-300">Imagem não encontrada no diretório local</p>
-                        <p id="modalPathText" class="text-xs text-slate-500 mt-1 font-mono bg-slate-900 px-2 py-1 rounded border border-slate-800">tools/pics/in.jpeg</p>
+                        <p id="modalPathText" class="text-xs text-slate-500 mt-1 font-mono bg-slate-900 px-2 py-1 rounded border border-slate-800">pics/in.jpeg</p>
                     </div>
                 </div>
 
@@ -366,7 +366,7 @@
             modalExamplePt.innerText = `"${prep.examplePt}"`;
 
             // Caminho exato apontando para tools/pics/nomeDoArquivo.jpeg
-            const imagePath = `tools/pics/${prep.fileName}`;
+            const imagePath = `pics/${prep.fileName}`;
             modalPathText.innerText = imagePath;
 
             // Esconder fallback inicialmente e carregar imagem
