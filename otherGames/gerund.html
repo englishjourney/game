@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Verbs Quest - Kahoot Edition</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Supabase JS v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            kahoot: {
+              purple: '#46178f',
+              darkPurple: '#25076b',
+              red: '#e21b3c',
+              blue: '#1368ce',
+              yellow: '#ffa602',
+              green: '#26890c',
+              lightGray: '#f2f2f2'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Montserrat', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&family=Inter:wght@400;600;700&display=swap');
+
+    body {
+      font-family: 'Montserrat', 'Inter', sans-serif;
+      background: linear-[#46178f];
+      background: linear-gradient(135deg, #25076b 0%, #46178f 60%, #5d1fb1 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .btn-kahoot {
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.25);
+    }
+
+    .btn-kahoot:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 rgba(0,0,0,0.25);
+    }
+
+    .avatar-option {
+      transition: all 0.2s ease;
+    }
+
+    .avatar-option:hover {
+      transform: scale(1.08);
+    }
+
+    .avatar-option.selected {
+      border-color: #ffa602;
+      box-shadow: 0 0 15px rgba(255, 166, 2, 0.8);
+      transform: scale(1.1);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.3);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255,255,255,0.5);
+    }
+
+    .pulse-animation {
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen text-white relative overflow-x-hidden">
+
+  <!-- Top Navigation Header -->
+  <header class="bg-black/30 backdrop-blur-md px-6 py-4 flex justify-between items-center border-b border-white/10 z-20">
+    <div class="flex items-center gap-3 cursor-pointer" onclick="resetToHome()">
+      <div class="w-10 h-10 bg-yellow-400 rounded-lg flex items-center justify-center font-black text-kahoot-darkPurple text-2xl shadow-lg">
+        K!
+      </div>
+      <span class="font-black text-xl tracking-wide uppercase text-white drop-shadow">Verb Master</span>
+    </div>
+
+    <!-- Status & Solo Mode Toggle -->
+    <div class="flex items-center gap-4 text-xs sm:text-sm">
+      <div id="connectionStatus" class="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/20">
+        <span class="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse" id="statusDot"></span>
+        <span id="statusText" class="font-medium">Conectando ao Supabase...</span>
+      </div>
+
+      <button id="toggleDemoBtn" onclick="toggleDemoMode()" class="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/20 transition font-semibold text-white flex items-center gap-2">
+        <i class="fa-solid fa-gamepad text-yellow-400"></i>
+        <span id="demoModeLabel">Modo Demo: OFF</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 flex flex-col justify-center items-center p-4 sm:p-6 max-w-6xl w-full mx-auto z-10">
+
+    <!-- 1. INITIAL LOGIN SCREEN (UNIFIED USERNAME AUTH) -->
+    <section id="screenRoleSelect" class="w-full max-w-xl bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 shadow-2xl text-center">
+      <div class="mb-8">
+        <span class="bg-yellow-400 text-kahoot-darkPurple font-extrabold text-xs tracking-wider uppercase px-4 py-1.5 rounded-full">Inglês - Gerúndio vs Infinitivo</span>
+        <h1 class="text-3xl sm:text-5xl font-black mt-4 drop-shadow-md">Desafio dos Verbos</h1>
+        <p class="text-gray-200 mt-2 text-sm sm:text-base">150 Questões: Classificação, Aplicação e Conversão!</p>
+      </div>
+
+      <form id="initialAuthForm" onsubmit="handleInitialAuth(event)" class="space-y-5 text-left">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-200 mb-2">Nome de Usuário (Supabase Username)</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 font-bold">@</span>
+            <input type="text" id="inputInitialUsername" required placeholder="Digite seu username" 
+                   class="w-full pl-10 pr-4 py-3.5 bg-black/40 text-white rounded-xl border border-white/30 focus:border-yellow-400 focus:outline-none text-lg">
+          </div>
+          <p class="text-xs text-gray-300 mt-2">Dica: Digite <span class="text-yellow-400 font-bold">micael.svg</span> para entrar direto como Host / Professor.</p>
+        </div>
+
+        <button type="submit" id="btnAuthSubmit" class="w-full py-4 bg-kahoot-blue hover:bg-blue-600 font-black text-xl rounded-2xl btn-kahoot flex items-center justify-center gap-3">
+          <i class="fa-solid fa-right-to-bracket text-2xl"></i>
+          ENTRAR NO JOGO
+        </button>
+      </form>
+    </section>
+
+    <!-- 2. PLAYER SETUP SCREEN (NICKNAME & AVATAR) -->
+    <section id="screenPlayerSetup" class="hidden w-full max-w-2xl bg-white/10 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/20 shadow-2xl">
+      <h2 class="text-2xl sm:text-3xl font-black text-center mb-2 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-user-gear text-yellow-400"></i> Perfil do Jogador
+      </h2>
+      <p class="text-center text-xs text-gray-300 mb-6">Logado como: <span id="displayAuthUser" class="text-yellow-400 font-bold"></span></p>
+
+      <form id="playerForm" onsubmit="handlePlayerJoin(event)" class="space-y-6">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-200 mb-2">Apelido para a Partida (Nickname)</label>
+          <input type="text" id="inputNickname" required placeholder="Como prefere ser chamado no jogo?" 
+                 class="w-full px-4 py-3.5 bg-black/40 text-white rounded-xl border border-white/30 focus:border-yellow-400 focus:outline-none text-lg">
+        </div>
+
+        <!-- Avatar Selection -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-200 mb-3 text-center">Escolha seu Avatar</label>
+          <div id="avatarGrid" class="grid grid-cols-4 gap-4 p-4 bg-black/20 rounded-2xl max-h-60 overflow-y-auto">
+            <!-- Avatars injected dynamically JS -->
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-4 bg-kahoot-green hover:bg-green-600 font-black text-xl rounded-2xl btn-kahoot uppercase tracking-wider">
+          Entrar na Sala de Espera
+        </button>
+      </form>
+    </section>
+
+    <!-- 3. HOST LOBBY SCREEN -->
+    <section id="screenHostLobby" class="hidden w-full max-w-4xl bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 shadow-2xl text-center">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8 border-b border-white/10 pb-6">
+        <div class="text-left">
+          <span class="bg-yellow-400 text-kahoot-darkPurple font-black text-xs px-3 py-1 rounded-full uppercase">Painel do Host</span>
+          <h2 class="text-3xl font-black mt-1">SALA DE ESPERA</h2>
+          <p class="text-gray-300 text-sm">Organizador: <span class="font-bold text-yellow-400">micael.svg</span></p>
+        </div>
+
+        <div class="bg-black/40 px-6 py-3 rounded-2xl border border-white/20 flex items-center gap-3">
+          <i class="fa-solid fa-users text-2xl text-kahoot-blue"></i>
+          <span id="playerCount" class="text-3xl font-black">0</span>
+          <span class="text-xs uppercase text-gray-300 font-bold">Jogadores<br>Conectados</span>
+        </div>
+      </div>
+
+      <!-- Joined Players List -->
+      <div id="hostPlayerList" class="grid grid-cols-2 sm:grid-cols-4 gap-4 min-h-[180px] p-4 bg-black/20 rounded-2xl mb-8">
+        <div class="col-span-full flex flex-col items-center justify-center text-gray-400 py-8">
+          <i class="fa-solid fa-spinner animate-spin text-3xl mb-2"></i>
+          <p class="font-medium">Aguardando jogadores entrarem...</p>
+        </div>
+      </div>
+
+      <button id="btnStartGame" onclick="hostStartGame()" disabled class="w-full py-5 bg-kahoot-green hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed font-black text-2xl rounded-2xl btn-kahoot uppercase tracking-wider transition">
+        <i class="fa-solid fa-play mr-2"></i> INICIAR PARTIDA
+      </button>
+    </section>
+
+    <!-- 4. PLAYER WAITING ROOM SCREEN -->
+    <section id="screenPlayerWaiting" class="hidden w-full max-w-xl bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 shadow-2xl text-center">
+      <div class="flex flex-col items-center">
+        <div class="w-28 h-28 bg-white rounded-full p-2 border-4 border-yellow-400 shadow-xl mb-4 flex items-center justify-center">
+          <img id="waitingAvatar" class="w-full h-full object-contain rounded-full" src="" alt="Avatar">
+        </div>
+        <h2 id="waitingNickname" class="text-3xl font-black text-yellow-400 mb-1">...</h2>
+        <p class="text-gray-300 text-sm mb-6">@<span id="waitingDbUser">...</span></p>
+
+        <div class="bg-black/30 px-6 py-4 rounded-2xl border border-white/10 w-full mb-6">
+          <p class="text-lg font-extrabold animate-pulse text-white">Você está conectado!</p>
+          <p class="text-sm text-gray-300 mt-1">Veja seu nome na tela principal do Host (micael.svg) e aguarde o início do quiz.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. QUESTION VIEW (Host View & Player Controls) -->
+    <section id="screenQuestion" class="hidden w-full flex flex-col items-center">
+      <!-- Question Header bar -->
+      <div class="w-full bg-white/10 backdrop-blur-md p-4 sm:p-6 rounded-3xl border border-white/20 shadow-2xl mb-6 text-center relative">
+        <!-- Timer Badge -->
+        <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 bg-yellow-400 text-kahoot-darkPurple font-black text-2xl rounded-full flex items-center justify-center border-4 border-kahoot-purple shadow-lg" id="questionTimer">
+          20
+        </div>
+
+        <div class="flex justify-between items-center text-xs font-bold uppercase tracking-wider text-gray-300 mb-2 px-2">
+          <span id="questionCategory">Categoria: Classificação</span>
+          <span id="questionCounter">Questão 1 / 150</span>
+        </div>
+
+        <h2 id="questionText" class="text-xl sm:text-3xl font-black text-white mt-2 px-4 leading-relaxed">
+          Carregando pergunta...
+        </h2>
+      </div>
+
+      <!-- Question Content / Answer Options -->
+      <div id="optionsGrid" class="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Buttons generated dynamically -->
+      </div>
+
+      <!-- Host Control Panel during Question -->
+      <div id="hostQuestionControls" class="hidden w-full mt-6 flex justify-between items-center bg-black/40 p-4 rounded-2xl border border-white/20">
+        <div class="text-sm font-semibold text-gray-200">
+          Respostas recebidas: <span id="answersSubmitted" class="font-black text-yellow-400 text-lg">0</span> / <span id="totalPlayersInRoom" class="font-black text-white text-lg">0</span>
+        </div>
+        <button onclick="hostRevealAnswers()" class="px-6 py-3 bg-kahoot-yellow hover:bg-yellow-500 font-extrabold text-kahoot-darkPurple rounded-xl btn-kahoot">
+          Revelar Resposta <i class="fa-solid fa-forward ml-2"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- 6. QUESTION REVEAL & RESULT FEEDBACK SCREEN -->
+    <section id="screenReveal" class="hidden w-full max-w-4xl flex flex-col items-center">
+      <div class="w-full bg-white/10 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/20 shadow-2xl text-center mb-6">
+        <h2 id="revealTitle" class="text-3xl font-black mb-2">Tempo Esgotado!</h2>
+        <p id="correctAnswerText" class="text-lg font-bold text-yellow-400 mb-6"></p>
+
+        <!-- Player Feedback Card -->
+        <div id="playerFeedbackCard" class="hidden p-6 rounded-2xl mb-6 text-2xl font-black">
+          <!-- Dynamically populated correct/wrong -->
+        </div>
+
+        <!-- Answer Stats Breakdown for Host -->
+        <div id="statsBreakdown" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-4 my-6">
+          <!-- Filled JS -->
+        </div>
+
+        <div id="hostNextContainer" class="hidden mt-4">
+          <button onclick="hostNextQuestion()" class="px-8 py-4 bg-kahoot-green hover:bg-green-600 font-black text-xl rounded-2xl btn-kahoot uppercase tracking-wider">
+            Próxima Questão <i class="fa-solid fa-arrow-right ml-2"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. FINAL PODIUM SCREEN -->
+    <section id="screenPodium" class="hidden w-full max-w-3xl bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 shadow-2xl text-center">
+      <div class="mb-8">
+        <i class="fa-solid fa-trophy text-6xl text-yellow-400 mb-2 animate-bounce"></i>
+        <h1 class="text-4xl font-black text-white">PÓDIO FINAL</h1>
+        <p class="text-gray-300">Pontuação salva no banco de dados do Supabase!</p>
+      </div>
+
+      <!-- Podium Graphic -->
+      <div id="podiumContainer" class="flex justify-center items-end gap-3 sm:gap-6 mb-8 min-h-[220px]">
+        <!-- 2nd Place -->
+        <div id="podium2" class="flex flex-col items-center flex-1 max-w-[140px]">
+          <div class="w-16 h-16 bg-white rounded-full p-1 border-2 border-gray-300 shadow-md mb-2">
+            <img id="podium2Img" class="w-full h-full object-contain rounded-full" src="" alt="2nd">
+          </div>
+          <span id="podium2Name" class="font-bold text-sm truncate w-full text-center">--</span>
+          <span id="podium2Score" class="text-xs text-yellow-400 font-black">0 pts</span>
+          <div class="w-full bg-gray-400 text-kahoot-darkPurple font-black text-2xl py-8 rounded-t-2xl mt-2 shadow-lg">2</div>
+        </div>
+
+        <!-- 1st Place -->
+        <div id="podium1" class="flex flex-col items-center flex-1 max-w-[160px]">
+          <div class="w-20 h-20 bg-white rounded-full p-1 border-4 border-yellow-400 shadow-xl mb-2 relative">
+            <i class="fa-solid fa-crown text-yellow-400 text-2xl absolute -top-5 left-1/2 transform -translate-x-1/2"></i>
+            <img id="podium1Img" class="w-full h-full object-contain rounded-full" src="" alt="1st">
+          </div>
+          <span id="podium1Name" class="font-black text-base truncate w-full text-center text-yellow-300">--</span>
+          <span id="podium1Score" class="text-sm text-yellow-400 font-black">0 pts</span>
+          <div class="w-full bg-yellow-400 text-kahoot-darkPurple font-black text-4xl py-12 rounded-t-2xl mt-2 shadow-2xl">1</div>
+        </div>
+
+        <!-- 3rd Place -->
+        <div id="podium3" class="flex flex-col items-center flex-1 max-w-[140px]">
+          <div class="w-16 h-16 bg-white rounded-full p-1 border-2 border-amber-700 shadow-md mb-2">
+            <img id="podium3Img" class="w-full h-full object-contain rounded-full" src="" alt="3rd">
+          </div>
+          <span id="podium3Name" class="font-bold text-sm truncate w-full text-center">--</span>
+          <span id="podium3Score" class="text-xs text-yellow-400 font-black">0 pts</span>
+          <div class="w-full bg-amber-700 text-white font-black text-2xl py-5 rounded-t-2xl mt-2 shadow-lg">3</div>
+        </div>
+      </div>
+
+      <button onclick="resetToHome()" class="px-8 py-4 bg-kahoot-blue hover:bg-blue-600 font-black text-xl rounded-2xl btn-kahoot uppercase">
+        Voltar ao Início
+      </button>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-black/40 py-3 text-center text-xs text-gray-400 border-t border-white/10">
+    <p>English Verbs Realtime Quiz • Integrado com Supabase & Realtime Broadcast</p>
+  </footer>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    // --- SUPABASE CONFIGURATION ---
+    const SUPABASE_URL = "https://rmsmamzutvxugdbiqsrz.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx";
+    
+    let supabaseClient = null;
+    let realtimeChannel = null;
+    let isDemoMode = false;
+
+    // --- GAME STATE ---
+    let userRole = null; // 'host' or 'player'
+    let currentUser = {
+      dbUsername: '',
+      nickname: '',
+      avatarUrl: '',
+      score: 0,
+      hasAnswered: false
+    };
+
+    let connectedPlayers = []; // List of player objects in room
+    // --- INITIAL LOGIN / AUTH HANDLER ---
+    async function handleInitialAuth(e) {
+      e.preventDefault();
+      const usernameInput = document.getElementById('inputInitialUsername').value.trim();
+
+      if (!usernameInput) {
+        alert("Por favor, digite um nome de usuário.");
+        return;
+      }
+
+      currentUser.dbUsername = usernameInput;
+
+      // Check if Host
+      if (usernameInput.toLowerCase() === 'micael.svg') {
+        userRole = 'host';
+        currentUser.nickname = 'micael.svg';
+        showScreen('screenHostLobby');
+        if (!isDemoMode && realtimeChannel) {
+          realtimeChannel.track({ nickname: 'micael.svg (Host)', isHost: true });
+        }
+        return;
+      }
+
+      // Verify User in Supabase (Player)
+      const btn = document.getElementById('btnAuthSubmit');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Verificando...`;
+      btn.disabled = true;
+
+      if (supabaseClient && !isDemoMode) {
+        try {
+          const { data, error } = await supabaseClient
+            .from('users')
+            .select('username, score')
+            .eq('username', usernameInput)
+            .single();
+
+          if (error && error.code === 'PGRST116') {
+            alert(`Usuário "@${usernameInput}" não foi encontrado no banco de dados. Verifique o nome digitado.`);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            return;
+          }
+
+          if (data) {
+            currentUser.score = data.score || 0;
+          }
+        } catch (err) {
+          console.warn("Supabase auth check error:", err);
+        }
+      }
+
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+
+      // Proceed to Player Setup (Avatar & Nickname)
+      userRole = 'player';
+      document.getElementById('displayAuthUser').innerText = `@${usernameInput}`;
+      document.getElementById('inputNickname').value = usernameInput.split('.')[0] || usernameInput;
+      showScreen('screenPlayerSetup');
+    }
+
+    // --- PLAYER SETUP COMPLETION HANDLER ---
+    async function handlePlayerJoin(e) {
+      e.preventDefault();
+      const nickname = document.getElementById('inputNickname').value.trim();
+
+      if (!nickname) {
+        alert("Por favor preencha seu apelido!");
+        return;
+      }
+
+      currentUser.nickname = nickname;
+
+      document.getElementById('waitingNickname').innerText = nickname;
+      document.getElementById('waitingDbUser').innerText = currentUser.dbUsername;
+      document.getElementById('waitingAvatar').src = currentUser.avatarUrl;
+
+      showScreen('screenPlayerWaiting');
+
+      // Track presence in channel
+      if (realtimeChannel && !isDemoMode) {
+        await realtimeChannel.track({
+          dbUsername: currentUser.dbUsername,
+          nickname: currentUser.nickname,
+          avatarUrl: currentUser.avatarUrl,
+          score: currentUser.score,
+          isHost: false
+        });
+      } else if (isDemoMode) {
+        connectedPlayers.push(currentUser);
+      }
+    }
+
+    // --- HOST LOBBY LOGIC ---
+    function renderHostLobby() {
+      const container = document.getElementById('hostPlayerList');
+      const startBtn = document.getElementById('btnStartGame');
+      const playersOnly = connectedPlayers.filter(p => !p.isHost);
+
+      document.getElementById('playerCount').innerText = playersOnly.length;
+
+      if (playersOnly.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full flex flex-col items-center justify-center text-gray-400 py-8">
+            <i class="fa-solid fa-spinner animate-spin text-3xl mb-2"></i>
+            <p class="font-medium">Aguardando jogadores entrarem...</p>
+          </div>
+        `;
+        startBtn.disabled = true;
+        return;
+      }
+
+      startBtn.disabled = false;
+      container.innerHTML = '';
+
+      playersOnly.forEach(player => {
+        const card = document.createElement('div');
+        card.className = "flex flex-col items-center bg-black/40 p-3 rounded-2xl border border-white/10 animate-fade-in";
+        card.innerHTML = `
+          <div class="w-14 h-14 bg-white rounded-full p-1 border-2 border-yellow-400 mb-2">
+            <img class="w-full h-full object-contain rounded-full" src="${player.avatarUrl || PLACEHOLDER_AVATAR}" onerror="this.src='${PLACEHOLDER_AVATAR}'">
+          </div>
+          <span class="font-bold text-sm text-white truncate w-full text-center">${player.nickname}</span>
+          <span class="text-xs text-gray-400 truncate">@${player.dbUsername || 'user'}</span>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function hostStartGame() {
+      broadcastState('START_GAME', {});
+    }
+
+    // --- QUESTION RENDER & TIMER ---
+    function renderQuestion(index) {
+      const q = QUESTIONS[index];
+      playerAnswersSubmitted = {};
+      currentUser.hasAnswered = false;
+
+      document.getElementById('questionCategory').innerText = q.category;
+      document.getElementById('questionCounter').innerText = `Questão ${index + 1} / ${QUESTIONS.length}`;
+      document.getElementById('questionText').innerText = q.text;
+
+      const grid = document.getElementById('optionsGrid');
+      grid.innerHTML = '';
+
+      const colors = ['bg-kahoot-red hover:bg-red-600', 'bg-kahoot-blue hover:bg-blue-600', 'bg-kahoot-yellow hover:bg-yellow-500', 'bg-kahoot-green hover:bg-green-600'];
+      const icons = ['fa-shapes', 'fa-diamond', 'fa-circle', 'fa-square'];
+
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `p-6 rounded-2xl text-white font-black text-xl sm:text-2xl flex items-center gap-4 btn-kahoot text-left ${colors[idx % 4]}`;
+        
+        // Host gets non-clickable reference buttons
+        if (userRole === 'host') {
+          btn.onclick = null;
+        } else {
+          btn.onclick = () => submitPlayerAnswer(idx);
+        }
+
+        btn.innerHTML = `
+          <i class="fa-solid ${icons[idx % 4]} text-2xl opacity-80"></i>
+          <span class="flex-1">${opt}</span>
+        `;
+        grid.appendChild(btn);
+      });
+
+      if (userRole === 'host') {
+        document.getElementById('hostQuestionControls').classList.remove('hidden');
+        document.getElementById('totalPlayersInRoom').innerText = connectedPlayers.filter(p => !p.isHost).length;
+        document.getElementById('answersSubmitted').innerText = '0';
+      } else {
+        document.getElementById('hostQuestionControls').classList.add('hidden');
+      }
+    }
+
+    function startQuestionTimer() {
+      if (questionTimerInterval) clearInterval(questionTimerInterval);
+      timerSeconds = 20;
+      document.getElementById('questionTimer').innerText = timerSeconds;
+
+      questionTimerInterval = setInterval(() => {
+        timerSeconds--;
+        document.getElementById('questionTimer').innerText = timerSeconds;
+        playSound('tick');
+
+        if (timerSeconds <= 0) {
+          clearInterval(questionTimerInterval);
+          hostRevealAnswers();
+        }
+      }, 1000);
+    }
+
+    function submitPlayerAnswer(optionIndex) {
+      if (currentUser.hasAnswered) return;
+      currentUser.hasAnswered = true;
+
+      // Visual lock on buttons
+      const btns = document.querySelectorAll('#optionsGrid button');
+      btns.forEach((btn, idx) => {
+        if (idx !== optionIndex) btn.classList.add('opacity-40');
+      });
+
+      broadcastState('SUBMIT_ANSWER', {
+        nickname: currentUser.nickname,
+        optionIndex: optionIndex
+      });
+    }
+
+    function hostRevealAnswers() {
+      if (questionTimerInterval) clearInterval(questionTimerInterval);
+      broadcastState('REVEAL_ANSWERS', { questionIndex: currentQuestionIndex });
+    }
+
+    // --- REVEAL ANSWERS & CALCULATE SCORES ---
+    function showAnswerReveal(qIndex) {
+      const q = QUESTIONS[qIndex];
+      showScreen('screenReveal');
+
+      document.getElementById('correctAnswerText').innerText = `Resposta Correta: ${q.options[q.correct]}`;
+
+      // Calculate score for player
+      if (userRole === 'player') {
+        const myAnswer = playerAnswersSubmitted[currentUser.nickname];
+        const card = document.getElementById('playerFeedbackCard');
+        card.classList.remove('hidden');
+
+        if (myAnswer === q.correct) {
+          const earned = 10;
+          currentUser.score += earned;
+          card.className = "p-6 rounded-2xl mb-6 text-2xl font-black bg-kahoot-green text-white animate-bounce";
+          card.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> CORRETO! +${earned} pts`;
+          playSound('correct');
+        } else {
+          card.className = "p-6 rounded-2xl mb-6 text-2xl font-black bg-kahoot-red text-white";
+          card.innerHTML = `<i class="fa-solid fa-circle-xmark mr-2"></i> INCORRETO!`;
+          playSound('wrong');
+        }
+      } else {
+        document.getElementById('playerFeedbackCard').classList.add('hidden');
+      }
+
+      // Host Stats Breakdown
+      if (userRole === 'host') {
+        document.getElementById('statsBreakdown').classList.remove('hidden');
+        document.getElementById('hostNextContainer').classList.remove('hidden');
+
+        const statsGrid = document.getElementById('statsBreakdown');
+        statsGrid.innerHTML = '';
+
+        const counts = [0, 0, 0, 0];
+        Object.values(playerAnswersSubmitted).forEach(optIdx => {
+          if (counts[optIdx] !== undefined) counts[optIdx]++;
+        });
+
+        q.options.forEach((opt, idx) => {
+          const isRight = idx === q.correct;
+          const statCard = document.createElement('div');
+          statCard.className = `p-4 rounded-xl text-center border-2 ${isRight ? 'bg-green-500/30 border-green-400' : 'bg-black/30 border-white/10'}`;
+          statCard.innerHTML = `
+            <span class="block text-2xl font-black">${counts[idx]}</span>
+            <span class="text-xs truncate font-bold">${opt}</span>
+          `;
+          statsGrid.appendChild(statCard);
+        });
+      } else {
+        document.getElementById('statsBreakdown').classList.add('hidden');
+        document.getElementById('hostNextContainer').classList.add('hidden');
+      }
+    }
+
+    function hostNextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < QUESTIONS.length) {
+        broadcastState('NEXT_QUESTION', { questionIndex: currentQuestionIndex });
+      } else {
+        // Game Finished -> Podiums
+        const topPlayers = connectedPlayers
+          .filter(p => !p.isHost)
+          .sort((a, b) => (b.score || 0) - (a.score || 0));
+
+        // Save scores to Supabase table
+        updateDatabaseScores();
+
+        broadcastState('GAME_OVER', { topPlayers });
+      }
+    }
+
+    // --- SUPABASE DATABASE UPDATE ---
+    async function updateDatabaseScores() {
+      if (!supabaseClient || isDemoMode) return;
+
+      if (userRole === 'player' && currentUser.dbUsername) {
+        try {
+          // Fetch current score
+          const { data } = await supabaseClient
+            .from('users')
+            .select('score')
+            .eq('username', currentUser.dbUsername)
+            .single();
+
+          const existingScore = data ? (data.score || 0) : 0;
+          const newTotalScore = existingScore + currentUser.score;
+
+          // Update back to table
+          await supabaseClient
+            .from('users')
+            .update({ score: newTotalScore })
+            .eq('username', currentUser.dbUsername);
+
+          console.log(`Score updated for @${currentUser.dbUsername}: +${currentUser.score} pts`);
+        } catch (e) {
+          console.error("Error updating score in Supabase:", e);
+        }
+      }
+    }
+
+    // --- FINAL PODIUM RENDER ---
+    function showFinalPodium(topPlayers) {
+      showScreen('screenPodium');
+      playSound('fanfare');
+      confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+
+      const p1 = topPlayers[0] || { nickname: 'P1', score: 0, avatarUrl: PLACEHOLDER_AVATAR };
+      const p2 = topPlayers[1] || { nickname: 'P2', score: 0, avatarUrl: PLACEHOLDER_AVATAR };
+      const p3 = topPlayers[2] || { nickname: 'P3', score: 0, avatarUrl: PLACEHOLDER_AVATAR };
+
+      document.getElementById('podium1Name').innerText = p1.nickname;
+      document.getElementById('podium1Score').innerText = `${p1.score || 0} pts`;
+      document.getElementById('podium1Img').src = p1.avatarUrl || PLACEHOLDER_AVATAR;
+
+      document.getElementById('podium2Name').innerText = p2.nickname;
+      document.getElementById('podium2Score').innerText = `${p2.score || 0} pts`;
+      document.getElementById('podium2Img').src = p2.avatarUrl || PLACEHOLDER_AVATAR;
+
+      document.getElementById('podium3Name').innerText = p3.nickname;
+      document.getElementById('podium3Score').innerText = `${p3.score || 0} pts`;
+      document.getElementById('podium3Img').src = p3.avatarUrl || PLACEHOLDER_AVATAR;
+    }
+  </script>
+</body>
+</html>
