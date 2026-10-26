@@ -489,6 +489,8 @@
 
     // 4. FINALIZAÇÃO E REGISTRO NO SUPABASE
     async function finishGame() {
+      if (await missionWasAlreadyAttempted(currentUser.username, '%There is%')) { showMsg(saveStatusEl, 'Você já participou desta missão. Jogar novamente não concede pontos.', 'error'); return; }
+
       progressBar.style.width = '100%';
       switchScreen(screenResult);
 
@@ -639,6 +641,21 @@ function shuffleArray(array) {
     [array[i], array[j]] = [array[j], array[i]];
   }
 }
-  </script>
+  
+    async function missionWasAlreadyAttempted(username, missionPattern) {
+      try {
+        let query = supabase.from('missions').select('done, fail');
+        query = missionPattern.includes('%') ? query.ilike('mission_name', missionPattern) : query.eq('mission_name', missionPattern);
+        const { data, error } = await query.maybeSingle();
+        if (error) throw error;
+        if (!data) return false;
+        const hasUser = value => String(value || '').split(',').map(v => v.trim().toLowerCase()).filter(Boolean).includes(String(username || '').trim().toLowerCase());
+        return hasUser(data.done) || hasUser(data.fail);
+      } catch (error) {
+        console.error('Falha ao verificar tentativa anterior; pontuação bloqueada por segurança:', error);
+        return true;
+      }
+    }
+</script>
 </body>
 </html>
