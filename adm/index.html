@@ -76,7 +76,7 @@
             <button class="nav-btn" data-target="users-section">Usuários</button>
             <button class="nav-btn" data-target="missions-section">Missões</button>
             <button class="nav-btn" data-target="flashcards-section">Flashcards</button>
-            <button class="nav-btn" data-target="reminders-section">Lembretes</button>
+            <button class="nav-btn hidden" data-target="reminders-section" aria-hidden="true" tabindex="-1">Lembretes</button>
             <button id="btn-yuki-planner" title="Yuki Planner" onclick="window.open('https://englishjourney.github.io/game/adm/yukiplanner/index.html', '_blank')" style="background: transparent; color: var(--text-muted); border: none; padding: 10px 15px; cursor: pointer; font-size: 1rem; border-bottom: 2px solid transparent;">
                 <i class="fa-solid fa-robot" style="font-size: 1.2rem; display: inline-block; width: auto; height: auto;"></i>
             </button>
@@ -178,6 +178,7 @@
                 <div class="full-width" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 15px;">
                     <div style="display: flex; gap: 15px; align-items: center;">
                         <label style="flex-direction: row; gap: 5px; align-items: center;"><input type="checkbox" id="cb-especial"> Especial</label>
+                        <label style="flex-direction: row; gap: 5px; align-items: center;"><input type="checkbox" id="cb-adaptado"> Adaptado</label>
                         <label style="flex-direction: row; gap: 5px; align-items: center;"><input type="checkbox" id="cb-folga"> Folga</label>
                         <label style="flex-direction: row; gap: 5px; align-items: center;"><input type="checkbox" id="cb-prova"> Prova</label>
                     </div>

@@ -72,6 +72,7 @@
                 <img id="app-logo" src="logoarcade.png" alt="Logo do Jogo">
             </div>
             <div class="profile-container">
+                <button id="btn-notifications" class="notification-bell" type="button" title="Notificações" aria-label="Abrir notificações">🔔<span id="notification-count" class="notification-count hidden"></span></button>
                 <button id="btn-avatar">
                    <img id="user-avatar" src="" alt="Avatar do Estudante">
                 </button>
@@ -86,6 +87,11 @@
             <button id="btn-flashcards" class="menu-btn">🃏 Flashcards</button>
         </section>
     </main>
+
+    <div id="notifications-panel" class="notifications-panel hidden" role="dialog" aria-label="Notificações">
+        <div class="notifications-heading"><strong>Notificações</strong><button id="btn-close-notifications" type="button" aria-label="Fechar">×</button></div>
+        <div id="notifications-list"></div>
+    </div>
 
     <!-- ================= JANELAS DE CONTEÚDO (Dialog) ================= -->
     <dialog id="content-modal" class="fullscreen-dialog">

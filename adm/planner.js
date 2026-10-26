@@ -25,10 +25,10 @@ export function initPlanner() {
         }
     };
 
-    ['cb-especial', 'cb-folga', 'cb-prova'].forEach(id => {
+    ['cb-especial', 'cb-folga', 'cb-prova', 'cb-adaptado'].forEach(id => {
         document.getElementById(id).addEventListener('change', (e) => {
             if (e.target.checked) {
-                ['cb-especial', 'cb-folga', 'cb-prova'].forEach(other => {
+                ['cb-especial', 'cb-folga', 'cb-prova', 'cb-adaptado'].forEach(other => {
                     if (other !== id) document.getElementById(other).checked = false;
                 });
             }
@@ -41,7 +41,7 @@ export function initPlanner() {
     document.getElementById('btn-add-plan').addEventListener('click', () => {
         resetPlannerForm();
         document.getElementById('plan-id').value = '';
-        ['cb-especial', 'cb-folga', 'cb-prova'].forEach(id => document.getElementById(id).checked = false);
+        ['cb-especial', 'cb-folga', 'cb-prova', 'cb-adaptado'].forEach(id => document.getElementById(id).checked = false);
         
         // Aplica "Última turma" se o toggle estiver ativo
         applyLastTeamIfEnabled();
@@ -119,7 +119,8 @@ export function initPlanner() {
         e.preventDefault();
         
         const id = document.getElementById('plan-id').value;
-        const specialValue = document.getElementById('cb-especial').checked ? 1 :
+        const specialValue = document.getElementById('cb-adaptado').checked ? 4 :
+                             document.getElementById('cb-especial').checked ? 1 :
                              document.getElementById('cb-folga').checked ? 2 :
                              document.getElementById('cb-prova').checked ? 3 : 0;
 
@@ -363,7 +364,7 @@ function applyLastTeamIfEnabled() {
 window.addPlanForDay = (day, date) => {
     resetPlannerForm();
     document.getElementById('plan-id').value = '';
-    ['cb-especial', 'cb-folga', 'cb-prova'].forEach(id => document.getElementById(id).checked = false);
+    ['cb-especial', 'cb-folga', 'cb-prova', 'cb-adaptado'].forEach(id => document.getElementById(id).checked = false);
 
     // Preenche o dia e a data fornecidos pela seção
     document.getElementById('plan-day').value = day || '';
@@ -434,8 +435,8 @@ async function loadPlanners() {
             </h3>
             <div class="planner-section-content ${displayClass}">
                 ${items.map(p => {
-                    let cardClass = p.special == 1 ? 'card-special-1' : (p.special == 2 ? 'card-special-2' : (p.special == 3 ? 'card-special-3' : ''));
-                    let titleHtml = p.special == 2 ? '<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>FOLGA</strong></p>' : (p.special == 3 ? '<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>PROVA</strong></p>' : '');
+                    let cardClass = p.special == 4 ? 'card-adapted' : (p.special == 1 ? 'card-special-1' : (p.special == 2 ? 'card-special-2' : (p.special == 3 ? 'card-special-3' : '')));
+                    let titleHtml = p.special == 4 ? '<p class="adapted-label"><i class="fa-solid fa-puzzle-piece" aria-hidden="true"></i> <strong>ADAPTADO</strong></p>' : (p.special == 2 ? '<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>FOLGA</strong></p>' : (p.special == 3 ? '<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>PROVA</strong></p>' : ''));
                     
                     return `
                     <div class="data-card ${cardClass}" id="plan-card-${p.id}">
@@ -471,6 +472,7 @@ window.editPlanner = (p) => {
     document.getElementById('plan-activities').value = p.activities || '';
     document.getElementById('plan-duration').value = p.duration || '';
     
+    document.getElementById('cb-adaptado').checked = p.special == 4;
     document.getElementById('cb-especial').checked = p.special == 1;
     document.getElementById('cb-folga').checked = p.special == 2;
     document.getElementById('cb-prova').checked = p.special == 3;
