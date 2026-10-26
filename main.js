@@ -7,12 +7,15 @@ import { openSuperStars } from './SuperStar.js';
 import { openFlashcards } from './flashcards.js';
 import { openAppsDialog } from './apps.js'; 
 import { supabase } from './supabaseClient.js'; // IMPORTAÇÃO DO SUPABASE PARA BUSCA EM TEMPO REAL
+import { initNotifications } from './notifications.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
     // Executa a verificação de segurança controlada primeiro
     await initSecurity();
 
     const session = getSession();
+
+    if (session) initNotifications();
 
     // Controle de exibição (Logado vs Deslogado)
     if (session) {
