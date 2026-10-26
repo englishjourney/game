@@ -418,13 +418,12 @@
         }
 
         async function finishGame() {
-            if (await missionWasAlreadyAttempted(currentUser.username, 'Connectors')) { alert('Você já participou desta missão. Jogar novamente não concede pontos.'); return; }
-
             gameScreen.classList.add('hidden');
             resultScreen.classList.remove('hidden');
 
             document.getElementById('final-score-text').textContent = `Você acertou ${correctCount} de 10 frases.`;
             const rewardText = document.getElementById('reward-text');
+            if (await missionWasAlreadyAttempted(currentUser.username, 'Connectors')) { rewardText.textContent = 'Você já participou desta missão. Jogar novamente não concede pontos.'; rewardText.className = 'incorrect'; return; }
 
             if (correctCount >= 5) {
                 rewardText.textContent = "Processando sua recompensa...";
