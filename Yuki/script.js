@@ -1,7 +1,10 @@
 // Configurações do Supabase e Apps Script
 const SUPABASE_URL = "https://rmsmamzutvxugdbiqsrz.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx";
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwBv8eOX6Ca0G9hxPi0DGcaZhK-CU7U1TxBWPJplOn9BiCpeb7wdmRr4I3ugJWHQzVUzA/exec";
+const ACTIVITY_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwBv8eOX6Ca0G9hxPi0DGcaZhK-CU7U1TxBWPJplOn9BiCpeb7wdmRr4I3ugJWHQzVUzA/exec";
+const DOUBTS_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhplJ6lou9R_aGRSZbf9v0aVS1HvbvwQk8dRX5blqJ4S7TK9PDR2_54LYX7fBQQ92w/exec";
+let activeAppsScriptUrl = null;
+let modeSelectionShown = false;
 
 // Instância com nome 'supabaseClient' para evitar conflito com a biblioteca global
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -16,6 +19,9 @@ let currentAssignmentId = null;
 const chatMessagesContainer = document.getElementById("chat-messages");
 const chatForm = document.getElementById("chat-form");
 const userInput = document.getElementById("user-input");
+
+userInput.disabled = true;
+chatForm.querySelector("button").disabled = true;
 
 // Inicialização
 document.addEventListener("DOMContentLoaded", async () => {
@@ -61,6 +67,48 @@ async function loadUserData() {
   currentUser.gradeClass = `${currentUser.serie || ''}${currentUser.team || ''}`;
   
   console.log("Usuário carregado com sucesso do cache:", currentUser.name);
+
+  showModeSelection();
+}
+
+// Exibe a escolha inicial e define qual projeto GAS atenderá a conversa.
+function showModeSelection() {
+  if (!currentUser || modeSelectionShown) return;
+  modeSelectionShown = true;
+
+  const greeting = renderMessage(
+    "yuki",
+    `Olá ${currentUser.username}! Antes de conversarmos, me conta o que você precisa:`,
+    "yuki.png"
+  );
+
+  const bubble = greeting.querySelector(".message-bubble");
+  const buttons = document.createElement("div");
+  buttons.className = "mode-choice-buttons";
+
+  const doubtsButton = document.createElement("button");
+  doubtsButton.type = "button";
+  doubtsButton.className = "mode-choice-btn";
+  doubtsButton.textContent = "Apenas conversar e tirar dúvidas";
+  doubtsButton.addEventListener("click", () => selectConversationMode(DOUBTS_APPS_SCRIPT_URL, buttons));
+
+  const activityButton = document.createElement("button");
+  activityButton.type = "button";
+  activityButton.className = "mode-choice-btn";
+  activityButton.textContent = "Concluir uma atividade enviada pelo professor";
+  activityButton.addEventListener("click", () => selectConversationMode(ACTIVITY_APPS_SCRIPT_URL, buttons));
+
+  buttons.append(doubtsButton, activityButton);
+  bubble.appendChild(buttons);
+}
+
+function selectConversationMode(appsScriptUrl, buttons) {
+  if (activeAppsScriptUrl) return;
+  activeAppsScriptUrl = appsScriptUrl;
+  buttons.remove();
+  userInput.disabled = false;
+  chatForm.querySelector("button").disabled = false;
+  userInput.focus();
 }
 
 // Ajuste automático de scroll quando o teclado mobile abre
@@ -144,7 +192,7 @@ chatForm.addEventListener("submit", async (e) => {
 
   try {
     // 4. Envia mensagem + histórico ao Apps Script
-    const response = await fetch(APPS_SCRIPT_URL, {
+    const response = await fetch(activeAppsScriptUrl, {
       method: "POST",
       body: JSON.stringify({
         message: message,
@@ -247,7 +295,7 @@ function renderCompletionButtons(yukiRow, detectedSubject) {
 // Cria o arquivo .txt no Drive via Apps Script e salva o link no Supabase (Executado SOMENTE nos botões)
 async function saveChatAndRecord(historyText, mainSubject) {
   try {
-    const response = await fetch(APPS_SCRIPT_URL, {
+    const response = await fetch(activeAppsScriptUrl, {
       method: "POST",
       body: JSON.stringify({
         action: "saveChat",
