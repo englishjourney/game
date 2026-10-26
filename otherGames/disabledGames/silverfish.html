@@ -819,6 +819,7 @@ if (player.isLevitating) {
     // ENCERRAMENTO E SALVAMENTO NO SUPABASE
     // ==========================================
     async function triggerGameOver(reason) {
+
         isPlaying = false;
         if (player.levitationInterval) clearInterval(player.levitationInterval);
 
@@ -832,6 +833,7 @@ if (player.isLevitating) {
         goScreen.classList.remove('hidden');
         btnRestart.classList.add('hidden');
         savingText.innerText = "Salvando progresso no Supabase...";
+        if (await missionWasAlreadyAttempted(currentUser, 'Minecraft Silverfish Runner')) { savingText.innerText = 'Esta missão já foi tentada. Jogar novamente não concede pontos.'; btnRestart.classList.remove('hidden'); return; }
 
         try {
             // Pega o score real atualizado
@@ -841,6 +843,7 @@ if (player.isLevitating) {
 
             // Atualiza
             await supabaseClient.from('users').update({ score: newTotal }).eq('username', currentUser);
+            await recordMissionFail(currentUser, 'Minecraft Silverfish Runner');
             
             currentTotalScore = newTotal;
             document.getElementById('final-total-score').innerText = currentTotalScore;
@@ -946,6 +949,36 @@ if (player.isLevitating) {
             ctx.stroke();
             ctx.restore();
         }
+    }
+
+    async function missionWasAlreadyAttempted(username, missionPattern) {
+      try {
+        let query = supabaseClient.from('missions').select('done, fail');
+        query = missionPattern.includes('%') ? query.ilike('mission_name', missionPattern) : query.eq('mission_name', missionPattern);
+        const { data, error } = await query.maybeSingle();
+        if (error) throw error;
+        if (!data) return false;
+        const hasUser = value => String(value || '').split(',').map(v => v.trim().toLowerCase()).filter(Boolean).includes(String(username || '').trim().toLowerCase());
+        return hasUser(data.done) || hasUser(data.fail);
+      } catch (error) {
+        console.error('Falha ao verificar tentativa anterior; pontuação bloqueada por segurança:', error);
+        return true;
+      }
+    }
+    async function recordMissionFail(username, missionName) {
+      try {
+        const { data, error } = await supabaseClient.from('missions').select('id, fail, done').eq('mission_name', missionName).maybeSingle();
+        if (error) throw error;
+        const users = String(data?.fail || '').split(',').map(v => v.trim()).filter(Boolean);
+        if (!users.some(v => v.toLowerCase() === String(username).trim().toLowerCase())) users.push(username);
+        if (data) {
+          const { error: updateError } = await supabaseClient.from('missions').update({ fail: users.join(', ') }).eq('id', data.id);
+          if (updateError) throw updateError;
+        } else {
+          const { error: insertError } = await supabaseClient.from('missions').insert({ mission_name: missionName, done: '', fail: users.join(', ') });
+          if (insertError) throw insertError;
+        }
+      } catch (error) { console.error('Erro ao registrar tentativa da missão:', error); }
     }
 </script>
 </body>
