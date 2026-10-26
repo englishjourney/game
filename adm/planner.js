@@ -460,13 +460,14 @@ async function loadPlanners() {
     }).join('');
 }
 
-// Adia uma aula para o próximo horário agendado, mantendo os dois conteúdos no mesmo horário.
+// Adia uma aula para a próxima aula futura da mesma série e turma.
 window.deferPlanner = async (id) => {
     try {
         const { data, error } = await supabase.from('planner').select('*');
         if (error) throw error;
 
-        const selected = (data || []).find(item => String(item.id) === String(id));
+        const plans = data || [];
+        const selected = plans.find(item => String(item.id) === String(id));
         if (!selected) {
             alert('Não foi possível encontrar esta aula.');
             return;
@@ -475,37 +476,60 @@ window.deferPlanner = async (id) => {
         const parseDateTime = (dateStr, timeStr) => {
             if (!dateStr) return NaN;
             const parts = String(dateStr).split(/[/-]/);
-            let year, month, day;
             if (parts.length !== 3) return NaN;
-            if (parts[0].length === 4) {
-                [year, month, day] = parts;
-            } else {
-                [day, month, year] = parts;
-            }
+            let year, month, day;
+            if (parts[0].length === 4) [year, month, day] = parts;
+            else [day, month, year] = parts;
+
             const time = /^\d{2}:\d{2}$/.test(String(timeStr || '')) ? timeStr : '00:00';
-            return new Date(Number(year), Number(month) - 1, Number(day), Number(time.split(':')[0]), Number(time.split(':')[1])).getTime();
+            const [hours, minutes] = time.split(':').map(Number);
+            const date = new Date(Number(year), Number(month) - 1, Number(day), hours, minutes);
+            return Number.isNaN(date.getTime()) ? NaN : date.getTime();
         };
 
+        const getDateKey = (dateStr) => {
+            if (!dateStr) return '';
+            const parts = String(dateStr).split(/[/-]/);
+            if (parts.length !== 3) return '';
+            const [year, month, day] = parts[0].length === 4
+                ? parts
+                : [parts[2], parts[1], parts[0]];
+            return Number(year) * 10000 + Number(month) * 100 + Number(day);
+        };
+
+        const today = new Date();
+        const todayKey = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
         const selectedTimestamp = parseDateTime(selected.date, selected.time);
         if (!Number.isFinite(selectedTimestamp)) {
             alert('Esta aula não possui uma data válida para adiamento.');
             return;
         }
 
-        const next = (data || [])
-            .filter(item => String(item.id) !== String(id))
-            .map(item => ({ item, timestamp: parseDateTime(item.date, item.time) }))
-            .filter(entry => Number.isFinite(entry.timestamp) && entry.timestamp > selectedTimestamp)
+        const normalize = value => String(value ?? '').trim().toLocaleLowerCase('pt-BR');
+        const sameSeriesAndTeam = item =>
+            normalize(item.serie) === normalize(selected.serie) &&
+            normalize(item.team) === normalize(selected.team);
+
+        // Busca a próxima aula da mesma série e turma, excluindo esta aula.
+        // O destino precisa estar em uma data estritamente posterior à data de hoje.
+        const next = plans
+            .filter(item => String(item.id) !== String(id) && sameSeriesAndTeam(item))
+            .map(item => ({ item, timestamp: parseDateTime(item.date, item.time), dateKey: getDateKey(item.date) }))
+            .filter(entry =>
+                Number.isFinite(entry.timestamp) &&
+                entry.dateKey > todayKey &&
+                entry.timestamp > selectedTimestamp
+            )
             .sort((a, b) => a.timestamp - b.timestamp)[0];
 
         if (!next) {
-            alert('Não há outra aula agendada depois desta para usar como destino do adiamento.');
+            alert('Não encontrei uma próxima aula futura para esta mesma série e turma. O adiamento só pode ser feito para uma data posterior a hoje.');
             return;
         }
 
         const target = next.item;
         const confirmation = confirm(
-            `Adiar esta aula de ${selected.date} às ${selected.time || 'horário não definido'} para ${target.date} às ${target.time || 'horário não definido'}?\n\nAs duas aulas ficarão agendadas para o mesmo dia e horário.`
+            `Adiar esta aula de ${selected.date} às ${selected.time || 'horário não definido'} para a próxima aula de ${selected.serie || ''}ª série, turma ${selected.team || ''}, em ${target.date} às ${target.time || 'horário não definido'}?\n\nAs duas aulas ficarão agendadas para o mesmo dia e horário.`
         );
         if (!confirmation) return;
 
