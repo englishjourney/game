@@ -468,7 +468,7 @@
         // Anti-farming: uma missão só pode gerar pontos na primeira tentativa registrada.
         async function missionWasAlreadyAttempted(username, missionName) {
             try {
-                const { data, error } = await supabaseClient
+                const { data, error } = await supabase
                     .from('missions')
                     .select('done, fail')
                     .eq('mission_name', missionName)
