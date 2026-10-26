@@ -257,3 +257,19 @@ dialog::backdrop { background: rgba(0,0,0,0.7); }
     gap: 10px;
     margin-top: 20px;
 }
+
+/* Aulas adaptadas: gradiente com as sete cores do arco-íris */
+.data-card.card-adapted {
+  background: linear-gradient(115deg, #ff4545, #ff9f43, #ffe34d, #4ade80, #38bdf8, #818cf8, #d946ef) !important;
+  border: 2px solid rgba(255,255,255,.9) !important;
+  color: #111827 !important;
+}
+.data-card.card-adapted .data-card-info,
+.data-card.card-adapted .data-card-info p,
+.data-card.card-adapted .data-card-info strong,
+.data-card.card-adapted .adapted-label { color: #111827 !important; }
+.data-card .adapted-label { font-size: 1.15rem; text-transform: uppercase; font-weight: 800; }
+.data-card .adapted-label i { margin-right: 5px; }
+/* Dropdown e formulário de lembretes sobre qualquer seção visível */
+#reminders-dropdown { position: absolute; top: calc(100% + 8px); right: 0; z-index: 10000; }
+#modal-reminder-form { position: fixed; inset: 0; z-index: 11000; }
