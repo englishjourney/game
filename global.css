@@ -1213,3 +1213,13 @@ dialog.superstar-dialog {
     30% { transform: translateY(0); }
     45% { transform: translateY(-4px); }
 }
+
+/* Notificações do usuário: popover sobre a interface atual */
+.notification-bell { position: relative; border: 1px solid rgba(255,255,255,.35); border-radius: 50%; background: rgba(0,0,0,.25); color: inherit; font-size: 1.25rem; width: 44px; height: 44px; cursor: pointer; }
+.notification-count { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 1px 4px; border-radius: 99px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 800; }
+.notifications-panel { position: fixed; z-index: 999999; top: 76px; right: 18px; width: min(380px, calc(100vw - 24px)); max-height: min(70vh, 520px); overflow: auto; padding: 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,.25); background: rgba(15,23,42,.98); color: #f8fafc; box-shadow: 0 18px 55px rgba(0,0,0,.5); }
+.notifications-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px; }
+.notifications-heading button { color:inherit; background:transparent; border:0; font-size:1.5rem; cursor:pointer; }
+.notification-item { padding: 11px; border: 1px solid rgba(255,255,255,.12); border-radius: 9px; margin-top: 8px; }
+.notification-item p { margin: 4px 0; }
+.notification-item button { margin-top: 7px; padding: 5px 9px; cursor:pointer; }
