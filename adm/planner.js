@@ -518,6 +518,7 @@ window.deferPlanner = async (id) => {
             .filter(entry =>
                 Number.isFinite(entry.timestamp) &&
                 entry.dateKey > todayKey &&
+                entry.dateKey > getDateKey(selected.date) &&
                 entry.timestamp > selectedTimestamp
             )
             .sort((a, b) => a.timestamp - b.timestamp)[0];
