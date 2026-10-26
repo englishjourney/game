@@ -819,6 +819,8 @@ if (player.isLevitating) {
     // ENCERRAMENTO E SALVAMENTO NO SUPABASE
     // ==========================================
     async function triggerGameOver(reason) {
+        if (await missionWasAlreadyAttempted(currentUser, 'Minecraft Silverfish Runner')) { savingText.innerText = 'Esta missão já foi tentada. Jogar novamente não concede pontos.'; btnRestart.classList.remove('hidden'); return; }
+
         isPlaying = false;
         if (player.levitationInterval) clearInterval(player.levitationInterval);
 
@@ -946,6 +948,21 @@ if (player.isLevitating) {
             ctx.stroke();
             ctx.restore();
         }
+    }
+
+    async function missionWasAlreadyAttempted(username, missionPattern) {
+      try {
+        let query = supabaseClient.from('missions').select('done, fail');
+        query = missionPattern.includes('%') ? query.ilike('mission_name', missionPattern) : query.eq('mission_name', missionPattern);
+        const { data, error } = await query.maybeSingle();
+        if (error) throw error;
+        if (!data) return false;
+        const hasUser = value => String(value || '').split(',').map(v => v.trim().toLowerCase()).filter(Boolean).includes(String(username || '').trim().toLowerCase());
+        return hasUser(data.done) || hasUser(data.fail);
+      } catch (error) {
+        console.error('Falha ao verificar tentativa anterior; pontuação bloqueada por segurança:', error);
+        return true;
+      }
     }
 </script>
 </body>
