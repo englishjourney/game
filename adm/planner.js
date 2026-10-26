@@ -448,6 +448,7 @@ async function loadPlanners() {
                         </div>
                         <div class="data-card-actions">
                             <button class="btn-small btn-secondary" onclick='window.editPlanner(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Editar</button>
+                            <button class="btn-small btn-postpone" onclick='window.deferPlanner("${p.id}")' title="Mover esta aula para a data e hora da próxima aula">Adiar</button>
                             <button class="btn-small" style="background-color: #ff4444; color: white; border: none;" onclick='window.deletePlanner("${p.id}")'>Excluir</button>
                         </div>
                     </div>
@@ -458,6 +459,70 @@ async function loadPlanners() {
         `;
     }).join('');
 }
+
+// Adia uma aula para o próximo horário agendado, mantendo os dois conteúdos no mesmo horário.
+window.deferPlanner = async (id) => {
+    try {
+        const { data, error } = await supabase.from('planner').select('*');
+        if (error) throw error;
+
+        const selected = (data || []).find(item => String(item.id) === String(id));
+        if (!selected) {
+            alert('Não foi possível encontrar esta aula.');
+            return;
+        }
+
+        const parseDateTime = (dateStr, timeStr) => {
+            if (!dateStr) return NaN;
+            const parts = String(dateStr).split(/[/-]/);
+            let year, month, day;
+            if (parts.length !== 3) return NaN;
+            if (parts[0].length === 4) {
+                [year, month, day] = parts;
+            } else {
+                [day, month, year] = parts;
+            }
+            const time = /^\d{2}:\d{2}$/.test(String(timeStr || '')) ? timeStr : '00:00';
+            return new Date(Number(year), Number(month) - 1, Number(day), Number(time.split(':')[0]), Number(time.split(':')[1])).getTime();
+        };
+
+        const selectedTimestamp = parseDateTime(selected.date, selected.time);
+        if (!Number.isFinite(selectedTimestamp)) {
+            alert('Esta aula não possui uma data válida para adiamento.');
+            return;
+        }
+
+        const next = (data || [])
+            .filter(item => String(item.id) !== String(id))
+            .map(item => ({ item, timestamp: parseDateTime(item.date, item.time) }))
+            .filter(entry => Number.isFinite(entry.timestamp) && entry.timestamp > selectedTimestamp)
+            .sort((a, b) => a.timestamp - b.timestamp)[0];
+
+        if (!next) {
+            alert('Não há outra aula agendada depois desta para usar como destino do adiamento.');
+            return;
+        }
+
+        const target = next.item;
+        const confirmation = confirm(
+            `Adiar esta aula de ${selected.date} às ${selected.time || 'horário não definido'} para ${target.date} às ${target.time || 'horário não definido'}?\n\nAs duas aulas ficarão agendadas para o mesmo dia e horário.`
+        );
+        if (!confirmation) return;
+
+        const { error: updateError } = await supabase
+            .from('planner')
+            .update({ date: target.date, day: target.day, time: target.time })
+            .eq('id', id);
+
+        if (updateError) throw updateError;
+
+        await loadPlanners();
+        alert(`Aula adiada para ${target.day || ''} ${target.date} às ${target.time || 'horário não definido'}.`);
+    } catch (error) {
+        console.error('Erro ao adiar aula:', error);
+        alert('Não foi possível adiar a aula: ' + (error.message || 'erro inesperado'));
+    }
+};
 
 window.editPlanner = (p) => {
     document.getElementById('plan-id').value = p.id;
