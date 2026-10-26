@@ -622,6 +622,8 @@
     });
 
     async function finishGame() {
+      if (await missionWasAlreadyAttempted(currentUser.username, 'Superlative H.U.D.')) { alert('Você já participou desta missão. Jogar novamente não concede pontos.'); finalEarned.textContent = '0'; finalTotal.textContent = currentUser.score || 0; return; }
+
       gameScreen.classList.add('hidden');
       victoryScreen.classList.remove('hidden');
 
@@ -641,11 +643,42 @@
       } catch (err) {
         console.error('Failed to sync score to Supabase:', err);
       }
+      await recordMissionCompletion(currentUser.username, 'Superlative H.U.D.');
+
     }
 
     restartBtn.addEventListener('click', () => {
       location.reload();
     });
-  </script>
+  
+    // Bloqueia pontuação repetida após a primeira tentativa registrada (vitória ou derrota).
+    async function missionWasAlreadyAttempted(username, missionName) {
+      try {
+        const { data, error } = await supabaseClient.from('missions').select('done, fail').eq('mission_name', missionName).maybeSingle();
+        if (error) throw error;
+        if (!data) return false;
+        const hasUser = value => String(value || '').split(',').map(v => v.trim().toLowerCase()).filter(Boolean).includes(String(username || '').trim().toLowerCase());
+        return hasUser(data.done) || hasUser(data.fail);
+      } catch (error) {
+        console.error('Não foi possível verificar o histórico da missão; pontuação bloqueada por segurança:', error);
+        return true;
+      }
+    }
+    async function recordMissionCompletion(username, missionName) {
+      try {
+        const { data, error } = await supabaseClient.from('missions').select('id, done, fail').eq('mission_name', missionName).maybeSingle();
+        if (error) throw error;
+        const users = String(data?.done || '').split(',').map(v => v.trim()).filter(Boolean);
+        if (!users.some(v => v.toLowerCase() === String(username).trim().toLowerCase())) users.push(username);
+        if (data) {
+          const { error: updateError } = await supabaseClient.from('missions').update({ done: users.join(', ') }).eq('id', data.id);
+          if (updateError) throw updateError;
+        } else {
+          const { error: insertError } = await supabaseClient.from('missions').insert({ mission_name: missionName, done: users.join(', '), fail: '' });
+          if (insertError) throw insertError;
+        }
+      } catch (error) { console.error('Erro ao registrar conclusão da missão:', error); }
+    }
+</script>
 </body>
 </html>
