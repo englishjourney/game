@@ -510,6 +510,8 @@
 
     // 5. FINALIZANDO JOGO & SINCRONIZAÇÃO
     async function endGame() {
+      if (await missionWasAlreadyAttempted(currentUser.username, 'Symon Says')) { showMsg(ui.syncMsg, 'Você já participou desta missão. Jogar novamente não concede pontos.', 'text-error'); return; }
+
       switchScreen(screens.result);
       ui.finalScore.textContent = score;
       ui.totalScore.textContent = "...";
@@ -579,6 +581,24 @@
       element.textContent = msg;
       element.className = `msg-feedback ${classColor}`;
     }
-  </script>
+  
+        // Anti-farming: uma missão só pode gerar pontos na primeira tentativa registrada.
+        async function missionWasAlreadyAttempted(username, missionName) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('missions')
+                    .select('done, fail')
+                    .eq('mission_name', missionName)
+                    .maybeSingle();
+                if (error) throw error;
+                if (!data) return false;
+                const hasUser = value => String(value || '').split(',').map(name => name.trim().toLowerCase()).filter(Boolean).includes(String(username || '').trim().toLowerCase());
+                return hasUser(data.done) || hasUser(data.fail);
+            } catch (error) {
+                console.error('Não foi possível verificar o histórico da missão; pontuação bloqueada por segurança:', error);
+                return true;
+            }
+        }
+</script>
 </body>
 </html>
