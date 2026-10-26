@@ -387,14 +387,13 @@
         }
 
         async function finishGame() {
-            if (await missionWasAlreadyAttempted(currentUser.username, 'Memory game - Animals')) { alert('Você já participou desta missão. Jogar novamente não concede pontos.'); return; }
-
             gameScreen.classList.add('hidden');
             resultScreen.classList.remove('hidden');
 
             const rewardText = document.getElementById('reward-text');
             rewardText.textContent = "Processando sua recompensa...";
             rewardText.className = "correct-msg";
+            if (await missionWasAlreadyAttempted(currentUser.username, 'Memory game - Animals')) { rewardText.textContent = 'Você já participou desta missão. Jogar novamente não concede pontos.'; rewardText.className = 'incorrect-msg'; return; }
             
             try {
                 let currentScore = parseInt(currentUser.score, 10);
