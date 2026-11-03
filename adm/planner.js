@@ -449,7 +449,7 @@ async function loadPlanners() {
                         <div class="data-card-actions">
                             <button class="btn-small btn-secondary" onclick='window.editPlanner(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Editar</button>
                             <button class="btn-small btn-postpone" onclick='window.deferPlanner("${p.id}")' title="Mover esta aula para a data e hora da próxima aula">Adiar</button>
-                            <button class="btn-small btn-advance" onclick='window.advancePlanner("${p.id}")' title="Trazer esta aula para a data e hora da aula anterior">Adiantar</button>
+                            <button class="btn-small btn-advance" onclick='window.advancePlanner("${p.id}")' title="Trazer esta aula para a próxima data futura da turma">Adiantar</button>
                             <button class="btn-small" style="background-color: #ff4444; color: white; border: none;" onclick='window.deletePlanner("${p.id}")'>Excluir</button>
                         </div>
                     </div>
@@ -550,7 +550,7 @@ window.deferPlanner = async (id) => {
     }
 };
 
-// Antecipa uma aula para a aula cronologicamente anterior da mesma série e turma.
+// Antecipa uma aula para a próxima aula futura da mesma série e turma, em ordem cronológica.
 window.advancePlanner = async (id) => {
     try {
         const { data, error } = await supabase.from('planner').select('*');
@@ -587,6 +587,7 @@ window.advancePlanner = async (id) => {
             return Number(year) * 10000 + Number(month) * 100 + Number(day);
         };
 
+        const now = Date.now();
         const today = new Date();
         const todayKey = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
         const selectedTimestamp = parseDateTime(selected.date, selected.time);
@@ -600,28 +601,28 @@ window.advancePlanner = async (id) => {
             normalize(item.serie) === normalize(selected.serie) &&
             normalize(item.team) === normalize(selected.team);
 
-        // Encontra a aula imediatamente anterior da mesma turma.
-        // O destino não pode estar em uma data passada.
-        const previous = plans
+        // Entre as aulas futuras da mesma turma que acontecem antes da aula selecionada,
+        // escolhe a mais próxima de agora (a primeira na ordem cronológica).
+        const nextUpcoming = plans
             .filter(item => String(item.id) !== String(id) && sameSeriesAndTeam(item))
             .map(item => ({ item, timestamp: parseDateTime(item.date, item.time), dateKey: getDateKey(item.date) }))
             .filter(entry =>
                 Number.isFinite(entry.timestamp) &&
                 entry.dateKey >= todayKey &&
-                entry.timestamp >= Date.now() &&
+                entry.timestamp >= now &&
                 entry.timestamp < selectedTimestamp
             )
-            .sort((a, b) => b.timestamp - a.timestamp)[0];
+            .sort((a, b) => a.timestamp - b.timestamp)[0];
 
-        if (!previous) {
-            alert('Não encontrei uma aula anterior desta mesma série e turma a partir de hoje. A antecipação não pode levar a aula para uma data passada.');
+        if (!nextUpcoming) {
+            alert('Não encontrei uma próxima aula futura desta mesma série e turma antes da data selecionada. A antecipação não pode levar a aula para uma data passada nem adiantar para depois da aula original.');
             return;
         }
 
-        const target = previous.item;
+        const target = nextUpcoming.item;
         const confirmation = confirm(
             'Adiantar esta aula de ' + selected.date + ' às ' + (selected.time || 'horário não definido') +
-            ' para a aula anterior de ' + (selected.serie || '') + 'ª série, turma ' + (selected.team || '') +
+            ' para a próxima aula de ' + (selected.serie || '') + 'ª série, turma ' + (selected.team || '') +
             ', em ' + target.date + ' às ' + (target.time || 'horário não definido') +
             '?\n\nAs duas aulas ficarão agendadas para o mesmo dia e horário.'
         );
