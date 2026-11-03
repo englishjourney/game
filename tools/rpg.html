@@ -397,7 +397,7 @@ async function loadPartners() {
   let activeRows = [];
   const result = await supabase
     .from("assignments")
-    .select("id,user1,user2,serieTeam,chatHistory,created_at,user1_character_name,user1_avatar_url,user2_character_name,user2_avatar_url")
+    .select("id,user1,user2,serieTeam,chatHistory,created_at,user1_character_name,avatar_url1,user2_character_name,avatar_url2")
     .eq("serieTeam", classCode(currentProfile))
     .or("user1.eq." + currentProfile.username + ",user2.eq." + currentProfile.username);
 
@@ -476,7 +476,7 @@ async function selectPartner(partner) {
   try {
     const { data, error } = await supabase
       .from("assignments")
-      .select("id,user1,user2,serieTeam,chatHistory,created_at,user1_character_name,user1_avatar_url,user2_character_name,user2_avatar_url")
+      .select("id,user1,user2,serieTeam,chatHistory,created_at,user1_character_name,avatar_url1,user2_character_name,avatar_url2")
       .eq("serieTeam", classCode(currentProfile))
       .eq("user1", pair[0])
       .eq("user2", pair[1])
@@ -498,7 +498,7 @@ async function selectPartner(partner) {
           serieTeam: classCode(currentProfile),
           chatHistory: JSON.stringify([])
         })
-        .select("id,user1,user2,serieTeam,chatHistory,created_at,user1_character_name,user1_avatar_url,user2_character_name,user2_avatar_url")
+        .select("id,user1,user2,serieTeam,chatHistory,created_at,user1_character_name,avatar_url1,user2_character_name,avatar_url2")
         .single();
 
       if (inserted.error && inserted.error.code === "23505") {
@@ -559,8 +559,8 @@ function saveCachedPlayerProfile() {
 function playerProfileColumnNames() {
   const first = activeAssignment.user1 === currentProfile.username;
   return first
-    ? { character: "user1_character_name", avatar: "user1_avatar_url" }
-    : { character: "user2_character_name", avatar: "user2_avatar_url" };
+    ? { character: "user1_character_name", avatar: "avatar_url1" }
+    : { character: "user2_character_name", avatar: "avatar_url2" };
 }
 
 function savedProfileFromAssignment() {
@@ -581,7 +581,7 @@ async function persistPlayerProfileForConversation() {
     .from("assignments")
     .update(updates)
     .eq("id", activeAssignment.id)
-    .select("id,user1_character_name,user1_avatar_url,user2_character_name,user2_avatar_url")
+    .select("id,user1_character_name,avatar_url1,user2_character_name,avatar_url2")
     .maybeSingle();
 
   if (error) throw error;
@@ -759,7 +759,7 @@ function subscribeToChat() {
     if (!activeAssignment) return;
     const { data, error } = await supabase
       .from("assignments")
-      .select("id,user1,user2,serieTeam,chatHistory,user1_character_name,user1_avatar_url,user2_character_name,user2_avatar_url")
+      .select("id,user1,user2,serieTeam,chatHistory,user1_character_name,avatar_url1,user2_character_name,avatar_url2")
       .eq("id", activeAssignment.id)
       .maybeSingle();
 
@@ -863,8 +863,8 @@ function renderMessages() {
 function avatarForUser(username) {
   if (!activeAssignment || !username) return "";
   return username === activeAssignment.user1
-    ? activeAssignment.user1_avatar_url || ""
-    : activeAssignment.user2_avatar_url || "";
+    ? activeAssignment.avatar_url1 || ""
+    : activeAssignment.avatar_url2 || "";
 }
 
 function formatMessage(text, mode) {
@@ -978,8 +978,8 @@ function buildExportPayload() {
     user2Name: activeAssignment.user2 === currentProfile.username ? (currentProfile.name || currentProfile.username) : (currentPartner.name || currentPartner.username),
     user1Character: activeAssignment.user1_character_name || chatMessages.find(message => message.user === activeAssignment.user1)?.character || (activeAssignment.user1 === currentProfile.username ? characterName : ""),
     user2Character: activeAssignment.user2_character_name || chatMessages.find(message => message.user === activeAssignment.user2)?.character || (activeAssignment.user2 === currentProfile.username ? characterName : ""),
-    user1Avatar: activeAssignment.user1_avatar_url || chatMessages.find(message => message.user === activeAssignment.user1)?.avatar_url || (activeAssignment.user1 === currentProfile.username ? characterAvatarUrl : ""),
-    user2Avatar: activeAssignment.user2_avatar_url || chatMessages.find(message => message.user === activeAssignment.user2)?.avatar_url || (activeAssignment.user2 === currentProfile.username ? characterAvatarUrl : ""),
+    user1Avatar: activeAssignment.avatar_url1 || chatMessages.find(message => message.user === activeAssignment.user1)?.avatar_url || (activeAssignment.user1 === currentProfile.username ? characterAvatarUrl : ""),
+    user2Avatar: activeAssignment.avatar_url2 || chatMessages.find(message => message.user === activeAssignment.user2)?.avatar_url || (activeAssignment.user2 === currentProfile.username ? characterAvatarUrl : ""),
     messages: chatMessages
   };
 }
