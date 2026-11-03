@@ -97,24 +97,27 @@ function buildTranscriptHtml_(payload, stamp) {
     var user = escapeHtml_(message.user || "player");
     var time = escapeHtml_(message.time || "");
     var text = escapeHtml_(message.message || "");
-    return '<section class="message ' + kind + '"><div class="meta"><strong>' + character +
-      '</strong><span>@' + user + '</span><time>' + time + '</time></div><div class="bubble">' +
-      text + '</div></section>';
+    return '<section class="message ' + kind + '"><div class="meta"><span>@' + user +
+      '</span><time>' + time + '</time></div><div class="bubble"><strong class="character">' +
+      character + ':</strong><br><span>' + text + '</span></div></section>';
   }).join("");
 
   return '<!doctype html><html><head><meta charset="utf-8"><style>' +
     '@page{size:A4;margin:18mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#17233b;background:#fff}' +
     '.head{border-bottom:3px solid #263e69;padding-bottom:16px;margin-bottom:22px}' +
     '.brand{font-size:11px;letter-spacing:3px;color:#55719e;font-weight:bold}.title{font-size:25px;margin:9px 0 5px}' +
-    '.metahead{font-size:11px;color:#64748b}.message{margin:0 0 15px;page-break-inside:avoid}' +
+    '.metahead{font-size:11px;color:#64748b;line-height:1.7}.participants{margin-top:8px;font-size:11px;color:#334155;line-height:1.8}.message{margin:0 0 15px;page-break-inside:avoid}' +
     '.meta{display:flex;gap:10px;align-items:center;font-size:10px;color:#64748b;margin:0 0 5px}' +
-    '.meta strong{font-size:12px;color:#1e3154}.bubble{display:inline-block;max-width:92%;padding:10px 13px;border-radius:12px;background:#edf3fb;border:1px solid #d8e2f0;font-size:12px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}' +
+    '.meta strong{font-size:12px;color:#1e3154}.bubble{display:inline-block;max-width:92%;padding:10px 13px;border-radius:12px;background:#edf3fb;border:1px solid #d8e2f0;font-size:12px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}.character{font-weight:bold;color:#1e3154}' +
     '.message.whisper .bubble{font-style:italic;color:#56627b}.message.shout .bubble{font-weight:bold;text-transform:none;color:#1e3154}' +
     '.message.action .bubble{font-weight:bold;color:#7a4e00;background:#fff5d9}.message.comment .bubble{font-style:italic;color:#8792a6;background:#f4f6f9}' +
     '.footer{margin-top:30px;padding-top:10px;border-top:1px solid #dbe3ef;font-size:9px;color:#94a3b8}' +
     '</style></head><body><header class="head"><div class="brand">ENGLISHJOURNEY · RPG CHAT</div>' +
-    '<h1 class="title">Registro de Role-Play</h1><div class="metahead">Turma ' + escapeHtml_(payload.serieTeam) +
-    ' · ' + escapeHtml_(payload.user1) + ' & ' + escapeHtml_(payload.user2) + ' · ' + escapeHtml_(stamp) +
+    '<h1 class="title">Registro de Role-Play</h1><div class="metahead">Data: ' + escapeHtml_(payload.dateText || stamp) +
+    '<br>Turma: ' + escapeHtml_(payload.serieTeam) + '</div><div class="participants">' +
+    '<strong>Participantes</strong><br>' +
+    escapeHtml_(payload.user1Name || payload.user1) + ' (@' + escapeHtml_(payload.user1) + ') · Personagem: ' + escapeHtml_(payload.user1Character || "Não informado") +
+    '<br>' + escapeHtml_(payload.user2Name || payload.user2) + ' (@' + escapeHtml_(payload.user2) + ') · Personagem: ' + escapeHtml_(payload.user2Character || "Não informado") +
     '</div></header><main>' + rows + '</main><footer class="footer">Histórico de conversa exportado pelo EnglishJourney RPG.</footer></body></html>';
 }
 
