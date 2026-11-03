@@ -449,6 +449,7 @@ async function loadPlanners() {
                         <div class="data-card-actions">
                             <button class="btn-small btn-secondary" onclick='window.editPlanner(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Editar</button>
                             <button class="btn-small btn-postpone" onclick='window.deferPlanner("${p.id}")' title="Mover esta aula para a data e hora da próxima aula">Adiar</button>
+                            <button class="btn-small btn-advance" onclick='window.advancePlanner("${p.id}")' title="Trazer esta aula para a data e hora da aula anterior">Adiantar</button>
                             <button class="btn-small" style="background-color: #ff4444; color: white; border: none;" onclick='window.deletePlanner("${p.id}")'>Excluir</button>
                         </div>
                     </div>
@@ -546,6 +547,97 @@ window.deferPlanner = async (id) => {
     } catch (error) {
         console.error('Erro ao adiar aula:', error);
         alert('Não foi possível adiar a aula: ' + (error.message || 'erro inesperado'));
+    }
+};
+
+// Antecipa uma aula para a aula cronologicamente anterior da mesma série e turma.
+window.advancePlanner = async (id) => {
+    try {
+        const { data, error } = await supabase.from('planner').select('*');
+        if (error) throw error;
+
+        const plans = data || [];
+        const selected = plans.find(item => String(item.id) === String(id));
+        if (!selected) {
+            alert('Não foi possível encontrar esta aula.');
+            return;
+        }
+
+        const parseDateTime = (dateStr, timeStr) => {
+            if (!dateStr) return NaN;
+            const parts = String(dateStr).split(/[/-]/);
+            if (parts.length !== 3) return NaN;
+            let year, month, day;
+            if (parts[0].length === 4) [year, month, day] = parts;
+            else [day, month, year] = parts;
+
+            const time = /^\d{2}:\d{2}$/.test(String(timeStr || '')) ? timeStr : '00:00';
+            const [hours, minutes] = time.split(':').map(Number);
+            const date = new Date(Number(year), Number(month) - 1, Number(day), hours, minutes);
+            return Number.isNaN(date.getTime()) ? NaN : date.getTime();
+        };
+
+        const getDateKey = (dateStr) => {
+            if (!dateStr) return 0;
+            const parts = String(dateStr).split(/[/-]/);
+            if (parts.length !== 3) return 0;
+            const [year, month, day] = parts[0].length === 4
+                ? parts
+                : [parts[2], parts[1], parts[0]];
+            return Number(year) * 10000 + Number(month) * 100 + Number(day);
+        };
+
+        const today = new Date();
+        const todayKey = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+        const selectedTimestamp = parseDateTime(selected.date, selected.time);
+        if (!Number.isFinite(selectedTimestamp)) {
+            alert('Esta aula não possui uma data válida para antecipação.');
+            return;
+        }
+
+        const normalize = value => String(value ?? '').trim().toLocaleLowerCase('pt-BR');
+        const sameSeriesAndTeam = item =>
+            normalize(item.serie) === normalize(selected.serie) &&
+            normalize(item.team) === normalize(selected.team);
+
+        // Encontra a aula imediatamente anterior da mesma turma.
+        // O destino não pode estar em uma data passada.
+        const previous = plans
+            .filter(item => String(item.id) !== String(id) && sameSeriesAndTeam(item))
+            .map(item => ({ item, timestamp: parseDateTime(item.date, item.time), dateKey: getDateKey(item.date) }))
+            .filter(entry =>
+                Number.isFinite(entry.timestamp) &&
+                entry.dateKey >= todayKey &&
+                entry.timestamp < selectedTimestamp
+            )
+            .sort((a, b) => b.timestamp - a.timestamp)[0];
+
+        if (!previous) {
+            alert('Não encontrei uma aula anterior desta mesma série e turma a partir de hoje. A antecipação não pode levar a aula para uma data passada.');
+            return;
+        }
+
+        const target = previous.item;
+        const confirmation = confirm(
+            'Adiantar esta aula de ' + selected.date + ' às ' + (selected.time || 'horário não definido') +
+            ' para a aula anterior de ' + (selected.serie || '') + 'ª série, turma ' + (selected.team || '') +
+            ', em ' + target.date + ' às ' + (target.time || 'horário não definido') +
+            '?\n\nAs duas aulas ficarão agendadas para o mesmo dia e horário.'
+        );
+        if (!confirmation) return;
+
+        const { error: updateError } = await supabase
+            .from('planner')
+            .update({ date: target.date, day: target.day, time: target.time })
+            .eq('id', id);
+
+        if (updateError) throw updateError;
+
+        await loadPlanners();
+        alert('Aula adiantada para ' + (target.day || '') + ' ' + target.date + ' às ' + (target.time || 'horário não definido') + '.');
+    } catch (error) {
+        console.error('Erro ao adiantar aula:', error);
+        alert('Não foi possível adiantar a aula: ' + (error.message || 'erro inesperado'));
     }
 };
 
