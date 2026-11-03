@@ -398,7 +398,8 @@ async function loadPartners() {
   const result = await supabase
     .from("assignments")
     .select("id,user1,user2,serieTeam,chatHistory,created_at,user1_character_name,user1_avatar_url,user2_character_name,user2_avatar_url")
-    .eq("serieTeam", classCode(currentProfile));
+    .eq("serieTeam", classCode(currentProfile))
+    .or("user1.eq." + currentProfile.username + ",user2.eq." + currentProfile.username);
 
   if (result.error) {
     console.error("Erro ao consultar conversas:", result.error);
@@ -769,12 +770,20 @@ function subscribeToChat() {
 function subscribeToUserAssignments() {
   if (realtimeChannel || !currentProfile) return;
 
+  const username = currentProfile.username;
   realtimeChannel = supabase
-    .channel("rpg-user-" + currentProfile.username)
+    .channel("rpg-user-" + username)
     .on("postgres_changes", {
       event: "UPDATE",
       schema: "public",
-      table: "assignments"
+      table: "assignments",
+      filter: "user1=eq." + username
+    }, payload => handleAssignmentUpdate(payload.new))
+    .on("postgres_changes", {
+      event: "UPDATE",
+      schema: "public",
+      table: "assignments",
+      filter: "user2=eq." + username
     }, payload => handleAssignmentUpdate(payload.new))
     .subscribe();
 }
