@@ -442,7 +442,7 @@ async function loadPlanners() {
                     <div class="data-card ${cardClass}" id="plan-card-${p.id}">
                         <div class="data-card-info">
                             <p><strong>${p.day} - ${p.date}${p.time ? `(${p.time})` : ''}</strong> ${p.duration ? `| Duração: ${p.duration}` : ''}</p>
-                            ${titleHtml}${p.serie || p.team ? `<p><strong>Turma:</strong> ${p.serie || ''} ${p.team || ''}</p>` : ''}
+                            ${titleHtml}${p.tag ? `<p style="font-size:0.85rem;color:var(--text-muted);"><strong>Tag:</strong> ${p.tag}</p>` : ''}${p.serie || p.team ? `<p><strong>Turma:</strong> ${p.serie || ''} ${p.team || ''}</p>` : ''}
                             ${p.activities ? `<p><strong>Atividades:</strong> ${p.activities}</p>` : ''}
                             ${p.skills ? `<p><strong>BNCC:</strong> ${p.skills}</p>` : ''}
                         </div>
@@ -459,6 +459,18 @@ async function loadPlanners() {
         </div>
         `;
     }).join('');
+}
+
+// Recupera a data de origem da aula. Se ela já foi movida, mantém a data registrada na tag.
+function getPlannerOriginalDate(item) {
+    const match = String(item.tag || '').match(/(?:Adiada|Adiantada) do dia (\d{2}\/\d{2}\/\d{4})/);
+    if (match) return match[1];
+
+    const value = String(item.date || '');
+    const parts = value.split(/[/-]/);
+    if (parts.length !== 3) return value;
+    if (parts[0].length === 4) return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+    return `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
 }
 
 // Adia uma aula para a próxima aula futura da mesma série e turma.
@@ -537,7 +549,7 @@ window.deferPlanner = async (id) => {
 
         const { error: updateError } = await supabase
             .from('planner')
-            .update({ date: target.date, day: target.day, time: target.time })
+            .update({ date: target.date, day: target.day, time: target.time, tag: `Adiada do dia ${getPlannerOriginalDate(selected)}` })
             .eq('id', id);
 
         if (updateError) throw updateError;
@@ -631,7 +643,7 @@ window.advancePlanner = async (id) => {
 
         const { error: updateError } = await supabase
             .from('planner')
-            .update({ date: target.date, day: target.day, time: target.time })
+            .update({ date: target.date, day: target.day, time: target.time, tag: `Adiantada do dia ${getPlannerOriginalDate(selected)}` })
             .eq('id', id);
 
         if (updateError) throw updateError;
