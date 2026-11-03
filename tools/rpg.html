@@ -26,8 +26,8 @@ h2{margin:8px 0 6px;font-size:27px}
 .sub{color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 22px}
 .field{display:grid;gap:7px;margin:14px 0}
 .field label{font-size:12px;color:#b9c7e3;font-weight:800}
-.field input,.searchbox input,.composer input{width:100%;border:1px solid #334566;background:#0b1325;color:var(--text);border-radius:12px;padding:13px 14px;outline:none}
-.field input:focus,.searchbox input:focus,.composer input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #39e5df18}
+.field input,.searchbox input,.composer textarea{width:100%;border:1px solid #334566;background:#0b1325;color:var(--text);border-radius:12px;padding:12px 14px;outline:none}
+.field input:focus,.searchbox input:focus,.composer textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #39e5df18}
 .primary{border:0;border-radius:12px;padding:13px 18px;background:linear-gradient(110deg,#35d8d0,#718bff);color:#07111f;font-weight:950;letter-spacing:.03em}
 .primary:disabled{opacity:.5;cursor:not-allowed}
 .ghost{border:1px solid #3b4d70;background:#182540;color:#dce7ff;border-radius:11px;padding:10px 13px;font-weight:800}
@@ -88,8 +88,16 @@ h2{margin:8px 0 6px;font-size:27px}
 .tools{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
 .tool{border:1px solid #354766;background:#192743;color:#bccae5;border-radius:9px;padding:7px 10px;font-size:11px;font-weight:850}
 .tool.active{border-color:var(--cyan);color:var(--cyan);background:#39e5df12}
-.composer{display:flex;gap:9px}
-.composer input{flex:1;min-width:0}
+.composer{display:flex;align-items:stretch;gap:9px}
+.editor-wrap{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+.composer textarea{display:block;flex:1;min-width:0;min-height:54px;max-height:100px;resize:vertical;line-height:1.45;font-size:13px}
+.composer textarea[data-mode="whisper"],.composer textarea[data-mode="comment"]{font-style:italic}
+.composer textarea[data-mode="action"]{font-weight:900}
+.composer textarea[data-mode="shout"]{font-weight:950;letter-spacing:.025em}
+.composer-preview{padding:7px 10px;border:1px dashed #3b5074;border-radius:10px;background:#0c1528;min-width:0}
+.composer-preview-label{display:block;color:#8495b8;font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:900;margin-bottom:4px}
+.composer-preview .bubble{display:block;padding:0;border:0;border-radius:0;background:transparent;max-width:100%;font-size:12px;line-height:1.4}
+.send{align-self:stretch;min-width:48px}
 .send{border:0;border-radius:12px;padding:0 18px;background:var(--cyan);color:#07111f;font-weight:1000}
 .hint{font-size:10px;color:#8495b8;margin:8px 2px 0}
 .secondary-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -107,6 +115,20 @@ dialog p{color:var(--muted);font-size:13px;line-height:1.6}
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:30;max-width:calc(100% - 28px);background:#1d2c49;border:1px solid #52668d;color:#eff5ff;padding:12px 16px;border-radius:12px;box-shadow:0 12px 40px #0008;font-size:12px}
 .drive-frame{display:none;width:0;height:0;border:0}
 a{color:var(--cyan)}
+@media(min-width:821px){
+  html,body{height:100%;min-height:0;overflow:hidden}
+  .shell{width:min(1480px,100%);height:100dvh;min-height:0;margin:0 auto;padding:12px 16px;display:flex;flex-direction:column;overflow:hidden}
+  .topbar{flex:0 0 auto;min-height:45px;margin-bottom:10px}
+  .app-grid{flex:1;min-height:0;height:100%;overflow:hidden}
+  .sidebar,.chat-panel{height:100%;min-height:0}
+  .sidebar{overflow:hidden}
+  #partner-list{flex:1;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain}
+  .chat-panel{overflow:hidden}
+  #messages{min-height:0;overscroll-behavior:contain}
+  .composer-area{flex:0 0 auto;padding:10px 13px}
+  .tools{margin-bottom:7px}
+  .secondary-row{margin-top:8px}
+}
 @media(max-width:820px){.app-grid{grid-template-columns:1fr}.sidebar{min-height:0}.chat-panel{min-height:65vh}.shell{margin:14px auto}.sidebar{padding:14px}#partner-list{max-height:220px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}.login-wrap{margin:5vh auto;padding:24px}}
 @media(max-width:520px){.shell{width:calc(100% - 18px)}.topbar{align-items:flex-start}.brand h1{font-size:14px}.class-pill{font-size:10px;padding:7px 9px}.chat-head{padding:13px}.chat-actions .back-btn{font-size:11px;padding:8px}.message{max-width:92%}#messages{padding:14px}.composer-area{padding:11px}.send{padding:0 13px}.tool{font-size:10px;padding:7px 8px}}
 </style>
@@ -161,10 +183,13 @@ a{color:var(--cyan)}
           <button class="tool" data-mode="comment" type="button">Comentar</button>
         </div>
         <form class="composer" id="message-form">
-          <input id="message-input" maxlength="1200" autocomplete="off" placeholder="Escreva sua mensagem..." aria-label="Mensagem">
-          <button class="send" id="send-button" type="submit">➤</button>
+          <div class="editor-wrap">
+            <textarea id="message-input" maxlength="1200" rows="2" autocomplete="off" placeholder="Escreva sua mensagem..." aria-label="Mensagem"></textarea>
+            <div class="composer-preview hidden" id="composer-preview" aria-live="polite"></div>
+          </div>
+          <button class="send" id="send-button" type="submit" aria-label="Enviar mensagem">➤</button>
         </form>
-        <div class="hint" id="mode-hint">Falar: mensagem normal.</div>
+        <div class="hint" id="mode-hint">Falar: mensagem normal. Selecione um trecho e escolha um estilo para formatá-lo.</div>
         <div class="secondary-row"><button class="end-btn" id="end-chat" type="button">Encerrar Role-Play-Game</button></div>
       </div>
     </section>
@@ -241,7 +266,7 @@ const modeHints = {
   say: "Falar: mensagem normal.",
   whisper: "Sussurrar: envolve o texto em parênteses e aplica itálico.",
   shout: "Gritar: transforma o texto em CAIXA ALTA.",
-  action: "Realizar ação: mantém os asteriscos visíveis e aplica negrito.",
+  action: "Realizar ação: envolve o texto em **asteriscos** e aplica negrito.",
   comment: "Comentar: adiciona // no início e aplica itálico esmaecido."
 };
 
@@ -807,6 +832,71 @@ document.addEventListener("visibilitychange", () => {
   if (!document.hidden) document.title = BASE_PAGE_TITLE;
 });
 
+function appendRichMessageText(container, value) {
+  const raw = String(value || "");
+  const pattern = /\*\*[\s\S]+?\*\*|\([\s\S]+?\)|(^|\s)\/\/[^\n]*/g;
+  let cursor = 0;
+  let match;
+  while ((match = pattern.exec(raw)) !== null) {
+    if (match.index > cursor) container.append(document.createTextNode(raw.slice(cursor, match.index)));
+    const token = match[0];
+    const span = document.createElement("span");
+    if (token.startsWith("**") && token.endsWith("**")) span.className = "inline-action";
+    else if (token.startsWith("(")) span.className = "inline-whisper";
+    else span.className = "inline-comment";
+    span.textContent = token;
+    container.append(span);
+    cursor = match.index + token.length;
+  }
+  if (cursor < raw.length) container.append(document.createTextNode(raw.slice(cursor)));
+}
+
+function syncComposerMode() {
+  document.querySelectorAll(".tool[data-mode]").forEach(tool => {
+    tool.classList.toggle("active", tool.dataset.mode === selectedMode);
+  });
+  $("mode-hint").textContent = modeHints[selectedMode] + " Selecione um trecho para formatar apenas essa parte.";
+  $("message-input").dataset.mode = selectedMode;
+}
+
+function updateComposerPreview() {
+  const raw = $("message-input").value;
+  const preview = $("composer-preview");
+  preview.innerHTML = "";
+  if (!raw.trim()) {
+    preview.classList.add("hidden");
+    return;
+  }
+  preview.classList.remove("hidden");
+  const label = document.createElement("span");
+  label.className = "composer-preview-label";
+  label.textContent = "Prévia da mensagem";
+  const bubble = document.createElement("div");
+  bubble.className = "bubble kind-" + selectedMode;
+  const text = document.createElement("span");
+  text.className = "bubble-text";
+  if (selectedMode === "say") appendRichMessageText(text, raw);
+  else text.textContent = formatMessage(raw, selectedMode);
+  bubble.append(text);
+  preview.append(label, bubble);
+}
+
+function formatSelectedText(mode) {
+  const input = $("message-input");
+  const start = input.selectionStart;
+  const end = input.selectionEnd;
+  if (start === end) return false;
+  const selected = input.value.slice(start, end);
+  let replacement = selected;
+  if (mode === "shout") replacement = selected.toLocaleUpperCase("pt-BR");
+  else if (mode === "whisper") replacement = "(" + selected + ")";
+  else if (mode === "action") replacement = "**" + selected + "**";
+  else if (mode === "comment") replacement = selected.split("\n").map(line => "//" + line).join("\n");
+  input.setRangeText(replacement, start, end, "select");
+  selectedMode = "say";
+  return true;
+}
+
 function renderMessages() {
   const container = $("messages");
   container.innerHTML = "";
@@ -849,7 +939,8 @@ function renderMessages() {
     character.textContent = (message.character || message.user || "Player") + ":";
     const text = document.createElement("span");
     text.className = "bubble-text";
-    text.textContent = message.message || "";
+    if (message.kind === "say") appendRichMessageText(text, message.message || "");
+    else text.textContent = message.message || "";
     bubble.append(character, text);
     content.append(meta, bubble);
     row.append(avatar, content);
@@ -870,20 +961,38 @@ function avatarForUser(username) {
 function formatMessage(text, mode) {
   if (mode === "whisper") return "(" + text + ")";
   if (mode === "shout") return text.toLocaleUpperCase("pt-BR");
-  if (mode === "action") return "*" + text + "*";
+  if (mode === "action") return "**" + text + "**";
   if (mode === "comment") return "//" + text;
   return text;
 }
 
 document.querySelectorAll(".tool[data-mode]").forEach(button => {
+  button.addEventListener("mousedown", event => event.preventDefault());
   button.addEventListener("click", () => {
-    selectedMode = button.dataset.mode;
-    document.querySelectorAll(".tool[data-mode]").forEach(tool => {
-      tool.classList.toggle("active", tool.dataset.mode === selectedMode);
-    });
-    $("mode-hint").textContent = modeHints[selectedMode];
+    const mode = button.dataset.mode;
+    const formattedSelection = formatSelectedText(mode);
+    if (!formattedSelection) selectedMode = mode;
+    syncComposerMode();
+    updateComposerPreview();
     $("message-input").focus();
   });
+});
+
+$("message-input").addEventListener("input", () => {
+  const input = $("message-input");
+  if (selectedMode === "shout") {
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const value = input.value;
+    const upper = value.toLocaleUpperCase("pt-BR");
+    if (upper !== value) {
+      input.value = upper;
+      const upperStart = value.slice(0, start).toLocaleUpperCase("pt-BR").length;
+      const upperEnd = value.slice(0, end).toLocaleUpperCase("pt-BR").length;
+      input.setSelectionRange(upperStart, upperEnd);
+    }
+  }
+  updateComposerPreview();
 });
 
 $("message-form").addEventListener("submit", async (event) => {
@@ -901,7 +1010,7 @@ $("message-form").addEventListener("submit", async (event) => {
     character: characterName,
     avatar_url: characterAvatarUrl,
     time: time,
-    message: formatMessage(raw, selectedMode),
+    message: selectedMode === "say" ? raw : formatMessage(raw, selectedMode),
     kind: selectedMode,
     createdAt: now.toISOString()
   };
@@ -942,6 +1051,9 @@ $("message-form").addEventListener("submit", async (event) => {
     if (!saved) throw new Error("A conversa recebeu mensagens ao mesmo tempo. Tente enviar novamente.");
     knownMessageIdsByAssignment.set(String(activeAssignment.id), new Set(chatMessages.map(messageKey)));
     $("message-input").value = "";
+    selectedMode = "say";
+    syncComposerMode();
+    updateComposerPreview();
     renderMessages();
   } catch (error) {
     console.error("Erro ao salvar mensagem:", error);
@@ -987,6 +1099,8 @@ function buildExportPayload() {
 function submitDriveExport(payload) {
   return new Promise((resolve, reject) => {
     const frame = $("drive-export-frame");
+    const requestId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+    payload.requestId = requestId;
     const form = document.createElement("form");
     form.method = "POST";
     form.action = DRIVE_EXPORT_URL;
@@ -1003,16 +1117,17 @@ function submitDriveExport(payload) {
     const timeout = setTimeout(() => {
       window.removeEventListener("message", onMessage);
       form.remove();
-      reject(new Error("A exportação não respondeu. Verifique a implantação do Apps Script."));
-    }, 90000);
+      reject(new Error("O Apps Script não confirmou o resultado. O histórico foi mantido no banco; confira a pasta da turma no Drive antes de tentar novamente."));
+    }, 150000);
 
     function onMessage(event) {
-      if (event.source !== frame.contentWindow || !event.data || event.data.type !== "rpg-export-result") return;
+      const result = event.data;
+      if (!result || result.type !== "rpg-export-result" || result.requestId !== requestId) return;
       clearTimeout(timeout);
       window.removeEventListener("message", onMessage);
       form.remove();
-      if (event.data.success && event.data.fileUrl) resolve(event.data);
-      else reject(new Error(event.data.error || "Não foi possível gerar o PDF."));
+      if (result.success && result.fileUrl) resolve(result);
+      else reject(new Error(result.error || "Não foi possível gerar o PDF."));
     }
 
     window.addEventListener("message", onMessage);
