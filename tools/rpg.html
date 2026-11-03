@@ -425,9 +425,10 @@ async function loadPartners() {
   let activeRows = [];
   const result = await supabase
     .from("assignments")
-    .select("id,user1,user2,serieTeam,chatHistory,created_at,user1_character_name,avatar_url1,user2_character_name,avatar_url2")
+    .select("id,user1,user2,serieTeam,chatHistory,status,created_at,user1_character_name,avatar_url1,user2_character_name,avatar_url2")
     .eq("serieTeam", classCode(currentProfile))
-    .or("user1.eq." + currentProfile.username + ",user2.eq." + currentProfile.username);
+    .or("user1.eq." + currentProfile.username + ",user2.eq." + currentProfile.username)
+    .neq("status", 0);
 
   if (result.error) {
     console.error("Erro ao consultar conversas:", result.error);
@@ -482,7 +483,7 @@ function renderPartners(activeRows = []) {
     if (existing) {
       const status = document.createElement("span");
       status.className = "status";
-      status.textContent = "EM ANDAMENTO";
+      status.textContent = Number(existing.status) === 2 ? "ENCERRANDO..." : "EM ANDAMENTO";
       button.append(status);
     }
 
@@ -504,7 +505,7 @@ async function selectPartner(partner) {
   try {
     const { data, error } = await supabase
       .from("assignments")
-      .select("id,user1,user2,serieTeam,chatHistory,created_at,user1_character_name,avatar_url1,user2_character_name,avatar_url2")
+      .select("id,user1,user2,serieTeam,chatHistory,status,created_at,user1_character_name,avatar_url1,user2_character_name,avatar_url2")
       .eq("serieTeam", classCode(currentProfile))
       .eq("user1", pair[0])
       .eq("user2", pair[1])
@@ -514,7 +515,10 @@ async function selectPartner(partner) {
 
     if (error) throw error;
 
-    if (data) {
+    if (data && Number(data.status) === 0) {
+      finishChatForBothClients();
+      return;
+    } else if (data) {
       activeAssignment = data;
       chatMessages = parseHistory(data.chatHistory);
     } else {
@@ -524,16 +528,17 @@ async function selectPartner(partner) {
           user1: pair[0],
           user2: pair[1],
           serieTeam: classCode(currentProfile),
-          chatHistory: JSON.stringify([])
+          chatHistory: JSON.stringify([]),
+          status: 1
         })
-        .select("id,user1,user2,serieTeam,chatHistory,created_at,user1_character_name,avatar_url1,user2_character_name,avatar_url2")
+        .select("id,user1,user2,serieTeam,chatHistory,status,created_at,user1_character_name,avatar_url1,user2_character_name,avatar_url2")
         .single();
 
       if (inserted.error && inserted.error.code === "23505") {
         // Se os dois alunos iniciarem ao mesmo tempo, reutiliza a row criada pelo outro.
         const retry = await supabase
           .from("assignments")
-          .select("id,user1,user2,serieTeam,chatHistory,created_at")
+          .select("id,user1,user2,serieTeam,chatHistory,status,created_at")
           .eq("serieTeam", classCode(currentProfile))
           .eq("user1", pair[0])
           .eq("user2", pair[1])
@@ -757,42 +762,66 @@ function notifyIncomingMessage(message) {
   }
 }
 
+function finishChatForBothClients() {
+  closeRealtime();
+  setLoader(false);
+  $("composer-area").classList.add("hidden");
+  closeChatView();
+  showToast("O chat encerrou");
+  loadPartners().catch(error => console.warn("Falha ao atualizar lista após encerramento:", error));
+}
+
 function handleAssignmentUpdate(row) {
   if (!row || !currentProfile || ![row.user1, row.user2].includes(currentProfile.username)) return;
-
   const id = String(row.id);
-  const incoming = parseHistory(row.chatHistory);
-  const known = knownMessageIdsByAssignment.get(id) || new Set();
-  const newMessages = incoming.filter(message =>
-    !known.has(messageKey(message)) && message.user !== currentProfile.username
-  );
-  knownMessageIdsByAssignment.set(id, new Set(incoming.map(messageKey)));
-
   if (activeAssignment && String(activeAssignment.id) === id) {
     activeAssignment = { ...activeAssignment, ...row };
-    if (incoming.length >= chatMessages.length) {
-      chatMessages = incoming;
-      renderMessages();
+    if (Number(row.status) === 2) {
+      setLoader(true);
+      $("send-button").disabled = true;
+      $("end-chat").disabled = true;
+      return;
+    }
+    if (Number(row.status) === 0) {
+      finishChatForBothClients();
+      return;
+    }
+    if (Number(row.status) === 1) {
+      setLoader(false);
+      $("send-button").disabled = false;
+      $("end-chat").disabled = false;
     }
   }
-
+  const incoming = parseHistory(row.chatHistory);
+  const known = knownMessageIdsByAssignment.get(id) || new Set();
+  const newMessages = incoming.filter(message => !known.has(messageKey(message)) && message.user !== currentProfile.username);
+  knownMessageIdsByAssignment.set(id, new Set(incoming.map(messageKey)));
+  if (activeAssignment && String(activeAssignment.id) === id && incoming.length >= chatMessages.length) {
+    chatMessages = incoming;
+    renderMessages();
+  }
   newMessages.forEach(notifyIncomingMessage);
 }
 
 function subscribeToChat() {
   closeRealtime();
   if (!activeAssignment) return;
-
+  const assignmentId = String(activeAssignment.id);
+  if (Number(activeAssignment.status) === 2) {
+    setLoader(true);
+    $("send-button").disabled = true;
+    $("end-chat").disabled = true;
+  }
   pollHandle = setInterval(async () => {
-    if (!activeAssignment) return;
-    const { data, error } = await supabase
-      .from("assignments")
-      .select("id,user1,user2,serieTeam,chatHistory,user1_character_name,avatar_url1,user2_character_name,avatar_url2")
-      .eq("id", activeAssignment.id)
-      .maybeSingle();
-
-    if (!error && data) handleAssignmentUpdate(data);
-  }, 3200);
+    if (!activeAssignment || String(activeAssignment.id) !== assignmentId) return;
+    const { data, error } = await supabase.from("assignments")
+      .select("id,user1,user2,serieTeam,chatHistory,status,user1_character_name,avatar_url1,user2_character_name,avatar_url2")
+      .eq("id", assignmentId).maybeSingle();
+    if (!activeAssignment || String(activeAssignment.id) !== assignmentId) return;
+    if (error) console.warn("Falha ao verificar status do RPG:", error);
+    else if (!data) finishChatForBothClients();
+    else handleAssignmentUpdate(data);
+  }, 1000);
 }
 
 function subscribeToUserAssignments() {
@@ -1008,7 +1037,7 @@ $("message-input").addEventListener("input", () => {
 $("message-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const raw = $("message-input").value.trim();
-  if (!raw || !activeAssignment || !currentProfile) return;
+  if (!raw || !activeAssignment || !currentProfile || Number(activeAssignment.status) !== 1) return;
 
   const sendButton = $("send-button");
   sendButton.disabled = true;
@@ -1036,6 +1065,7 @@ $("message-form").addEventListener("submit", async (event) => {
         .from("assignments")
         .update({ chatHistory: JSON.stringify(candidate) })
         .eq("id", activeAssignment.id)
+        .eq("status", 1)
         .eq("chatHistory", previousHistory)
         .select("chatHistory")
         .maybeSingle();
@@ -1055,6 +1085,7 @@ $("message-form").addEventListener("submit", async (event) => {
 
       if (latest.error) throw latest.error;
       if (!latest.data) throw new Error("Esta conversa não está mais disponível.");
+      if (Number(latest.data.status) !== 1) throw new Error("Esta conversa está sendo encerrada.");
       chatMessages = parseHistory(latest.data.chatHistory);
     }
 
@@ -1150,44 +1181,78 @@ $("end-chat").addEventListener("click", async () => {
     showToast("Envie pelo menos uma mensagem antes de encerrar.");
     return;
   }
+  if (Number(activeAssignment.status) !== 1) {
+    showToast("O encerramento desta conversa já foi solicitado.");
+    return;
+  }
   if (!DRIVE_EXPORT_URL || !DRIVE_EXPORT_URL.startsWith("https://script.google.com/")) {
     showToast("O endereço do exportador do Google Drive ainda não foi configurado.");
     return;
   }
 
+  const assignment = { ...activeAssignment };
+  const assignmentId = assignment.id;
+  const payload = buildExportPayload();
   exportPending = true;
   $("end-chat").disabled = true;
+  $("send-button").disabled = true;
   setLoader(true);
+  let closingStarted = false;
 
   try {
-    const exported = await submitDriveExport(buildExportPayload());
-    const { error } = await supabase
-      .from("assignments")
-      .delete()
-      .eq("id", activeAssignment.id)
-      .eq("user1", activeAssignment.user1)
-      .eq("user2", activeAssignment.user2)
-      .eq("serieTeam", activeAssignment.serieTeam);
-
-    if (error) {
-      throw new Error("PDF criado, mas a conversa não pôde ser removida do banco. " + error.message);
+    const started = await supabase.from("assignments").update({ status: 2 })
+      .eq("id", assignmentId).eq("status", 1).select("id,status").maybeSingle();
+    if (started.error) throw started.error;
+    if (!started.data) {
+      const latest = await supabase.from("assignments").select("status").eq("id", assignmentId).maybeSingle();
+      if (latest.error) throw latest.error;
+      if (latest.data && Number(latest.data.status) === 2) {
+        activeAssignment = { ...assignment, status: 2 };
+        showToast("O encerramento já está sendo processado.");
+        return;
+      }
+      if (!latest.data || Number(latest.data.status) === 0) {
+        finishChatForBothClients();
+        return;
+      }
+      throw new Error("Não foi possível iniciar o encerramento desta conversa.");
     }
+    closingStarted = true;
+    activeAssignment = { ...assignment, status: 2 };
 
-    closeRealtime();
-    $("pdf-link").href = exported.fileUrl;
-    $("success-dialog").showModal();
-    $("composer-area").classList.add("hidden");
-    chatMessages = [];
-    activeAssignment = null;
-    currentPartner = null;
-    await loadPartners();
+    const exported = await submitDriveExport(payload);
+
+    const closed = await supabase.from("assignments").update({ status: 0 })
+      .eq("id", assignmentId).eq("status", 2).select("id,status").maybeSingle();
+    if (closed.error) throw closed.error;
+    if (!closed.data) throw new Error("O PDF foi confirmado no Drive, mas o status da conversa não pôde ser atualizado.");
+
+    const removed = await supabase.from("assignments").delete()
+      .eq("id", assignmentId).eq("status", 0);
+    if (removed.error) {
+      console.error("O chat encerrou, mas a row não foi removida:", removed.error);
+      showToast("O chat encerrou, mas houve uma falha ao remover o registro do banco.");
+    } else finishChatForBothClients();
+
+    if (exported.fileUrl) $("pdf-link").href = exported.fileUrl;
   } catch (error) {
     console.error("Erro ao encerrar RPG:", error);
+    if (closingStarted) {
+      const reopened = await supabase.from("assignments").update({ status: 1 })
+        .eq("id", assignmentId).eq("status", 2).select("id,status").maybeSingle();
+      if (reopened.error) console.error("Falha ao reativar o chat:", reopened.error);
+      else if (reopened.data && activeAssignment) activeAssignment = { ...assignment, status: 1 };
+    }
+    setLoader(false);
+    $("send-button").disabled = false;
+    $("end-chat").disabled = false;
     showToast(error.message || "Não foi possível encerrar a conversa.");
   } finally {
-    setLoader(false);
     exportPending = false;
-    $("end-chat").disabled = false;
+    if (activeAssignment && Number(activeAssignment.status) === 1) {
+      $("send-button").disabled = false;
+      $("end-chat").disabled = false;
+    }
   }
 });
 
