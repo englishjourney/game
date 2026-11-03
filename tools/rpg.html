@@ -475,7 +475,7 @@ async function selectPartner(partner) {
   try {
     const { data, error } = await supabase
       .from("assignments")
-      .select("id,user1,user2,serieTeam,chatHistory,created_at")
+      .select("id,user1,user2,serieTeam,chatHistory,created_at,user1_character_name,user1_avatar_url,user2_character_name,user2_avatar_url")
       .eq("serieTeam", classCode(currentProfile))
       .eq("user1", pair[0])
       .eq("user2", pair[1])
@@ -700,6 +700,9 @@ function closeRealtime() {
     clearInterval(pollHandle);
     pollHandle = null;
   }
+}
+
+function closeUserRealtime() {
   if (realtimeChannel) {
     supabase.removeChannel(realtimeChannel);
     realtimeChannel = null;
@@ -964,10 +967,10 @@ function buildExportPayload() {
     dateText: new Date().toLocaleString("pt-BR"),
     user1Name: activeAssignment.user1 === currentProfile.username ? (currentProfile.name || currentProfile.username) : (currentPartner.name || currentPartner.username),
     user2Name: activeAssignment.user2 === currentProfile.username ? (currentProfile.name || currentProfile.username) : (currentPartner.name || currentPartner.username),
-    user1Character: activeAssignment.user1_character_name || (activeAssignment.user1 === currentProfile.username ? characterName : ""),
-    user2Character: activeAssignment.user2_character_name || (activeAssignment.user2 === currentProfile.username ? characterName : ""),
-    user1Avatar: activeAssignment.user1_avatar_url || (activeAssignment.user1 === currentProfile.username ? characterAvatarUrl : ""),
-    user2Avatar: activeAssignment.user2_avatar_url || (activeAssignment.user2 === currentProfile.username ? characterAvatarUrl : ""),
+    user1Character: activeAssignment.user1_character_name || chatMessages.find(message => message.user === activeAssignment.user1)?.character || (activeAssignment.user1 === currentProfile.username ? characterName : ""),
+    user2Character: activeAssignment.user2_character_name || chatMessages.find(message => message.user === activeAssignment.user2)?.character || (activeAssignment.user2 === currentProfile.username ? characterName : ""),
+    user1Avatar: activeAssignment.user1_avatar_url || chatMessages.find(message => message.user === activeAssignment.user1)?.avatar_url || (activeAssignment.user1 === currentProfile.username ? characterAvatarUrl : ""),
+    user2Avatar: activeAssignment.user2_avatar_url || chatMessages.find(message => message.user === activeAssignment.user2)?.avatar_url || (activeAssignment.user2 === currentProfile.username ? characterAvatarUrl : ""),
     messages: chatMessages
   };
 }
@@ -1059,7 +1062,10 @@ $("success-close").addEventListener("click", () => {
   closeChatView();
 });
 
-window.addEventListener("beforeunload", closeRealtime);
+window.addEventListener("beforeunload", () => {
+  closeRealtime();
+  closeUserRealtime();
+});
 loginFromSavedSession();
 </script>
 </body>
