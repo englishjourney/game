@@ -564,7 +564,7 @@ async function selectPartner(partner) {
     activeAssignment = null;
     showToast("Não foi possível abrir a conversa. Confira as permissões de assignments.");
   } finally {
-    setLoader(false);
+    if (!activeAssignment || Number(activeAssignment.status) !== 2) setLoader(false);
   }
 }
 
