@@ -48,13 +48,22 @@ function doPost(e) {
       while (previousFiles.hasNext()) {
         var previousFile = previousFiles.next();
         if (previousFile.getDescription() === exportMarker) {
+          var verifiedPrevious = findExactFileWithRetries_(
+            classFolder,
+            previousFile.getName(),
+            previousFile.getId()
+          );
+          if (!verifiedPrevious) {
+            throw new Error("O PDF anterior ainda não foi localizado pelo nome exato na pasta da turma.");
+          }
           return responseHtml_({
             type: "rpg-export-result",
             requestId: requestId,
             success: true,
-            fileUrl: previousFile.getUrl(),
-            fileName: previousFile.getName(),
-            reused: true
+            fileUrl: verifiedPrevious.getUrl(),
+            fileName: verifiedPrevious.getName(),
+            reused: true,
+            verified: true
           });
         }
       }
@@ -71,12 +80,20 @@ function doPost(e) {
     if (exportMarker) file.setDescription(exportMarker);
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
 
+    // Só confirma ao navegador depois de encontrar o mesmo arquivo na pasta,
+    // pelo nome exato e conferindo também seu ID exclusivo do Drive.
+    var verifiedFile = findExactFileWithRetries_(classFolder, filename, file.getId());
+    if (!verifiedFile) {
+      throw new Error("O PDF foi criado, mas não apareceu na busca exata da pasta após 5 tentativas.");
+    }
+
     return responseHtml_({
       type: "rpg-export-result",
       requestId: requestId,
       success: true,
-      fileUrl: file.getUrl(),
-      fileName: filename
+      fileUrl: verifiedFile.getUrl(),
+      fileName: verifiedFile.getName(),
+      verified: true
     });
   } catch (err) {
     return responseHtml_({
@@ -102,6 +119,20 @@ function validatePayload_(data) {
 function getOrCreateFolder_(parent, name) {
   var folders = parent.getFoldersByName(name);
   return folders.hasNext() ? folders.next() : parent.createFolder(name);
+}
+
+function findExactFileWithRetries_(folder, exactName, expectedFileId) {
+  for (var attempt = 1; attempt <= 5; attempt++) {
+    var files = folder.getFilesByName(exactName);
+    while (files.hasNext()) {
+      var candidate = files.next();
+      if (candidate.getName() === exactName && candidate.getId() === expectedFileId) {
+        return candidate;
+      }
+    }
+    if (attempt < 5) Utilities.sleep(1000);
+  }
+  return null;
 }
 
 function safeName_(value) {
