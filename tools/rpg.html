@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#090d1b">
+<title>EnglishJourney | RPG Chat</title>
+<style>
+:root{color-scheme:dark;--bg:#090d1b;--panel:#111a2e;--panel2:#16223b;--line:#2b3c5e;--cyan:#39e5df;--violet:#a78bfa;--gold:#ffd166;--muted:#91a2c4;--text:#f3f6ff;--danger:#ff6b83;--green:#5ee6a8}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(circle at 12% 5%,#202a55 0,transparent 32%),radial-gradient(circle at 88% 92%,#18294b 0,transparent 30%),var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text)}
+button,input{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+.shell{width:min(1180px,calc(100% - 28px));margin:24px auto;min-height:calc(100vh - 48px)}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{width:45px;height:45px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--cyan),#5b74ff);color:#07111f;font-size:23px;font-weight:1000;box-shadow:0 0 28px #39e5df44}
+.brand h1{font-size:17px;letter-spacing:.12em;margin:0;text-transform:uppercase}
+.brand small{display:block;color:var(--muted);font-size:11px;letter-spacing:.08em;margin-top:3px}
+.class-pill{border:1px solid #39e5df66;border-radius:999px;color:var(--cyan);padding:8px 13px;font-weight:800;font-size:12px;background:#39e5df0c}
+.panel{background:linear-gradient(145deg,#141f36f2,#10182bf2);border:1px solid var(--line);border-radius:22px;box-shadow:0 22px 65px #0006}
+.login-wrap{max-width:440px;margin:8vh auto;padding:30px}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.18em;color:var(--cyan);font-weight:900}
+h2{margin:8px 0 6px;font-size:27px}
+.sub{color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 22px}
+.field{display:grid;gap:7px;margin:14px 0}
+.field label{font-size:12px;color:#b9c7e3;font-weight:800}
+.field input,.searchbox input,.composer input{width:100%;border:1px solid #334566;background:#0b1325;color:var(--text);border-radius:12px;padding:13px 14px;outline:none}
+.field input:focus,.searchbox input:focus,.composer input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #39e5df18}
+.primary{border:0;border-radius:12px;padding:13px 18px;background:linear-gradient(110deg,#35d8d0,#718bff);color:#07111f;font-weight:950;letter-spacing:.03em}
+.primary:disabled{opacity:.5;cursor:not-allowed}
+.ghost{border:1px solid #3b4d70;background:#182540;color:#dce7ff;border-radius:11px;padding:10px 13px;font-weight:800}
+.ghost:hover,.tool:hover{border-color:var(--cyan);color:var(--cyan)}
+.error{font-size:12px;color:var(--danger);min-height:18px;margin-top:10px}
+.app-grid{display:grid;grid-template-columns:310px minmax(0,1fr);gap:16px;min-height:690px}
+.sidebar{padding:18px;display:flex;flex-direction:column;min-height:690px}
+.userline{padding:12px;border:1px solid #2c3d5d;background:#0b1427;border-radius:14px;margin:14px 0}
+.userline strong{display:block;font-size:14px}
+.userline span{font-size:11px;color:var(--muted)}
+.searchbox{position:relative;margin:4px 0 12px}
+.searchbox input{padding-left:38px}
+.searchbox:before{content:"⌕";position:absolute;left:13px;top:7px;font-size:22px;color:var(--cyan)}
+.list-title{display:flex;justify-content:space-between;align-items:center;color:#aebcda;font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:900;margin:8px 0}
+#partner-list{overflow:auto;display:grid;gap:8px;max-height:480px}
+.partner{width:100%;text-align:left;border:1px solid #293b5c;background:#111d33;color:var(--text);border-radius:13px;padding:12px;display:flex;align-items:center;gap:10px}
+.partner:hover{border-color:var(--cyan);background:#1a2a47}
+.partner.active{border-color:var(--violet);background:#30275a66}
+.avatar{width:36px;height:36px;border-radius:11px;background:linear-gradient(145deg,#263d65,#493c82);display:grid;place-items:center;font-weight:950;color:#dff}
+.partner-info{min-width:0;flex:1}
+.partner-info strong{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis}
+.partner-info small{font-size:10px;color:var(--muted)}
+.status{font-size:9px;color:var(--green);font-weight:900;white-space:nowrap}
+.empty{color:var(--muted);font-size:12px;line-height:1.6;padding:14px;text-align:center;border:1px dashed #334566;border-radius:13px}
+.chat-panel{display:flex;flex-direction:column;min-height:690px;overflow:hidden}
+.chat-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:17px 20px;border-bottom:1px solid var(--line);background:#17233b}
+.chat-heading{min-width:0}
+.chat-heading strong{display:block;font-size:15px}
+.chat-heading small{color:var(--muted);font-size:11px}
+.chat-actions{display:flex;gap:8px;align-items:center}
+#messages{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;background-image:radial-gradient(#31415f66 1px,transparent 1px);background-size:22px 22px}
+.message{display:flex;flex-direction:column;max-width:min(78%,560px);align-self:flex-start}
+.message.mine{align-self:flex-end}
+.message-meta{display:flex;gap:8px;align-items:center;color:#9aaaca;font-size:10px;margin:0 8px 5px}
+.message.mine .message-meta{justify-content:flex-end}
+.message-meta strong{color:#d8e2fb}
+.bubble{padding:11px 14px;border:1px solid #34496e;background:#172642;border-radius:15px 15px 15px 4px;line-height:1.55;font-size:14px;overflow-wrap:anywhere;white-space:pre-wrap}
+.message.mine .bubble{background:linear-gradient(135deg,#263d63,#2b2b57);border-color:#5662a0;border-radius:15px 15px 4px 15px}
+.bubble.kind-whisper{font-style:italic;color:#d6daf0}
+.bubble.kind-action{font-weight:900;color:#ffe2a2}
+.bubble.kind-comment{font-style:italic;color:#8996ae;border-color:#39465d;background:#121b2c}
+.bubble.kind-shout{font-weight:950;letter-spacing:.025em;color:#fff}
+.welcome{margin:auto;max-width:420px;text-align:center;color:var(--muted);line-height:1.7;font-size:13px}
+.welcome .symbol{font-size:36px;margin-bottom:8px}
+.composer-area{border-top:1px solid var(--line);padding:13px 16px 15px;background:#131e34}
+.tools{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+.tool{border:1px solid #354766;background:#192743;color:#bccae5;border-radius:9px;padding:7px 10px;font-size:11px;font-weight:850}
+.tool.active{border-color:var(--cyan);color:var(--cyan);background:#39e5df12}
+.composer{display:flex;gap:9px}
+.composer input{flex:1;min-width:0}
+.send{border:0;border-radius:12px;padding:0 18px;background:var(--cyan);color:#07111f;font-weight:1000}
+.hint{font-size:10px;color:#8495b8;margin:8px 2px 0}
+.secondary-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.end-btn{border:1px solid #a3475e;background:#451e32;color:#ffc0cf;border-radius:11px;padding:10px 13px;font-weight:900}
+.end-btn:hover{background:#64233f}
+.back-btn{border:1px solid #3b4d70;background:transparent;color:#c6d3ed;border-radius:11px;padding:10px 13px;font-weight:850}
+dialog{border:1px solid #40547a;border-radius:20px;background:#111b30;color:var(--text);padding:24px;width:min(420px,calc(100% - 30px));box-shadow:0 25px 90px #000b}
+dialog::backdrop{background:#020611c9;backdrop-filter:blur(5px)}
+dialog h3{margin:0 0 8px;font-size:21px}
+dialog p{color:var(--muted);font-size:13px;line-height:1.6}
+.dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.loader{position:fixed;inset:0;background:#050914e8;display:grid;place-items:center;z-index:20;backdrop-filter:blur(7px)}
+.spinner{width:54px;height:54px;border-radius:50%;border:4px solid #273754;border-top-color:var(--cyan);border-right-color:var(--violet);animation:spin .8s linear infinite;box-shadow:0 0 25px #39e5df33}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:30;max-width:calc(100% - 28px);background:#1d2c49;border:1px solid #52668d;color:#eff5ff;padding:12px 16px;border-radius:12px;box-shadow:0 12px 40px #0008;font-size:12px}
+.drive-frame{display:none;width:0;height:0;border:0}
+a{color:var(--cyan)}
+@media(max-width:820px){.app-grid{grid-template-columns:1fr}.sidebar{min-height:0}.chat-panel{min-height:65vh}.shell{margin:14px auto}.sidebar{padding:14px}#partner-list{max-height:220px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}.login-wrap{margin:5vh auto;padding:24px}}
+@media(max-width:520px){.shell{width:calc(100% - 18px)}.topbar{align-items:flex-start}.brand h1{font-size:14px}.class-pill{font-size:10px;padding:7px 9px}.chat-head{padding:13px}.chat-actions .back-btn{font-size:11px;padding:8px}.message{max-width:92%}#messages{padding:14px}.composer-area{padding:11px}.send{padding:0 13px}.tool{font-size:10px;padding:7px 8px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">⚔</div><div><h1>EnglishJourney RPG</h1><small>ROLE-PLAY CHAT SYSTEM</small></div></div>
+    <div class="class-pill" id="class-pill">TURMA --</div>
+  </header>
+
+  <main id="login-screen" class="panel login-wrap hidden">
+    <div class="eyebrow">PLAYER ACCESS</div>
+    <h2>Entrar no RPG</h2>
+    <p class="sub">Use o mesmo usuário e senha da sua conta EnglishJourney.</p>
+    <form id="login-form">
+      <div class="field"><label for="username">NOME DE USUÁRIO</label><input id="username" autocomplete="username" required></div>
+      <div class="field"><label for="password">SENHA</label><input id="password" type="password" autocomplete="current-password" required></div>
+      <button class="primary" id="login-submit" type="submit" style="width:100%">ENTRAR NO CHAT</button>
+      <div class="error" id="login-error" role="alert"></div>
+    </form>
+  </main>
+
+  <main id="app-screen" class="app-grid hidden">
+    <aside class="panel sidebar">
+      <div class="eyebrow">PARTY FINDER</div>
+      <h2 style="font-size:21px">Escolha seu parceiro</h2>
+      <div class="userline"><strong id="logged-name">Player</strong><span id="logged-meta">Turma</span></div>
+      <div class="searchbox"><input id="partner-search" type="search" placeholder="Buscar aluno da turma..." aria-label="Buscar aluno"></div>
+      <div class="list-title"><span>Jogadores da turma</span><span id="player-count">0</span></div>
+      <div id="partner-list"><div class="empty">Carregando jogadores...</div></div>
+      <div style="margin-top:auto;padding-top:14px">
+        <button class="ghost" id="refresh-list" style="width:100%">↻ Atualizar jogadores</button>
+        <p class="hint">Somente colegas da mesma série e turma aparecem aqui.</p>
+        <p class="hint"><a href="../index.html">← Voltar ao EnglishJourney</a></p>
+      </div>
+    </aside>
+
+    <section class="panel chat-panel">
+      <div class="chat-head">
+        <div class="chat-heading"><strong id="chat-title">Nenhuma conversa selecionada</strong><small id="chat-subtitle">Escolha alguém da sua turma para começar</small></div>
+        <div class="chat-actions"><button class="back-btn" id="close-chat" type="button">Voltar</button></div>
+      </div>
+      <div id="messages"><div class="welcome"><div class="symbol">✦</div><strong>Seu próximo capítulo começa aqui.</strong><br>Encontre um colega, escolha seu personagem e comece o role-play.</div></div>
+      <div id="composer-area" class="composer-area hidden">
+        <div class="tools" role="group" aria-label="Estilo da mensagem">
+          <button class="tool active" data-mode="say" type="button">Falar</button>
+          <button class="tool" data-mode="whisper" type="button">Sussurrar</button>
+          <button class="tool" data-mode="shout" type="button">Gritar</button>
+          <button class="tool" data-mode="action" type="button">Realizar ação</button>
+          <button class="tool" data-mode="comment" type="button">Comentar</button>
+        </div>
+        <form class="composer" id="message-form">
+          <input id="message-input" maxlength="1200" autocomplete="off" placeholder="Escreva sua mensagem..." aria-label="Mensagem">
+          <button class="send" id="send-button" type="submit">➤</button>
+        </form>
+        <div class="hint" id="mode-hint">Falar: mensagem normal.</div>
+        <div class="secondary-row"><button class="end-btn" id="end-chat" type="button">Encerrar Role-Play-Game</button></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<dialog id="character-dialog">
+  <div class="eyebrow">CHARACTER SETUP</div>
+  <h3>Quem é você nesta história?</h3>
+  <p>Escolha o nome do personagem que aparecerá nas suas mensagens desta conversa.</p>
+  <form id="character-form">
+    <div class="field"><label for="character-name">NOME DO PERSONAGEM</label><input id="character-name" maxlength="40" placeholder="Ex.: Alex Shadow" required></div>
+    <div class="dialog-actions"><button class="ghost" id="cancel-character" type="button">Cancelar</button><button class="primary" type="submit">Entrar na aventura</button></div>
+  </form>
+</dialog>
+
+<dialog id="success-dialog">
+  <div class="eyebrow">CHAPTER SAVED</div>
+  <h3>Role-play encerrado!</h3>
+  <p>O registro foi arquivado. O documento está disponível no Google Drive.</p>
+  <div class="dialog-actions"><a id="pdf-link" class="ghost" href="#" target="_blank" rel="noopener">Abrir PDF</a><button class="primary" id="success-close" type="button">Concluir</button></div>
+</dialog>
+
+<div class="loader hidden" id="loader" aria-hidden="true"><div class="spinner"></div></div>
+<div id="toast" class="toast hidden" role="status"></div>
+<iframe class="drive-frame" name="rpg-export-frame" id="drive-export-frame" title="Exportação"></iframe>
+
+<script type="module">
+import { supabase } from "../supabaseClient.js";
+
+/*
+ * CONFIGURAÇÃO DO GOOGLE DRIVE:
+ * Implante tools/rpg-drive.gs como Web App e cole a URL /exec abaixo.
+ * A URL não é uma chave secreta. Restrinja o acesso da implantação ao público
+ * que poderá usar o exportador e revise a política de compartilhamento do Drive.
+ */
+const DRIVE_EXPORT_URL = "";
+
+const SESSION_KEY = "studentSession";
+const $ = (id) => document.getElementById(id);
+let currentProfile = null;
+let partners = [];
+let currentPartner = null;
+let activeAssignment = null;
+let chatMessages = [];
+let selectedMode = "say";
+let characterName = "";
+let realtimeChannel = null;
+let pollHandle = null;
+let toastHandle = null;
+let exportPending = false;
+
+const modeHints = {
+  say: "Falar: mensagem normal.",
+  whisper: "Sussurrar: envolve o texto em parênteses e aplica itálico.",
+  shout: "Gritar: transforma o texto em CAIXA ALTA.",
+  action: "Realizar ação: mantém os asteriscos visíveis e aplica negrito.",
+  comment: "Comentar: adiciona // no início e aplica itálico esmaecido."
+};
+
+function readSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    console.warn("Sessão local inválida.", error);
+    return null;
+  }
+}
+
+function saveSession(user) {
+  // Mantém o mesmo formato usado pelo auth.js do EnglishJourney.
+  localStorage.setItem(SESSION_KEY, JSON.stringify({
+    username: user.username,
+    serie: user.serie
+  }));
+}
+
+function parseHistory(value) {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter(item => item && typeof item === "object") : [];
+  } catch (error) {
+    console.error("Histórico RPG inválido:", error);
+    return [];
+  }
+}
+
+function classCode(profile) {
+  return String(profile.serie || "").trim() + String(profile.team || "").trim().toUpperCase();
+}
+
+function showToast(message) {
+  $("toast").textContent = message;
+  $("toast").classList.remove("hidden");
+  clearTimeout(toastHandle);
+  toastHandle = setTimeout(() => $("toast").classList.add("hidden"), 3600);
+}
+
+function setLoader(visible) {
+  $("loader").classList.toggle("hidden", !visible);
+  $("loader").setAttribute("aria-hidden", visible ? "false" : "true");
+}
+
+function showLogin(errorMessage = "") {
+  $("login-screen").classList.remove("hidden");
+  $("app-screen").classList.add("hidden");
+  $("login-error").textContent = errorMessage;
+}
+
+async function loadProfile(username) {
+  const { data, error } = await supabase
+    .from("users")
+    .select("username,name,serie,team,avatar_url")
+    .eq("username", username)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+async function enterWithProfile(profile) {
+  if (!profile || !profile.username || !profile.serie || !profile.team) {
+    throw new Error("Não foi possível identificar a série e a turma desta conta.");
+  }
+
+  currentProfile = profile;
+  $("login-screen").classList.add("hidden");
+  $("app-screen").classList.remove("hidden");
+  $("class-pill").textContent = "TURMA " + classCode(profile);
+  $("logged-name").textContent = profile.name || profile.username;
+  $("logged-meta").textContent = "@" + profile.username + " · Turma " + classCode(profile);
+  await loadPartners();
+}
+
+async function loginFromSavedSession() {
+  const session = readSession();
+  if (!session || !session.username) {
+    showLogin();
+    return;
+  }
+
+  try {
+    const profile = await loadProfile(session.username);
+    if (!profile) {
+      localStorage.removeItem(SESSION_KEY);
+      showLogin("Sessão não encontrada. Entre novamente.");
+      return;
+    }
+    await enterWithProfile(profile);
+  } catch (error) {
+    console.error("Falha ao reutilizar sessão:", error);
+    showLogin("Não foi possível validar sua sessão. Entre novamente.");
+  }
+}
+
+$("login-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const username = $("username").value.trim().toLowerCase();
+  const password = $("password").value;
+  const button = $("login-submit");
+  button.disabled = true;
+  $("login-error").textContent = "";
+
+  try {
+    const { data, error } = await supabase
+      .from("users")
+      .select("username,serie")
+      .eq("username", username)
+      .eq("psswd", password)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) {
+      $("login-error").textContent = "Usuário ou senha incorretos.";
+      return;
+    }
+
+    const profile = await loadProfile(data.username);
+    if (!profile) throw new Error("Conta encontrada, mas os dados da turma estão incompletos.");
+    saveSession(profile);
+    await enterWithProfile(profile);
+  } catch (error) {
+    console.error("Erro no login RPG:", error);
+    $("login-error").textContent = "Não foi possível entrar. Verifique a conexão e as permissões.";
+  } finally {
+    button.disabled = false;
+  }
+});
+
+async function loadPartners() {
+  $("partner-list").innerHTML = '<div class="empty">Carregando jogadores...</div>';
+  const { data, error } = await supabase
+    .from("users")
+    .select("username,name,avatar_url")
+    .eq("serie", currentProfile.serie)
+    .eq("team", currentProfile.team)
+    .neq("username", currentProfile.username)
+    .order("username", { ascending: true });
+
+  if (error) {
+    console.error("Erro ao listar colegas:", error);
+    $("partner-list").innerHTML = '<div class="empty">Não foi possível carregar os colegas desta turma.</div>';
+    return;
+  }
+
+  partners = data || [];
+  let activeRows = [];
+  const result = await supabase
+    .from("assignments")
+    .select("id,user1,user2,serieTeam,chatHistory,created_at")
+    .eq("serieTeam", classCode(currentProfile));
+
+  if (result.error) {
+    console.error("Erro ao consultar conversas:", result.error);
+    showToast("O banco ainda não liberou o acesso às conversas RPG.");
+  } else {
+    activeRows = result.data || [];
+  }
+
+  renderPartners(activeRows);
+}
+
+function pairFor(partnerUsername) {
+  return [currentProfile.username, partnerUsername].sort((a, b) => a.localeCompare(b));
+}
+
+function renderPartners(activeRows = []) {
+  const query = $("partner-search").value.trim().toLowerCase();
+  const list = $("partner-list");
+  list.innerHTML = "";
+  const filtered = partners.filter(person => {
+    const label = ((person.name || "") + " " + person.username).toLowerCase();
+    return label.includes(query);
+  });
+  $("player-count").textContent = String(filtered.length);
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty">Nenhum colega encontrado nesta turma.</div>';
+    return;
+  }
+
+  filtered.forEach(person => {
+    const pair = pairFor(person.username);
+    const existing = activeRows.find(row => row.user1 === pair[0] && row.user2 === pair[1]);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "partner" + (currentPartner && currentPartner.username === person.username ? " active" : "");
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.textContent = (person.name || person.username || "P").charAt(0).toUpperCase();
+    const info = document.createElement("div");
+    info.className = "partner-info";
+    const name = document.createElement("strong");
+    name.textContent = person.name || person.username;
+    const user = document.createElement("small");
+    user.textContent = "@" + person.username;
+    info.append(name, user);
+    button.append(avatar, info);
+
+    if (existing) {
+      const status = document.createElement("span");
+      status.className = "status";
+      status.textContent = "EM ANDAMENTO";
+      button.append(status);
+    }
+
+    button.addEventListener("click", () => selectPartner(person));
+    list.append(button);
+  });
+}
+
+$("partner-search").addEventListener("input", () => renderPartners());
+$("refresh-list").addEventListener("click", loadPartners);
+
+async function selectPartner(partner) {
+  if (exportPending) return;
+  currentPartner = partner;
+  closeRealtime();
+  setLoader(true);
+
+  const pair = pairFor(partner.username);
+  try {
+    const { data, error } = await supabase
+      .from("assignments")
+      .select("id,user1,user2,serieTeam,chatHistory,created_at")
+      .eq("serieTeam", classCode(currentProfile))
+      .eq("user1", pair[0])
+      .eq("user2", pair[1])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (data) {
+      activeAssignment = data;
+      chatMessages = parseHistory(data.chatHistory);
+    } else {
+      const inserted = await supabase
+        .from("assignments")
+        .insert({
+          user1: pair[0],
+          user2: pair[1],
+          serieTeam: classCode(currentProfile),
+          chatHistory: JSON.stringify([])
+        })
+        .select("id,user1,user2,serieTeam,chatHistory,created_at")
+        .single();
+
+      if (inserted.error) throw inserted.error;
+      activeAssignment = inserted.data;
+      chatMessages = [];
+    }
+
+    $("character-name").value = "";
+    $("character-dialog").showModal();
+    renderPartnersForCurrent();
+  } catch (error) {
+    console.error("Erro ao abrir/criar conversa:", error);
+    currentPartner = null;
+    activeAssignment = null;
+    showToast("Não foi possível abrir a conversa. Confira as permissões de assignments.");
+  } finally {
+    setLoader(false);
+  }
+}
+
+function renderPartnersForCurrent() {
+  renderPartners();
+}
+
+$("cancel-character").addEventListener("click", () => {
+  $("character-dialog").close();
+  currentPartner = null;
+  activeAssignment = null;
+  chatMessages = [];
+  renderPartners();
+});
+
+$("character-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const value = $("character-name").value.trim();
+  if (!value) return;
+  characterName = value.slice(0, 40);
+  $("character-dialog").close();
+  showChat();
+});
+
+function showChat() {
+  $("chat-title").textContent = (currentPartner.name || currentPartner.username) + " · " + classCode(currentProfile);
+  $("chat-subtitle").textContent = "Você: " + characterName + " · @" + currentProfile.username;
+  $("composer-area").classList.remove("hidden");
+  renderMessages();
+  subscribeToChat();
+}
+
+function closeRealtime() {
+  if (pollHandle) {
+    clearInterval(pollHandle);
+    pollHandle = null;
+  }
+  if (realtimeChannel) {
+    supabase.removeChannel(realtimeChannel);
+    realtimeChannel = null;
+  }
+}
+
+function subscribeToChat() {
+  closeRealtime();
+  if (!activeAssignment) return;
+
+  realtimeChannel = supabase
+    .channel("rpg-assignment-" + activeAssignment.id)
+    .on("postgres_changes", {
+      event: "UPDATE",
+      schema: "public",
+      table: "assignments",
+      filter: "id=eq." + activeAssignment.id
+    }, payload => {
+      const incoming = parseHistory(payload.new && payload.new.chatHistory);
+      if (incoming.length >= chatMessages.length) {
+        chatMessages = incoming;
+        renderMessages();
+      }
+    })
+    .subscribe();
+
+  // Polling mantém a conversa sincronizada mesmo se Realtime não estiver habilitado.
+  pollHandle = setInterval(async () => {
+    if (!activeAssignment) return;
+    const { data, error } = await supabase
+      .from("assignments")
+      .select("chatHistory")
+      .eq("id", activeAssignment.id)
+      .maybeSingle();
+
+    if (!error && data) {
+      const incoming = parseHistory(data.chatHistory);
+      if (incoming.length !== chatMessages.length) {
+        chatMessages = incoming;
+        renderMessages();
+      }
+    }
+  }, 3200);
+}
+
+function renderMessages() {
+  const container = $("messages");
+  container.innerHTML = "";
+
+  if (!chatMessages.length) {
+    const welcome = document.createElement("div");
+    welcome.className = "welcome";
+    welcome.innerHTML = '<div class="symbol">⚔</div><strong>Conversa iniciada.</strong><br>Apresente seu personagem e construa a história junto com seu parceiro.';
+    container.append(welcome);
+    return;
+  }
+
+  chatMessages.forEach(message => {
+    const mine = message.user === currentProfile.username;
+    const item = document.createElement("article");
+    item.className = "message" + (mine ? " mine" : "");
+    const meta = document.createElement("div");
+    meta.className = "message-meta";
+    const who = document.createElement("strong");
+    who.textContent = message.character || message.user || "Player";
+    const at = document.createElement("span");
+    at.textContent = "@" + (message.user || "player") + " · " + (message.time || "");
+    meta.append(who, at);
+    const bubble = document.createElement("div");
+    bubble.className = "bubble kind-" + (message.kind || "say");
+    bubble.textContent = message.message || "";
+    item.append(meta, bubble);
+    container.append(item);
+  });
+
+  container.scrollTop = container.scrollHeight;
+}
+
+function formatMessage(text, mode) {
+  if (mode === "whisper") return "(" + text + ")";
+  if (mode === "shout") return text.toLocaleUpperCase("pt-BR");
+  if (mode === "action") return "*" + text + "*";
+  if (mode === "comment") return "//" + text;
+  return text;
+}
+
+document.querySelectorAll(".tool[data-mode]").forEach(button => {
+  button.addEventListener("click", () => {
+    selectedMode = button.dataset.mode;
+    document.querySelectorAll(".tool[data-mode]").forEach(tool => {
+      tool.classList.toggle("active", tool.dataset.mode === selectedMode);
+    });
+    $("mode-hint").textContent = modeHints[selectedMode];
+    $("message-input").focus();
+  });
+});
+
+$("message-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const raw = $("message-input").value.trim();
+  if (!raw || !activeAssignment || !currentProfile) return;
+
+  const sendButton = $("send-button");
+  sendButton.disabled = true;
+  const now = new Date();
+  const time = now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const item = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : String(now.getTime()) + Math.random().toString(16).slice(2)),
+    user: currentProfile.username,
+    character: characterName,
+    time: time,
+    message: formatMessage(raw, selectedMode),
+    kind: selectedMode,
+    createdAt: now.toISOString()
+  };
+
+  const updated = [...chatMessages, item];
+  try {
+    const { error } = await supabase
+      .from("assignments")
+      .update({ chatHistory: JSON.stringify(updated) })
+      .eq("id", activeAssignment.id)
+      .eq("user1", activeAssignment.user1)
+      .eq("user2", activeAssignment.user2);
+
+    if (error) throw error;
+    chatMessages = updated;
+    $("message-input").value = "";
+    renderMessages();
+  } catch (error) {
+    console.error("Erro ao salvar mensagem:", error);
+    showToast("Mensagem não enviada. Verifique a conexão e as permissões.");
+  } finally {
+    sendButton.disabled = false;
+    $("message-input").focus();
+  }
+});
+
+function closeChatView() {
+  closeRealtime();
+  $("composer-area").classList.add("hidden");
+  $("chat-title").textContent = "Nenhuma conversa selecionada";
+  $("chat-subtitle").textContent = "Escolha alguém da sua turma para começar";
+  $("messages").innerHTML = '<div class="welcome"><div class="symbol">✦</div><strong>Seu próximo capítulo começa aqui.</strong><br>Encontre um colega, escolha seu personagem e comece o role-play.</div>';
+  currentPartner = null;
+  activeAssignment = null;
+  chatMessages = [];
+  characterName = "";
+  renderPartners();
+}
+
+$("close-chat").addEventListener("click", closeChatView);
+
+function buildExportPayload() {
+  return {
+    assignmentId: activeAssignment.id,
+    user1: activeAssignment.user1,
+    user2: activeAssignment.user2,
+    serieTeam: activeAssignment.serieTeam,
+    messages: chatMessages
+  };
+}
+
+function submitDriveExport(payload) {
+  return new Promise((resolve, reject) => {
+    const frame = $("drive-export-frame");
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = DRIVE_EXPORT_URL;
+    form.target = "rpg-export-frame";
+    form.style.display = "none";
+
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "payload";
+    input.value = JSON.stringify(payload);
+    form.append(input);
+    document.body.append(form);
+
+    const timeout = setTimeout(() => {
+      window.removeEventListener("message", onMessage);
+      form.remove();
+      reject(new Error("A exportação não respondeu. Verifique a implantação do Apps Script."));
+    }, 90000);
+
+    function onMessage(event) {
+      if (event.source !== frame.contentWindow || !event.data || event.data.type !== "rpg-export-result") return;
+      clearTimeout(timeout);
+      window.removeEventListener("message", onMessage);
+      form.remove();
+      if (event.data.success && event.data.fileUrl) resolve(event.data);
+      else reject(new Error(event.data.error || "Não foi possível gerar o PDF."));
+    }
+
+    window.addEventListener("message", onMessage);
+    form.submit();
+  });
+}
+
+$("end-chat").addEventListener("click", async () => {
+  if (!activeAssignment || !chatMessages.length || exportPending) {
+    showToast("Envie pelo menos uma mensagem antes de encerrar.");
+    return;
+  }
+  if (!DRIVE_EXPORT_URL || !DRIVE_EXPORT_URL.startsWith("https://script.google.com/")) {
+    showToast("O endereço do exportador do Google Drive ainda não foi configurado.");
+    return;
+  }
+
+  exportPending = true;
+  $("end-chat").disabled = true;
+  setLoader(true);
+
+  try {
+    const exported = await submitDriveExport(buildExportPayload());
+    const { error } = await supabase
+      .from("assignments")
+      .delete()
+      .eq("id", activeAssignment.id)
+      .eq("user1", activeAssignment.user1)
+      .eq("user2", activeAssignment.user2)
+      .eq("serieTeam", activeAssignment.serieTeam);
+
+    if (error) {
+      throw new Error("PDF criado, mas a conversa não pôde ser removida do banco. " + error.message);
+    }
+
+    closeRealtime();
+    $("pdf-link").href = exported.fileUrl;
+    $("success-dialog").showModal();
+    $("composer-area").classList.add("hidden");
+    chatMessages = [];
+    activeAssignment = null;
+    currentPartner = null;
+    await loadPartners();
+  } catch (error) {
+    console.error("Erro ao encerrar RPG:", error);
+    showToast(error.message || "Não foi possível encerrar a conversa.");
+  } finally {
+    setLoader(false);
+    exportPending = false;
+    $("end-chat").disabled = false;
+  }
+});
+
+$("success-close").addEventListener("click", () => {
+  $("success-dialog").close();
+  closeChatView();
+});
+
+window.addEventListener("beforeunload", closeRealtime);
+loginFromSavedSession();
+</script>
+</body>
+</html>
