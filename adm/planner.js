@@ -608,6 +608,7 @@ window.advancePlanner = async (id) => {
             .filter(entry =>
                 Number.isFinite(entry.timestamp) &&
                 entry.dateKey >= todayKey &&
+                entry.timestamp >= Date.now() &&
                 entry.timestamp < selectedTimestamp
             )
             .sort((a, b) => b.timestamp - a.timestamp)[0];
