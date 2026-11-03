@@ -38,6 +38,28 @@ function doPost(e) {
     var classFolder = getOrCreateFolder_(rpgFolder, payload.serieTeam);
     classFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
 
+    // Reutiliza o PDF já criado para esta conversa se a confirmação anterior
+    // tiver se perdido no caminho de volta ao navegador.
+    var exportMarker = payload.assignmentId
+      ? "EnglishJourney RPG assignment: " + String(payload.assignmentId)
+      : "";
+    if (exportMarker) {
+      var previousFiles = classFolder.getFiles();
+      while (previousFiles.hasNext()) {
+        var previousFile = previousFiles.next();
+        if (previousFile.getDescription() === exportMarker) {
+          return responseHtml_({
+            type: "rpg-export-result",
+            requestId: requestId,
+            success: true,
+            fileUrl: previousFile.getUrl(),
+            fileName: previousFile.getName(),
+            reused: true
+          });
+        }
+      }
+    }
+
     var stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd_HHmmss");
     var filename = "RPG_" + safeName_(payload.user1) + "_" + safeName_(payload.user2) + "_" + stamp + ".pdf";
     var html = buildTranscriptHtml_(payload, stamp);
@@ -46,6 +68,7 @@ function doPost(e) {
       .setName(filename);
 
     var file = classFolder.createFile(pdfBlob);
+    if (exportMarker) file.setDescription(exportMarker);
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
 
     return responseHtml_({
