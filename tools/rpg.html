@@ -763,6 +763,7 @@ function notifyIncomingMessage(message) {
 }
 
 function finishChatForBothClients() {
+  if (!activeAssignment && !currentPartner) return;
   closeRealtime();
   setLoader(false);
   $("composer-area").classList.add("hidden");
@@ -1167,7 +1168,7 @@ function submitDriveExport(payload) {
       clearTimeout(timeout);
       window.removeEventListener("message", onMessage);
       form.remove();
-      if (result.success && result.fileUrl) resolve(result);
+      if (result.success && result.verified === true && result.fileUrl) resolve(result);
       else reject(new Error(result.error || "Não foi possível gerar o PDF."));
     }
 
@@ -1237,6 +1238,17 @@ $("end-chat").addEventListener("click", async () => {
     if (exported.fileUrl) $("pdf-link").href = exported.fileUrl;
   } catch (error) {
     console.error("Erro ao encerrar RPG:", error);
+    if (!closingStarted) {
+      const latest = await supabase.from("assignments").select("status").eq("id", assignmentId).maybeSingle();
+      if (!latest.error && latest.data && Number(latest.data.status) === 2) {
+        activeAssignment = { ...assignment, status: 2 };
+        setLoader(true);
+        $("send-button").disabled = true;
+        $("end-chat").disabled = true;
+        showToast("O encerramento já está sendo processado.");
+        return;
+      }
+    }
     if (closingStarted) {
       const reopened = await supabase.from("assignments").update({ status: 1 })
         .eq("id", assignmentId).eq("status", 2).select("id,status").maybeSingle();
