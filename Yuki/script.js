@@ -1,8 +1,8 @@
 // Configurações do Supabase e Apps Script
 const SUPABASE_URL = "https://rmsmamzutvxugdbiqsrz.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_hMNCps2v2Odflpq9zDt_dw_Cgb_Jcxx";
-const ACTIVITY_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwBv8eOX6Ca0G9hxPi0DGcaZhK-CU7U1TxBWPJplOn9BiCpeb7wdmRr4I3ugJWHQzVUzA/exec";
-const DOUBTS_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhplJ6lou9R_aGRSZbf9v0aVS1HvbvwQk8dRX5blqJ4S7TK9PDR2_54LYX7fBQQ92w/exec";
+const ACTIVITY_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNQTAa8CjpqcO58zkc9_Wi3MQv3G3DRHpV9Nt7qodmDN4zQJ5bMD9p3V1MW5Bkl5AvRA/exec";
+const DOUBTS_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzJfJuskRk7Q8hNd0O2ia3I0OG8wm4kvVzunKAn4C_FWTRjWL2iUiOnfD0GRlBgY5wo/exec";
 let activeAppsScriptUrl = null;
 let modeSelectionShown = false;
 
