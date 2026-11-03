@@ -259,8 +259,14 @@ function renderCompletionButtons(yukiRow, detectedSubject) {
     btnClose.disabled = true;
     btnAnother.disabled = true;
     
-    await saveChatAndRecord(chatHistoryText, detectedSubject || "Encerrado");
-    
+    const saved = await saveChatAndRecord(chatHistoryText, detectedSubject || "Encerrado");
+    if (!saved) {
+      btnClose.innerText = "Tentar salvar novamente";
+      btnClose.disabled = false;
+      btnAnother.disabled = false;
+      return;
+    }
+
     userInput.disabled = true;
     chatForm.querySelector("button").disabled = true;
     buttonContainer.remove();
@@ -278,8 +284,14 @@ function renderCompletionButtons(yukiRow, detectedSubject) {
     btnClose.disabled = true;
     btnAnother.disabled = true;
     
-    await saveChatAndRecord(chatHistoryText, detectedSubject || "Finalizado");
-    
+    const saved = await saveChatAndRecord(chatHistoryText, detectedSubject || "Finalizado");
+    if (!saved) {
+      btnAnother.innerText = "Tentar salvar novamente";
+      btnClose.disabled = false;
+      btnAnother.disabled = false;
+      return;
+    }
+
     chatHistoryText = "";
     conversationHistory = [];
     currentAssignmentId = null;
@@ -315,10 +327,16 @@ async function saveChatAndRecord(historyText, mainSubject) {
       data = JSON.parse(responseText);
     } catch (e) {
       console.error("Retorno inválido do Apps Script ao salvar:", responseText);
-      return;
+      alert("O servidor retornou uma resposta inválida. O chat não foi encerrado para que você possa tentar novamente.");
+      return false;
     }
 
     const fileUrl = data.fileUrl || "";
+    if (!response.ok || data.success !== true || !fileUrl) {
+      console.error("Falha ao salvar no Drive:", data.error || "URL do arquivo ausente.");
+      alert(data.error || "Não foi possível salvar o histórico no Google Drive. O chat continua disponível para nova tentativa.");
+      return false;
+    }
 
     const payload = {
       chatHistory: fileUrl,
@@ -328,10 +346,11 @@ async function saveChatAndRecord(historyText, mainSubject) {
     };
 
     if (currentAssignmentId) {
-      await supabaseClient
+      const { error } = await supabaseClient
         .from("assignments")
         .update(payload)
         .eq("id", currentAssignmentId);
+      if (error) console.error("Erro ao atualizar o registro do chat no Supabase:", error);
     } else {
       const { data: insertData, error } = await supabaseClient
         .from("assignments")
@@ -339,12 +358,18 @@ async function saveChatAndRecord(historyText, mainSubject) {
         .select("id")
         .single();
 
-      if (!error && insertData) {
+      if (error) {
+        console.error("Erro ao registrar o chat no Supabase:", error);
+      } else if (insertData) {
         currentAssignmentId = insertData.id;
       }
     }
+
+    return true;
   } catch (err) {
     console.error("Erro ao salvar o chat no Drive/Supabase:", err);
+    alert("Não foi possível concluir o salvamento. O chat continua disponível para nova tentativa.");
+    return false;
   }
 }
 
