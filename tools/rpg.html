@@ -82,6 +82,9 @@ h2{margin:8px 0 6px;font-size:27px}
 .bubble.kind-action{font-weight:900;color:#ffe2a2}
 .bubble.kind-comment{font-style:italic;color:#8996ae;border-color:#39465d;background:#121b2c}
 .bubble.kind-shout{font-weight:950;letter-spacing:.025em;color:#fff}
+.inline-action{font-weight:950;color:#ffe2a2}
+.inline-whisper{font-style:italic;color:#d6daf0}
+.inline-comment{font-style:italic;color:#8996ae}
 .welcome{margin:auto;max-width:420px;text-align:center;color:var(--muted);line-height:1.7;font-size:13px}
 .welcome .symbol{font-size:36px;margin-bottom:8px}
 .composer-area{border-top:1px solid var(--line);padding:13px 16px 15px;background:#131e34}
@@ -90,7 +93,7 @@ h2{margin:8px 0 6px;font-size:27px}
 .tool.active{border-color:var(--cyan);color:var(--cyan);background:#39e5df12}
 .composer{display:flex;align-items:stretch;gap:9px}
 .editor-wrap{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
-.composer textarea{display:block;flex:1;min-width:0;min-height:54px;max-height:100px;resize:vertical;line-height:1.45;font-size:13px}
+.composer textarea{display:block;flex:1;min-width:0;min-height:54px;max-height:100px;resize:none;overflow-y:auto;line-height:1.45;font-size:13px}
 .composer textarea[data-mode="whisper"],.composer textarea[data-mode="comment"]{font-style:italic}
 .composer textarea[data-mode="action"]{font-weight:900}
 .composer textarea[data-mode="shout"]{font-weight:950;letter-spacing:.025em}
