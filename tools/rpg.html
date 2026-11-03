@@ -59,13 +59,25 @@ h2{margin:8px 0 6px;font-size:27px}
 .chat-heading small{color:var(--muted);font-size:11px}
 .chat-actions{display:flex;gap:8px;align-items:center}
 #messages{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;background-image:radial-gradient(#31415f66 1px,transparent 1px);background-size:22px 22px}
-.message{display:flex;flex-direction:column;max-width:min(78%,560px);align-self:flex-start}
+.message{display:flex;width:100%;align-self:flex-start}
 .message.mine{align-self:flex-end}
+.message-row{display:flex;align-items:flex-end;gap:9px;max-width:min(84%,650px);min-width:0}
+.message.mine .message-row{flex-direction:row-reverse}
+.message-avatar{width:42px;height:42px;flex:0 0 42px;border-radius:50%;object-fit:cover;border:2px solid #6079aa;background:#172642;box-shadow:0 4px 16px #0006}
+.message-content{min-width:0;max-width:calc(100% - 51px)}
 .message-meta{display:flex;gap:8px;align-items:center;color:#9aaaca;font-size:10px;margin:0 8px 5px}
 .message.mine .message-meta{justify-content:flex-end}
 .message-meta strong{color:#d8e2fb}
 .bubble{padding:11px 14px;border:1px solid #34496e;background:#172642;border-radius:15px 15px 15px 4px;line-height:1.55;font-size:14px;overflow-wrap:anywhere;white-space:pre-wrap}
 .message.mine .bubble{background:linear-gradient(135deg,#263d63,#2b2b57);border-color:#5662a0;border-radius:15px 15px 4px 15px}
+.bubble-character{display:block;font-weight:950;color:#fff;margin-bottom:5px}
+.bubble-text{display:block;white-space:pre-wrap;overflow-wrap:anywhere}
+.avatar-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:8px}
+.avatar-option{border:2px solid #344766;border-radius:13px;padding:4px;background:#0b1427;aspect-ratio:1;overflow:hidden}
+.avatar-option img{width:100%;height:100%;display:block;object-fit:cover;border-radius:8px}
+.avatar-option.selected{border-color:var(--cyan);box-shadow:0 0 0 3px #39e5df22}
+.notification-toggle{width:100%;margin-bottom:8px}
+@media(max-width:520px){.message-row{max-width:94%}.message-avatar{width:34px;height:34px;flex-basis:34px}.message-content{max-width:calc(100% - 43px)}.avatar-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .bubble.kind-whisper{font-style:italic;color:#d6daf0}
 .bubble.kind-action{font-weight:900;color:#ffe2a2}
 .bubble.kind-comment{font-style:italic;color:#8996ae;border-color:#39465d;background:#121b2c}
@@ -127,6 +139,7 @@ a{color:var(--cyan)}
       <div class="list-title"><span>Jogadores da turma</span><span id="player-count">0</span></div>
       <div id="partner-list"><div class="empty">Carregando jogadores...</div></div>
       <div style="margin-top:auto;padding-top:14px">
+        <button class="ghost notification-toggle" id="enable-notifications" type="button">♢ Ativar notificações</button>
         <button class="ghost" id="refresh-list" style="width:100%">↻ Atualizar jogadores</button>
         <p class="hint">Somente colegas da mesma série e turma aparecem aqui.</p>
         <p class="hint"><a href="../index.html">← Voltar ao EnglishJourney</a></p>
@@ -164,6 +177,7 @@ a{color:var(--cyan)}
   <p>Escolha o nome do personagem que aparecerá nas suas mensagens desta conversa.</p>
   <form id="character-form">
     <div class="field"><label for="character-name">NOME DO PERSONAGEM</label><input id="character-name" maxlength="40" placeholder="Ex.: Alex Shadow" required></div>
+    <div class="field"><label>ESCOLHA SEU AVATAR</label><div class="avatar-grid" id="avatar-grid" role="group" aria-label="Avatares disponíveis"></div></div>
     <div class="dialog-actions"><button class="ghost" id="cancel-character" type="button">Cancelar</button><button class="primary" type="submit">Entrar na aventura</button></div>
   </form>
 </dialog>
@@ -199,8 +213,27 @@ let activeAssignment = null;
 let chatMessages = [];
 let selectedMode = "say";
 let characterName = "";
+let characterAvatarUrl = "";
+let selectedAvatarUrl = "";
 let realtimeChannel = null;
 let pollHandle = null;
+let knownMessageIdsByAssignment = new Map();
+const RPG_PROFILE_PREFIX = "rpgPlayerProfile:";
+const BASE_PAGE_TITLE = document.title;
+const AVATAR_OPTIONS = [
+  "https://i.pinimg.com/1200x/85/ab/4c/85ab4cbe8bcff67648d771d8f24dfb1c.jpg",
+  "https://i.pinimg.com/736x/02/c8/95/02c895ab7b366aa2e8f9ecdcd0be21b7.jpg",
+  "https://i.pinimg.com/originals/bf/cf/ea/bfcfea2175a8efd59d8a242eb3c6fd57.jpg",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRjspixaT-6mp2WzvsiBuZlDCZZDByMGNtPrK2NaxQqRPmbfTUZ5XpHq2tU&s=10",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTrzLmXPJDNhZuBcRSGm-y5TsUF8hGw-t2X0NoPu_R9qD3mf0xUk7jV9bs&s=10",
+  "https://pbs.twimg.com/profile_images/1082020318523412480/E87sUSUc_400x400.jpg",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8gghTujWAFOyZQ8H27_icpZv4sm13Um_uHQgqGbm1UqXSkZEWaXdrvnQ&s=10",
+  "https://wallpapers.com/images/hd/aesthetic-anime-profile-pictures-mwdj39vapg6nkl6y.jpg",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTakUCVPhy4aXMdQxHz6dEHroRAUHBuLnAGqKE_2znnZfFIMBlenMqMBFpi&s=10",
+  "https://wallpapercave.com/wp/wp8756073.jpg",
+  "https://img.wattpad.com/90e863534cb62c26152bbed0f0c35c514c2e76f6/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f776174747061642d6d656469612d736572766963652f53746f7279496d6167652f6a59484c55346842564e596946513d3d2d35332e313636663032303232386638396464313630353339303031323639392e6a7067",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDRxm1uQJwnlcM_1x5VKhuOCA4zb1weoFOTD-p4XPRhgEgAO8QecdER2yC&s=10"
+];
 let toastHandle = null;
 let exportPending = false;
 
@@ -286,6 +319,7 @@ async function enterWithProfile(profile) {
   $("logged-name").textContent = profile.name || profile.username;
   $("logged-meta").textContent = "@" + profile.username + " · Turma " + classCode(profile);
   await loadPartners();
+  subscribeToUserAssignments();
 }
 
 async function loginFromSavedSession() {
@@ -363,7 +397,7 @@ async function loadPartners() {
   let activeRows = [];
   const result = await supabase
     .from("assignments")
-    .select("id,user1,user2,serieTeam,chatHistory,created_at")
+    .select("id,user1,user2,serieTeam,chatHistory,created_at,user1_character_name,user1_avatar_url,user2_character_name,user2_avatar_url")
     .eq("serieTeam", classCode(currentProfile));
 
   if (result.error) {
@@ -371,6 +405,9 @@ async function loadPartners() {
     showToast("O banco ainda não liberou o acesso às conversas RPG.");
   } else {
     activeRows = result.data || [];
+    activeRows.forEach(row => {
+      knownMessageIdsByAssignment.set(String(row.id), new Set(parseHistory(row.chatHistory).map(messageKey)));
+    });
   }
 
   renderPartners(activeRows);
@@ -460,7 +497,7 @@ async function selectPartner(partner) {
           serieTeam: classCode(currentProfile),
           chatHistory: JSON.stringify([])
         })
-        .select("id,user1,user2,serieTeam,chatHistory,created_at")
+        .select("id,user1,user2,serieTeam,chatHistory,created_at,user1_character_name,user1_avatar_url,user2_character_name,user2_avatar_url")
         .single();
 
       if (inserted.error && inserted.error.code === "23505") {
@@ -484,9 +521,9 @@ async function selectPartner(partner) {
       }
     }
 
-    $("character-name").value = "";
-    $("character-dialog").showModal();
+    knownMessageIdsByAssignment.set(String(activeAssignment.id), new Set(chatMessages.map(messageKey)));
     renderPartnersForCurrent();
+    await prepareCharacterProfile();
   } catch (error) {
     console.error("Erro ao abrir/criar conversa:", error);
     currentPartner = null;
@@ -495,6 +532,111 @@ async function selectPartner(partner) {
   } finally {
     setLoader(false);
   }
+}
+
+function profileCacheKey() {
+  return RPG_PROFILE_PREFIX + currentProfile.username;
+}
+
+function readCachedPlayerProfile() {
+  try {
+    const profile = JSON.parse(localStorage.getItem(profileCacheKey()) || "null");
+    if (profile && profile.characterName && AVATAR_OPTIONS.includes(profile.avatarUrl)) return profile;
+  } catch (error) {
+    console.warn("Perfil RPG local inválido:", error);
+  }
+  return null;
+}
+
+function saveCachedPlayerProfile() {
+  localStorage.setItem(profileCacheKey(), JSON.stringify({
+    characterName,
+    avatarUrl: characterAvatarUrl
+  }));
+}
+
+function playerProfileColumnNames() {
+  const first = activeAssignment.user1 === currentProfile.username;
+  return first
+    ? { character: "user1_character_name", avatar: "user1_avatar_url" }
+    : { character: "user2_character_name", avatar: "user2_avatar_url" };
+}
+
+function savedProfileFromAssignment() {
+  const columns = playerProfileColumnNames();
+  return {
+    characterName: activeAssignment[columns.character] || "",
+    avatarUrl: activeAssignment[columns.avatar] || ""
+  };
+}
+
+async function persistPlayerProfileForConversation() {
+  const columns = playerProfileColumnNames();
+  const updates = {
+    [columns.character]: characterName,
+    [columns.avatar]: characterAvatarUrl
+  };
+  const { data, error } = await supabase
+    .from("assignments")
+    .update(updates)
+    .eq("id", activeAssignment.id)
+    .select("id,user1_character_name,user1_avatar_url,user2_character_name,user2_avatar_url")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (data) activeAssignment = { ...activeAssignment, ...data };
+}
+
+function renderAvatarPicker(selectedUrl = AVATAR_OPTIONS[0]) {
+  const grid = $("avatar-grid");
+  grid.innerHTML = "";
+  selectedAvatarUrl = AVATAR_OPTIONS.includes(selectedUrl) ? selectedUrl : AVATAR_OPTIONS[0];
+
+  AVATAR_OPTIONS.forEach((url, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "avatar-option" + (url === selectedAvatarUrl ? " selected" : "");
+    button.dataset.avatar = url;
+    button.setAttribute("aria-label", "Avatar " + (index + 1));
+    const image = document.createElement("img");
+    image.src = url;
+    image.alt = "Avatar " + (index + 1);
+    image.loading = "lazy";
+    image.referrerPolicy = "no-referrer";
+    image.onerror = () => {
+      image.style.opacity = "0.2";
+      image.alt = "Imagem indisponível";
+    };
+    button.append(image);
+    button.addEventListener("click", () => {
+      selectedAvatarUrl = url;
+      grid.querySelectorAll(".avatar-option").forEach(option => {
+        option.classList.toggle("selected", option.dataset.avatar === url);
+      });
+    });
+    grid.append(button);
+  });
+}
+
+async function prepareCharacterProfile() {
+  const cached = readCachedPlayerProfile();
+  const stored = savedProfileFromAssignment();
+  const profile = cached || (
+    stored.characterName && AVATAR_OPTIONS.includes(stored.avatarUrl) ? stored : null
+  );
+
+  if (!profile) {
+    $("character-name").value = stored.characterName || "";
+    renderAvatarPicker(stored.avatarUrl || AVATAR_OPTIONS[0]);
+    $("character-dialog").showModal();
+    return;
+  }
+
+  characterName = profile.characterName;
+  characterAvatarUrl = profile.avatarUrl;
+  saveCachedPlayerProfile();
+  await persistPlayerProfileForConversation();
+  showChat();
 }
 
 function renderPartnersForCurrent() {
@@ -506,16 +648,35 @@ $("cancel-character").addEventListener("click", () => {
   currentPartner = null;
   activeAssignment = null;
   chatMessages = [];
+  characterName = "";
+  characterAvatarUrl = "";
   renderPartners();
 });
 
-$("character-form").addEventListener("submit", (event) => {
+$("character-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const value = $("character-name").value.trim();
-  if (!value) return;
+  if (!value || !AVATAR_OPTIONS.includes(selectedAvatarUrl)) {
+    showToast("Escolha um nome e um avatar para seu personagem.");
+    return;
+  }
+
+  const submit = $("character-form").querySelector('button[type="submit"]');
+  submit.disabled = true;
   characterName = value.slice(0, 40);
-  $("character-dialog").close();
-  showChat();
+  characterAvatarUrl = selectedAvatarUrl;
+
+  try {
+    saveCachedPlayerProfile();
+    await persistPlayerProfileForConversation();
+    $("character-dialog").close();
+    showChat();
+  } catch (error) {
+    console.error("Erro ao salvar perfil do personagem:", error);
+    showToast("Não foi possível salvar seu personagem nesta conversa.");
+  } finally {
+    submit.disabled = false;
+  }
 });
 
 function showChat() {
@@ -524,6 +685,14 @@ function showChat() {
   $("composer-area").classList.remove("hidden");
   renderMessages();
   subscribeToChat();
+}
+
+function messageKey(message) {
+  return String(message.id || [
+    message.user || "",
+    message.createdAt || message.time || "",
+    message.message || ""
+  ].join("|"));
 }
 
 function closeRealtime() {
@@ -537,44 +706,94 @@ function closeRealtime() {
   }
 }
 
+function notifyIncomingMessage(message) {
+  const sender = message.character || message.user || "Colega";
+  const body = String(message.message || "").slice(0, 150);
+  showToast(sender + ": " + body);
+  document.title = "🔔 Nova mensagem | EnglishJourney RPG";
+
+  if ("Notification" in window && Notification.permission === "granted" && document.hidden) {
+    try {
+      new Notification("Nova mensagem no RPG", {
+        body: sender + ": " + body,
+        icon: message.avatar_url || undefined,
+        tag: "rpg-" + (message.id || message.createdAt || Date.now())
+      });
+    } catch (error) {
+      console.warn("Notificação do navegador indisponível:", error);
+    }
+  }
+}
+
+function handleAssignmentUpdate(row) {
+  if (!row || !currentProfile || ![row.user1, row.user2].includes(currentProfile.username)) return;
+
+  const id = String(row.id);
+  const incoming = parseHistory(row.chatHistory);
+  const known = knownMessageIdsByAssignment.get(id) || new Set();
+  const newMessages = incoming.filter(message =>
+    !known.has(messageKey(message)) && message.user !== currentProfile.username
+  );
+  knownMessageIdsByAssignment.set(id, new Set(incoming.map(messageKey)));
+
+  if (activeAssignment && String(activeAssignment.id) === id) {
+    activeAssignment = { ...activeAssignment, ...row };
+    if (incoming.length >= chatMessages.length) {
+      chatMessages = incoming;
+      renderMessages();
+    }
+  }
+
+  newMessages.forEach(notifyIncomingMessage);
+}
+
 function subscribeToChat() {
   closeRealtime();
   if (!activeAssignment) return;
 
-  realtimeChannel = supabase
-    .channel("rpg-assignment-" + activeAssignment.id)
-    .on("postgres_changes", {
-      event: "UPDATE",
-      schema: "public",
-      table: "assignments",
-      filter: "id=eq." + activeAssignment.id
-    }, payload => {
-      const incoming = parseHistory(payload.new && payload.new.chatHistory);
-      if (incoming.length >= chatMessages.length) {
-        chatMessages = incoming;
-        renderMessages();
-      }
-    })
-    .subscribe();
-
-  // Polling mantém a conversa sincronizada mesmo se Realtime não estiver habilitado.
   pollHandle = setInterval(async () => {
     if (!activeAssignment) return;
     const { data, error } = await supabase
       .from("assignments")
-      .select("chatHistory")
+      .select("id,user1,user2,serieTeam,chatHistory,user1_character_name,user1_avatar_url,user2_character_name,user2_avatar_url")
       .eq("id", activeAssignment.id)
       .maybeSingle();
 
-    if (!error && data) {
-      const incoming = parseHistory(data.chatHistory);
-      if (incoming.length !== chatMessages.length) {
-        chatMessages = incoming;
-        renderMessages();
-      }
-    }
+    if (!error && data) handleAssignmentUpdate(data);
   }, 3200);
 }
+
+function subscribeToUserAssignments() {
+  if (realtimeChannel || !currentProfile) return;
+
+  realtimeChannel = supabase
+    .channel("rpg-user-" + currentProfile.username)
+    .on("postgres_changes", {
+      event: "UPDATE",
+      schema: "public",
+      table: "assignments"
+    }, payload => handleAssignmentUpdate(payload.new))
+    .subscribe();
+}
+
+$("enable-notifications").addEventListener("click", async () => {
+  if (!("Notification" in window)) {
+    showToast("Este navegador não oferece notificações do sistema. Você ainda verá avisos dentro do chat.");
+    return;
+  }
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === "granted") showToast("Notificações ativadas!");
+    else showToast("As notificações do navegador não foram autorizadas.");
+  } catch (error) {
+    console.warn("Não foi possível pedir permissão de notificação:", error);
+    showToast("Não foi possível ativar as notificações neste navegador.");
+  }
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) document.title = BASE_PAGE_TITLE;
+});
 
 function renderMessages() {
   const container = $("messages");
@@ -592,21 +811,48 @@ function renderMessages() {
     const mine = message.user === currentProfile.username;
     const item = document.createElement("article");
     item.className = "message" + (mine ? " mine" : "");
+
+    const row = document.createElement("div");
+    row.className = "message-row";
+    const avatar = document.createElement("img");
+    avatar.className = "message-avatar";
+    avatar.src = message.avatar_url || avatarForUser(message.user) || "";
+    avatar.alt = "Avatar de " + (message.character || message.user || "Player");
+    avatar.loading = "lazy";
+    avatar.referrerPolicy = "no-referrer";
+    avatar.onerror = () => { avatar.style.visibility = "hidden"; };
+
+    const content = document.createElement("div");
+    content.className = "message-content";
     const meta = document.createElement("div");
     meta.className = "message-meta";
-    const who = document.createElement("strong");
-    who.textContent = message.character || message.user || "Player";
     const at = document.createElement("span");
     at.textContent = "@" + (message.user || "player") + " · " + (message.time || "");
-    meta.append(who, at);
+    meta.append(at);
+
     const bubble = document.createElement("div");
     bubble.className = "bubble kind-" + (message.kind || "say");
-    bubble.textContent = message.message || "";
-    item.append(meta, bubble);
+    const character = document.createElement("strong");
+    character.className = "bubble-character";
+    character.textContent = (message.character || message.user || "Player") + ":";
+    const text = document.createElement("span");
+    text.className = "bubble-text";
+    text.textContent = message.message || "";
+    bubble.append(character, text);
+    content.append(meta, bubble);
+    row.append(avatar, content);
+    item.append(row);
     container.append(item);
   });
 
   container.scrollTop = container.scrollHeight;
+}
+
+function avatarForUser(username) {
+  if (!activeAssignment || !username) return "";
+  return username === activeAssignment.user1
+    ? activeAssignment.user1_avatar_url || ""
+    : activeAssignment.user2_avatar_url || "";
 }
 
 function formatMessage(text, mode) {
@@ -641,6 +887,7 @@ $("message-form").addEventListener("submit", async (event) => {
     id: (crypto.randomUUID ? crypto.randomUUID() : String(now.getTime()) + Math.random().toString(16).slice(2)),
     user: currentProfile.username,
     character: characterName,
+    avatar_url: characterAvatarUrl,
     time: time,
     message: formatMessage(raw, selectedMode),
     kind: selectedMode,
@@ -681,6 +928,7 @@ $("message-form").addEventListener("submit", async (event) => {
     }
 
     if (!saved) throw new Error("A conversa recebeu mensagens ao mesmo tempo. Tente enviar novamente.");
+    knownMessageIdsByAssignment.set(String(activeAssignment.id), new Set(chatMessages.map(messageKey)));
     $("message-input").value = "";
     renderMessages();
   } catch (error) {
@@ -713,6 +961,13 @@ function buildExportPayload() {
     user1: activeAssignment.user1,
     user2: activeAssignment.user2,
     serieTeam: activeAssignment.serieTeam,
+    dateText: new Date().toLocaleString("pt-BR"),
+    user1Name: activeAssignment.user1 === currentProfile.username ? (currentProfile.name || currentProfile.username) : (currentPartner.name || currentPartner.username),
+    user2Name: activeAssignment.user2 === currentProfile.username ? (currentProfile.name || currentProfile.username) : (currentPartner.name || currentPartner.username),
+    user1Character: activeAssignment.user1_character_name || (activeAssignment.user1 === currentProfile.username ? characterName : ""),
+    user2Character: activeAssignment.user2_character_name || (activeAssignment.user2 === currentProfile.username ? characterName : ""),
+    user1Avatar: activeAssignment.user1_avatar_url || (activeAssignment.user1 === currentProfile.username ? characterAvatarUrl : ""),
+    user2Avatar: activeAssignment.user2_avatar_url || (activeAssignment.user2 === currentProfile.username ? characterAvatarUrl : ""),
     messages: chatMessages
   };
 }
