@@ -609,6 +609,7 @@ window.advancePlanner = async (id) => {
             .filter(entry =>
                 Number.isFinite(entry.timestamp) &&
                 entry.dateKey >= todayKey &&
+                entry.dateKey !== getDateKey(selected.date) &&
                 entry.timestamp >= now &&
                 entry.timestamp < selectedTimestamp
             )
