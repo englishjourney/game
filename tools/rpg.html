@@ -981,6 +981,13 @@ document.querySelectorAll(".tool[data-mode]").forEach(button => {
   });
 });
 
+$("message-input").addEventListener("keydown", event => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    $("message-form").requestSubmit();
+  }
+});
+
 $("message-input").addEventListener("input", () => {
   const input = $("message-input");
   if (selectedMode === "shout") {
