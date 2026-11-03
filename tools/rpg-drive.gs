@@ -17,6 +17,7 @@ function doGet() {
 }
 
 function doPost(e) {
+  var requestId = "";
   try {
     var raw = e && e.parameter && e.parameter.payload;
     if (!raw && e && e.postData && e.postData.contents) {
@@ -25,6 +26,7 @@ function doPost(e) {
     if (!raw) throw new Error("Payload ausente.");
 
     var payload = JSON.parse(raw);
+    requestId = String(payload.requestId || "");
     validatePayload_(payload);
 
     var root = getOrCreateFolder_(DriveApp.getRootFolder(), "chatHistory");
@@ -48,6 +50,7 @@ function doPost(e) {
 
     return responseHtml_({
       type: "rpg-export-result",
+      requestId: requestId,
       success: true,
       fileUrl: file.getUrl(),
       fileName: filename
@@ -55,6 +58,7 @@ function doPost(e) {
   } catch (err) {
     return responseHtml_({
       type: "rpg-export-result",
+      requestId: requestId,
       success: false,
       error: String(err && err.message ? err.message : err)
     });
@@ -124,7 +128,12 @@ function buildTranscriptHtml_(payload, stamp) {
 function responseHtml_(result) {
   var serialized = JSON.stringify(result).replace(/</g, "\\u003c");
   var html = '<!doctype html><html><head><meta charset="utf-8"></head><body><script>' +
-    'window.parent.postMessage(' + serialized + ', "*");' +
+    '(function(){var result=' + serialized + ';var attempts=0;' +
+    'function notifyParent(){try{window.parent.postMessage(result,"*");}catch(err){}' +
+    'attempts++;if(attempts<12)setTimeout(notifyParent,400);}' +
+    'if(document.readyState==="complete")notifyParent();' +
+    'else window.addEventListener("load",notifyParent);' +
+    '})();' +
     '</script></body></html>';
   return HtmlService.createHtmlOutput(html)
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
