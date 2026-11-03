@@ -463,9 +463,25 @@ async function selectPartner(partner) {
         .select("id,user1,user2,serieTeam,chatHistory,created_at")
         .single();
 
-      if (inserted.error) throw inserted.error;
-      activeAssignment = inserted.data;
-      chatMessages = [];
+      if (inserted.error && inserted.error.code === "23505") {
+        // Se os dois alunos iniciarem ao mesmo tempo, reutiliza a row criada pelo outro.
+        const retry = await supabase
+          .from("assignments")
+          .select("id,user1,user2,serieTeam,chatHistory,created_at")
+          .eq("serieTeam", classCode(currentProfile))
+          .eq("user1", pair[0])
+          .eq("user2", pair[1])
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (retry.error || !retry.data) throw inserted.error;
+        activeAssignment = retry.data;
+        chatMessages = parseHistory(retry.data.chatHistory);
+      } else {
+        if (inserted.error) throw inserted.error;
+        activeAssignment = inserted.data;
+        chatMessages = [];
+      }
     }
 
     $("character-name").value = "";
@@ -631,17 +647,40 @@ $("message-form").addEventListener("submit", async (event) => {
     createdAt: now.toISOString()
   };
 
-  const updated = [...chatMessages, item];
   try {
-    const { error } = await supabase
-      .from("assignments")
-      .update({ chatHistory: JSON.stringify(updated) })
-      .eq("id", activeAssignment.id)
-      .eq("user1", activeAssignment.user1)
-      .eq("user2", activeAssignment.user2);
+    // Atualização otimista: a mensagem só entra no histórico se a versão anterior
+    // ainda for a mesma. Isso evita sobrescrever uma mensagem enviada em paralelo.
+    let saved = false;
+    for (let attempt = 0; attempt < 3 && !saved; attempt++) {
+      const previousHistory = JSON.stringify(chatMessages);
+      const candidate = [...chatMessages, item];
+      const { data, error } = await supabase
+        .from("assignments")
+        .update({ chatHistory: JSON.stringify(candidate) })
+        .eq("id", activeAssignment.id)
+        .eq("chatHistory", previousHistory)
+        .select("chatHistory")
+        .maybeSingle();
 
-    if (error) throw error;
-    chatMessages = updated;
+      if (error) throw error;
+      if (data) {
+        chatMessages = parseHistory(data.chatHistory);
+        saved = true;
+        break;
+      }
+
+      const latest = await supabase
+        .from("assignments")
+        .select("chatHistory")
+        .eq("id", activeAssignment.id)
+        .maybeSingle();
+
+      if (latest.error) throw latest.error;
+      if (!latest.data) throw new Error("Esta conversa não está mais disponível.");
+      chatMessages = parseHistory(latest.data.chatHistory);
+    }
+
+    if (!saved) throw new Error("A conversa recebeu mensagens ao mesmo tempo. Tente enviar novamente.");
     $("message-input").value = "";
     renderMessages();
   } catch (error) {
