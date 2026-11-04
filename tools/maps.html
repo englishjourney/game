@@ -620,12 +620,29 @@
       country.mapSrc = src;
     }
 
+    function normalizeMapName(value) {
+      return String(value || '')
+        .normalize('NFD')
+        .replace(/[\\u0300-\\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+    }
+
     function renderAllMaps() {
+      const nameAliases = {
+        us: ['United States of America', 'United States'],
+        bs: ['The Bahamas', 'Bahamas']
+      };
+
       countries.forEach(country => {
+        const acceptedNames = [country.english, ...(nameAliases[country.id] || [])]
+          .map(normalizeMapName);
         const feature = mapFeatures.find(item => {
           const props = item.properties || {};
           const code = String(props.ISO_A2 || props.ISO_A2_EH || '').toLowerCase();
-          return code === country.iso;
+          const names = [props.ADMIN, props.NAME, props.NAME_EN].map(normalizeMapName);
+          return code === country.iso || names.some(name => acceptedNames.includes(name));
         });
         if (feature) setMapImage(country, feature);
         else {
