@@ -622,14 +622,10 @@
 
     function normalizeMapName(value) {
       return String(value || '')
-        .normalize('NFD')
-        .replace(/[\\u0300-\\u036f]/g, '')
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, ' ')
         .trim();
-    }
-
-    function renderAllMaps() {
+    }\n\n    function renderAllMaps() {
       const nameAliases = {
         us: ['United States of America', 'United States'],
         bs: ['The Bahamas', 'Bahamas']
