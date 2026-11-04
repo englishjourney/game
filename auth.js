@@ -93,7 +93,7 @@ export async function handleLogin(event) {
     try {
         const { data, error } = await supabase
             .from('users')
-            .select('username, serie')
+            .select('username, serie, name, avatar_url')
             .eq('username', username)
             .eq('psswd', psswd)
             .maybeSingle();
@@ -102,7 +102,23 @@ export async function handleLogin(event) {
             return alert("Usuário ou senha incorretos!");
         }
 
-        saveSession({ username: data.username, serie: data.serie });
+        let tcsSessionToken = null;
+        try {
+            const { data: gameSession, error: gameSessionError } = await supabase.functions.invoke('the-city-sleeps', {
+                body: { action: 'create_session', username: data.username, password: psswd }
+            });
+            if (!gameSessionError && gameSession?.data?.sessionToken) tcsSessionToken = gameSession.data.sessionToken;
+        } catch (gameSessionError) {
+            console.warn('The City Sleeps session will be created when the game is opened:', gameSessionError);
+        }
+
+        saveSession({
+            username: data.username,
+            serie: data.serie,
+            name: data.name,
+            avatar_url: data.avatar_url,
+            tcsSessionToken
+        });
         window.location.reload();
 
     } catch (error) {

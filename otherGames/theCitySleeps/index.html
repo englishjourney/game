@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080d18">
+  <title>The City Sleeps | EnglishJourney</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="night-sky" aria-hidden="true"></div>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="../gamestotry.html" data-pt="Voltar aos jogos">
+        <span class="brand-mark">CS</span>
+        <span><strong>THE CITY SLEEPS</strong><small>ENGLISHJOURNEY MULTIPLAYER</small></span>
+      </a>
+      <div class="topbar-right">
+        <span id="connection-indicator" class="connection-indicator"><i></i> Connecting</span>
+        <span id="signed-in-user" class="signed-in-user"></span>
+      </div>
+    </header>
+
+    <main>
+      <section id="session-required" class="session-required hidden">
+        <div class="panel-card narrow-card">
+          <p class="eyebrow">PLAYER ACCESS</p><h1>Sign in to play</h1>
+          <p class="muted">Use your EnglishJourney account to join a room.</p>
+          <button id="btn-open-session" class="button button-primary" type="button">Sign in</button>
+        </div>
+      </section>
+
+      <section id="home-view">
+        <div class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow"><span class="eyebrow-dot"></span> A SOCIAL DEDUCTION GAME</p>
+            <h1>When the city sleeps,<br><em>secrets wake up.</em></h1>
+            <p class="hero-description">Find your role. Trust carefully. Work together before sunrise.</p>
+            <div class="hero-actions">
+              <button id="btn-create-room" class="button button-primary" type="button" data-pt="Criar uma sala">Create a room <span>＋</span></button>
+              <button id="btn-refresh-rooms" class="button button-quiet" type="button" data-pt="Atualizar salas">Refresh rooms ↻</button>
+            </div>
+          </div>
+          <div class="hero-emblem" aria-hidden="true"><div class="moon"></div></div>
+        </div>
+
+        <div class="home-grid">
+          <section class="panel-card rooms-panel">
+            <div class="section-heading">
+              <div><p class="eyebrow">OPEN LOBBIES</p><h2>Waiting rooms</h2></div>
+              <span id="room-count" class="count-pill">0 ROOMS</span>
+            </div>
+            <div id="rooms-list" class="rooms-list">
+              <div class="empty-state"><span class="empty-icon">☾</span><strong>Looking for rooms...</strong><small>Waiting rooms will appear here.</small></div>
+            </div>
+          </section>
+
+          <aside class="panel-card join-panel">
+            <p class="eyebrow">HAVE A ROOM CODE?</p><h2>Join a game</h2>
+            <p class="muted">Enter the 4-character code shared by the host.</p>
+            <form id="join-by-code-form" class="stack-form">
+              <label for="manual-room-code">Room code</label>
+              <input id="manual-room-code" type="text" maxlength="4" autocomplete="off" placeholder="A7K2" required>
+              <label for="manual-room-password">Password <span class="optional-label">if closed</span></label>
+              <input id="manual-room-password" type="password" autocomplete="off" placeholder="Room password">
+              <button class="button button-outline full-button" type="submit" data-pt="Entrar na sala">Join room <span>→</span></button>
+            </form>
+            <div class="join-note"><span>✦</span><span>At least <strong>6 players</strong> are needed to begin.</span></div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="room-view" class="hidden">
+        <div class="room-topline">
+          <button id="btn-leave-room" type="button" class="button button-quiet" data-pt="Sair da sala">← Leave room</button>
+          <div class="room-code-block"><span class="muted">ROOM CODE</span><strong id="room-code-display">----</strong><button id="btn-copy-room-code" type="button" title="Copy room code" aria-label="Copy room code">▢</button></div>
+        </div>
+        <div class="room-layout">
+          <aside class="panel-card participants-panel">
+            <div class="section-heading">
+              <div><p class="eyebrow">THE LOBBY</p><h2>Players <span id="participant-count" class="inline-count">0</span></h2></div>
+              <span id="host-badge" class="host-badge hidden">HOST</span>
+            </div>
+            <div id="participants-list" class="participants-list"></div>
+            <div id="lobby-controls" class="lobby-controls">
+              <p id="lobby-hint" class="muted">Waiting for the host...</p>
+              <button id="btn-start-game" class="button button-primary full-button" type="button" disabled data-pt="Iniciar jogo">Start game <span>▶</span></button>
+              <small class="muted">Minimum 6 players · Maximum 24 players</small>
+            </div>
+          </aside>
+
+          <section class="room-main">
+            <div class="panel-card phase-card">
+              <div class="phase-card-top">
+                <div><p id="phase-kicker" class="eyebrow">ROOM STATUS</p><h1 id="phase-title">Waiting for players</h1></div>
+                <div id="phase-clock" class="phase-clock hidden"><span>TIME LEFT</span><strong>00:00</strong></div>
+              </div>
+              <div id="phase-panel"></div>
+            </div>
+            <div class="room-lower-grid">
+              <section class="panel-card roster-card">
+                <div class="section-heading"><div><p class="eyebrow">CITY STATUS</p><h2>Living players</h2></div><span id="living-count" class="count-pill">0 ALIVE</span></div>
+                <div id="living-players" class="mini-player-list"></div>
+              </section>
+              <section class="panel-card graveyard-card">
+                <div class="section-heading"><div><p class="eyebrow">THE SILENT SIDE</p><h2>Eliminated</h2></div><span id="dead-count" class="count-pill">0 OUT</span></div>
+                <div id="dead-players" class="mini-player-list"></div>
+              </section>
+            </div>
+            <section id="team-panel" class="panel-card team-panel hidden"></section>
+            <section class="panel-card news-panel">
+              <div class="section-heading"><div><p class="eyebrow">CITY RECORD</p><h2>Daily news</h2></div><span class="news-mark">✦</span></div>
+              <div id="daily-news" class="news-list"><p class="muted">No reports yet.</p></div>
+            </section>
+            <section id="private-messages-panel" class="private-messages-panel hidden"></section>
+          </section>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer"><span>ENGLISHJOURNEY</span><span>Think together. Choose wisely.</span></footer>
+  </div>
+
+  <dialog id="session-dialog" class="game-dialog">
+    <form id="session-form" class="dialog-card">
+      <button type="button" class="dialog-close" data-close-dialog="session-dialog" aria-label="Close">×</button>
+      <p class="eyebrow">PLAYER ACCESS</p><h2>Welcome back</h2>
+      <p class="muted">Confirm your EnglishJourney account to protect your secret role.</p>
+      <label for="session-username">Username</label><input id="session-username" type="text" autocomplete="username" required>
+      <label for="session-password">Password</label><input id="session-password" type="password" autocomplete="current-password" required>
+      <p id="session-error" class="form-error"></p>
+      <button class="button button-primary full-button" type="submit" data-pt="Continuar">Continue <span>→</span></button>
+    </form>
+  </dialog>
+
+  <dialog id="create-room-dialog" class="game-dialog">
+    <form id="create-room-form" class="dialog-card">
+      <button type="button" class="dialog-close" data-close-dialog="create-room-dialog" aria-label="Close">×</button>
+      <p class="eyebrow">NEW GAME</p><h2>Create a room</h2>
+      <p class="muted">You will become the host and join as a player.</p>
+      <label for="room-visibility">Room access</label>
+      <select id="room-visibility"><option value="public">Open room</option><option value="private">Closed room</option></select>
+      <div id="room-password-field" class="hidden"><label for="new-room-password">Room password</label><input id="new-room-password" type="password" minlength="4" maxlength="40" autocomplete="new-password" placeholder="At least 4 characters"></div>
+      <p id="create-room-error" class="form-error"></p>
+      <button class="button button-primary full-button" type="submit">Create room <span>＋</span></button>
+    </form>
+  </dialog>
+
+  <dialog id="join-room-dialog" class="game-dialog">
+    <form id="join-room-form" class="dialog-card">
+      <button type="button" class="dialog-close" data-close-dialog="join-room-dialog" aria-label="Close">×</button>
+      <p class="eyebrow">JOIN GAME</p><h2>Enter the room</h2>
+      <p id="join-room-description" class="muted">Room code</p><input id="join-room-code" type="hidden">
+      <div id="join-password-field" class="hidden"><label for="join-room-password">Room password</label><input id="join-room-password" type="password" autocomplete="off" placeholder="Enter password"></div>
+      <p id="join-room-error" class="form-error"></p>
+      <button class="button button-primary full-button" type="submit">Join room <span>→</span></button>
+    </form>
+  </dialog>
+
+  <dialog id="mini-game-dialog" class="game-dialog mini-game-dialog">
+    <div class="mini-game-card">
+      <div class="mini-game-heading"><div><p class="eyebrow">NIGHTLY TASK</p><h2 id="mini-game-title">EnglishJourney game</h2></div><button id="btn-close-mini-game" class="dialog-close" type="button" aria-label="Close">×</button></div>
+      <iframe id="mini-game-frame" title="EnglishJourney mini-game" loading="lazy"></iframe>
+      <div class="mini-game-actions"><p class="muted">Finish the activity, then return to the city.</p><button id="btn-complete-mini-game" type="button" class="button button-primary" data-pt="Concluir atividade">I completed my task ✓</button></div>
+    </div>
+  </dialog>
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
