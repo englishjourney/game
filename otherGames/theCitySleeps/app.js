@@ -296,28 +296,72 @@ function notify(message, isError = false) {
   window.setTimeout(() => toast.remove(), 4200);
 }
 
-async function api(action, payload = {}) {
-  const body = { action, ...payload };
-  if (action !== "create_session") body.sessionToken = sessionToken;
-  const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, { body });
+const LOADING_LABELS = {
+  create_session: "Signing in...",
+  create_room: "Creating your room...",
+  join_room: "Joining the room...",
+  leave_room: "Leaving the room...",
+  start_game: "Starting the game...",
+  submit_action: "Saving your action...",
+  acknowledge_role: "Saving your response...",
+  acknowledge_dawn: "Saving your response...",
+  cast_vote: "Recording your vote...",
+  task_done: "Saving your task...",
+  advance_phase: "Updating the game...",
+};
 
-  if (error) {
-    let message = error.message || "The game server is unavailable.";
-    try {
-      if (error.context && typeof error.context.clone === "function") {
-        const detail = await error.context.clone().json();
-        if (detail && detail.error) message = detail.error;
+let loadingRequests = 0;
+let loadingTimer = null;
+
+function beginDatabaseLoading(action) {
+  loadingRequests += 1;
+  if (loadingRequests !== 1) return;
+  const overlay = $("database-loader");
+  if (!overlay) return;
+  $("database-loader-message").textContent = LOADING_LABELS[action] || "Saving to the game...";
+  loadingTimer = window.setTimeout(() => {
+    if (loadingRequests > 0) overlay.classList.add("is-visible");
+  }, 220);
+}
+
+function endDatabaseLoading() {
+  loadingRequests = Math.max(0, loadingRequests - 1);
+  if (loadingRequests > 0) return;
+  if (loadingTimer) window.clearTimeout(loadingTimer);
+  loadingTimer = null;
+  const overlay = $("database-loader");
+  if (overlay) overlay.classList.remove("is-visible");
+}
+
+async function api(action, payload = {}) {
+  // Background polling should never interrupt the player with a blocking loader.
+  const showLoader = !["get_state", "list_rooms"].includes(action);
+  if (showLoader) beginDatabaseLoading(action);
+  try {
+    const body = { action, ...payload };
+    if (action !== "create_session") body.sessionToken = sessionToken;
+    const { data, error } = await supabase.functions.invoke(FUNCTION_NAME, { body });
+
+    if (error) {
+      let message = error.message || "The game server is unavailable.";
+      try {
+        if (error.context && typeof error.context.clone === "function") {
+          const detail = await error.context.clone().json();
+          if (detail && detail.error) message = detail.error;
+        }
+      } catch (_) {}
+      const sessionExpired = action !== "create_session" &&
+        (error.context?.status === 401 || /session has expired|sign in again/i.test(message));
+      if (sessionExpired) {
+        requireLogin("Your game session expired. Sign in again to continue.");
       }
-    } catch (_) {}
-    const sessionExpired = action !== "create_session" &&
-      (error.context?.status === 401 || /session has expired|sign in again/i.test(message));
-    if (sessionExpired) {
-      requireLogin("Your game session expired. Sign in again to continue.");
+      throw new Error(message);
     }
-    throw new Error(message);
+    if (data && data.error) throw new Error(data.error);
+    return data ? data.data : null;
+  } finally {
+    if (showLoader) endDatabaseLoading();
   }
-  if (data && data.error) throw new Error(data.error);
-  return data ? data.data : null;
 }
 
 function openDialog(id) {
