@@ -220,6 +220,7 @@ export function initPlanner() {
 // Helper para redefinir o formulário mantendo integridade
 function resetPlannerForm() {
     document.getElementById('planner-form').reset();
+    if (window.updatePlannerActivitiesPreview) window.updatePlannerActivitiesPreview();
     document.getElementById('plan-serie').value = '';
     document.getElementById('plan-team').value = '';
     document.getElementById('plan-time').value = '';
@@ -716,6 +717,7 @@ window.editPlanner = (p) => {
 
     document.getElementById('plan-skills').value = p.skills || '';
     document.getElementById('plan-activities').value = p.activities || '';
+    if (window.updatePlannerActivitiesPreview) window.updatePlannerActivitiesPreview();
     document.getElementById('plan-duration').value = p.duration || '';
     
     document.getElementById('cb-adaptado').checked = p.special == 4;
@@ -828,6 +830,7 @@ function setupActivitiesEditor() {
         preview.innerHTML = editor.value.trim() ? renderPlannerMarkdown(editor.value)
             : '<span class="preview-placeholder">A pré-visualização aparecerá aqui.</span>';
     };
+    window.updatePlannerActivitiesPreview = updatePreview;
 
     toolbar.addEventListener('click', event => {
         const button = event.target.closest('[data-format]');
