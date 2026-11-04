@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberGlossary - Glossário de Segurança e Verificação</title>
+    <title>English Glossary | Tradutor e Glossário de Inglês</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -61,14 +61,14 @@
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <div class="bg-google-blue text-white p-2.5 rounded-xl shadow-md flex items-center justify-center">
-                    <i class="fa-solid me-0 fa-shield-halved text-xl"></i>
+                    <i class="fa-solid me-0 fa-book-open text-xl"></i>
                 </div>
                 <div>
                     <h1 class="text-xl font-semibold tracking-tight leading-tight flex items-center gap-2">
-                        CyberGlossary 
+                        English Glossary 
                         <span class="text-xs bg-blue-100 dark:bg-blue-900/50 text-google-blue dark:text-blue-300 px-2 py-0.5 rounded-full font-medium">Translate Style</span>
                     </h1>
-                    <p class="text-xs text-gray-5-00 dark:text-gray-400">Glossário de Segurança, Engenharia Social & Fact-Checking</p>
+                    <p class="text-xs text-gray-5-00 dark:text-gray-400">Tradutor e glossário de inglês</p>
                 </div>
             </div>
 
@@ -84,28 +84,8 @@
 
     <!-- Category Selector Tabs -->
     <div class="max-w-7xl mx-auto w-full px-4 pt-4 pb-2">
-        <div class="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-none" id="categoryChips">
-            <button data-cat="all" class="cat-chip active-chip px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap bg-google-blue text-white shadow-sm">
-                <i class="fa-solid fa-border-all mr-1.5 text-xs"></i> Todos os Termos
-            </button>
-            <button data-cat="English Vocabulary" class="cat-chip px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap bg-white dark:bg-google-darkCard border border-google-lightBorder dark:border-google-darkBorder hover:bg-gray-50 dark:hover:bg-google-darkBorder text-gray-700 dark:text-gray-300">
-                <i class="fa-solid fa-book-open mr-1.5 text-xs text-emerald-500"></i> Vocabulário em Inglês
-            </button>
-            <button data-cat="Cybersecurity" class="cat-chip px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap bg-white dark:bg-google-darkCard border border-google-lightBorder dark:border-google-darkBorder hover:bg-gray-50 dark:hover:bg-google-darkBorder text-gray-700 dark:text-gray-300">
-                <i class="fa-solid fa-lock mr-1.5 text-xs text-blue-500"></i> Segurança Cibernética
-            </button>
-            <button data-cat="Phishing" class="cat-chip px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap bg-white dark:bg-google-darkCard border border-google-lightBorder dark:border-google-darkBorder hover:bg-gray-50 dark:hover:bg-google-darkBorder text-gray-700 dark:text-gray-300">
-                <i class="fa-solid fa-fish-fins mr-1.5 text-xs text-red-500"></i> Phishing
-            </button>
-            <button data-cat="Social Engineering" class="cat-chip px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap bg-white dark:bg-google-darkCard border border-google-lightBorder dark:border-google-darkBorder hover:bg-gray-50 dark:hover:bg-google-darkBorder text-gray-700 dark:text-gray-300">
-                <i class="fa-solid fa-user-ninja mr-1.5 text-xs text-amber-500"></i> Engenharia Social
-            </button>
-            <button data-cat="Fake News" class="cat-chip px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap bg-white dark:bg-google-darkCard border border-google-lightBorder dark:border-google-darkBorder hover:bg-gray-50 dark:hover:bg-google-darkBorder text-gray-700 dark:text-gray-300">
-                <i class="fa-solid fa-newspaper mr-1.5 text-xs text-purple-500"></i> Fake News
-            </button>
-            <button data-cat="Fontes Confiáveis" class="cat-chip px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap bg-white dark:bg-google-darkCard border border-google-lightBorder dark:border-google-darkBorder hover:bg-gray-50 dark:hover:bg-google-darkBorder text-gray-700 dark:text-gray-300">
-                <i class="fa-solid fa-circle-check mr-1.5 text-xs text-emerald-500"></i> Fontes Confiáveis
-            </button>
+        <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none" id="categoryChips" aria-label="Filtros por classe gramatical">
+            <!-- Os filtros de classe gramatical são gerados automaticamente. -->
         </div>
     </div>
 
@@ -133,7 +113,7 @@
                     <textarea 
                         id="searchInput" 
                         rows="4" 
-                        placeholder="Digite um termo em inglês ou português (ex: Phishing, Fake News, Trojan)..." 
+                        placeholder="Digite uma palavra ou expressão em inglês ou português..." 
                         class="w-full bg-transparent text-xl font-medium outline-none resize-none placeholder-gray-400 dark:placeholder-gray-500 text-gray-800 dark:text-gray-100 flex-grow py-1"
                         spellcheck="false"
                     ></textarea>
@@ -174,8 +154,8 @@
                         <span class="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                             <i class="fa-solid fa-language text-xs"></i> Tradução & Significado (Português)
                         </span>
-                        <span id="resultCategoryBadge" class="hidden text-xs font-medium px-2 py-0.5 rounded-full bg-gray-200 dark:bg-google-darkBorder text-gray-700 dark:text-gray-300">
-                            <!-- Category Badge -->
+                        <span id="resultPartOfSpeechBadge" class="hidden text-xs font-medium px-2 py-0.5 rounded-full bg-gray-200 dark:bg-google-darkBorder text-gray-700 dark:text-gray-300">
+                            <!-- Grammatical class badge -->
                         </span>
                     </div>
 
@@ -221,9 +201,9 @@
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
                     <i class="fa-solid fa-list-ul text-google-blue"></i>
-                    Explorar Todos os Termos (<span id="termCountDisplay">0</span>)
+                    Explorar Vocabulário (<span id="termCountDisplay">0</span>)
                 </h3>
-                <span class="text-xs text-gray-500 dark:text-gray-400">Clique em qualquer card para carregar</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">Clique em uma palavra para consultar</span>
             </div>
 
             <!-- Grid of Cards -->
@@ -242,7 +222,7 @@
 
     <!-- Footer -->
     <footer class="border-t border-google-lightBorder dark:border-google-darkBorder py-4 px-4 text-center text-xs text-gray-500 dark:text-gray-400">
-        <p>CyberGlossary &copy; 2026 — Base de Conhecimento em Segurança Cibernética & Proteção Digital.</p>
+        <p>CyberGlossary &copy; 2026 — Tradução, significado e vocabulário de inglês.</p>
     </footer>
 
     <!-- JavaScript Application Logic -->
@@ -254,42 +234,42 @@
             {
                 id: 1,
                 term: "Cybersecurity",
-                category: "Cybersecurity",
+                partOfSpeech: "Substantivo",
                 translation: "Segurança cibernética",
                 definition: "Conjunto de práticas, tecnologias e processos projetados para proteger computadores, redes, programas e dados contra ataques, danos ou acesso não autorizado."
             },
             {
                 id: 2,
                 term: "Data Breach",
-                category: "Cybersecurity",
+                partOfSpeech: "Substantivo",
                 translation: "Vazamento / violação de dados",
                 definition: "Incidente de segurança no qual dados confidenciais, protegidos ou sensíveis são copiados, transmitidos, visualizados ou roubados por uma pessoa não autorizada."
             },
             {
                 id: 3,
                 term: "Malware",
-                category: "Cybersecurity",
+                partOfSpeech: "Substantivo",
                 translation: "Softwares maliciosos (vírus, spyware, ransomware)",
                 definition: "Qualquer software intencionalmente projetado para causar danos a um computador, servidor, cliente ou rede de computadores."
             },
             {
                 id: 4,
                 term: "Ransomware",
-                category: "Cybersecurity",
+                partOfSpeech: "Substantivo",
                 translation: "Tipo de vírus sequestrador",
                 definition: "Tipo de malware que criptografa os arquivos do computador e cobra um resgate (geralmente em criptomoedas) para reestabelecer o acesso."
             },
             {
                 id: 5,
                 term: "Spyware",
-                category: "Cybersecurity",
+                partOfSpeech: "Substantivo",
                 translation: "Programa espião",
                 definition: "Software malicioso que monitora e coleta remotamente suas atividades, senhas e informações pessoais sem a sua permissão."
             },
             {
                 id: 6,
                 term: "Two-Factor Authentication (2FA) / Multi-Factor Authentication (MFA)",
-                category: "Cybersecurity",
+                partOfSpeech: "Substantivo",
                 aliases: ["2FA", "MFA", "Two-Factor Authentication", "Multi-Factor Authentication"],
                 translation: "Autenticação em duas etapas / de múltiplos fatores",
                 definition: "Método de verificação de identidade que exige duas ou mais provas independentes para conceder acesso a uma conta."
@@ -297,70 +277,70 @@
             {
                 id: 7,
                 term: "Encryption",
-                category: "Cybersecurity",
+                partOfSpeech: "Substantivo",
                 translation: "Criptografia",
                 definition: "Processo de codificação de informações para que apenas partes autorizadas com uma chave secreta consigam ler o conteúdo."
             },
             {
                 id: 8,
                 term: "Firewall",
-                category: "Cybersecurity",
+                partOfSpeech: "Substantivo",
                 translation: "Barreira de segurança de rede",
                 definition: "Dispositivo ou software de segurança que monitora e filtra o tráfego de rede de entrada e saída com base em regras estabelecidas."
             },
             {
                 id: 9,
                 term: "Strong Password",
-                category: "Cybersecurity",
+                partOfSpeech: "Substantivo",
                 translation: "Senha forte",
                 definition: "Senha complexa contendo combinação de números, letras maiúsculas/minúsculas e símbolos especiais para dificultar invasões."
             },
             {
                 id: 10,
                 term: "Data Privacy",
-                category: "Cybersecurity",
+                partOfSpeech: "Substantivo",
                 translation: "Privacidade de dados",
                 definition: "Área focada no tratamento e manipulação correta de dados pessoais, garantindo o consentimento e a segurança do titular."
             },
             {
                 id: 11,
                 term: "Phishing",
-                category: "Phishing",
+                partOfSpeech: "Substantivo",
                 translation: "Golpe de roubo de dados por fraude",
                 definition: "Golpe digital projetado para enganar o usuário (via links ou e-mails falsos) e roubar dados confidenciais como senhas e cartões de crédito."
             },
             {
                 id: 12,
                 term: "Spear Phishing",
-                category: "Phishing",
+                partOfSpeech: "Substantivo",
                 translation: "Phishing direcionado e personalizado",
                 definition: "Ataque de phishing altamente específico e direcionado a um indivíduo, cargo ou empresa específica para aumentar as chances de sucesso."
             },
             {
                 id: 13,
                 term: "Smishing",
-                category: "Phishing",
+                partOfSpeech: "Substantivo",
                 translation: "Phishing por mensagens de texto (SMS)",
                 definition: "Variante do phishing realizada especificamente por meio de mensagens SMS maliciosas em celulares."
             },
             {
                 id: 14,
                 term: "Vishing",
-                category: "Phishing",
+                partOfSpeech: "Substantivo",
                 translation: "Phishing por chamadas de voz",
                 definition: "Prática de phishing por telefone (Voice Phishing) onde o golpista finge ser de uma instituição confiável via ligação telefônica."
             },
             {
                 id: 15,
                 term: "Spoofing",
-                category: "Phishing",
+                partOfSpeech: "Substantivo",
                 translation: "Falsificação de identidade digital",
                 definition: "Técnica onde o invasor se disfarça de outra entidade/endereço (ex: Email Spoofing onde o e-mail parece vir de um banco legítimo)."
             },
             {
                 id: 16,
                 term: "Malicious Link / Suspicious Link",
-                category: "Phishing",
+                partOfSpeech: "Substantivo",
                 aliases: ["Malicious Link", "Suspicious Link"],
                 translation: "Link malicioso / link suspeito",
                 definition: "Hiperlink criado para redirecionar a vítima para sites fraudulentos, infectados ou preparados para capturar credenciais."
@@ -368,7 +348,7 @@
             {
                 id: 17,
                 term: "Bait / Baiting",
-                category: "Phishing",
+                partOfSpeech: "Substantivo",
                 aliases: ["Bait", "Baiting"],
                 translation: "Isca / uso de isca para atração",
                 definition: "Tática de seduzir a vítima oferecendo algo atraente (como downloads grátis ou pen drives 'achados') contendo malware."
@@ -376,7 +356,7 @@
             {
                 id: 18,
                 term: "Scam / Scammer",
-                category: "Phishing",
+                partOfSpeech: "Substantivo",
                 aliases: ["Scam", "Scammer"],
                 translation: "Golpe / Golpista",
                 definition: "Termo geral para esquemas ou fraudes desonestas na internet / pessoa ou grupo que executa tais golpes."
@@ -384,28 +364,28 @@
             {
                 id: 19,
                 term: "Credential Stuffing",
-                category: "Phishing",
+                partOfSpeech: "Substantivo",
                 translation: "Uso automatizado de senhas vazadas",
                 definition: "Ataque automatizado onde hackers testam grandes listas de pares de e-mail e senhas vazadas em múltiplos outros sites."
             },
             {
                 id: 20,
                 term: "Social Engineering",
-                category: "Social Engineering",
+                partOfSpeech: "Substantivo",
                 translation: "Engenharia social",
                 definition: "Manipulação psicológica de pessoas para fazê-las executar ações involuntárias ou divulgar informações confidenciais."
             },
             {
                 id: 21,
                 term: "Pretexting",
-                category: "Social Engineering",
+                partOfSpeech: "Substantivo",
                 translation: "Criação de história/cenário falso",
                 definition: "Prática de inventar uma história ou situação convincente (pretexto) para enganar a vítima e obter dados confidenciais."
             },
             {
                 id: 22,
                 term: "Impersonation / Impersonate",
-                category: "Social Engineering",
+                partOfSpeech: "Múltiplas classes",
                 aliases: ["Impersonation", "Impersonate"],
                 translation: "Falsificação de identidade / se passar por outro",
                 definition: "Ação de fingir ser outra pessoa, funcionário de TI ou autoridade para manipular a confiança de uma vítima."
@@ -413,7 +393,7 @@
             {
                 id: 23,
                 term: "Urgency / Sense of Urgency",
-                category: "Social Engineering",
+                partOfSpeech: "Substantivo",
                 aliases: ["Urgency", "Sense of Urgency"],
                 translation: "Senso de urgência artificial",
                 definition: "Tática que induz medo ou pressa na vítima para que ela tome uma decisão precipitada sem checar os fatos."
@@ -421,63 +401,63 @@
             {
                 id: 24,
                 term: "Trust",
-                category: "Social Engineering",
+                partOfSpeech: "Substantivo",
                 translation: "Confiança",
                 definition: "Relação de credibilidade explorada por golpistas para que a vítima baixe a guarda durante uma interação."
             },
             {
                 id: 25,
                 term: "Authority",
-                category: "Social Engineering",
+                partOfSpeech: "Substantivo",
                 translation: "Abuso de autoridade",
                 definition: "Estratégia de se passar por figuras de liderança, policiais ou suporte técnico para forçar obediência rápida."
             },
             {
                 id: 26,
                 term: "Quid Pro Quo",
-                category: "Social Engineering",
+                partOfSpeech: "Expressão",
                 translation: "Troca de favores ilusória",
                 definition: "Oferta de um benefício ou serviço falso (ex: suporte técnico gratuito) em troca de senhas ou acesso."
             },
             {
                 id: 27,
                 term: "Fake News",
-                category: "Fake News",
+                partOfSpeech: "Substantivo",
                 translation: "Notícias falsas",
                 definition: "Informações deliberadamente falsas ou enganosas apresentadas como se fossem notícias reais para manipular a opinião pública."
             },
             {
                 id: 28,
                 term: "Misinformation",
-                category: "Fake News",
+                partOfSpeech: "Substantivo",
                 translation: "Informação incorreta sem má intenção",
                 definition: "Compartilhamento de informações errôneas sem a intenção direta de prejudicar (ex: engano ou mal-entendido)."
             },
             {
                 id: 29,
                 term: "Disinformation",
-                category: "Fake News",
+                partOfSpeech: "Substantivo",
                 translation: "Desinformação intencional",
                 definition: "Criação e difusão de informações falsas criadas intencionalmente para enganar, prejudicar ou desestabilizar."
             },
             {
                 id: 30,
                 term: "Deepfake",
-                category: "Fake News",
+                partOfSpeech: "Substantivo",
                 translation: "Mídia sintética hiper-realista",
                 definition: "Vídeo, áudio ou foto alterados por Inteligência Artificial de alta precisão para simular alguém dizendo ou fazendo algo irreal."
             },
             {
                 id: 31,
                 term: "Clickbait",
-                category: "Fake News",
+                partOfSpeech: "Substantivo",
                 translation: "Conteúdo caça-clique",
                 definition: "Títulos ou imagens apelativas e exageradas criadas unicamente para atiçar curiosidade e gerar acessos a sites."
             },
             {
                 id: 32,
                 term: "Bias / Unbiased",
-                category: "Fake News",
+                partOfSpeech: "Múltiplas classes",
                 aliases: ["Bias", "Unbiased"],
                 translation: "Viés / Imparcial",
                 definition: "Tendência pré-conceituosa ou parcial em relatar fatos / Atitude neutra e sem viés ideológico."
@@ -485,35 +465,35 @@
             {
                 id: 33,
                 term: "Echo Chamber",
-                category: "Fake News",
+                partOfSpeech: "Substantivo",
                 translation: "Câmara de eco",
                 definition: "Ambiente (como redes sociais) onde o usuário consome apenas opiniões que concordam com as suas próprias crenças."
             },
             {
                 id: 34,
                 term: "Out of Context",
-                category: "Fake News",
+                partOfSpeech: "Expressão",
                 translation: "Fora de contexto",
                 definition: "Citação, foto ou vídeo real removido do seu contexto original para distorcer o seu significado verdadeiro."
             },
             {
                 id: 35,
                 term: "Sensationalism",
-                category: "Fake News",
+                partOfSpeech: "Substantivo",
                 translation: "Sensacionalismo",
                 definition: "Estilo de apelo emocional exagerado focado em causar impacto, medo ou escândalo ao invés da verdade dos fatos."
             },
             {
                 id: 36,
                 term: "Fact-Checking",
-                category: "Fontes Confiáveis",
+                partOfSpeech: "Substantivo",
                 translation: "Checagem de fatos",
                 definition: "Processo metódico de investigação e verificação de alegações e dados para confirmar se são verdadeiros."
             },
             {
                 id: 37,
                 term: "Reliable / Credible Source",
-                category: "Fontes Confiáveis",
+                partOfSpeech: "Substantivo",
                 aliases: ["Reliable Source", "Credible Source"],
                 translation: "Fonte confiável / credível",
                 definition: "Origem de informação respaldada por especialistas, histórico de precisão, transparência e reputação sólida."
@@ -521,14 +501,14 @@
             {
                 id: 38,
                 term: "Unreliable Source",
-                category: "Fontes Confiáveis",
+                partOfSpeech: "Substantivo",
                 translation: "Fonte não confiável",
                 definition: "Veículo de informação sem credibilidade, com histórico de erros, anonimato suspeito ou viés extremado."
             },
             {
                 id: 39,
                 term: "Cross-reference / Cross-check",
-                category: "Fontes Confiáveis",
+                partOfSpeech: "Múltiplas classes",
                 aliases: ["Cross-reference", "Cross-check"],
                 translation: "Cruzar informações / checagem dupla",
                 definition: "Comparar a mesma notícia em múltiplos veículos confiáveis e independentes para confirmar a veracidade."
@@ -536,21 +516,21 @@
             {
                 id: 40,
                 term: "Primary Source",
-                category: "Fontes Confiáveis",
+                partOfSpeech: "Substantivo",
                 translation: "Fonte primária",
                 definition: "Documento, testemunha direta ou gravação original sem intermediários ou interpretações secundárias."
             },
             {
                 id: 41,
                 term: "Domain Name",
-                category: "Fontes Confiáveis",
+                partOfSpeech: "Substantivo",
                 translation: "Nome de domínio de site",
                 definition: "Endereço web oficial. Deve ser verificado se possui extensões confiáveis (ex: .gov, .edu) ou caracteres alterados."
             },
             {
                 id: 42,
                 term: "Byline / Author Credentials",
-                category: "Fontes Confiáveis",
+                partOfSpeech: "Substantivo",
                 aliases: ["Byline", "Author Credentials"],
                 translation: "Assinatura e credenciais do autor",
                 definition: "Identificação formal do jornalista ou especialista responsável pelo artigo e suas qualificações profissionais."
@@ -558,14 +538,14 @@
             {
                 id: 43,
                 term: "Correction Policy",
-                category: "Fontes Confiáveis",
+                partOfSpeech: "Substantivo",
                 translation: "Política de correção",
                 definition: "Diretrizes públicas do veículo que demonstram transparência na retificação clara de erros cometidos em publicações."
             },
             {
                 id: 44,
                 term: "Reverse Image Search",
-                category: "Fontes Confiáveis",
+                partOfSpeech: "Substantivo",
                 translation: "Pesquisa reversa de imagem",
                 definition: "Técnica de busca para descobrir a data original, contexto e fonte real onde uma foto foi publicada originalmente."
             }
@@ -573,749 +553,749 @@
             {
                 id: 45,
                 term: "Bridging",
-                category: "English Vocabulary",
+                partOfSpeech: "Verbo",
                 translation: "Conectando / Reduzindo (uma distância ou lacuna)",
                 definition: "Ato de unir duas coisas separadas ou diminuir uma diferença."
             },
             {
                 id: 46,
                 term: "the",
-                category: "English Vocabulary",
+                partOfSpeech: "Artigo",
                 translation: "O / A / Os / As",
                 definition: "Artigo definido usado antes de um substantivo específico."
             },
             {
                 id: 47,
                 term: "Divide",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Divisão / A divisão / A lacuna",
                 definition: "Separação entre dois grupos ou realidades."
             },
             {
                 id: 48,
                 term: "Challenge",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Desafio",
                 definition: "Tarefa ou situação difícil que exige esforço para ser superada."
             },
             {
                 id: 49,
                 term: "of",
-                category: "English Vocabulary",
+                partOfSpeech: "Preposição",
                 translation: "De",
                 definition: "Preposição que indica posse, origem ou relação entre elementos."
             },
             {
                 id: 50,
                 term: "Social",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Social",
                 definition: "Relacionado à sociedade e às relações entre as pessoas."
             },
             {
                 id: 51,
                 term: "Inequality",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Desigualdade",
                 definition: "Falta de igualdade, especialmente em direitos, oportunidades e riqueza."
             },
             {
                 id: 52,
                 term: "remains",
-                category: "English Vocabulary",
+                partOfSpeech: "Verbo",
                 translation: "Permanece",
                 definition: "Continua a existir em determinado estado ou situação."
             },
             {
                 id: 53,
                 term: "one",
-                category: "English Vocabulary",
+                partOfSpeech: "Determinante numeral",
                 translation: "Um / Uma",
                 definition: "Número ou pronome indefinido, dependendo do contexto."
             },
             {
                 id: 54,
                 term: "most",
-                category: "English Vocabulary",
+                partOfSpeech: "Advérbio",
                 translation: "Mais / O mais",
                 definition: "Usado para formar o superlativo; indica o grau mais elevado."
             },
             {
                 id: 55,
                 term: "pressing",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Urgente / Premente",
                 definition: "Que exige atenção ou solução imediata."
             },
             {
                 id: 56,
                 term: "challenges",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Desafios",
                 definition: "Plural de challenge; situações difíceis que exigem esforço."
             },
             {
                 id: 57,
                 term: "our",
-                category: "English Vocabulary",
+                partOfSpeech: "Determinante possessivo",
                 translation: "Nosso / Nossa",
                 definition: "Pronome possessivo que indica algo pertencente a nós."
             },
             {
                 id: 58,
                 term: "time",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Tempo / Época",
                 definition: "Período ou momento em que vivemos."
             },
             {
                 id: 59,
                 term: "Despite",
-                category: "English Vocabulary",
+                partOfSpeech: "Preposição",
                 translation: "Apesar de",
                 definition: "Expressa contraste ou concessão."
             },
             {
                 id: 60,
                 term: "global",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Global / Mundial",
                 definition: "Que abrange o mundo todo."
             },
             {
                 id: 61,
                 term: "economic",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Econômico",
                 definition: "Relacionado à economia, produção, dinheiro e finanças."
             },
             {
                 id: 62,
                 term: "growth",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Crescimento",
                 definition: "Aumento de tamanho, valor ou quantidade."
             },
             {
                 id: 63,
                 term: "profound",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Profundo / Intenso",
                 definition: "Que é muito grande, intenso ou significativo."
             },
             {
                 id: 64,
                 term: "gap",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Lacuna / Distância / Brecha",
                 definition: "Espaço vazio ou diferença entre duas coisas ou grupos."
             },
             {
                 id: 65,
                 term: "continues",
-                category: "English Vocabulary",
+                partOfSpeech: "Verbo",
                 translation: "Continua",
                 definition: "Mantém uma ação ou estado ao longo do tempo."
             },
             {
                 id: 66,
                 term: "to",
-                category: "English Vocabulary",
+                partOfSpeech: "Partícula do infinitivo",
                 translation: "A / Para",
                 definition: "Preposição que pode indicar direção, finalidade ou acompanhar verbos no infinitivo."
             },
             {
                 id: 67,
                 term: "separate",
-                category: "English Vocabulary",
+                partOfSpeech: "Verbo",
                 translation: "Separar / Separado",
                 definition: "Dividir ou manter duas ou mais partes distintas."
             },
             {
                 id: 68,
                 term: "privileged",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Privilegiados",
                 definition: "Pessoas ou grupos que possuem vantagens ou oportunidades especiais."
             },
             {
                 id: 69,
                 term: "from",
-                category: "English Vocabulary",
+                partOfSpeech: "Preposição",
                 translation: "De / A partir de",
                 definition: "Preposição que indica origem, procedência ou separação."
             },
             {
                 id: 70,
                 term: "marginalized",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Marginalizados",
                 definition: "Pessoas ou grupos colocados à margem ou excluídos da sociedade."
             },
             {
                 id: 71,
                 term: "affecting",
-                category: "English Vocabulary",
+                partOfSpeech: "Verbo",
                 translation: "Afetando",
                 definition: "Causando impacto, influência ou mudança em algo ou alguém."
             },
             {
                 id: 72,
                 term: "human",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Humano",
                 definition: "Relacionado às pessoas ou à humanidade."
             },
             {
                 id: 73,
                 term: "dignity",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Dignidade",
                 definition: "Valor próprio de cada pessoa, que merece respeito."
             },
             {
                 id: 74,
                 term: "and",
-                category: "English Vocabulary",
+                partOfSpeech: "Conjunção",
                 translation: "E",
                 definition: "Conectivo aditivo que une palavras, frases ou ideias."
             },
             {
                 id: 75,
                 term: "daily",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Diário / Diariamente",
                 definition: "Que acontece todos os dias ou se relaciona à rotina."
             },
             {
                 id: 76,
                 term: "opportunities",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Oportunidades",
                 definition: "Chances ou condições favoráveis para realizar algo."
             },
             {
                 id: 77,
                 term: "This",
-                category: "English Vocabulary",
+                partOfSpeech: "Determinante demonstrativo",
                 translation: "Este / Esta / Isso",
                 definition: "Pronome demonstrativo usado para indicar algo próximo ou já mencionado."
             },
             {
                 id: 78,
                 term: "imbalance",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Desequilíbrio",
                 definition: "Falta de equilíbrio, proporção ou igualdade."
             },
             {
                 id: 79,
                 term: "goes",
-                category: "English Vocabulary",
+                partOfSpeech: "Verbo",
                 translation: "Vai / Segue",
                 definition: "Forma do verbo to go; em goes beyond, significa vai além."
             },
             {
                 id: 80,
                 term: "far",
-                category: "English Vocabulary",
+                partOfSpeech: "Advérbio",
                 translation: "Muito / Longe",
                 definition: "Pode indicar distância ou intensificar uma expressão, como far beyond."
             },
             {
                 id: 81,
                 term: "beyond",
-                category: "English Vocabulary",
+                partOfSpeech: "Preposição",
                 translation: "Além de",
                 definition: "Indica algo que ultrapassa um limite."
             },
             {
                 id: 82,
                 term: "income",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Renda / Rendimento",
                 definition: "Dinheiro recebido por trabalho, serviços ou investimentos."
             },
             {
                 id: 83,
                 term: "Access",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Acesso",
                 definition: "Possibilidade, direito ou facilidade de entrar, alcançar ou utilizar algo."
             },
             {
                 id: 84,
                 term: "quality",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Qualidade",
                 definition: "Característica ou padrão que indica o nível de algo."
             },
             {
                 id: 85,
                 term: "education",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Educação",
                 definition: "Processo de ensino, aprendizagem e desenvolvimento."
             },
             {
                 id: 86,
                 term: "healthcare",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Assistência médica / Cuidados de saúde",
                 definition: "Conjunto de serviços e cuidados relacionados à saúde."
             },
             {
                 id: 87,
                 term: "stable",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Estável / Seguro",
                 definition: "Firme, constante ou que oferece segurança."
             },
             {
                 id: 88,
                 term: "employment",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Emprego / Trabalho",
                 definition: "Ocupação ou atividade remunerada."
             },
             {
                 id: 89,
                 term: "often",
-                category: "English Vocabulary",
+                partOfSpeech: "Advérbio",
                 translation: "Frequentemente / Muitas vezes",
                 definition: "Advérbio que indica algo que acontece com frequência."
             },
             {
                 id: 90,
                 term: "determined",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Determinado / Definido",
                 definition: "Estabelecido ou influenciado por uma condição ou fator."
             },
             {
                 id: 91,
                 term: "by",
-                category: "English Vocabulary",
+                partOfSpeech: "Preposição",
                 translation: "Por",
                 definition: "Preposição que pode indicar o agente, meio ou causa de uma ação."
             },
             {
                 id: 92,
                 term: "socioeconomic",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Socioeconômico",
                 definition: "Relacionado aos fatores sociais e econômicos."
             },
             {
                 id: 93,
                 term: "background",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Origem / Histórico / Contexto",
                 definition: "História pessoal, social, familiar ou financeira de alguém."
             },
             {
                 id: 94,
                 term: "or",
-                category: "English Vocabulary",
+                partOfSpeech: "Conjunção",
                 translation: "Ou",
                 definition: "Conectivo que apresenta uma alternativa."
             },
             {
                 id: 95,
                 term: "geographic",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Geográfico",
                 definition: "Relacionado à localização e às características de uma região."
             },
             {
                 id: 96,
                 term: "location",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Localização / Lugar",
                 definition: "Ponto ou área onde algo ou alguém está."
             },
             {
                 id: 97,
                 term: "Underfunded",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Com verba insuficiente / Subfinanciado",
                 definition: "Que recebe menos recursos financeiros do que o necessário."
             },
             {
                 id: 98,
                 term: "schools",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Escolas",
                 definition: "Instituições destinadas ao ensino e à aprendizagem."
             },
             {
                 id: 99,
                 term: "unequal",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Desigual",
                 definition: "Que não apresenta igualdade; diferente em quantidade, condição ou oportunidade."
             },
             {
                 id: 100,
                 term: "medical",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Médico",
                 definition: "Relacionado à medicina ou aos cuidados de saúde."
             },
             {
                 id: 101,
                 term: "care",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Cuidado / Atendimento",
                 definition: "Atenção, assistência ou tratamento oferecido a alguém."
             },
             {
                 id: 102,
                 term: "trap",
-                category: "English Vocabulary",
+                partOfSpeech: "Verbo",
                 translation: "Prendem / Aprisionam",
                 definition: "Verbo que indica deixar alguém preso ou sem saída."
             },
             {
                 id: 103,
                 term: "vulnerable",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Vulnerável",
                 definition: "Que está mais exposto a riscos, dificuldades ou danos."
             },
             {
                 id: 104,
                 term: "communities",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Comunidades",
                 definition: "Grupos de pessoas que vivem na mesma área ou compartilham características."
             },
             {
                 id: 105,
                 term: "in",
-                category: "English Vocabulary",
+                partOfSpeech: "Preposição",
                 translation: "Em / Dentro de",
                 definition: "Preposição que indica lugar, tempo ou condição."
             },
             {
                 id: 106,
                 term: "cycle",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Ciclo",
                 definition: "Sequência de acontecimentos que se repete."
             },
             {
                 id: 107,
                 term: "limited",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Limitado / Restrito",
                 definition: "Que possui limites ou poucas opções disponíveis."
             },
             {
                 id: 108,
                 term: "preventing",
-                category: "English Vocabulary",
+                partOfSpeech: "Verbo",
                 translation: "Impedindo / Evitando",
                 definition: "Ação de evitar que algo aconteça."
             },
             {
                 id: 109,
                 term: "upward",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Ascendente / Para cima",
                 definition: "Que segue em direção a uma posição ou nível mais alto."
             },
             {
                 id: 110,
                 term: "mobility",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Mobilidade",
                 definition: "Capacidade de se mover ou mudar de posição ou condição social."
             },
             {
                 id: 111,
                 term: "Addressing",
-                category: "English Vocabulary",
+                partOfSpeech: "Verbo",
                 translation: "Enfrentando / Tratando de / Abordando",
                 definition: "Ação de lidar diretamente com um problema ou questão."
             },
             {
                 id: 112,
                 term: "requires",
-                category: "English Vocabulary",
+                partOfSpeech: "Verbo",
                 translation: "Exige / Requer",
                 definition: "Precisa de algo como condição necessária."
             },
             {
                 id: 113,
                 term: "systemic",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Sistêmico",
                 definition: "Que afeta ou envolve o sistema como um todo."
             },
             {
                 id: 114,
                 term: "change",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Mudança / Transformação",
                 definition: "Ato ou resultado de alterar algo."
             },
             {
                 id: 115,
                 term: "rather",
-                category: "English Vocabulary",
+                partOfSpeech: "Advérbio",
                 translation: "Em vez de / Preferencialmente",
                 definition: "Usado para indicar preferência ou oposição; rather than significa em vez de."
             },
             {
                 id: 116,
                 term: "than",
-                category: "English Vocabulary",
+                partOfSpeech: "Conjunção",
                 translation: "Do que",
                 definition: "Palavra usada em comparações, como bigger than."
             },
             {
                 id: 117,
                 term: "simple",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Simples",
                 definition: "Fácil de entender ou realizar; sem complexidade."
             },
             {
                 id: 118,
                 term: "charity",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Caridade",
                 definition: "Ajuda voluntária ou doação destinada a pessoas necessitadas."
             },
             {
                 id: 119,
                 term: "Governments",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Governos",
                 definition: "Autoridades e instituições responsáveis pela administração de um país ou território."
             },
             {
                 id: 120,
                 term: "must",
-                category: "English Vocabulary",
+                partOfSpeech: "Verbo modal",
                 translation: "Deve / Devem",
                 definition: "Verbo modal que expressa obrigação ou necessidade."
             },
             {
                 id: 121,
                 term: "implement",
-                category: "English Vocabulary",
+                partOfSpeech: "Verbo",
                 translation: "Implementar / Colocar em prática",
                 definition: "Executar ou fazer um plano, ideia ou política funcionar."
             },
             {
                 id: 122,
                 term: "inclusive",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Inclusivo",
                 definition: "Que procura incluir todas as pessoas, sem discriminação."
             },
             {
                 id: 123,
                 term: "policies",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Políticas / Diretrizes",
                 definition: "Planos, regras ou linhas de ação adotadas por governos ou instituições."
             },
             {
                 id: 124,
                 term: "such",
-                category: "English Vocabulary",
+                partOfSpeech: "Determinante",
                 translation: "Tal / Tais",
                 definition: "Usado para apresentar exemplos, especialmente na expressão such as (tais como)."
             },
             {
                 id: 125,
                 term: "as",
-                category: "English Vocabulary",
+                partOfSpeech: "Preposição",
                 translation: "Como",
                 definition: "Pode indicar exemplo, função ou comparação, conforme o contexto."
             },
             {
                 id: 126,
                 term: "fair",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Justo",
                 definition: "Que respeita a igualdade, a imparcialidade e os direitos."
             },
             {
                 id: 127,
                 term: "labor",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Trabalho / Laboral",
                 definition: "Relacionado ao trabalho e às relações entre empregados e empregadores."
             },
             {
                 id: 128,
                 term: "laws",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Leis",
                 definition: "Regras obrigatórias estabelecidas por uma autoridade."
             },
             {
                 id: 129,
                 term: "equitable",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Equitativo / Justo",
                 definition: "Baseado na imparcialidade e em uma distribuição justa."
             },
             {
                 id: 130,
                 term: "funding",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Financiamento / Recursos financeiros",
                 definition: "Dinheiro ou recursos fornecidos para determinado objetivo."
             },
             {
                 id: 131,
                 term: "robust",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Robusto / Forte / Sólido",
                 definition: "Resistente, consistente ou bem estruturado."
             },
             {
                 id: 132,
                 term: "safety",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Segurança / Proteção",
                 definition: "Condição de estar protegido contra perigos ou riscos."
             },
             {
                 id: 133,
                 term: "nets",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Redes",
                 definition: "Sistemas conectados; em social safety nets, significa redes de proteção social."
             },
             {
                 id: 134,
                 term: "Ultimately",
-                category: "English Vocabulary",
+                partOfSpeech: "Advérbio",
                 translation: "Em última análise / No fim das contas",
                 definition: "Advérbio usado para apresentar uma conclusão geral."
             },
             {
                 id: 135,
                 term: "society's",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Da sociedade",
                 definition: "Forma possessiva de society; indica algo pertencente à sociedade."
             },
             {
                 id: 136,
                 term: "true",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Verdadeiro / Real",
                 definition: "Que corresponde à realidade ou é genuíno."
             },
             {
                 id: 137,
                 term: "success",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Sucesso",
                 definition: "Êxito ou resultado positivo."
             },
             {
                 id: 138,
                 term: "is",
-                category: "English Vocabulary",
+                partOfSpeech: "Verbo",
                 translation: "É / Está",
                 definition: "Forma do verbo to be no presente, usada com he, she e it."
             },
             {
                 id: 139,
                 term: "measured",
-                category: "English Vocabulary",
+                partOfSpeech: "Verbo",
                 translation: "Medido / Avaliado",
                 definition: "Calculado ou julgado com base em determinados critérios."
             },
             {
                 id: 140,
                 term: "how",
-                category: "English Vocabulary",
+                partOfSpeech: "Advérbio",
                 translation: "Como / De que maneira",
                 definition: "Palavra usada para perguntar ou explicar o modo como algo acontece."
             },
             {
                 id: 141,
                 term: "it",
-                category: "English Vocabulary",
+                partOfSpeech: "Pronome",
                 translation: "Ele / Ela / Isso",
                 definition: "Pronome usado para retomar coisas, animais ou ideias."
             },
             {
                 id: 142,
                 term: "supports",
-                category: "English Vocabulary",
+                partOfSpeech: "Verbo",
                 translation: "Apoia / Sustenta",
                 definition: "Oferece ajuda, suporte ou condições para algo continuar."
             },
             {
                 id: 143,
                 term: "members",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Membros / Integrantes",
                 definition: "Pessoas que fazem parte de um grupo."
             },
             {
                 id: 144,
                 term: "both",
-                category: "English Vocabulary",
+                partOfSpeech: "Determinante",
                 translation: "Ambos / Tanto ... quanto",
                 definition: "Usado para indicar duas pessoas ou coisas em conjunto."
             },
             {
                 id: 145,
                 term: "ethical",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Ético",
                 definition: "Relacionado aos princípios morais e ao que é considerado correto."
             },
             {
                 id: 146,
                 term: "imperative",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Imperativo / Necessidade urgente",
                 definition: "Algo indispensável ou que exige ação."
             },
             {
                 id: 147,
                 term: "foundation",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Fundação / Base",
                 definition: "Estrutura ou princípio fundamental sobre o qual algo se sustenta."
             },
             {
                 id: 148,
                 term: "for",
-                category: "English Vocabulary",
+                partOfSpeech: "Preposição",
                 translation: "Para / Por",
                 definition: "Preposição que indica finalidade, destino, benefício ou motivo."
             },
             {
                 id: 149,
                 term: "a",
-                category: "English Vocabulary",
+                partOfSpeech: "Artigo",
                 translation: "Um / Uma",
                 definition: "Artigo indefinido usado antes de substantivos no singular."
             },
             {
                 id: 150,
                 term: "just",
-                category: "English Vocabulary",
+                partOfSpeech: "Adjetivo",
                 translation: "Justo",
                 definition: "Que age com justiça e imparcialidade; como advérbio também pode significar apenas."
             },
             {
                 id: 151,
                 term: "future",
-                category: "English Vocabulary",
+                partOfSpeech: "Substantivo",
                 translation: "Futuro",
                 definition: "Tempo que ainda está por vir."
             }
@@ -1388,7 +1368,7 @@
         const resultTermTitle = document.getElementById('resultTermTitle');
         const resultTranslationText = document.getElementById('resultTranslationText');
         const resultDefinitionBox = document.getElementById('resultDefinitionBox');
-        const resultCategoryBadge = document.getElementById('resultCategoryBadge');
+        const resultPartOfSpeechBadge = document.getElementById('resultPartOfSpeechBadge');
 
         const copyInputBtn = document.getElementById('copyInputBtn');
         const copyResultBtn = document.getElementById('copyResultBtn');
@@ -1528,9 +1508,9 @@
             resultTranslationText.textContent = item.translation;
             resultDefinitionBox.textContent = item.definition;
 
-            // Category Badge Tag
-            resultCategoryBadge.classList.remove('hidden');
-            resultCategoryBadge.textContent = item.category;
+            // Grammatical class badge
+            resultPartOfSpeechBadge.classList.remove('hidden');
+            resultPartOfSpeechBadge.textContent = item.partOfSpeech;
 
             // Enable action buttons
             speakEnglishBtn.disabled = false;
@@ -1540,7 +1520,7 @@
         function showEmptyState(msg) {
             activeSelectedTerm = null;
             activeResultState.classList.add('hidden');
-            resultCategoryBadge.classList.add('hidden');
+            resultPartOfSpeechBadge.classList.add('hidden');
             emptyResultState.classList.remove('hidden');
             
             if (msg) {
@@ -1571,12 +1551,52 @@
         // ----------------------------------------------------
         // 7. DICTIONARY GRID EXPLORER & CATEGORIES
         // ----------------------------------------------------
+        function renderPartOfSpeechFilters() {
+            const container = document.getElementById('categoryChips');
+            const classOrder = [
+                'Substantivo',
+                'Verbo',
+                'Adjetivo',
+                'Advérbio',
+                'Pronome',
+                'Artigo',
+                'Determinante',
+                'Determinante demonstrativo',
+                'Determinante possessivo',
+                'Determinante numeral',
+                'Preposição',
+                'Conjunção',
+                'Verbo modal',
+                'Partícula do infinitivo',
+                'Expressão',
+                'Múltiplas classes'
+            ];
+            const availableClasses = classOrder.filter(label =>
+                dictionary.some(item => item.partOfSpeech === label)
+            );
+            const buttons = [
+                { value: 'all', label: 'Todas as palavras', icon: 'fa-layer-group' },
+                ...availableClasses.map(label => ({ value: label, label, icon: 'fa-tag' }))
+            ];
+
+            container.innerHTML = buttons.map((item, index) => `
+                <button
+                    type="button"
+                    data-pos="${item.value}"
+                    class="pos-chip px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${index === 0
+                        ? 'bg-google-blue text-white shadow-sm'
+                        : 'bg-white dark:bg-google-darkCard border border-google-lightBorder dark:border-google-darkBorder hover:bg-gray-50 dark:hover:bg-google-darkBorder text-gray-700 dark:text-gray-300'}">
+                    <i class="fa-solid ${item.icon} mr-1.5 text-xs"></i>${item.label}
+                </button>
+            `).join('');
+        }
+
         function renderDictionaryGrid() {
             dictionaryGrid.innerHTML = '';
             
             const filteredItems = currentFilter === 'all' 
                 ? dictionary 
-                : dictionary.filter(item => item.category === currentFilter);
+                : dictionary.filter(item => item.partOfSpeech === currentFilter);
 
             termCountDisplay.textContent = filteredItems.length;
 
@@ -1588,7 +1608,7 @@
                     <div>
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-google-blue dark:text-blue-300">
-                                ${item.category}
+                                ${item.partOfSpeech}
                             </span>
                             <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-300 dark:text-gray-600 group-hover:text-google-blue transition-colors"></i>
                         </div>
@@ -1686,20 +1706,21 @@
                 }
             });
 
-            // Category Chips
-            document.querySelectorAll('.cat-chip').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.cat-chip').forEach(c => {
-                        c.classList.remove('bg-google-blue', 'text-white', 'shadow-sm');
-                        c.classList.add('bg-white', 'dark:bg-google-darkCard', 'text-gray-700', 'dark:text-gray-300');
-                    });
+            // Grammatical class filters
+            document.getElementById('categoryChips').addEventListener('click', (e) => {
+                const btn = e.target.closest('.pos-chip');
+                if (!btn) return;
 
-                    btn.classList.remove('bg-white', 'dark:bg-google-darkCard', 'text-gray-700', 'dark:text-gray-300');
-                    btn.classList.add('bg-google-blue', 'text-white', 'shadow-sm');
-
-                    currentFilter = btn.getAttribute('data-cat');
-                    renderDictionaryGrid();
+                document.querySelectorAll('.pos-chip').forEach(chip => {
+                    chip.classList.remove('bg-google-blue', 'text-white', 'shadow-sm');
+                    chip.classList.add('bg-white', 'dark:bg-google-darkCard', 'text-gray-700', 'dark:text-gray-300');
                 });
+
+                btn.classList.remove('bg-white', 'dark:bg-google-darkCard', 'text-gray-700', 'dark:text-gray-300');
+                btn.classList.add('bg-google-blue', 'text-white', 'shadow-sm');
+
+                currentFilter = btn.dataset.pos;
+                renderDictionaryGrid();
             });
 
             // Theme Toggle
@@ -1715,6 +1736,7 @@
             });
 
             // Initial Render
+            renderPartOfSpeechFilters();
             renderDictionaryGrid();
         });
     </script>
