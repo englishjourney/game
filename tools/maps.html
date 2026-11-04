@@ -287,15 +287,15 @@
   <div id="modal-backdrop" class="modal-backdrop hidden" role="presentation">
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-country-name">
       <header class="modal-head">
-        <img id="modal-flag" class="modal-flag" src="" alt="Country flag">
+        <img id="modal-flag" class="modal-flag" src="" alt="Bandeira do país">
         <div class="modal-title">
           <h2 id="modal-country-name"></h2>
           <p id="modal-country-subtitle"></p>
         </div>
-        <button id="close-modal" class="close-modal" type="button" aria-label="Close">×</button>
+        <button id="close-modal" class="close-modal" type="button" aria-label="Fechar">×</button>
       </header>
       <div class="modal-body">
-        <div class="modal-map"><img id="modal-map-img" src="" alt="Map outline of the selected country"></div>
+        <div class="modal-map"><img id="modal-map-img" src="" alt="Mapa do país selecionado"></div>
         <div class="detail-grid">
           <article class="detail-card">
             <div class="detail-label">🏛️ Official language(s)</div>
@@ -315,7 +315,7 @@
             <div class="phrases" id="modal-phrases"></div>
           </article>
         </div>
-        <p class="modal-note">Note: the languages listed as mother tongues are examples of languages learned at home in childhood. They are not necessarily official languages, and one country may have many more.</p>
+        <p class="modal-note">Observação: as línguas apresentadas como línguas maternas são exemplos de idiomas aprendidos em casa durante a infância. Elas não são necessariamente línguas oficiais, e cada país pode ter muitas outras.</p>
       </div>
     </section>
   </div>
@@ -328,156 +328,156 @@
     const countries = [
       {
         id:'us', iso:'us', name:'Estados Unidos', english:'United States', group:'native', groupLabel:'English as a main native language',
-        official:'English is the official language at the federal level, designated by Executive Order 14224 in 2025. Some states and territories also have their own language rules.',
-        mother:'English is the most common first language and the language most often spoken at home. Spanish and many other languages are also first languages for millions of people.',
-        role:'English is the main language used in everyday communication, government, education and most public life.',
-        fact:'The United States is multilingual: many communities use Spanish, Chinese languages, Tagalog, Vietnamese and Indigenous languages.',
+        official:"O inglês é a língua oficial no âmbito federal, designado pelo Decreto Executivo 14224, de 2025. Alguns estados e territórios também têm regras próprias sobre idiomas.",
+        mother:"O inglês é a língua materna mais comum e a língua mais falada em casa. O espanhol e muitas outras línguas também são primeiras línguas de milhões de pessoas.",
+        role:"O inglês é o principal idioma usado na comunicação cotidiana, no governo, na educação e na maior parte da vida pública.",
+        fact:"Os Estados Unidos são um país multilíngue: muitas comunidades também usam espanhol, línguas chinesas, tagalo, vietnamita e línguas indígenas.",
         phrases:[['The United States is in North America.','Os Estados Unidos ficam na América do Norte.'],['Many languages are spoken across the country.','Muitas línguas são faladas por todo o país.']]
       },
       {
         id:'gb', iso:'gb', name:'Reino Unido', english:'United Kingdom', group:'native', groupLabel:'English as a main native language',
-        official:'English is the dominant language across the UK. Welsh has official status in Wales. Scottish Gaelic, Irish and other regional languages also have recognition and protection in parts of the UK.',
-        mother:'English is the first language for most people. Welsh, Scottish Gaelic, Irish and many community languages are mother tongues for people and families in different regions.',
-        role:'English is used throughout the United Kingdom in daily life, education, media and government.',
-        fact:'The UK is made up of four countries: England, Scotland, Wales and Northern Ireland.',
+        official:"O inglês é a língua predominante em todo o Reino Unido. O galês tem status oficial no País de Gales. O gaélico escocês, o irlandês e outras línguas regionais também recebem reconhecimento e proteção em algumas partes do país.",
+        mother:"O inglês é a primeira língua da maioria da população. O galês, o gaélico escocês, o irlandês e diversas línguas de comunidades migrantes são línguas maternas de famílias em diferentes regiões.",
+        role:"O inglês é usado em todo o Reino Unido no cotidiano, na educação, na mídia e no governo.",
+        fact:"O Reino Unido é formado por quatro países: Inglaterra, Escócia, País de Gales e Irlanda do Norte.",
         phrases:[['The United Kingdom has four countries.','O Reino Unido tem quatro países constituintes.'],['English is spoken across the UK.','O inglês é falado em todo o Reino Unido.']]
       },
       {
         id:'ca', iso:'ca', name:'Canadá', english:'Canada', group:'native', groupLabel:'English as a main native language',
-        official:'English and French are the two official languages of the federal government. Provinces and territories also have their own language arrangements.',
-        mother:'English is the most common mother tongue nationally. French is the first language for many people, especially in Quebec. Indigenous and immigrant languages are also mother tongues.',
-        role:'English is widely used in most provinces. French is especially important in Quebec and is also used across the country.',
-        fact:'Canada is officially bilingual at the federal level, so English is not its only official language.',
+        official:"O inglês e o francês são as duas línguas oficiais do governo federal. As províncias e os territórios também podem ter suas próprias regras linguísticas.",
+        mother:"O inglês é a língua materna mais comum no país. O francês é a primeira língua de muitas pessoas, especialmente em Quebec. Línguas indígenas e de comunidades imigrantes também são línguas maternas de muitos canadenses.",
+        role:"O inglês é amplamente usado na maioria das províncias. O francês tem grande importância em Quebec e também é utilizado em outras partes do país.",
+        fact:"O Canadá é oficialmente bilíngue no âmbito federal; portanto, o inglês não é sua única língua oficial.",
         phrases:[['Canada has two federal official languages.','O Canadá tem duas línguas oficiais no âmbito federal.'],['French is widely spoken in Quebec.','O francês é amplamente falado em Quebec.']]
       },
       {
         id:'au', iso:'au', name:'Austrália', english:'Australia', group:'native', groupLabel:'English as a main native language',
-        official:'English is the de facto main language of public life. Australia does not have a single language declared as official in a federal language law.',
-        mother:'English is the most common language learned at home. Aboriginal and Torres Strait Islander languages, as well as languages brought by migrants, are also mother tongues.',
-        role:'English is the main language used in daily communication, schools, public services and national media.',
-        fact:'The 2021 Australian Census recorded English as the only language used at home by 72% of people.',
+        official:"O inglês é, na prática, a principal língua da vida pública. A Austrália não possui uma lei federal que declare uma única língua como oficial.",
+        mother:"O inglês é a língua mais falada em casa. Línguas dos povos aborígenes e dos habitantes das Ilhas do Estreito de Torres, além de idiomas trazidos por migrantes, também são línguas maternas de diferentes comunidades.",
+        role:"O inglês é a principal língua usada na comunicação cotidiana, nas escolas, nos serviços públicos e na mídia nacional.",
+        fact:"No Censo australiano de 2021, 72% das pessoas declararam usar somente o inglês em casa.",
         phrases:[['Australia is famous for its unique animals.','A Austrália é famosa por seus animais únicos.'],['English is the main language used in public life.','O inglês é a principal língua usada na vida pública.']]
       },
       {
         id:'nz', iso:'nz', name:'Nova Zelândia', english:'New Zealand', group:'native', groupLabel:'English as a main native language',
-        official:'English, te reo Māori and New Zealand Sign Language are official languages. English received explicit statutory recognition on 7 August 2026.',
-        mother:'English is the first language for many people. Māori is the first language for some Māori families and communities; other languages are spoken in immigrant communities.',
-        role:'English is the most widely used language in everyday life, government, education and communication.',
-        fact:'The Māori language and New Zealand Sign Language have official status too.',
+        official:"O inglês, o te reo Māori e a Língua de Sinais da Nova Zelândia são línguas oficiais. O inglês recebeu reconhecimento legal explícito em 7 de agosto de 2026.",
+        mother:"O inglês é a primeira língua de muitas pessoas. O Māori é a primeira língua de algumas famílias e comunidades Māori. Outras línguas também são faladas em comunidades de imigrantes.",
+        role:"O inglês é a língua mais utilizada no cotidiano, no governo, na educação e na comunicação.",
+        fact:"A língua Māori e a Língua de Sinais da Nova Zelândia também possuem status oficial.",
         phrases:[['New Zealand has two main islands.','A Nova Zelândia tem duas ilhas principais.'],['Māori is an official language of New Zealand.','O maori é uma língua oficial da Nova Zelândia.']]
       },
       {
         id:'ie', iso:'ie', name:'Irlanda', english:'Ireland', group:'native', groupLabel:'English as a main native language',
-        official:'Irish (Gaeilge) is the first official language. English is recognised as the second official language by the Irish Constitution.',
-        mother:'English is the first language for most people in everyday life. Irish is a mother tongue for people in Irish-speaking areas (the Gaeltacht) and in Irish-speaking families.',
-        role:'English is widely spoken throughout the country, while Irish is an important national language and is used in education, public services and cultural life.',
-        fact:'Official-language order and everyday language use are different: Irish is first in the Constitution, but English is more widely spoken.',
+        official:"O irlandês (Gaeilge) é a primeira língua oficial. O inglês é reconhecido pela Constituição da Irlanda como a segunda língua oficial.",
+        mother:"O inglês é a primeira língua da maioria das pessoas no cotidiano. O irlandês é língua materna de pessoas que vivem em regiões de língua irlandesa (Gaeltacht) e de famílias que mantêm o idioma em casa.",
+        role:"O inglês é amplamente falado em todo o país. O irlandês também tem importância nacional e é utilizado na educação, em serviços públicos e na cultura.",
+        fact:"A ordem das línguas oficiais é diferente de seu uso cotidiano: o irlandês aparece primeiro na Constituição, mas o inglês é muito mais falado.",
         phrases:[['Ireland has two official languages.','A Irlanda tem duas línguas oficiais.'],['Irish is the first official language.','O irlandês é a primeira língua oficial.']]
       },
 
       {
         id:'bs', iso:'bs', name:'Bahamas', english:'The Bahamas', group:'islands', groupLabel:'Islands and Caribbean countries',
-        official:'English is the official language and is used in government, schools and formal communication.',
-        mother:'Bahamian English and Bahamian Creole varieties are part of everyday speech. Haitian Creole and other languages are also mother tongues in some communities.',
-        role:'English is used in official settings, while local Bahamian speech has distinctive expressions, pronunciation and vocabulary.',
-        fact:'The Bahamas is an archipelago in the Atlantic Ocean, southeast of Florida.',
+        official:"O inglês é a língua oficial e é utilizado no governo, nas escolas e na comunicação formal.",
+        mother:"O inglês bahamense e as variedades de crioulo bahamense fazem parte da fala cotidiana. O crioulo haitiano e outras línguas também são línguas maternas em algumas comunidades.",
+        role:"O inglês é usado em situações oficiais, enquanto a fala local das Bahamas possui expressões, pronúncia e vocabulário próprios.",
+        fact:"As Bahamas formam um arquipélago no Oceano Atlântico, a sudeste da Flórida.",
         phrases:[['The Bahamas is a country of many islands.','As Bahamas são um país formado por muitas ilhas.'],['English is the official language.','O inglês é a língua oficial.']]
       },
       {
         id:'jm', iso:'jm', name:'Jamaica', english:'Jamaica', group:'islands', groupLabel:'Islands and Caribbean countries',
-        official:'English is the official language and is used in law, government, education and formal writing.',
-        mother:'Jamaican Patois (Patwa), an English-based Creole language, is a first or home language for many Jamaicans. Many people also use Standard Jamaican English.',
-        role:'English is important in formal situations; Jamaican Patois is widely used in daily conversation, music and popular culture.',
-        fact:'Jamaican Patois has its own grammar and vocabulary; it is not simply incorrect English.',
+        official:"O inglês é a língua oficial e é usado nas leis, no governo, na educação e na escrita formal.",
+        mother:"O Patois jamaicano (Patwa), uma língua crioula de base inglesa, é a primeira língua ou língua falada em casa por muitos jamaicanos. Muitas pessoas também usam o inglês padrão jamaicano.",
+        role:"O inglês é importante em situações formais; o Patois jamaicano é muito utilizado nas conversas cotidianas, na música e na cultura popular.",
+        fact:"O Patois jamaicano possui gramática e vocabulário próprios; não é simplesmente uma forma incorreta de falar inglês.",
         phrases:[['Jamaica is famous for reggae music.','A Jamaica é famosa pela música reggae.'],['Many people speak Jamaican Patois at home.','Muitas pessoas falam o patois jamaicano em casa.']]
       },
       {
         id:'bb', iso:'bb', name:'Barbados', english:'Barbados', group:'islands', groupLabel:'Islands and Caribbean countries',
-        official:'English is the official language of Barbados and is used in government, education and formal contexts.',
-        mother:'Bajan, an English-based Creole variety, is widely used in everyday conversation and is a home language for many people.',
-        role:'Standard English is common in formal settings, while Bajan is part of daily communication and local identity.',
-        fact:'Barbados is an island country in the eastern Caribbean region.',
+        official:"O inglês é a língua oficial de Barbados e é utilizado no governo, na educação e em situações formais.",
+        mother:"O Bajan, uma variedade crioula de base inglesa, é muito usado nas conversas cotidianas e é a língua falada em casa por muitas pessoas.",
+        role:"O inglês padrão é comum em situações formais, enquanto o Bajan faz parte da comunicação diária e da identidade local.",
+        fact:"Barbados é um país insular localizado na região oriental do Caribe.",
         phrases:[['Barbados is an island in the Caribbean.','Barbados é uma ilha no Caribe.'],['People use English and Bajan in daily life.','As pessoas usam inglês e bajan no dia a dia.']]
       },
       {
         id:'tt', iso:'tt', name:'Trinidad e Tobago', english:'Trinidad and Tobago', group:'islands', groupLabel:'Islands and Caribbean countries',
-        official:'English is the official language and is used in government and education.',
-        mother:'Trinidadian Creole and Tobagonian Creole are widely used in everyday life. Families may also speak languages connected with Indian, African, European and other heritage.',
-        role:'English is used in formal communication, while local Creole varieties are important in informal conversation and culture.',
-        fact:'Trinidad and Tobago is a twin-island country near the northeastern coast of Venezuela.',
+        official:"O inglês é a língua oficial e é utilizado no governo e na educação.",
+        mother:"O crioulo de Trinidad e o crioulo de Tobago são muito usados no cotidiano. Algumas famílias também falam línguas ligadas às suas heranças indianas, africanas, europeias e de outras origens.",
+        role:"O inglês é usado na comunicação formal, enquanto as variedades crioulas locais são importantes nas conversas informais e na cultura.",
+        fact:"Trinidad e Tobago é um país formado por duas ilhas principais, próximo à costa nordeste da Venezuela.",
         phrases:[['Trinidad and Tobago has two main islands.','Trinidad e Tobago tem duas ilhas principais.'],['English is used in schools and government.','O inglês é usado nas escolas e no governo.']]
       },
       {
         id:'bz', iso:'bz', name:'Belize', english:'Belize', group:'islands', groupLabel:'Islands and Caribbean countries',
-        official:'English is the official language of Belize.',
-        mother:'Belize Kriol, Spanish, Garifuna and Maya languages (among others) are home or first languages for different communities. There is no single mother tongue for the whole country.',
-        role:'English is used in government and formal education. Belize is highly multilingual, and Kriol and Spanish are also widely heard.',
-        fact:'Belize is in Central America and is the only country in the region where English is the official language.',
+        official:"O inglês é a língua oficial de Belize.",
+        mother:"O Kriol belizenho, o espanhol, o garífuna e as línguas maias, entre outras, são primeiras línguas ou línguas faladas em casa por diferentes comunidades. Não existe uma única língua materna para todo o país.",
+        role:"O inglês é usado no governo e na educação formal. Belize é bastante multilíngue, e o Kriol e o espanhol também são muito ouvidos.",
+        fact:"Belize fica na América Central e é o único país da região que tem o inglês como língua oficial.",
         phrases:[['Belize is in Central America.','Belize fica na América Central.'],['People in Belize speak different languages.','As pessoas em Belize falam diferentes línguas.']]
       },
       {
         id:'mt', iso:'mt', name:'Malta', english:'Malta', group:'islands', groupLabel:'Islands and Caribbean countries',
-        official:'Maltese and English are the two official languages. Maltese is the national language.',
-        mother:'Maltese is the most common first language for many Maltese people. English is widely learned and used as a second language.',
-        role:'Both Maltese and English are used in public life, education and services. The amount of English used can vary by context.',
-        fact:'Malta is a small island country in the Mediterranean Sea, south of Sicily.',
+        official:"O maltês e o inglês são as duas línguas oficiais. O maltês é a língua nacional.",
+        mother:"O maltês é a primeira língua mais comum entre a população de Malta. O inglês é amplamente aprendido e usado como segunda língua.",
+        role:"O maltês e o inglês são utilizados na vida pública, na educação e nos serviços. A presença do inglês pode variar de acordo com a situação.",
+        fact:"Malta é um pequeno país insular no Mar Mediterrâneo, ao sul da Sicília.",
         phrases:[['Malta is an island country in Europe.','Malta é um país insular da Europa.'],['Maltese and English are official languages.','Maltês e inglês são línguas oficiais.']]
       },
 
       {
         id:'za', iso:'za', name:'África do Sul', english:'South Africa', group:'multilingual', groupLabel:'Countries with English in official or public use',
-        official:'South Africa has 12 official languages: Sepedi, Sesotho, Setswana, siSwati, Tshivenda, Xitsonga, Afrikaans, South African Sign Language, English, isiNdebele, isiXhosa and isiZulu.',
-        mother:'There are many mother tongues. isiZulu is the largest home language, followed by isiXhosa, Afrikaans, Sepedi and others. English is a first language for a smaller share of the population.',
-        role:'English is widely used in business, higher education, national communication and parts of government, alongside the country’s other official languages.',
-        fact:'South African Sign Language became the country’s 12th official language in 2023; the constitutional change took effect in June 2026.',
+        official:"A África do Sul tem 12 línguas oficiais: Sepedi, Sesotho, Setswana, siSwati, Tshivenda, Xitsonga, africâner, Língua de Sinais Sul-Africana, inglês, isiNdebele, isiXhosa e isiZulu.",
+        mother:"O país possui muitas línguas maternas. O isiZulu é a língua mais falada em casa, seguido pelo isiXhosa, africâner, Sepedi e outras. O inglês é a primeira língua de uma parcela menor da população.",
+        role:"O inglês é muito utilizado nos negócios, no ensino superior, na comunicação nacional e em partes do governo, junto com as demais línguas oficiais do país.",
+        fact:"A Língua de Sinais Sul-Africana tornou-se a 12ª língua oficial do país em 2023; a alteração constitucional entrou em vigor em junho de 2026.",
         phrases:[['South Africa has twelve official languages.','A África do Sul tem doze línguas oficiais.'],['Many languages are spoken in South Africa.','Muitas línguas são faladas na África do Sul.']]
       },
       {
         id:'in', iso:'in', name:'Índia', english:'India', group:'multilingual', groupLabel:'Countries with English in official or public use',
-        official:'Hindi is the official language of the Union. English may also continue to be used for official purposes under the Official Languages Act. States have their own language arrangements.',
-        mother:'India has many mother tongues, including Hindi, Bengali, Marathi, Telugu, Tamil, Gujarati, Urdu, Kannada and Malayalam. The first language varies greatly by region and family.',
-        role:'English is widely used in central administration, courts, higher education, business and communication between people from different language regions.',
-        fact:'The Constitution lists 22 Scheduled Languages, but this does not mean that all 22 have the same official status across the whole country.',
+        official:"O hindi é a língua oficial da União. O inglês também pode continuar sendo usado para fins oficiais, conforme a Lei das Línguas Oficiais. Os estados possuem suas próprias regras linguísticas.",
+        mother:"A Índia tem muitas línguas maternas, incluindo hindi, bengali, marata, telugu, tâmil, gujarati, urdu, canarês e malaiala. A primeira língua varia bastante conforme a região e a família.",
+        role:"O inglês é amplamente utilizado na administração central, nos tribunais, no ensino superior, nos negócios e na comunicação entre pessoas de diferentes regiões linguísticas.",
+        fact:"A Constituição lista 22 línguas reconhecidas no Oitavo Anexo, mas isso não significa que todas tenham o mesmo status oficial em todo o país.",
         phrases:[['India has many languages.','A Índia tem muitas línguas.'],['English is used in education and business.','O inglês é usado na educação e nos negócios.']]
       },
       {
         id:'sg', iso:'sg', name:'Singapura', english:'Singapore', group:'multilingual', groupLabel:'Countries with English in official or public use',
-        official:'Singapore has four official languages: English, Malay, Mandarin Chinese and Tamil. Malay is the national language.',
-        mother:'First languages vary across families and communities. English is the language most commonly spoken at home overall; Mandarin, other Chinese varieties, Malay and Tamil are also important.',
-        role:'English is the main working language and a common language for communication among people from different language communities.',
-        fact:'Singapore’s school system also uses the expression “mother tongue” for a subject linked to a student’s ethnic background; this can differ from the language first learned at home.',
+        official:"Singapura tem quatro línguas oficiais: inglês, malaio, chinês mandarim e tâmil. O malaio é a língua nacional.",
+        mother:"As primeiras línguas variam entre famílias e comunidades. No conjunto da população, o inglês é a língua mais falada em casa; o mandarim, outras variedades chinesas, o malaio e o tâmil também são importantes.",
+        role:"O inglês é a principal língua de trabalho e funciona como idioma comum de comunicação entre pessoas de diferentes comunidades linguísticas.",
+        fact:"O sistema escolar de Singapura também usa a expressão “mother tongue” para uma disciplina ligada à origem étnica do estudante. Essa disciplina pode não corresponder à língua que ele aprendeu primeiro em casa.",
         phrases:[['Singapore is a multilingual country.','Singapura é um país multilíngue.'],['English is a common language at school and work.','O inglês é uma língua comum na escola e no trabalho.']]
       },
       {
         id:'ph', iso:'ph', name:'Filipinas', english:'Philippines', group:'multilingual', groupLabel:'Countries with English in official or public use',
-        official:'Filipino and English are the official languages. Filipino is the national language.',
-        mother:'The Philippines has many regional mother tongues, including Cebuano, Tagalog, Ilocano, Hiligaynon, Waray and others.',
-        role:'English is widely used in education, government, law, media and communication, alongside Filipino and regional languages.',
-        fact:'The Philippines is an archipelago with thousands of islands and a large number of living languages.',
+        official:"O filipino e o inglês são as línguas oficiais. O filipino é a língua nacional.",
+        mother:"As Filipinas têm muitas línguas maternas regionais, incluindo cebuano, tagalo, ilocano, hiligaynon, waray e outras.",
+        role:"O inglês é amplamente utilizado na educação, no governo, no direito, na mídia e na comunicação, junto com o filipino e as línguas regionais.",
+        fact:"As Filipinas formam um arquipélago com milhares de ilhas e uma grande diversidade de línguas.",
         phrases:[['The Philippines is an archipelago.','As Filipinas são um arquipélago.'],['Filipino and English are official languages.','Filipino e inglês são línguas oficiais.']]
       },
       {
         id:'ng', iso:'ng', name:'Nigéria', english:'Nigeria', group:'multilingual', groupLabel:'Countries with English in official or public use',
-        official:'English is the official language and is used in federal government, education and formal communication.',
-        mother:'Hausa, Yoruba and Igbo are major indigenous languages. Hundreds of other languages are also mother tongues for communities across the country.',
-        role:'English is a shared language in a country with many linguistic communities. It is especially important in national government and education.',
-        fact:'Nigeria is one of the most linguistically diverse countries in Africa.',
+        official:"O inglês é a língua oficial e é utilizado no governo federal, na educação e na comunicação formal.",
+        mother:"Hauçá, iorubá e igbo são algumas das principais línguas indígenas. Centenas de outras línguas também são línguas maternas de comunidades espalhadas pelo país.",
+        role:"O inglês funciona como uma língua comum em um país com muitas comunidades linguísticas. Ele é especialmente importante no governo nacional e na educação.",
+        fact:"A Nigéria é um dos países linguisticamente mais diversos da África.",
         phrases:[['Nigeria is in West Africa.','A Nigéria fica na África Ocidental.'],['People speak English and many local languages.','As pessoas falam inglês e muitas línguas locais.']]
       },
       {
         id:'gh', iso:'gh', name:'Gana', english:'Ghana', group:'multilingual', groupLabel:'Countries with English in official or public use',
-        official:'English is the official language and the language used in government and formal education.',
-        mother:'Akan varieties such as Twi and Fante, Ewe, Ga and Dagbani are among the many languages learned at home. The mother tongue depends on the family and region.',
-        role:'English connects people from different language communities and is used in schools, government and national communication.',
-        fact:'Akan is the most frequently spoken indigenous language and is also used as a second language by many people.',
+        official:"O inglês é a língua oficial e é utilizado no governo e na educação formal.",
+        mother:"Variedades do akan, como twi e fante, além de ewe, ga e dagbani, estão entre as muitas línguas aprendidas em casa. A língua materna depende da família e da região.",
+        role:"O inglês conecta pessoas de diferentes comunidades linguísticas e é usado nas escolas, no governo e na comunicação nacional.",
+        fact:"O akan é a língua indígena mais falada e também é utilizado como segunda língua por muitas pessoas.",
         phrases:[['Ghana is in West Africa.','Gana fica na África Ocidental.'],['English is used in schools and government.','O inglês é usado nas escolas e no governo.']]
       },
       {
         id:'ke', iso:'ke', name:'Quênia', english:'Kenya', group:'multilingual', groupLabel:'Countries with English in official or public use',
-        official:'Kiswahili and English are the official languages. Kiswahili is also the national language.',
-        mother:'Kenya has many mother tongues, including Kikuyu, Luhya languages, Dholuo, Kalenjin languages, Kamba and others. These vary by community and region.',
-        role:'English is widely used in education, government and formal communication. Kiswahili is a shared language across many communities.',
-        fact:'English is not the only official language: Kiswahili has the same constitutional official status and is the national language.',
+        official:"O suaíli (Kiswahili) e o inglês são as línguas oficiais. O suaíli também é a língua nacional.",
+        mother:"O Quênia tem muitas línguas maternas, incluindo kikuyu, línguas Luhya, dholuo, línguas Kalenjin, kamba e outras. Elas variam conforme a comunidade e a região.",
+        role:"O inglês é amplamente utilizado na educação, no governo e na comunicação formal. O suaíli é uma língua comum entre muitas comunidades.",
+        fact:"O inglês não é a única língua oficial: o suaíli tem o mesmo status oficial previsto na Constituição e também é a língua nacional.",
         phrases:[['Kenya is in East Africa.','O Quênia fica na África Oriental.'],['Kiswahili and English are official languages.','Suaíli e inglês são línguas oficiais.']]
       }
     ];
