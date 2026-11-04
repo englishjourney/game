@@ -504,6 +504,7 @@ async function resolveNight(roomId: string) {
   try {
     const room = await getRoomById(roomId);
     let players = await getRoomPlayers(roomId);
+    const deathsBefore = players.filter((p: any) => !p.is_alive).length;
     let alive = players.filter((p: any) => p.is_alive);
     const { data: currentActions, error: actionError } = await db.from("tcs_night_actions")
       .select("*").eq("room_id", roomId).eq("round_no", room.round_no);
@@ -613,7 +614,7 @@ async function resolveNight(roomId: string) {
       if (!targets[0]) continue;
       if (action.action === "kill") attacks.push({ attacker: player, targetId: targets[0], source: "The Werewolf" });
       if (action.action === "poison") attacks.push({ attacker: player, targetId: targets[0], source: "The Witch" });
-      if (action.action === "puppet_kill") attacks.push({ attacker: player, targetId: targets[0], source: "The Puppet", puppet: true });
+      if (action.action === "puppet_kill") attacks.push({ attacker: player, targetId: targets[0], source: "The Necromancer's Puppet", puppet: true });
     }
 
     const resolveAttack = async (target: any, source: string) => {
@@ -690,7 +691,7 @@ async function resolveNight(roomId: string) {
     for (const player of alive) {
       const action: any = actionByPlayer.get(player.id);
       if (action?.action === "task_done") {
-        await addNews(roomId, room.round_no, "An Ordinary Citizen completed a nightly task.", "task");
+        await addNews(roomId, room.round_no, player.username + " completed an Ordinary Citizen's nightly task.", "task");
       }
     }
 
@@ -698,8 +699,10 @@ async function resolveNight(roomId: string) {
       const victory = await checkVictory(room);
       if (!victory) {
         const refreshed = await getRoomPlayers(roomId);
-        const deaths = refreshed.filter((p: any) => !p.is_alive).length;
-        if (!deaths) await addNews(roomId, room.round_no, "The city wakes up. No one was eliminated tonight.", "dawn");
+        const deathsAfter = refreshed.filter((p: any) => !p.is_alive).length;
+        if (deathsAfter === deathsBefore) {
+          await addNews(roomId, room.round_no, "The city wakes up. No one was eliminated tonight.", "dawn");
+        }
         const { error } = await db.from("tcs_rooms").update({
           phase: "dawn",
           phase_started_at: new Date().toISOString(),

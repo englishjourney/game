@@ -117,7 +117,31 @@ const WORD_PT = {
   left:"restantes", remaining:"restante", protection:"proteção", broken:"quebrado", saved:"salvo",
   saved:"salvo", survived:"sobreviveu", eliminate:"eliminar", killed:"eliminado", assassin:"assassino",
   host:"anfitrião", waiting:"aguardando", account:"conta", sign:"entrar", password:"senha",
-  englishjourney:"EnglishJourney", citysleeps:"The City Sleeps"
+  englishjourney:"EnglishJourney", citysleeps:"The City Sleeps",
+  from:"de", being:"sendo", may:"pode", also:"também", during:"durante", entire:"inteiro", yourself:"você mesmo",
+  cannot:"não pode", reached:"alcançado", while:"enquanto", but:"mas", owner:"dono", chosen:"escolhido",
+  they:"eles", belong:"pertencer", them:"eles", instead:"em vez", can:"pode", see:"ver", tags:"marcadores",
+  bring:"trazer", as:"como", must:"deve", returned:"retornou", successful:"bem-sucedida", ends:"termina",
+  act:"agir", naturally:"naturalmente", let:"deixar", choice:"escolha", recruit:"recrutar", into:"para dentro",
+  when:"quando", belongs:"pertence", seduced:"seduzido", times:"vezes", final:"final", pair:"dupla",
+  with:"com", least:"pelo menos", needed:"necessário", begin:"começar", looking:"procurando",
+  share:"compartilhar", become:"tornar-se", report:"relatório", whole:"todo", everyone:"todos",
+  returned:"retornou", twice:"duas vezes", successful:"bem-sucedido", owner:"dono", from:"de",
+  before:"antes", sunrise:"amanhecer", trust:"confiar", carefully:"com cuidado", work:"trabalhar",
+  account:"conta", sign:"entrar", access:"acesso", username:"usuário", confirm:"confirmar",
+  expired:"expirado", session:"sessão", reconnecting:"reconectando", connected:"conectado",
+  eligible:"apto", available:"disponível", private:"privado", public:"público", empty:"vazio",
+  correct:"correto", incorrect:"incorreto", every:"cada", another:"outro", one:"um/uma", person:"pessoa",
+  who:"quem", should:"deveria", city:"cidade", hiding:"escondido", among:"entre", discussion:"discussão",
+  cast:"registrar", submitted:"enviado", remaining:"restantes", result:"resultado", the:"o/a",
+  power:"poder", choose:"escolher", your:"seu/sua", move:"ação", completed:"concluído",
+  tonight:"esta noite", protection:"proteção", potion:"poção", shield:"escudo", build:"construir",
+  house:"casa", away:"fora", owner:"dono", escaped:"escapou", attack:"ataque", attacked:"atacado",
+  killed:"eliminado", target:"alvo", faction:"facção", player:"jogador", players:"jogadores",
+  reveal:"revelar", insights:"visões", insight:"visão", category:"categoria", private:"privada",
+  ally:"aliado", allies:"aliados", villain:"vilão", citizen:"cidadão", neutral:"neutro",
+  eliminated:"eliminado", survivor:"sobrevivente", survive:"sobreviver", alone:"sozinho",
+  everyone:"todos", each:"cada", night:"noite", nightly:"noturna", task:"tarefa", skip:"pular"
 };
 
 function attachWordTooltips(root = document.body) {
