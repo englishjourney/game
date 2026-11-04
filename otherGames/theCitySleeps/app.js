@@ -46,6 +46,24 @@ const ROLES = {
 
 const CATEGORY_PT = { Citizen: "Cidadão", Villain: "Vilão", Neutral: "Neutro" };
 
+const ROLE_PORTRAITS = {
+  ordinary_citizen: "https://i1.sndcdn.com/artworks-000244007318-slqqeo-t500x500.jpg",
+  angel: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSO2fApet3J8EAFQy65QrHE73rq2iqEcsGKcWpJD4yI_UQt5hyBqfocitQ&s=10",
+  witch: "https://i.pinimg.com/736x/ef/77/fd/ef77fd9b0b9d05994d7148b50d83c013.jpg",
+  oracle: "https://i.pinimg.com/474x/f3/77/55/f37755dc36eccec777de830fc624c5e8.jpg",
+  dwarf: "https://i.pinimg.com/736x/fe/88/2b/fe882b578cd6131a914b0955d532b7a8.jpg",
+  homeless: "https://static.wikia.nocookie.net/toyoureternity/images/8/8f/Pioran_anime_2.jpg/revision/latest?cb=20220210154647&path-prefix=es",
+  hunter: "https://preview.redd.it/gy7n1o0wd4ee1.jpeg?auto=webp&s=16575331786b596e11d306da81cb1d0400d39e58",
+  werewolf: "https://i.pinimg.com/736x/db/9a/cc/db9acc860558e002b467b9f2e0ef8204.jpg",
+  necromancer: "https://static0.cbrimages.com/wordpress/wp-content/uploads/2025/12/solo_leveling_s2_ep2.jpg?q=49&fit=crop&w=300&h=273&dpr=2",
+  puppet: "https://static0.cbrimages.com/wordpress/wp-content/uploads/2025/12/solo_leveling_s2_ep2.jpg?q=49&fit=crop&w=300&h=273&dpr=2",
+  harlequin: "https://i.pinimg.com/736x/e9/3e/9f/e93e9f65639b61142faad9e290edd15d.jpg",
+  cultist: "https://i.redd.it/m3sbezy6gjxc1.jpg",
+  syren: "https://i.scdn.co/image/ab67616d0000b273b9339f06b26c10684dddb409",
+};
+
+let cachedRooms = [];
+
 const WORD_PT = {
   a:"um/uma", an:"um/uma", the:"o/a", and:"e", or:"ou", to:"para", of:"de", in:"em", on:"em", at:"em",
   is:"é/está", are:"são/estão", be:"ser/estar", you:"você", your:"seu/sua", have:"ter", has:"tem",
@@ -277,16 +295,25 @@ function tooltip(text, pt) {
   return ' data-pt="' + esc(pt || "") + '" title="' + esc(pt || "") + '"';
 }
 
+function rolePortraitMarkup(roleKey, size = "") {
+  const role = ROLES[roleKey] || ROLES.ordinary_citizen;
+  const source = ROLE_PORTRAITS[roleKey] || ROLE_PORTRAITS.ordinary_citizen;
+  return '<span class="role-portrait ' + size + '"><img src="' + esc(source) + '" alt="' + esc(role.name) + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.classList.add(\'portrait-failed\');this.remove()"></span>';
+}
+
 function avatarMarkup(player, size = "") {
   const name = String(player.username || "?");
   const initial = esc(name.slice(0, 1).toUpperCase());
+  const publicRole = player.revealedRoleKey || "";
+  if (publicRole && ROLE_PORTRAITS[publicRole]) {
+    return rolePortraitMarkup(publicRole, "avatar-role " + size);
+  }
   const cls = "avatar " + size;
   if (player.avatarUrl) {
     return '<img class="' + cls + '" src="' + esc(player.avatarUrl) + '" alt="' + esc(name) + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),{className:\'avatar avatar-fallback ' + size + '\',textContent:\'' + initial + '\'}))">';
   }
   return '<span class="' + cls + ' avatar-fallback" aria-label="' + esc(name) + '">' + initial + "</span>";
 }
-
 function notify(message, isError = false) {
   const container = $("toast-container");
   const toast = document.createElement("div");
@@ -445,6 +472,11 @@ async function initialize() {
 
   $("btn-create-room").addEventListener("click", () => openDialog("create-room-dialog"));
   $("btn-refresh-rooms").addEventListener("click", initializeHome);
+  $("btn-open-join-code").addEventListener("click", () => openDialog("join-code-dialog"));
+  $("btn-open-rooms-dialog").addEventListener("click", () => openDialog("rooms-dialog"));
+  document.querySelectorAll("[data-open-dialog]").forEach((button) => {
+    button.addEventListener("click", () => openDialog(button.dataset.openDialog));
+  });
   $("room-visibility").addEventListener("change", () => {
     const closed = $("room-visibility").value === "private";
     $("room-password-field").classList.toggle("hidden", !closed);
@@ -454,8 +486,13 @@ async function initialize() {
   $("join-room-form").addEventListener("submit", joinFromDialog);
   $("join-by-code-form").addEventListener("submit", async (event) => {
     event.preventDefault();
-    openJoinDialog($("manual-room-code").value.trim().toUpperCase(), null);
-    $("join-room-password").value = $("manual-room-password").value;
+    $("join-code-error").textContent = "";
+    const code = $("manual-room-code").value.trim().toUpperCase();
+    if (!/^[A-Z0-9]{4}$/.test(code)) {
+      $("join-code-error").textContent = "Enter a valid 4-character room code.";
+      return;
+    }
+    await joinRoom(code, $("manual-room-password").value);
   });
 
   $("rooms-list").addEventListener("click", (event) => {
@@ -537,12 +574,15 @@ async function initializeHome() {
 }
 
 function renderRooms(rooms) {
-  $("room-count").textContent = rooms.length + (rooms.length === 1 ? " ROOM" : " ROOMS");
-  if (!rooms.length) {
+  cachedRooms = Array.isArray(rooms) ? rooms : [];
+  const countLabel = cachedRooms.length + (cachedRooms.length === 1 ? " ROOM" : " ROOMS");
+  $("room-count").textContent = countLabel;
+  $("rooms-browse-count").textContent = cachedRooms.length + " available";
+  if (!cachedRooms.length) {
     $("rooms-list").innerHTML = '<div class="empty-state"><span class="empty-icon">☾</span><strong>No waiting rooms yet.</strong><small>Create a room and invite your friends.</small></div>';
     return;
   }
-  $("rooms-list").innerHTML = rooms.map((room) => {
+  $("rooms-list").innerHTML = cachedRooms.map((room) => {
     const access = room.isPublic ? "Open room" : "Password required";
     const pt = room.isPublic ? "Sala aberta" : "Senha necessária";
     return '<article class="room-list-card"><div class="room-list-main"><div class="room-list-code">' + esc(room.code) + '</div>' +
@@ -551,7 +591,6 @@ function renderRooms(rooms) {
   }).join("");
   attachWordTooltips($("rooms-list"));
 }
-
 function openJoinDialog(code, isPublic) {
   $("join-room-code").value = String(code || "").toUpperCase();
   $("join-room-description").textContent = "Room " + String(code || "").toUpperCase();
@@ -575,11 +614,13 @@ async function joinRoom(code, password) {
   try {
     const result = await api("join_room", { roomCode: String(code || "").trim().toUpperCase(), password });
     closeDialog("join-room-dialog");
+    closeDialog("join-code-dialog");
     $("manual-room-password").value = "";
     $("manual-room-code").value = "";
     enterRoom(result.roomCode);
   } catch (error) {
-    if ($("join-room-dialog").open) $("join-room-error").textContent = error.message;
+    if ($("join-code-dialog").open) $("join-code-error").textContent = error.message;
+    else if ($("join-room-dialog").open) $("join-room-error").textContent = error.message;
     else notify(error.message, true);
   }
 }
@@ -698,6 +739,7 @@ function renderRoom(state) {
   const room = state.room;
   $("room-code-display").textContent = room.code;
   $("participant-count").textContent = room.playerCount;
+  $("shortcut-player-count").textContent = room.playerCount + " / 30";
   $("host-badge").classList.toggle("hidden", !room.isHost);
   $("participants-list").innerHTML = state.participants.map((p) =>
     '<div class="participant-row">' + avatarMarkup(p) +
@@ -738,6 +780,7 @@ function renderRoom(state) {
   updateCountdown();
 
   const totalLiving = Object.values(state.counts || {}).reduce((sum, count) => sum + Number(count || 0), 0);
+  $("shortcut-city-count").textContent = totalLiving + " alive";
   $("living-count").textContent = totalLiving + " ALIVE";
   $("dead-count").textContent = state.deadPlayers.length + " OUT";
   $("living-players").innerHTML = state.alivePlayers.length
@@ -750,6 +793,16 @@ function renderRoom(state) {
   renderTeam(state.teamPlayers || []);
   renderNews(state.news || []);
   renderPrivateMessages(state.privateMessages || []);
+  $("btn-open-faction-dialog").classList.toggle("hidden", !(state.teamPlayers || []).length);
+  $("btn-open-notices-dialog").classList.toggle("hidden", !(state.privateMessages || []).length);
+  $("btn-open-role-dialog").classList.toggle("hidden", room.phase === "lobby");
+  const role = ROLES[state.me.roleKey] || ROLES.ordinary_citizen;
+  $("role-detail-content").innerHTML = room.phase === "lobby"
+    ? '<div class="role-detail-empty"><span class="role-detail-lock">?</span><h3>Your secret role is waiting</h3><p class="muted">Your character will be revealed when the host starts the game.</p></div>'
+    : '<div class="role-detail-card">' + rolePortraitMarkup(state.me.roleKey, "role-large") +
+      '<div><span class="role-category">' + esc(role.category) + '</span><h2 class="role-title">' + esc(role.name) + '</h2>' +
+      '<p class="role-description">' + esc(role.description) + '</p><p class="role-warning">Keep your role secret. Do not show this screen to other players.</p></div></div>';
+
   const key = [room.phase, room.roundNo, state.me.id, !!state.me.roleReady, !!state.me.phaseReady,
     !!state.myAction, !!state.myVote, room.winnerMessage || ""].join("|");
   if (key !== panelKey) {
@@ -759,7 +812,6 @@ function renderRoom(state) {
   }
   attachWordTooltips($("room-view"));
 }
-
 function renderTeam(players) {
   const panel = $("team-panel");
   if (!players.length) {
@@ -784,7 +836,7 @@ function renderPrivateMessages(messages) {
   const panel = $("private-messages-panel");
   if (!messages.length) { panel.classList.add("hidden"); return; }
   panel.classList.remove("hidden");
-  panel.innerHTML = '<h3>Private notices</h3>' + messages.slice(-5).map((item) =>
+  panel.innerHTML = '<h3>Private notices</h3><p class="muted">Only you can see these messages.</p>' + messages.slice(-5).map((item) =>
     '<p class="private-message">✦ ' + esc(item.message) + "</p>"
   ).join("");
 }
@@ -813,7 +865,7 @@ function renderPhasePanel(state) {
     const role = ROLES[me.roleKey] || ROLES.ordinary_citizen;
     const ready = me.roleReady;
     panel.innerHTML = '<div class="phase-content"><p class="eyebrow">YOUR SECRET ROLE</p><div class="role-reveal-card">' +
-      '<div class="role-symbol">' + role.icon + '</div><div><h2 class="role-title"' + tooltip(role.name, role.pt) + '>' + esc(role.name) + '</h2>' +
+      '<div class="role-symbol">' + rolePortraitMarkup(me.roleKey, "role-large") + '</div><div><h2 class="role-title"' + tooltip(role.name, role.pt) + '>' + esc(role.name) + '</h2>' +
       '<span class="role-category"' + tooltip(role.category, CATEGORY_PT[role.category]) + '>' + esc(role.category) + '</span>' +
       '<p class="role-description">' + esc(role.description) + '</p><p class="role-warning">Keep this role private. Do not show your screen to other players.</p></div></div>' +
       '<div class="phase-actions">' + (ready

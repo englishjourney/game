@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#080d18">
+  <meta name="theme-color" content="#100b2b">
   <title>The City Sleeps | EnglishJourney</title>
   <link rel="stylesheet" href="./style.css">
 </head>
@@ -38,34 +38,35 @@
             <p class="hero-description">Find your role. Trust carefully. Work together before sunrise.</p>
             <div class="hero-actions">
               <button id="btn-create-room" class="button button-primary" type="button" data-pt="Criar uma sala">Create a room <span>＋</span></button>
-              <button id="btn-refresh-rooms" class="button button-quiet" type="button" data-pt="Atualizar salas">Refresh rooms ↻</button>
+              <button id="btn-open-join-code" class="button button-glass" type="button">Join with a code <span>→</span></button>
             </div>
           </div>
           <div class="hero-emblem" aria-hidden="true"><div class="moon"></div></div>
+          <div class="hero-glow hero-glow-one" aria-hidden="true"></div>
+          <div class="hero-glow hero-glow-two" aria-hidden="true"></div>
         </div>
 
         <div class="home-grid">
-          <section class="panel-card rooms-panel">
+          <section class="panel-card rooms-panel home-feature-card">
+            <div class="feature-art feature-art-rooms" aria-hidden="true">✦</div>
+            <p class="eyebrow">FIND YOUR CITY</p>
             <div class="section-heading">
-              <div><p class="eyebrow">OPEN LOBBIES</p><h2>Waiting rooms</h2></div>
+              <h2>Waiting rooms</h2>
               <span id="room-count" class="count-pill">0 ROOMS</span>
             </div>
-            <div id="rooms-list" class="rooms-list">
-              <div class="empty-state"><span class="empty-icon">☾</span><strong>Looking for rooms...</strong><small>Waiting rooms will appear here.</small></div>
-            </div>
+            <p class="muted">Explore public lobbies and meet other players before the night begins.</p>
+            <button id="btn-open-rooms-dialog" class="button button-outline full-button">Browse waiting rooms <span id="rooms-browse-count">0 available</span> →</button>
           </section>
 
-          <aside class="panel-card join-panel">
-            <p class="eyebrow">HAVE A ROOM CODE?</p><h2>Join a game</h2>
-            <p class="muted">Enter the 4-character code shared by the host.</p>
-            <form id="join-by-code-form" class="stack-form">
-              <label for="manual-room-code">Room code</label>
-              <input id="manual-room-code" type="text" maxlength="4" autocomplete="off" placeholder="A7K2" required>
-              <label for="manual-room-password">Password <span class="optional-label">if closed</span></label>
-              <input id="manual-room-password" type="password" autocomplete="off" placeholder="Room password">
-              <button class="button button-outline full-button" type="submit" data-pt="Entrar na sala">Join room <span>→</span></button>
-            </form>
-            <div class="join-note"><span>✦</span><span>At least <strong>6 players</strong> are needed to begin.</span></div>
+          <aside class="panel-card join-panel home-feature-card">
+            <div class="feature-art feature-art-how" aria-hidden="true">☾</div>
+            <p class="eyebrow">HOW TO PLAY</p>
+            <h2>One city. Many secrets.</h2>
+            <div class="how-steps">
+              <div><span>01</span><p><strong>Join a room</strong><small>Invite friends or use a room code.</small></p></div>
+              <div><span>02</span><p><strong>Discover your role</strong><small>Keep your identity secret.</small></p></div>
+              <div><span>03</span><p><strong>Survive the night</strong><small>Choose wisely and trust carefully.</small></p></div>
+            </div>
           </aside>
         </div>
       </section>
@@ -75,20 +76,26 @@
           <button id="btn-leave-room" type="button" class="button button-quiet" data-pt="Sair da sala">← Leave room</button>
           <div class="room-code-block"><span class="muted">ROOM CODE</span><strong id="room-code-display">----</strong><button id="btn-copy-room-code" type="button" title="Copy room code" aria-label="Copy room code">▢</button></div>
         </div>
-        <div class="room-layout">
-          <aside class="panel-card participants-panel">
-            <div class="section-heading">
-              <div><p class="eyebrow">THE LOBBY</p><h2>Players <span id="participant-count" class="inline-count">0</span></h2></div>
-              <span id="host-badge" class="host-badge hidden">HOST</span>
-            </div>
-            <div id="participants-list" class="participants-list"></div>
-            <div id="lobby-controls" class="lobby-controls">
-              <p id="lobby-hint" class="muted">Waiting for the host...</p>
-              <button id="btn-start-game" class="button button-primary full-button" type="button" disabled data-pt="Iniciar jogo">Start game <span>▶</span></button>
-              <small class="muted">Minimum 6 players · Maximum 30 players</small>
-            </div>
-          </aside>
 
+        <nav class="room-shortcuts" aria-label="Game sections">
+          <button type="button" class="shortcut-card shortcut-players" data-open-dialog="players-dialog">
+            <span class="shortcut-icon">♟</span><span><strong>Players</strong><small>Everyone in the room</small></span><b id="shortcut-player-count">0 / 30</b>
+          </button>
+          <button type="button" class="shortcut-card shortcut-city" data-open-dialog="city-dialog">
+            <span class="shortcut-icon">✦</span><span><strong>City record</strong><small>Living, eliminated & news</small></span><b id="shortcut-city-count">0 alive</b>
+          </button>
+          <button type="button" class="shortcut-card shortcut-role" id="btn-open-role-dialog" data-open-dialog="role-dialog">
+            <span class="shortcut-icon">◈</span><span><strong>My role</strong><small>Private character details</small></span><b>PRIVATE</b>
+          </button>
+          <button type="button" class="shortcut-card shortcut-faction hidden" id="btn-open-faction-dialog" data-open-dialog="faction-dialog">
+            <span class="shortcut-icon">☾</span><span><strong>My faction</strong><small>Allies & team</small></span><b>SECRET</b>
+          </button>
+          <button type="button" class="shortcut-card shortcut-notices hidden" id="btn-open-notices-dialog" data-open-dialog="notices-dialog">
+            <span class="shortcut-icon">✉</span><span><strong>Private notices</strong><small>Messages just for you</small></span><b>NEW</b>
+          </button>
+        </nav>
+
+        <div class="room-layout">
           <section class="room-main">
             <div class="panel-card phase-card">
               <div class="phase-card-top">
@@ -97,22 +104,6 @@
               </div>
               <div id="phase-panel"></div>
             </div>
-            <div class="room-lower-grid">
-              <section class="panel-card roster-card">
-                <div class="section-heading"><div><p class="eyebrow">CITY STATUS</p><h2>Living players</h2></div><span id="living-count" class="count-pill">0 ALIVE</span></div>
-                <div id="living-players" class="mini-player-list"></div>
-              </section>
-              <section class="panel-card graveyard-card">
-                <div class="section-heading"><div><p class="eyebrow">THE SILENT SIDE</p><h2>Eliminated</h2></div><span id="dead-count" class="count-pill">0 OUT</span></div>
-                <div id="dead-players" class="mini-player-list"></div>
-              </section>
-            </div>
-            <section id="team-panel" class="panel-card team-panel hidden"></section>
-            <section class="panel-card news-panel">
-              <div class="section-heading"><div><p class="eyebrow">CITY RECORD</p><h2>Daily news</h2></div><span class="news-mark">✦</span></div>
-              <div id="daily-news" class="news-list"><p class="muted">No reports yet.</p></div>
-            </section>
-            <section id="private-messages-panel" class="private-messages-panel hidden"></section>
           </section>
         </div>
       </section>
@@ -144,6 +135,32 @@
     </form>
   </dialog>
 
+  <dialog id="join-code-dialog" class="game-dialog">
+    <form id="join-by-code-form" class="dialog-card">
+      <button type="button" class="dialog-close" data-close-dialog="join-code-dialog" aria-label="Close">×</button>
+      <p class="eyebrow">JOIN YOUR FRIENDS</p><h2>Enter a room code</h2>
+      <p class="muted">Type the 4-character code shared by the host. Add a password when the room is private.</p>
+      <label for="manual-room-code">Room code</label>
+      <input id="manual-room-code" type="text" maxlength="4" autocomplete="off" placeholder="A7K2" required>
+      <label for="manual-room-password">Room password <span class="optional-label">if required</span></label>
+      <input id="manual-room-password" type="password" autocomplete="off" placeholder="Room password">
+      <p id="join-code-error" class="form-error"></p>
+      <button class="button button-primary full-button" type="submit">Join room <span>→</span></button>
+    </form>
+  </dialog>
+
+  <dialog id="rooms-dialog" class="game-dialog game-dialog-wide">
+    <div class="dialog-card">
+      <button type="button" class="dialog-close" data-close-dialog="rooms-dialog" aria-label="Close">×</button>
+      <p class="eyebrow">OPEN LOBBIES</p><h2>Waiting rooms</h2>
+      <p class="muted">Choose a public room to join, or use a room code to enter a private one.</p>
+      <div id="rooms-list" class="rooms-list">
+        <div class="empty-state"><span class="empty-icon">☾</span><strong>Looking for rooms...</strong><small>Waiting rooms will appear here.</small></div>
+      </div>
+      <button id="btn-refresh-rooms" class="button button-quiet full-button" type="button">Refresh rooms ↻</button>
+    </div>
+  </dialog>
+
   <dialog id="join-room-dialog" class="game-dialog">
     <form id="join-room-form" class="dialog-card">
       <button type="button" class="dialog-close" data-close-dialog="join-room-dialog" aria-label="Close">×</button>
@@ -155,6 +172,64 @@
     </form>
   </dialog>
 
+  <dialog id="players-dialog" class="game-dialog game-dialog-wide">
+    <div class="dialog-card">
+      <button type="button" class="dialog-close" data-close-dialog="players-dialog" aria-label="Close">×</button>
+      <p class="eyebrow">THE LOBBY</p>
+      <div class="section-heading"><h2>Players</h2><span id="host-badge" class="host-badge hidden">HOST</span></div>
+      <p class="muted">See who has joined the city. The host can begin once at least six players are ready.</p>
+      <div id="participants-list" class="participants-list"></div>
+      <div id="lobby-controls" class="lobby-controls">
+        <p id="lobby-hint" class="muted">Waiting for the host...</p>
+        <button id="btn-start-game" class="button button-primary full-button" type="button" disabled data-pt="Iniciar jogo">Start game <span>▶</span></button>
+        <small class="muted">Minimum 6 players · Maximum 30 players</small>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="city-dialog" class="game-dialog game-dialog-wide">
+    <div class="dialog-card">
+      <button type="button" class="dialog-close" data-close-dialog="city-dialog" aria-label="Close">×</button>
+      <p class="eyebrow">CITY STATUS</p><h2>The city record</h2>
+      <div class="room-lower-grid">
+        <section class="panel-card roster-card">
+          <div class="section-heading"><div><p class="eyebrow">STILL HERE</p><h2>Living players</h2></div><span id="living-count" class="count-pill">0 ALIVE</span></div>
+          <div id="living-players" class="mini-player-list"></div>
+        </section>
+        <section class="panel-card graveyard-card">
+          <div class="section-heading"><div><p class="eyebrow">THE SILENT SIDE</p><h2>Eliminated</h2></div><span id="dead-count" class="count-pill">0 OUT</span></div>
+          <div id="dead-players" class="mini-player-list"></div>
+        </section>
+      </div>
+      <section class="panel-card news-panel">
+        <div class="section-heading"><div><p class="eyebrow">CITY RECORD</p><h2>Daily news</h2></div><span class="news-mark">✦</span></div>
+        <div id="daily-news" class="news-list"><p class="muted">No reports yet.</p></div>
+      </section>
+    </div>
+  </dialog>
+
+  <dialog id="role-dialog" class="game-dialog game-dialog-wide">
+    <div class="dialog-card">
+      <button type="button" class="dialog-close" data-close-dialog="role-dialog" aria-label="Close">×</button>
+      <p class="eyebrow">YOUR SECRET IDENTITY</p><h2>My role</h2>
+      <div id="role-detail-content" class="role-detail-content"></div>
+    </div>
+  </dialog>
+
+  <dialog id="faction-dialog" class="game-dialog">
+    <div class="dialog-card">
+      <button type="button" class="dialog-close" data-close-dialog="faction-dialog" aria-label="Close">×</button>
+      <section id="team-panel" class="team-panel"></section>
+    </div>
+  </dialog>
+
+  <dialog id="notices-dialog" class="game-dialog">
+    <div class="dialog-card">
+      <button type="button" class="dialog-close" data-close-dialog="notices-dialog" aria-label="Close">×</button>
+      <section id="private-messages-panel" class="private-messages-panel"></section>
+    </div>
+  </dialog>
+
   <dialog id="mini-game-dialog" class="game-dialog mini-game-dialog">
     <div class="mini-game-card">
       <div class="mini-game-heading"><div><p class="eyebrow">NIGHTLY TASK</p><h2 id="mini-game-title">EnglishJourney game</h2></div><button id="btn-close-mini-game" class="dialog-close" type="button" aria-label="Close">×</button></div>
@@ -162,6 +237,7 @@
       <div class="mini-game-actions"><p class="muted">Finish the activity, then return to the city.</p><button id="btn-complete-mini-game" type="button" class="button button-primary" data-pt="Concluir atividade">I completed my task ✓</button></div>
     </div>
   </dialog>
+
   <div id="database-loader" class="database-loader" role="status" aria-live="polite" aria-hidden="true">
     <div class="database-loader-card">
       <span class="database-loader-spinner" aria-hidden="true"></span>
