@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f8f9fa">
+  <title>Anglophone Countries | English Journey</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8f9fa;
+      --surface: #ffffff;
+      --surface-soft: #f1f5f9;
+      --text: #202124;
+      --muted: #687385;
+      --border: #dfe3e8;
+      --blue: #1a73e8;
+      --blue-dark: #1557b0;
+      --blue-soft: #e8f0fe;
+      --green: #138a52;
+      --shadow: 0 6px 22px rgba(32, 45, 66, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Arial, sans-serif;
+      transition: background .2s, color .2s;
+    }
+    body.dark {
+      --bg: #202124;
+      --surface: #2d2e30;
+      --surface-soft: #35383d;
+      --text: #e8eaed;
+      --muted: #aab2bf;
+      --border: #45494f;
+      --blue: #8ab4f8;
+      --blue-dark: #aecbfa;
+      --blue-soft: #26364f;
+      --green: #6dd6a2;
+      --shadow: 0 8px 28px rgba(0, 0, 0, .26);
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 13px max(20px, calc((100vw - 1240px) / 2));
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      box-shadow: 0 2px 8px rgba(0,0,0,.035);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .brand-icon {
+      width: 42px; height: 42px; flex: 0 0 42px;
+      display: grid; place-items: center;
+      border-radius: 13px;
+      background: var(--blue);
+      color: white;
+      font-size: 21px;
+      font-weight: 800;
+    }
+    .brand h1 { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -.02em; }
+    .brand p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+    .icon-button {
+      width: 40px; height: 40px; border: 1px solid var(--border); border-radius: 50%;
+      background: var(--surface); color: var(--text); font-size: 18px;
+    }
+    .icon-button:hover { background: var(--surface-soft); }
+    .page { width: min(1240px, calc(100% - 36px)); margin: 30px auto 50px; }
+    .hero { text-align: center; margin: 0 auto 27px; max-width: 850px; }
+    .eyebrow { color: var(--blue); font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    .hero h2 { margin: 10px 0 9px; font-size: clamp(27px, 4vw, 38px); letter-spacing: -.045em; }
+    .hero p { margin: 0; color: var(--muted); line-height: 1.7; font-size: 14px; }
+    .concept-note {
+      display: grid; grid-template-columns: 42px 1fr; gap: 13px; align-items: start;
+      max-width: 940px; margin: 22px auto 0; padding: 16px 18px;
+      background: var(--blue-soft); border: 1px solid #8ab4f855; border-radius: 14px;
+      text-align: left;
+    }
+    .concept-note .note-icon { font-size: 24px; }
+    .concept-note strong { display: block; margin-bottom: 4px; font-size: 13px; }
+    .concept-note p { margin: 0; font-size: 12px; line-height: 1.65; color: var(--muted); }
+    .controls {
+      display: flex; gap: 12px; align-items: center; justify-content: space-between;
+      margin: 26px 0 18px; flex-wrap: wrap;
+    }
+    .filters { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 6px; max-width: 100%; }
+    .filter {
+      flex: 0 0 auto; border: 1px solid var(--border); border-radius: 999px;
+      background: var(--surface); color: var(--muted); padding: 9px 14px;
+      font-size: 12px; font-weight: 700; transition: .18s;
+    }
+    .filter:hover { border-color: var(--blue); color: var(--blue); }
+    .filter.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .search-wrap { position: relative; width: min(280px, 100%); flex: 0 1 280px; }
+    .search-wrap:before { content: '⌕'; position: absolute; left: 13px; top: 7px; color: var(--muted); font-size: 23px; }
+    .search-wrap input {
+      width: 100%; height: 40px; border: 1px solid var(--border); border-radius: 999px;
+      padding: 0 14px 0 38px; outline: 0; background: var(--surface); color: var(--text); font-size: 12px;
+    }
+    .search-wrap input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #1a73e81c; }
+    .group { margin: 27px 0 0; }
+    .group-head { display: flex; align-items: center; gap: 10px; margin: 0 0 13px; }
+    .group-head h3 { margin: 0; font-size: 17px; letter-spacing: -.02em; }
+    .group-head span { color: var(--muted); font-size: 11px; font-weight: 700; }
+    .group-line { height: 1px; flex: 1; background: var(--border); }
+    .country-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    .country-card {
+      min-width: 0; padding: 12px; border: 1px solid var(--border); border-radius: 15px;
+      background: var(--surface); box-shadow: var(--shadow); text-align: left;
+      transition: transform .18s, border-color .18s, box-shadow .18s;
+    }
+    .country-card:hover { transform: translateY(-3px); border-color: var(--blue); box-shadow: 0 10px 25px rgba(26,115,232,.12); }
+    .country-open {
+      display: block; width: 100%; padding: 0; border: 0; background: transparent; color: inherit; text-align: left;
+    }
+    .map-frame {
+      position: relative; display: grid; place-items: center; height: 136px; overflow: hidden;
+      border-radius: 10px; background:
+        radial-gradient(circle at 1px 1px, #94a3b833 1px, transparent 1.3px) 0 0 / 14px 14px,
+        var(--surface-soft);
+    }
+    .map-img { width: 100%; height: 100%; object-fit: contain; padding: 8px; }
+    .map-loading { color: var(--muted); font-size: 10px; }
+    .country-name-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 2px 1px; }
+    .country-name { font-size: 13px; font-weight: 800; line-height: 1.35; }
+    .country-en { margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .open-cue {
+      flex: 0 0 27px; width: 27px; height: 27px; display: grid; place-items: center;
+      border-radius: 50%; background: var(--blue-soft); color: var(--blue); font-size: 15px;
+    }
+    .no-results { padding: 28px; border: 1px dashed var(--border); border-radius: 15px; text-align: center; color: var(--muted); }
+    .page-foot { margin: 35px 0 0; padding: 18px 0 0; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px; line-height: 1.7; }
+    .page-foot a { color: var(--blue); text-decoration: none; }
+    .page-foot a:hover { text-decoration: underline; }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 50; display: grid; place-items: center;
+      padding: 18px; background: rgba(15, 23, 42, .62); backdrop-filter: blur(5px);
+    }
+    .modal {
+      width: min(760px, 100%); max-height: min(90vh, 920px); overflow: auto;
+      border: 1px solid var(--border); border-radius: 20px; background: var(--surface);
+      box-shadow: 0 24px 80px rgba(0,0,0,.32); animation: modalIn .2s ease;
+    }
+    @keyframes modalIn { from { opacity: 0; transform: translateY(10px) scale(.99); } to { opacity: 1; transform: none; } }
+    .modal-head {
+      display: flex; align-items: center; gap: 14px; padding: 19px 22px;
+      border-bottom: 1px solid var(--border); background: var(--surface);
+      position: sticky; top: 0; z-index: 2;
+    }
+    .modal-flag {
+      width: 65px; height: 44px; flex: 0 0 65px; object-fit: cover; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--surface-soft);
+    }
+    .modal-title { min-width: 0; flex: 1; }
+    .modal-title h2 { margin: 0; font-size: 21px; letter-spacing: -.03em; }
+    .modal-title p { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+    .close-modal { width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 50%; background: var(--surface-soft); color: var(--text); font-size: 20px; }
+    .close-modal:hover { border-color: var(--blue); color: var(--blue); }
+    .modal-body { padding: 20px 22px 24px; }
+    .modal-map {
+      height: 190px; display: grid; place-items: center; overflow: hidden; margin-bottom: 18px;
+      border-radius: 13px; border: 1px solid var(--border); background: var(--surface-soft);
+    }
+    .modal-map img { width: 100%; height: 100%; object-fit: contain; padding: 10px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .detail-card {
+      padding: 14px; border: 1px solid var(--border); border-radius: 13px; background: var(--surface);
+    }
+    .detail-card.full { grid-column: 1 / -1; }
+    .detail-label { display: flex; align-items: center; gap: 7px; margin: 0 0 7px; color: var(--blue); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .detail-card p { margin: 0; color: var(--text); font-size: 12px; line-height: 1.7; }
+    .fact-line { margin-top: 8px !important; color: var(--muted) !important; font-size: 11px !important; }
+    .phrases { display: grid; gap: 9px; }
+    .phrase {
+      padding: 12px; border: 1px solid var(--border); border-radius: 11px;
+      background: var(--surface-soft);
+    }
+    .phrase strong { display: block; margin-bottom: 4px; font-size: 13px; line-height: 1.5; }
+    .phrase span { color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .modal-note { margin: 15px 0 0; color: var(--muted); font-size: 10px; line-height: 1.6; }
+    .hidden { display: none !important; }
+
+    @media (max-width: 950px) { .country-grid { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+    @media (max-width: 650px) {
+      .topbar { padding: 10px 14px; }
+      .brand p { display: none; }
+      .page { width: min(100% - 24px, 560px); margin-top: 22px; }
+      .country-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+      .map-frame { height: 116px; }
+      .controls { align-items: stretch; }
+      .search-wrap { width: 100%; flex-basis: 100%; }
+      .filters { order: 2; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .detail-card.full { grid-column: auto; }
+      .modal-backdrop { padding: 8px; }
+      .modal { max-height: 94vh; border-radius: 15px; }
+      .modal-head { padding: 14px; }
+      .modal-body { padding: 14px; }
+      .modal-map { height: 155px; }
+      .modal-title h2 { font-size: 18px; }
+    }
+    @media (max-width: 360px) { .country-grid { grid-template-columns: 1fr 1fr; } .country-card { padding: 8px; } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">⌖</div>
+      <div>
+        <h1>English Journey <span style="color:var(--blue)">· Maps</span></h1>
+        <p>Explore countries where English is spoken</p>
+      </div>
+    </div>
+    <button id="theme-toggle" class="icon-button" type="button" title="Alternar tema" aria-label="Alternar tema">☾</button>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <div class="eyebrow">Geography · Language · Culture</div>
+      <h2>Anglophone Countries</h2>
+      <p>Explore countries where English is a native language, an official language or an important language for communication, education and public life. Select a map to discover more.</p>
+      <div class="concept-note">
+        <div class="note-icon">💡</div>
+        <div>
+          <strong>Official language ≠ mother tongue</strong>
+          <p>An <b>official language</b> is used by the government, in laws or in public services. A <b>mother tongue</b> is generally the first language a person learns at home. A country can have several official languages and many different mother tongues.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="controls" aria-label="Country filters">
+      <div class="filters" id="filters">
+        <button class="filter active" data-filter="all" type="button">All countries (18)</button>
+        <button class="filter" data-filter="native" type="button">Native English</button>
+        <button class="filter" data-filter="islands" type="button">Islands & Caribbean</button>
+        <button class="filter" data-filter="multilingual" type="button">Multilingual countries</button>
+      </div>
+      <label class="search-wrap">
+        <input id="search" type="search" placeholder="Search a country..." autocomplete="off" aria-label="Search a country">
+      </label>
+    </section>
+
+    <div id="country-groups">
+      <section class="group" data-group="native">
+        <div class="group-head"><h3>English as a main native language</h3><span>6 countries</span><div class="group-line"></div></div>
+        <div class="country-grid" id="grid-native"></div>
+      </section>
+      <section class="group" data-group="islands">
+        <div class="group-head"><h3>Islands and Caribbean countries</h3><span>6 countries</span><div class="group-line"></div></div>
+        <div class="country-grid" id="grid-islands"></div>
+      </section>
+      <section class="group" data-group="multilingual">
+        <div class="group-head"><h3>Countries with English in official or public use</h3><span>6 countries</span><div class="group-line"></div></div>
+        <div class="country-grid" id="grid-multilingual"></div>
+      </section>
+    </div>
+    <div id="no-results" class="no-results hidden">No countries found. Try another name.</div>
+
+    <footer class="page-foot">
+      <b>About the maps:</b> country outlines are drawn from Natural Earth geographical data (public-domain map data). The flag images are provided by FlagCDN.
+      <br><b>Language note:</b> “Mother tongue” examples are not an exhaustive list. First languages vary by region, family and community, especially in multilingual countries.
+      <br><b>Reference links:</b>
+      <a href="https://www.usa.gov/official-language-of-us" target="_blank" rel="noopener">USA.gov</a> ·
+      <a href="https://www150.statcan.gc.ca/n1/daily-quotidien/220817/dq220817a-eng.htm" target="_blank" rel="noopener">Statistics Canada</a> ·
+      <a href="https://www.irishstatutebook.ie/eli/cons/en/html" target="_blank" rel="noopener">Ireland Constitution</a> ·
+      <a href="https://www.legislation.govt.nz/act/public/2026/49/en/latest" target="_blank" rel="noopener">New Zealand Legislation</a> ·
+      <a href="https://www.gov.za/speeches/president-cyril-ramaphosa-enact-sign-language-12th-official-langauge-19-jul" target="_blank" rel="noopener">South African Government</a> ·
+      <a href="https://rajbhasha.gov.in/en/bharat-samhita-code-india-" target="_blank" rel="noopener">Government of India</a> ·
+      <a href="https://officialgazette.gov.ph/constitutions/1987-constitution/" target="_blank" rel="noopener">Philippines Constitution</a> ·
+      <a href="https://www.klrc.go.ke/index.php/constitution-of-kenya/108-chapter-two-the-republic/173-7-national-official-and-other-languages" target="_blank" rel="noopener">Kenya Constitution</a> ·
+      <a href="https://www.motcca.gov.gh/culture/" target="_blank" rel="noopener">Ghana Ministry of Tourism, Culture & Creative Arts</a> ·
+      <a href="https://www.constitution.mt/constitution/chapter/1/article/5" target="_blank" rel="noopener">Malta Constitution</a>.
+    </footer>
+  </main>
+
+  <div id="modal-backdrop" class="modal-backdrop hidden" role="presentation">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-country-name">
+      <header class="modal-head">
+        <img id="modal-flag" class="modal-flag" src="" alt="Country flag">
+        <div class="modal-title">
+          <h2 id="modal-country-name"></h2>
+          <p id="modal-country-subtitle"></p>
+        </div>
+        <button id="close-modal" class="close-modal" type="button" aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <div class="modal-map"><img id="modal-map-img" src="" alt="Map outline of the selected country"></div>
+        <div class="detail-grid">
+          <article class="detail-card">
+            <div class="detail-label">🏛️ Official language(s)</div>
+            <p id="modal-official"></p>
+          </article>
+          <article class="detail-card">
+            <div class="detail-label">🏠 Mother tongue(s)</div>
+            <p id="modal-mother"></p>
+          </article>
+          <article class="detail-card full">
+            <div class="detail-label">🌍 English in this country</div>
+            <p id="modal-role"></p>
+            <p id="modal-fact" class="fact-line"></p>
+          </article>
+          <article class="detail-card full">
+            <div class="detail-label">💬 Simple English sentences</div>
+            <div class="phrases" id="modal-phrases"></div>
+          </article>
+        </div>
+        <p class="modal-note">Note: the languages listed as mother tongues are examples of languages learned at home in childhood. They are not necessarily official languages, and one country may have many more.</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    'use strict';
+
+    const MAP_DATA_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson';
+
+    const countries = [
+      {
+        id:'us', iso:'us', name:'Estados Unidos', english:'United States', group:'native', groupLabel:'English as a main native language',
+        official:'English is the official language at the federal level, designated by Executive Order 14224 in 2025. Some states and territories also have their own language rules.',
+        mother:'English is the most common first language and the language most often spoken at home. Spanish and many other languages are also first languages for millions of people.',
+        role:'English is the main language used in everyday communication, government, education and most public life.',
+        fact:'The United States is multilingual: many communities use Spanish, Chinese languages, Tagalog, Vietnamese and Indigenous languages.',
+        phrases:[['The United States is in North America.','Os Estados Unidos ficam na América do Norte.'],['Many languages are spoken across the country.','Muitas línguas são faladas por todo o país.']]
+      },
+      {
+        id:'gb', iso:'gb', name:'Reino Unido', english:'United Kingdom', group:'native', groupLabel:'English as a main native language',
+        official:'English is the dominant language across the UK. Welsh has official status in Wales. Scottish Gaelic, Irish and other regional languages also have recognition and protection in parts of the UK.',
+        mother:'English is the first language for most people. Welsh, Scottish Gaelic, Irish and many community languages are mother tongues for people and families in different regions.',
+        role:'English is used throughout the United Kingdom in daily life, education, media and government.',
+        fact:'The UK is made up of four countries: England, Scotland, Wales and Northern Ireland.',
+        phrases:[['The United Kingdom has four countries.','O Reino Unido tem quatro países constituintes.'],['English is spoken across the UK.','O inglês é falado em todo o Reino Unido.']]
+      },
+      {
+        id:'ca', iso:'ca', name:'Canadá', english:'Canada', group:'native', groupLabel:'English as a main native language',
+        official:'English and French are the two official languages of the federal government. Provinces and territories also have their own language arrangements.',
+        mother:'English is the most common mother tongue nationally. French is the first language for many people, especially in Quebec. Indigenous and immigrant languages are also mother tongues.',
+        role:'English is widely used in most provinces. French is especially important in Quebec and is also used across the country.',
+        fact:'Canada is officially bilingual at the federal level, so English is not its only official language.',
+        phrases:[['Canada has two federal official languages.','O Canadá tem duas línguas oficiais no âmbito federal.'],['French is widely spoken in Quebec.','O francês é amplamente falado em Quebec.']]
+      },
+      {
+        id:'au', iso:'au', name:'Austrália', english:'Australia', group:'native', groupLabel:'English as a main native language',
+        official:'English is the de facto main language of public life. Australia does not have a single language declared as official in a federal language law.',
+        mother:'English is the most common language learned at home. Aboriginal and Torres Strait Islander languages, as well as languages brought by migrants, are also mother tongues.',
+        role:'English is the main language used in daily communication, schools, public services and national media.',
+        fact:'The 2021 Australian Census recorded English as the only language used at home by 72% of people.',
+        phrases:[['Australia is famous for its unique animals.','A Austrália é famosa por seus animais únicos.'],['English is the main language used in public life.','O inglês é a principal língua usada na vida pública.']]
+      },
+      {
+        id:'nz', iso:'nz', name:'Nova Zelândia', english:'New Zealand', group:'native', groupLabel:'English as a main native language',
+        official:'English, te reo Māori and New Zealand Sign Language are official languages. English received explicit statutory recognition on 7 August 2026.',
+        mother:'English is the first language for many people. Māori is the first language for some Māori families and communities; other languages are spoken in immigrant communities.',
+        role:'English is the most widely used language in everyday life, government, education and communication.',
+        fact:'The Māori language and New Zealand Sign Language have official status too.',
+        phrases:[['New Zealand has two main islands.','A Nova Zelândia tem duas ilhas principais.'],['Māori is an official language of New Zealand.','O maori é uma língua oficial da Nova Zelândia.']]
+      },
+      {
+        id:'ie', iso:'ie', name:'Irlanda', english:'Ireland', group:'native', groupLabel:'English as a main native language',
+        official:'Irish (Gaeilge) is the first official language. English is recognised as the second official language by the Irish Constitution.',
+        mother:'English is the first language for most people in everyday life. Irish is a mother tongue for people in Irish-speaking areas (the Gaeltacht) and in Irish-speaking families.',
+        role:'English is widely spoken throughout the country, while Irish is an important national language and is used in education, public services and cultural life.',
+        fact:'Official-language order and everyday language use are different: Irish is first in the Constitution, but English is more widely spoken.',
+        phrases:[['Ireland has two official languages.','A Irlanda tem duas línguas oficiais.'],['Irish is the first official language.','O irlandês é a primeira língua oficial.']]
+      },
+
+      {
+        id:'bs', iso:'bs', name:'Bahamas', english:'The Bahamas', group:'islands', groupLabel:'Islands and Caribbean countries',
+        official:'English is the official language and is used in government, schools and formal communication.',
+        mother:'Bahamian English and Bahamian Creole varieties are part of everyday speech. Haitian Creole and other languages are also mother tongues in some communities.',
+        role:'English is used in official settings, while local Bahamian speech has distinctive expressions, pronunciation and vocabulary.',
+        fact:'The Bahamas is an archipelago in the Atlantic Ocean, southeast of Florida.',
+        phrases:[['The Bahamas is a country of many islands.','As Bahamas são um país formado por muitas ilhas.'],['English is the official language.','O inglês é a língua oficial.']]
+      },
+      {
+        id:'jm', iso:'jm', name:'Jamaica', english:'Jamaica', group:'islands', groupLabel:'Islands and Caribbean countries',
+        official:'English is the official language and is used in law, government, education and formal writing.',
+        mother:'Jamaican Patois (Patwa), an English-based Creole language, is a first or home language for many Jamaicans. Many people also use Standard Jamaican English.',
+        role:'English is important in formal situations; Jamaican Patois is widely used in daily conversation, music and popular culture.',
+        fact:'Jamaican Patois has its own grammar and vocabulary; it is not simply incorrect English.',
+        phrases:[['Jamaica is famous for reggae music.','A Jamaica é famosa pela música reggae.'],['Many people speak Jamaican Patois at home.','Muitas pessoas falam o patois jamaicano em casa.']]
+      },
+      {
+        id:'bb', iso:'bb', name:'Barbados', english:'Barbados', group:'islands', groupLabel:'Islands and Caribbean countries',
+        official:'English is the official language of Barbados and is used in government, education and formal contexts.',
+        mother:'Bajan, an English-based Creole variety, is widely used in everyday conversation and is a home language for many people.',
+        role:'Standard English is common in formal settings, while Bajan is part of daily communication and local identity.',
+        fact:'Barbados is an island country in the eastern Caribbean region.',
+        phrases:[['Barbados is an island in the Caribbean.','Barbados é uma ilha no Caribe.'],['People use English and Bajan in daily life.','As pessoas usam inglês e bajan no dia a dia.']]
+      },
+      {
+        id:'tt', iso:'tt', name:'Trinidad e Tobago', english:'Trinidad and Tobago', group:'islands', groupLabel:'Islands and Caribbean countries',
+        official:'English is the official language and is used in government and education.',
+        mother:'Trinidadian Creole and Tobagonian Creole are widely used in everyday life. Families may also speak languages connected with Indian, African, European and other heritage.',
+        role:'English is used in formal communication, while local Creole varieties are important in informal conversation and culture.',
+        fact:'Trinidad and Tobago is a twin-island country near the northeastern coast of Venezuela.',
+        phrases:[['Trinidad and Tobago has two main islands.','Trinidad e Tobago tem duas ilhas principais.'],['English is used in schools and government.','O inglês é usado nas escolas e no governo.']]
+      },
+      {
+        id:'bz', iso:'bz', name:'Belize', english:'Belize', group:'islands', groupLabel:'Islands and Caribbean countries',
+        official:'English is the official language of Belize.',
+        mother:'Belize Kriol, Spanish, Garifuna and Maya languages (among others) are home or first languages for different communities. There is no single mother tongue for the whole country.',
+        role:'English is used in government and formal education. Belize is highly multilingual, and Kriol and Spanish are also widely heard.',
+        fact:'Belize is in Central America and is the only country in the region where English is the official language.',
+        phrases:[['Belize is in Central America.','Belize fica na América Central.'],['People in Belize speak different languages.','As pessoas em Belize falam diferentes línguas.']]
+      },
+      {
+        id:'mt', iso:'mt', name:'Malta', english:'Malta', group:'islands', groupLabel:'Islands and Caribbean countries',
+        official:'Maltese and English are the two official languages. Maltese is the national language.',
+        mother:'Maltese is the most common first language for many Maltese people. English is widely learned and used as a second language.',
+        role:'Both Maltese and English are used in public life, education and services. The amount of English used can vary by context.',
+        fact:'Malta is a small island country in the Mediterranean Sea, south of Sicily.',
+        phrases:[['Malta is an island country in Europe.','Malta é um país insular da Europa.'],['Maltese and English are official languages.','Maltês e inglês são línguas oficiais.']]
+      },
+
+      {
+        id:'za', iso:'za', name:'África do Sul', english:'South Africa', group:'multilingual', groupLabel:'Countries with English in official or public use',
+        official:'South Africa has 12 official languages: Sepedi, Sesotho, Setswana, siSwati, Tshivenda, Xitsonga, Afrikaans, South African Sign Language, English, isiNdebele, isiXhosa and isiZulu.',
+        mother:'There are many mother tongues. isiZulu is the largest home language, followed by isiXhosa, Afrikaans, Sepedi and others. English is a first language for a smaller share of the population.',
+        role:'English is widely used in business, higher education, national communication and parts of government, alongside the country’s other official languages.',
+        fact:'South African Sign Language became the country’s 12th official language in 2023; the constitutional change took effect in June 2026.',
+        phrases:[['South Africa has twelve official languages.','A África do Sul tem doze línguas oficiais.'],['Many languages are spoken in South Africa.','Muitas línguas são faladas na África do Sul.']]
+      },
+      {
+        id:'in', iso:'in', name:'Índia', english:'India', group:'multilingual', groupLabel:'Countries with English in official or public use',
+        official:'Hindi is the official language of the Union. English may also continue to be used for official purposes under the Official Languages Act. States have their own language arrangements.',
+        mother:'India has many mother tongues, including Hindi, Bengali, Marathi, Telugu, Tamil, Gujarati, Urdu, Kannada and Malayalam. The first language varies greatly by region and family.',
+        role:'English is widely used in central administration, courts, higher education, business and communication between people from different language regions.',
+        fact:'The Constitution lists 22 Scheduled Languages, but this does not mean that all 22 have the same official status across the whole country.',
+        phrases:[['India has many languages.','A Índia tem muitas línguas.'],['English is used in education and business.','O inglês é usado na educação e nos negócios.']]
+      },
+      {
+        id:'sg', iso:'sg', name:'Singapura', english:'Singapore', group:'multilingual', groupLabel:'Countries with English in official or public use',
+        official:'Singapore has four official languages: English, Malay, Mandarin Chinese and Tamil. Malay is the national language.',
+        mother:'First languages vary across families and communities. English is the language most commonly spoken at home overall; Mandarin, other Chinese varieties, Malay and Tamil are also important.',
+        role:'English is the main working language and a common language for communication among people from different language communities.',
+        fact:'Singapore’s school system also uses the expression “mother tongue” for a subject linked to a student’s ethnic background; this can differ from the language first learned at home.',
+        phrases:[['Singapore is a multilingual country.','Singapura é um país multilíngue.'],['English is a common language at school and work.','O inglês é uma língua comum na escola e no trabalho.']]
+      },
+      {
+        id:'ph', iso:'ph', name:'Filipinas', english:'Philippines', group:'multilingual', groupLabel:'Countries with English in official or public use',
+        official:'Filipino and English are the official languages. Filipino is the national language.',
+        mother:'The Philippines has many regional mother tongues, including Cebuano, Tagalog, Ilocano, Hiligaynon, Waray and others.',
+        role:'English is widely used in education, government, law, media and communication, alongside Filipino and regional languages.',
+        fact:'The Philippines is an archipelago with thousands of islands and a large number of living languages.',
+        phrases:[['The Philippines is an archipelago.','As Filipinas são um arquipélago.'],['Filipino and English are official languages.','Filipino e inglês são línguas oficiais.']]
+      },
+      {
+        id:'ng', iso:'ng', name:'Nigéria', english:'Nigeria', group:'multilingual', groupLabel:'Countries with English in official or public use',
+        official:'English is the official language and is used in federal government, education and formal communication.',
+        mother:'Hausa, Yoruba and Igbo are major indigenous languages. Hundreds of other languages are also mother tongues for communities across the country.',
+        role:'English is a shared language in a country with many linguistic communities. It is especially important in national government and education.',
+        fact:'Nigeria is one of the most linguistically diverse countries in Africa.',
+        phrases:[['Nigeria is in West Africa.','A Nigéria fica na África Ocidental.'],['People speak English and many local languages.','As pessoas falam inglês e muitas línguas locais.']]
+      },
+      {
+        id:'gh', iso:'gh', name:'Gana', english:'Ghana', group:'multilingual', groupLabel:'Countries with English in official or public use',
+        official:'English is the official language and the language used in government and formal education.',
+        mother:'Akan varieties such as Twi and Fante, Ewe, Ga and Dagbani are among the many languages learned at home. The mother tongue depends on the family and region.',
+        role:'English connects people from different language communities and is used in schools, government and national communication.',
+        fact:'Akan is the most frequently spoken indigenous language and is also used as a second language by many people.',
+        phrases:[['Ghana is in West Africa.','Gana fica na África Ocidental.'],['English is used in schools and government.','O inglês é usado nas escolas e no governo.']]
+      },
+      {
+        id:'ke', iso:'ke', name:'Quênia', english:'Kenya', group:'multilingual', groupLabel:'Countries with English in official or public use',
+        official:'Kiswahili and English are the official languages. Kiswahili is also the national language.',
+        mother:'Kenya has many mother tongues, including Kikuyu, Luhya languages, Dholuo, Kalenjin languages, Kamba and others. These vary by community and region.',
+        role:'English is widely used in education, government and formal communication. Kiswahili is a shared language across many communities.',
+        fact:'English is not the only official language: Kiswahili has the same constitutional official status and is the national language.',
+        phrases:[['Kenya is in East Africa.','O Quênia fica na África Oriental.'],['Kiswahili and English are official languages.','Suaíli e inglês são línguas oficiais.']]
+      }
+    ];
+
+    const groups = ['native', 'islands', 'multilingual'];
+    const gridIds = { native: 'grid-native', islands: 'grid-islands', multilingual: 'grid-multilingual' };
+    let currentFilter = 'all';
+    let currentSearch = '';
+    let mapFeatures = [];
+    let lastFocused = null;
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+      }[char]));
+    }
+
+    function cardMarkup(country) {
+      return `
+        <article class="country-card" data-country-card="${country.id}" data-group="${country.group}">
+          <button class="country-open" type="button" data-open-country="${country.id}" aria-label="Open information about ${escapeHtml(country.english)}">
+            <div class="map-frame">
+              <img class="map-img hidden" data-map-id="${country.id}" alt="Map of ${escapeHtml(country.english)}" loading="lazy">
+              <span class="map-loading" data-map-loading="${country.id}">Loading map…</span>
+            </div>
+            <div class="country-name-row">
+              <div>
+                <div class="country-name">${escapeHtml(country.name)}</div>
+                <div class="country-en">${escapeHtml(country.english)}</div>
+              </div>
+              <span class="open-cue" aria-hidden="true">↗</span>
+            </div>
+          </button>
+        </article>`;
+    }
+
+    function renderCards() {
+      groups.forEach(group => {
+        const container = document.getElementById(gridIds[group]);
+        container.innerHTML = countries.filter(country => country.group === group).map(cardMarkup).join('');
+      });
+      applyFilters();
+      document.querySelectorAll('[data-open-country]').forEach(button => {
+        button.addEventListener('click', () => openModal(button.dataset.openCountry));
+      });
+      if (mapFeatures.length) renderAllMaps();
+    }
+
+    function applyFilters() {
+      let visibleTotal = 0;
+      groups.forEach(group => {
+        const groupElement = document.querySelector('[data-group="' + group + '"]');
+        const groupCountries = countries.filter(country => country.group === group);
+        let groupVisible = 0;
+        groupCountries.forEach(country => {
+          const card = document.querySelector('[data-country-card="' + country.id + '"]');
+          const matchesGroup = currentFilter === 'all' || currentFilter === country.group;
+          const haystack = (country.name + ' ' + country.english).toLocaleLowerCase('en');
+          const matchesSearch = !currentSearch || haystack.includes(currentSearch);
+          const show = matchesGroup && matchesSearch;
+          card.classList.toggle('hidden', !show);
+          if (show) { groupVisible++; visibleTotal++; }
+        });
+        groupElement.classList.toggle('hidden', groupVisible === 0);
+      });
+      document.getElementById('no-results').classList.toggle('hidden', visibleTotal > 0);
+    }
+
+    function extractPolygons(geometry) {
+      if (!geometry) return [];
+      if (geometry.type === 'Polygon') return [geometry.coordinates];
+      if (geometry.type === 'MultiPolygon') return geometry.coordinates;
+      return [];
+    }
+
+    function ringArea(ring) {
+      let sum = 0;
+      for (let i = 0; i < ring.length - 1; i++) {
+        sum += ring[i][0] * ring[i + 1][1] - ring[i + 1][0] * ring[i][1];
+      }
+      return Math.abs(sum / 2);
+    }
+
+    function createMapSvg(feature, country) {
+      let polygons = extractPolygons(feature.geometry).filter(polygon => polygon[0] && polygon[0].length > 2);
+      if (!polygons.length) return '';
+
+      // Keep the main land masses readable in countries with remote islands.
+      const measured = polygons.map(polygon => ({ polygon, area: ringArea(polygon[0]) })).sort((a,b) => b.area - a.area);
+      if (country.id === 'us') polygons = measured.slice(0, 2).map(item => item.polygon);
+      else if (country.id === 'nz') polygons = measured.filter(item => item.area > measured[0].area * 0.0005).map(item => item.polygon);
+      else if (country.id === 'ph') polygons = measured.filter(item => item.area > measured[0].area * 0.00015).slice(0, 70).map(item => item.polygon);
+      else if (country.id === 'bs') polygons = measured.filter(item => item.area > measured[0].area * 0.00008).slice(0, 65).map(item => item.polygon);
+      else if (country.id === 'ca') polygons = measured.filter(item => item.area > measured[0].area * 0.0002).slice(0, 35).map(item => item.polygon);
+      else polygons = measured.filter(item => item.area > measured[0].area * 0.00008).map(item => item.polygon);
+
+      const rings = polygons.map(polygon => polygon[0]);
+      const coords = rings.flat();
+      const minLat = Math.min(...coords.map(point => point[1]));
+      const maxLat = Math.max(...coords.map(point => point[1]));
+      const midLat = (minLat + maxLat) / 2;
+      const cosLat = Math.max(.25, Math.cos(midLat * Math.PI / 180));
+      const project = ([lon, lat]) => [lon * cosLat, lat];
+      const projected = coords.map(project);
+      const minX = Math.min(...projected.map(point => point[0]));
+      const maxX = Math.max(...projected.map(point => point[0]));
+      const minY = Math.min(...projected.map(point => point[1]));
+      const maxY = Math.max(...projected.map(point => point[1]));
+      const mapWidth = 600, mapHeight = 350, padding = 28;
+      const spanX = Math.max(.01, maxX - minX), spanY = Math.max(.01, maxY - minY);
+      const scale = Math.min((mapWidth - padding * 2) / spanX, (mapHeight - padding * 2) / spanY);
+      const offsetX = (mapWidth - spanX * scale) / 2;
+      const offsetY = (mapHeight - spanY * scale) / 2;
+      const pathData = rings.map(ring => {
+        const points = ring.map(raw => {
+          const [x,y] = project(raw);
+          const sx = offsetX + (x - minX) * scale;
+          const sy = mapHeight - offsetY - (y - minY) * scale;
+          return [sx.toFixed(1), sy.toFixed(1)];
+        });
+        return 'M' + points.map((p,index) => (index ? 'L' : '') + p[0] + ' ' + p[1]).join(' ') + 'Z';
+      }).join(' ');
+
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="350" viewBox="0 0 600 350">
+        <defs><linearGradient id="land" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#bfdbfe"/><stop offset="1" stop-color="#60a5fa"/></linearGradient></defs>
+        <rect width="600" height="350" rx="18" fill="#f1f5f9"/>
+        <path d="${pathData}" fill="url(#land)" stroke="#1d4ed8" stroke-width="2.2" stroke-linejoin="round" fill-rule="evenodd"/>
+        <text x="300" y="331" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" font-weight="700" letter-spacing="2" fill="#64748b">${escapeHtml(country.english.toUpperCase())}</text>
+      </svg>`;
+    }
+
+    function setMapImage(country, feature) {
+      const svg = createMapSvg(feature, country);
+      if (!svg) return;
+      const src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      const image = document.querySelector('[data-map-id="' + country.id + '"]');
+      const loading = document.querySelector('[data-map-loading="' + country.id + '"]');
+      if (image) { image.src = src; image.classList.remove('hidden'); }
+      if (loading) loading.classList.add('hidden');
+      country.mapSrc = src;
+    }
+
+    function renderAllMaps() {
+      countries.forEach(country => {
+        const feature = mapFeatures.find(item => {
+          const props = item.properties || {};
+          const code = String(props.ISO_A2 || props.ISO_A2_EH || '').toLowerCase();
+          return code === country.iso;
+        });
+        if (feature) setMapImage(country, feature);
+        else {
+          const loading = document.querySelector('[data-map-loading="' + country.id + '"]');
+          if (loading) loading.textContent = 'Map unavailable';
+        }
+      });
+    }
+
+    async function loadMapData() {
+      try {
+        const response = await fetch(MAP_DATA_URL, { cache: 'force-cache' });
+        if (!response.ok) throw new Error('Map data request failed: ' + response.status);
+        const geojson = await response.json();
+        mapFeatures = geojson.features || [];
+        renderAllMaps();
+      } catch (error) {
+        console.error('Could not load country map outlines:', error);
+        document.querySelectorAll('.map-loading').forEach(element => {
+          element.textContent = 'Map could not be loaded';
+        });
+      }
+    }
+
+    function openModal(countryId) {
+      const country = countries.find(item => item.id === countryId);
+      if (!country) return;
+      lastFocused = document.activeElement;
+      document.getElementById('modal-flag').src = 'https://flagcdn.com/w160/' + country.iso + '.png';
+      document.getElementById('modal-flag').alt = 'Flag of ' + country.english;
+      document.getElementById('modal-country-name').textContent = country.name;
+      document.getElementById('modal-country-subtitle').textContent = country.english + ' · ' + country.groupLabel;
+      document.getElementById('modal-official').textContent = country.official;
+      document.getElementById('modal-mother').textContent = country.mother;
+      document.getElementById('modal-role').textContent = country.role;
+      document.getElementById('modal-fact').textContent = country.fact;
+      document.getElementById('modal-map-img').src = country.mapSrc || '';
+      document.getElementById('modal-map-img').alt = 'Map of ' + country.english;
+      document.getElementById('modal-phrases').innerHTML = country.phrases.map(pair =>
+        '<div class="phrase"><strong>' + escapeHtml(pair[0]) + '</strong><span>' + escapeHtml(pair[1]) + '</span></div>'
+      ).join('');
+      document.getElementById('modal-backdrop').classList.remove('hidden');
+      document.getElementById('close-modal').focus();
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      document.getElementById('modal-backdrop').classList.add('hidden');
+      document.body.style.overflow = '';
+      if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+    }
+
+    document.getElementById('close-modal').addEventListener('click', closeModal);
+    document.getElementById('modal-backdrop').addEventListener('click', event => {
+      if (event.target.id === 'modal-backdrop') closeModal();
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !document.getElementById('modal-backdrop').classList.contains('hidden')) closeModal();
+    });
+
+    document.getElementById('filters').addEventListener('click', event => {
+      const button = event.target.closest('[data-filter]');
+      if (!button) return;
+      currentFilter = button.dataset.filter;
+      document.querySelectorAll('.filter').forEach(item => item.classList.toggle('active', item === button));
+      applyFilters();
+    });
+    document.getElementById('search').addEventListener('input', event => {
+      currentSearch = event.target.value.trim().toLocaleLowerCase('en');
+      applyFilters();
+    });
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      const isDark = document.body.classList.contains('dark');
+      document.getElementById('theme-toggle').textContent = isDark ? '☀' : '☾';
+      document.querySelector('meta[name="theme-color"]').content = isDark ? '#202124' : '#f8f9fa';
+    });
+
+    renderCards();
+    loadMapData();
+  </script>
+</body>
+</html>
