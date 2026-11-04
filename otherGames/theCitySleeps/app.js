@@ -141,7 +141,7 @@ const WORD_PT = {
   reveal:"revelar", insights:"visões", insight:"visão", category:"categoria", private:"privada",
   ally:"aliado", allies:"aliados", villain:"vilão", citizen:"cidadão", neutral:"neutro",
   eliminated:"eliminado", survivor:"sobrevivente", survive:"sobreviver", alone:"sozinho",
-  everyone:"todos", each:"cada", night:"noite", nightly:"noturna", task:"tarefa", skip:"pular"
+  everyone:"todos", each:"cada", night:"noite", nightly:"noturna", task:"tarefa", skip:"pular",
 
   if:"se", for:"para", use:"usar", do:"fazer", it:"isso", will:"irá", been:"sido", was:"era",
   that:"essa/esse", this:"esta/este", there:"há", here:"aqui", what:"o que", happened:"aconteceu",
@@ -309,8 +309,10 @@ async function api(action, payload = {}) {
         if (detail && detail.error) message = detail.error;
       }
     } catch (_) {}
-    if (/session has expired|sign in again|session/i.test(message)) {
-      openSessionDialog();
+    const sessionExpired = action !== "create_session" &&
+      (error.context?.status === 401 || /session has expired|sign in again/i.test(message));
+    if (sessionExpired) {
+      requireLogin("Your game session expired. Sign in again to continue.");
     }
     throw new Error(message);
   }
@@ -332,6 +334,22 @@ function openSessionDialog() {
   if (gameSession.username) $("session-username").value = gameSession.username;
   $("session-error").textContent = "";
   openDialog("session-dialog");
+}
+
+function requireLogin(message = "") {
+  sessionToken = "";
+  gameSession.tcsSessionToken = null;
+  saveSession(gameSession);
+  currentRoomCode = "";
+  localStorage.removeItem("tcs_current_room");
+  stopRoomPolling();
+
+  $("home-view").classList.add("hidden");
+  $("room-view").classList.add("hidden");
+  $("session-required").classList.remove("hidden");
+  $("signed-in-user").textContent = "";
+  openSessionDialog();
+  $("session-error").textContent = message;
 }
 
 async function establishSession(username, password) {
@@ -360,6 +378,8 @@ async function initialize() {
     button.addEventListener("click", () => closeDialog(button.dataset.closeDialog));
   });
 
+  // Prevent closing the required sign-in dialog with the Escape key.
+  $("session-dialog").addEventListener("cancel", (event) => event.preventDefault());
   $("signed-in-user").textContent = gameSession.username || "";
   $("btn-open-session").addEventListener("click", openSessionDialog);
   $("session-form").addEventListener("submit", async (event) => {
@@ -410,10 +430,14 @@ async function initialize() {
   $("btn-complete-mini-game").addEventListener("click", completeMiniGame);
 
   if (!sessionToken) {
+    $("home-view").classList.add("hidden");
+    $("room-view").classList.add("hidden");
     $("session-required").classList.remove("hidden");
     openSessionDialog();
     return;
   }
+
+  $("session-required").classList.add("hidden");
 
   try {
     if (currentRoomCode) {
