@@ -415,6 +415,9 @@
       timerDisplay.classList.remove('low-time');
       renderGame();
       updateTimer();
+      if (window.innerWidth <= 760) {
+        piecesPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
       timerInterval = setInterval(() => {
         timeLeft -= 1;
         updateTimer();
@@ -533,6 +536,9 @@
         statusDisplay.textContent = 'Piece selected. Now tap the position where it belongs.';
       }
       renderGame();
+      if (window.innerWidth <= 760 && selectedSource?.type === 'bank') {
+        board.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     }
 
     function handleSlotClick(index) {
