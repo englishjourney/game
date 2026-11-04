@@ -1399,7 +1399,7 @@
             if (query.length < 1) return;
 
             // Bloqueia textos longos para manter a consulta focada em palavras e expressões.
-            const wordCount = rawQuery.trim().split(/\\s+/).filter(Boolean).length;
+            const wordCount = rawQuery.trim().split(/\s+/).filter(Boolean).length;
             const MAX_SEARCH_WORDS = 6;
             const MAX_SEARCH_CHARS = 80;
             if (wordCount > MAX_SEARCH_WORDS || rawQuery.length > MAX_SEARCH_CHARS) {
