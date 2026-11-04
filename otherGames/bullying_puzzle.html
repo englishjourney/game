@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bullying Puzzle | English Journey</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f0fdf4;
+      --surface: #ffffff;
+      --green: #16a34a;
+      --green-dark: #15803d;
+      --green-soft: #dcfce7;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #cbd5e1;
+      --red: #dc2626;
+      --shadow: 0 12px 30px rgba(15, 23, 42, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      background: linear-gradient(145deg, #f0fdf4 0%, #eff6ff 100%);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+    }
+
+    button { font: inherit; }
+    .app {
+      width: 100%;
+      max-width: 1080px;
+      padding: 30px;
+      background: var(--surface);
+      border: 1px solid #dbe5df;
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .brand {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      color: var(--green-dark);
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
+    h1 {
+      margin: 0 0 10px;
+      color: var(--green-dark);
+      text-align: center;
+      font-size: clamp(2rem, 5vw, 2.65rem);
+      line-height: 1.1;
+    }
+    .subtitle {
+      max-width: 720px;
+      margin: 0 auto 24px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.65;
+    }
+
+    .intro-card {
+      max-width: 700px;
+      margin: 26px auto 0;
+      padding: 24px;
+      border: 1px solid #bbf7d0;
+      border-radius: 16px;
+      background: #f8fff9;
+      text-align: center;
+    }
+    .intro-icon { font-size: 2.6rem; margin-bottom: 8px; }
+    .intro-card p { margin: 0 0 18px; color: #475569; line-height: 1.65; }
+
+    .primary-btn {
+      padding: 13px 24px;
+      border: 0;
+      border-radius: 11px;
+      background: var(--green);
+      color: white;
+      box-shadow: 0 5px 13px rgba(22, 163, 74, .23);
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .2s, background .2s;
+    }
+    .primary-btn:hover { background: var(--green-dark); transform: translateY(-2px); }
+    .primary-btn:active { transform: translateY(0); }
+    .hidden { display: none !important; }
+
+    .game-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin: 12px 0 18px;
+      padding: 14px 18px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: #f8fafc;
+    }
+    .game-name { color: var(--green-dark); font-family: 'Fredoka', sans-serif; font-size: 1.2rem; }
+    .timer-box {
+      min-width: 100px;
+      padding: 8px 13px;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      background: #fff1f2;
+      color: #b91c1c;
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+    .timer-box.low-time { animation: pulse .8s infinite alternate; }
+    @keyframes pulse { to { transform: scale(1.04); background: #fee2e2; } }
+
+    .instructions {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: .92rem;
+      line-height: 1.55;
+      text-align: center;
+    }
+    .progress-wrap { margin-bottom: 20px; }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 700;
+    }
+    .progress-track { height: 9px; overflow: hidden; border-radius: 20px; background: #e2e8f0; }
+    .progress-fill { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #22c55e, #86efac); transition: width .25s ease; }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(280px, .92fr);
+      gap: 20px;
+      align-items: start;
+    }
+    .panel {
+      min-width: 0;
+      padding: 18px;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      background: #fbfdff;
+    }
+    .panel-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 13px;
+      color: #334155;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.25rem;
+    }
+    .panel-heading small {
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: .72rem;
+      font-weight: 600;
+    }
+
+    .board { display: grid; gap: 9px; }
+    .drop-slot {
+      display: flex;
+      align-items: stretch;
+      gap: 10px;
+      min-height: 82px;
+      padding: 9px;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      background: white;
+      transition: border-color .18s, background .18s, transform .18s;
+    }
+    .drop-slot.drag-over { border-color: var(--green); background: #f0fdf4; transform: scale(1.01); }
+    .drop-slot.selected-source { border-color: #0ea5e9; background: #f0f9ff; }
+    .slot-number {
+      flex: 0 0 30px;
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: #475569;
+      font-size: .83rem;
+      font-weight: 800;
+    }
+    .slot-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      color: #94a3b8;
+      font-size: .82rem;
+      line-height: 1.5;
+    }
+    .slot-content.filled { color: var(--text); font-size: .88rem; font-weight: 500; }
+    .slot-content.title-piece {
+      color: var(--green-dark);
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.08rem;
+      font-weight: 600;
+    }
+
+    .pieces-list { display: grid; gap: 10px; }
+    .piece-card {
+      position: relative;
+      padding: 13px 14px 13px 38px;
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+      background: white;
+      color: #334155;
+      font-size: .88rem;
+      line-height: 1.5;
+      cursor: grab;
+      user-select: none;
+      transition: border-color .18s, background .18s, transform .18s, box-shadow .18s;
+    }
+    .piece-card::before {
+      content: '✣';
+      position: absolute;
+      left: 13px;
+      top: 12px;
+      color: var(--green);
+      font-size: 1.05rem;
+    }
+    .piece-card:hover { border-color: var(--green); box-shadow: 0 4px 12px rgba(22, 163, 74, .09); transform: translateY(-1px); }
+    .piece-card.selected { border: 2px solid #0ea5e9; background: #f0f9ff; box-shadow: 0 0 0 3px rgba(14, 165, 233, .1); }
+    .piece-card:active { cursor: grabbing; }
+    .piece-card.dragging { opacity: .45; }
+
+    .status {
+      min-height: 25px;
+      margin: 15px 0 0;
+      color: var(--muted);
+      text-align: center;
+      font-size: .88rem;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+    .return-btn {
+      display: block;
+      margin: 10px auto 0;
+      padding: 8px 12px;
+      border: 1px solid #bae6fd;
+      border-radius: 9px;
+      background: #f0f9ff;
+      color: #0369a1;
+      font-size: .82rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .return-btn:hover { background: #e0f2fe; }
+
+    .result-panel {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid #86efac;
+      border-radius: 15px;
+      background: #f0fdf4;
+      text-align: center;
+      animation: appear .3s ease;
+    }
+    .result-panel.failed { border-color: #fecaca; background: #fff7f7; }
+    .result-panel h2 { margin: 0 0 7px; color: var(--green-dark); font-size: 1.7rem; }
+    .result-panel.failed h2 { color: #b91c1c; }
+    .result-panel p { margin: 0 0 16px; color: #475569; line-height: 1.55; }
+    @keyframes appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 760px) {
+      body { padding: 12px; }
+      .app { padding: 20px 14px; border-radius: 16px; }
+      .workspace { grid-template-columns: 1fr; }
+      .game-top { align-items: flex-start; }
+      .game-name { font-size: 1.05rem; }
+      .panel { padding: 13px; }
+      .drop-slot { min-height: 76px; }
+    }
+    @media (max-width: 420px) {
+      .game-top { padding: 11px; }
+      .timer-box { min-width: 82px; font-size: 1.05rem; }
+      .piece-card, .slot-content.filled { font-size: .82rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="brand">✦ English Journey · Other Games ✦</div>
+
+    <section id="start-screen">
+      <h1>Bullying Puzzle</h1>
+      <p class="subtitle">Understanding and Stopping Bullying</p>
+      <div class="intro-card">
+        <div class="intro-icon">🧩</div>
+        <p>Put the text back in the correct order! The title and the two parts of each paragraph are mixed up. Arrange all <strong>7 pieces</strong> before the time runs out.</p>
+        <p><strong>You have 1 minute.</strong> Drag each piece to a position. On a touchscreen, tap a piece and then tap the position where it belongs.</p>
+        <button id="start-btn" class="primary-btn">Start Puzzle</button>
+      </div>
+    </section>
+
+    <section id="game-screen" class="hidden">
+      <div class="game-top">
+        <div class="game-name">🧩 Put the text in order!</div>
+        <div id="timer" class="timer-box" aria-live="off">01:00</div>
+      </div>
+      <p class="instructions">Complete the text from beginning to end. The title must come first. You can move a piece again whenever you need.</p>
+
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Completed positions</span><span id="progress-count">0 / 7</span></div>
+        <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+      </div>
+
+      <div class="workspace">
+        <section class="panel" aria-label="Puzzle board">
+          <h2 class="panel-heading">🧱 Puzzle board <small>Order: 1 → 7</small></h2>
+          <div id="board" class="board"></div>
+          <button id="return-btn" class="return-btn hidden">Return selected piece to the list</button>
+        </section>
+
+        <section id="pieces-panel" class="panel" aria-label="Available puzzle pieces">
+          <h2 class="panel-heading">🧩 Available pieces <small id="pieces-count">7 left</small></h2>
+          <div id="pieces-list" class="pieces-list"></div>
+        </section>
+      </div>
+
+      <p id="status" class="status" aria-live="polite">Choose a piece to begin.</p>
+
+      <section id="result-panel" class="result-panel hidden" aria-live="polite">
+        <h2 id="result-title">Time's up!</h2>
+        <p id="result-message">Try again and rebuild the text.</p>
+        <button id="restart-btn" class="primary-btn">Restart puzzle</button>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    'use strict';
+
+    // The title is piece 1. Each of the three original paragraphs is split into two pieces.
+    const puzzlePieces = [
+      { id: 'title', text: 'Understanding and Stopping Bullying', isTitle: true },
+      { id: 'p1a', text: 'Bullying is a serious problem that affects many students in schools around the world. It happens when someone repeatedly hurts, threatens, or humiliates another person on purpose.' },
+      { id: 'p1b', text: 'This behavior can be physical, verbal, or even online through social media, creating a hostile environment for everyone involved.' },
+      { id: 'p2a', text: 'The impact of bullying on victims can be deeply damaging and long-lasting. Children and teenagers who experience bullying often suffer from anxiety, depression, a drop in school performance, and feelings of isolation.' },
+      { id: 'p2b', text: 'Because they feel unsafe and unsupported, it becomes very difficult for them to focus on learning and enjoying their daily lives.' },
+      { id: 'p3a', text: 'Stopping bullying requires a collective effort from students, teachers, and parents. Schools must enforce strict anti-bullying rules, while adults need to teach empathy, respect, and kindness.' },
+      { id: 'p3b', text: 'By speaking up and supporting one another, we can create a safe environment where every young person feels valued and protected.' }
+    ];
+    const correctOrder = puzzlePieces.map(piece => piece.id);
+
+    const startScreen = document.getElementById('start-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const board = document.getElementById('board');
+    const piecesList = document.getElementById('pieces-list');
+    const piecesPanel = document.getElementById('pieces-panel');
+    const timerDisplay = document.getElementById('timer');
+    const statusDisplay = document.getElementById('status');
+    const progressCount = document.getElementById('progress-count');
+    const progressFill = document.getElementById('progress-fill');
+    const piecesCount = document.getElementById('pieces-count');
+    const returnButton = document.getElementById('return-btn');
+    const resultPanel = document.getElementById('result-panel');
+    const resultTitle = document.getElementById('result-title');
+    const resultMessage = document.getElementById('result-message');
+
+    let availablePieces = [];
+    let placedPieces = Array(7).fill(null);
+    let selectedSource = null;
+    let dragSource = null;
+    let timeLeft = 60;
+    let timerInterval = null;
+    let gameEnded = false;
+
+    function shuffle(items) {
+      const result = [...items];
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+      }
+      return result;
+    }
+
+    function startGame() {
+      clearInterval(timerInterval);
+      availablePieces = shuffle(puzzlePieces);
+      placedPieces = Array(7).fill(null);
+      selectedSource = null;
+      dragSource = null;
+      timeLeft = 60;
+      gameEnded = false;
+      startScreen.classList.add('hidden');
+      gameScreen.classList.remove('hidden');
+      resultPanel.classList.add('hidden');
+      statusDisplay.textContent = 'Choose a piece to begin.';
+      timerDisplay.classList.remove('low-time');
+      renderGame();
+      updateTimer();
+      timerInterval = setInterval(() => {
+        timeLeft -= 1;
+        updateTimer();
+        if (timeLeft <= 0) endGame(false);
+      }, 1000);
+    }
+
+    function updateTimer() {
+      const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+      const seconds = (timeLeft % 60).toString().padStart(2, '0');
+      timerDisplay.textContent = minutes + ':' + seconds;
+      timerDisplay.classList.toggle('low-time', timeLeft <= 15);
+    }
+
+    function renderGame() {
+      board.innerHTML = '';
+      placedPieces.forEach((piece, index) => {
+        const slot = document.createElement('div');
+        slot.className = 'drop-slot';
+        slot.dataset.index = String(index);
+        slot.addEventListener('click', () => handleSlotClick(index));
+        slot.addEventListener('dragover', event => {
+          if (!gameEnded && dragSource) {
+            event.preventDefault();
+            slot.classList.add('drag-over');
+          }
+        });
+        slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+        slot.addEventListener('drop', event => {
+          event.preventDefault();
+          slot.classList.remove('drag-over');
+          if (dragSource && !gameEnded) {
+            movePiece(dragSource, { type: 'slot', index });
+            dragSource = null;
+          }
+        });
+
+        const number = document.createElement('span');
+        number.className = 'slot-number';
+        number.textContent = String(index + 1);
+        slot.appendChild(number);
+
+        const content = document.createElement('div');
+        content.className = 'slot-content';
+        if (piece) {
+          content.classList.add('filled');
+          if (piece.isTitle) content.classList.add('title-piece');
+          content.textContent = piece.text;
+          content.draggable = !gameEnded;
+          content.title = 'Tap to select this piece, or drag it to another position.';
+          content.addEventListener('dragstart', event => beginDrag(event, { type: 'slot', index }));
+          content.addEventListener('dragend', () => { dragSource = null; });
+        } else {
+          content.textContent = 'Drop a piece here or tap this position';
+        }
+        slot.appendChild(content);
+
+        if (selectedSource?.type === 'slot' && selectedSource.index === index) {
+          slot.classList.add('selected-source');
+        }
+        board.appendChild(slot);
+      });
+
+      piecesList.innerHTML = '';
+      availablePieces.forEach((piece, index) => {
+        const card = document.createElement('div');
+        card.className = 'piece-card';
+        card.textContent = piece.text;
+        card.draggable = !gameEnded;
+        card.tabIndex = gameEnded ? -1 : 0;
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', 'Puzzle piece: ' + piece.text);
+        card.addEventListener('click', () => handleBankClick(index));
+        card.addEventListener('keydown', event => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            handleBankClick(index);
+          }
+        });
+        card.addEventListener('dragstart', event => beginDrag(event, { type: 'bank', index }));
+        card.addEventListener('dragend', () => { dragSource = null; });
+        if (selectedSource?.type === 'bank' && selectedSource.index === index) card.classList.add('selected');
+        piecesList.appendChild(card);
+      });
+
+      piecesCount.textContent = availablePieces.length + ' left';
+      const completed = placedPieces.filter(Boolean).length;
+      progressCount.textContent = completed + ' / 7';
+      progressFill.style.width = ((completed / 7) * 100) + '%';
+      returnButton.classList.toggle('hidden', selectedSource?.type !== 'slot' || gameEnded);
+    }
+
+    function beginDrag(event, source) {
+      if (gameEnded) {
+        event.preventDefault();
+        return;
+      }
+      dragSource = source;
+      selectedSource = null;
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', source.type + ':' + source.index);
+      event.currentTarget.classList.add('dragging');
+    }
+
+    function handleBankClick(index) {
+      if (gameEnded) return;
+      if (selectedSource?.type === 'slot') {
+        returnSelectedPiece();
+        return;
+      }
+      if (selectedSource?.type === 'bank' && selectedSource.index === index) {
+        selectedSource = null;
+        statusDisplay.textContent = 'Selection cleared. Choose another piece.';
+      } else {
+        selectedSource = { type: 'bank', index };
+        statusDisplay.textContent = 'Piece selected. Now tap the position where it belongs.';
+      }
+      renderGame();
+    }
+
+    function handleSlotClick(index) {
+      if (gameEnded) return;
+      if (selectedSource) {
+        movePiece(selectedSource, { type: 'slot', index });
+        selectedSource = null;
+        return;
+      }
+      if (placedPieces[index]) {
+        selectedSource = { type: 'slot', index };
+        statusDisplay.textContent = 'Position selected. Tap another position to move or swap this piece.';
+        renderGame();
+      } else {
+        statusDisplay.textContent = 'Choose a piece from the available pieces first.';
+      }
+    }
+
+    function movePiece(source, destination) {
+      if (gameEnded || !source || destination.type !== 'slot') return;
+      let movingPiece;
+      if (source.type === 'bank') {
+        movingPiece = availablePieces[source.index];
+        if (!movingPiece) return;
+        const displacedPiece = placedPieces[destination.index];
+        if (displacedPiece) availablePieces[source.index] = displacedPiece;
+        else availablePieces.splice(source.index, 1);
+      } else if (source.type === 'slot') {
+        if (source.index === destination.index) {
+          selectedSource = null;
+          renderGame();
+          return;
+        }
+        movingPiece = placedPieces[source.index];
+        if (!movingPiece) return;
+        placedPieces[source.index] = placedPieces[destination.index];
+      } else {
+        return;
+      }
+
+      placedPieces[destination.index] = movingPiece;
+      selectedSource = null;
+      renderGame();
+      checkPuzzle();
+
+      if (window.innerWidth <= 760 && !gameEnded) {
+        if (availablePieces.length > 0) piecesPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    function returnSelectedPiece() {
+      if (gameEnded || selectedSource?.type !== 'slot') return;
+      const piece = placedPieces[selectedSource.index];
+      if (piece) {
+        placedPieces[selectedSource.index] = null;
+        availablePieces.push(piece);
+      }
+      selectedSource = null;
+      statusDisplay.textContent = 'Piece returned to the available list.';
+      renderGame();
+    }
+
+    function checkPuzzle() {
+      const complete = placedPieces.every(Boolean);
+      if (!complete) {
+        statusDisplay.textContent = 'Keep going! Put all 7 pieces in the correct order.';
+        return;
+      }
+      const isCorrect = placedPieces.every((piece, index) => piece.id === correctOrder[index]);
+      if (isCorrect) {
+        endGame(true);
+      } else {
+        statusDisplay.textContent = 'All positions are filled, but the order is not correct yet. Keep adjusting the pieces!';
+      }
+    }
+
+    function endGame(won) {
+      if (gameEnded) return;
+      gameEnded = true;
+      clearInterval(timerInterval);
+      selectedSource = null;
+      dragSource = null;
+      renderGame();
+      resultPanel.classList.remove('hidden', 'failed');
+      if (won) {
+        resultTitle.textContent = 'You did it! 🎉';
+        resultMessage.textContent = 'Excellent work! You rebuilt the text about understanding and stopping bullying.';
+        statusDisplay.textContent = 'Puzzle completed successfully!';
+        timerDisplay.classList.remove('low-time');
+      } else {
+        resultPanel.classList.add('failed');
+        resultTitle.textContent = "Time's up! ⏰";
+        resultMessage.textContent = 'The 1-minute challenge is over. Restart the puzzle and try to put all 7 pieces in the correct order.';
+        statusDisplay.textContent = 'Time is over. The pieces are locked until you restart.';
+      }
+      document.getElementById('restart-btn').textContent = won ? 'Play again' : 'Restart puzzle';
+    }
+
+    document.getElementById('start-btn').addEventListener('click', startGame);
+    document.getElementById('restart-btn').addEventListener('click', startGame);
+    returnButton.addEventListener('click', returnSelectedPiece);
+
+    // Allow pieces dragged from the board to be returned to the available-pieces area.
+    piecesPanel.addEventListener('dragover', event => {
+      if (!gameEnded && dragSource?.type === 'slot') event.preventDefault();
+    });
+    piecesPanel.addEventListener('drop', event => {
+      event.preventDefault();
+      if (gameEnded || dragSource?.type !== 'slot') return;
+      const piece = placedPieces[dragSource.index];
+      if (piece) {
+        placedPieces[dragSource.index] = null;
+        availablePieces.push(piece);
+        selectedSource = null;
+        renderGame();
+        statusDisplay.textContent = 'Piece returned to the available list.';
+      }
+      dragSource = null;
+    });
+  </script>
+</body>
+</html>
