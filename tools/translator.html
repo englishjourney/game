@@ -88,6 +88,9 @@
             <button data-cat="all" class="cat-chip active-chip px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap bg-google-blue text-white shadow-sm">
                 <i class="fa-solid fa-border-all mr-1.5 text-xs"></i> Todos os Termos
             </button>
+            <button data-cat="English Vocabulary" class="cat-chip px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap bg-white dark:bg-google-darkCard border border-google-lightBorder dark:border-google-darkBorder hover:bg-gray-50 dark:hover:bg-google-darkBorder text-gray-700 dark:text-gray-300">
+                <i class="fa-solid fa-book-open mr-1.5 text-xs text-emerald-500"></i> Vocabulário em Inglês
+            </button>
             <button data-cat="Cybersecurity" class="cat-chip px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap bg-white dark:bg-google-darkCard border border-google-lightBorder dark:border-google-darkBorder hover:bg-gray-50 dark:hover:bg-google-darkBorder text-gray-700 dark:text-gray-300">
                 <i class="fa-solid fa-lock mr-1.5 text-xs text-blue-500"></i> Segurança Cibernética
             </button>
@@ -245,7 +248,7 @@
     <!-- JavaScript Application Logic -->
     <script>
         // ----------------------------------------------------
-        // 1. DATASET OF 44 DICTIONARY TERMS
+        // 1. DATASET OF DICTIONARY TERMS
         // ----------------------------------------------------
         const dictionary = [
             {
@@ -565,6 +568,756 @@
                 category: "Fontes Confiáveis",
                 translation: "Pesquisa reversa de imagem",
                 definition: "Técnica de busca para descobrir a data original, contexto e fonte real onde uma foto foi publicada originalmente."
+            }
+            ,
+            {
+                id: 45,
+                term: "Bridging",
+                category: "English Vocabulary",
+                translation: "Conectando / Reduzindo (uma distância ou lacuna)",
+                definition: "Ato de unir duas coisas separadas ou diminuir uma diferença."
+            },
+            {
+                id: 46,
+                term: "the",
+                category: "English Vocabulary",
+                translation: "O / A / Os / As",
+                definition: "Artigo definido usado antes de um substantivo específico."
+            },
+            {
+                id: 47,
+                term: "Divide",
+                category: "English Vocabulary",
+                translation: "Divisão / A divisão / A lacuna",
+                definition: "Separação entre dois grupos ou realidades."
+            },
+            {
+                id: 48,
+                term: "Challenge",
+                category: "English Vocabulary",
+                translation: "Desafio",
+                definition: "Tarefa ou situação difícil que exige esforço para ser superada."
+            },
+            {
+                id: 49,
+                term: "of",
+                category: "English Vocabulary",
+                translation: "De",
+                definition: "Preposição que indica posse, origem ou relação entre elementos."
+            },
+            {
+                id: 50,
+                term: "Social",
+                category: "English Vocabulary",
+                translation: "Social",
+                definition: "Relacionado à sociedade e às relações entre as pessoas."
+            },
+            {
+                id: 51,
+                term: "Inequality",
+                category: "English Vocabulary",
+                translation: "Desigualdade",
+                definition: "Falta de igualdade, especialmente em direitos, oportunidades e riqueza."
+            },
+            {
+                id: 52,
+                term: "remains",
+                category: "English Vocabulary",
+                translation: "Permanece",
+                definition: "Continua a existir em determinado estado ou situação."
+            },
+            {
+                id: 53,
+                term: "one",
+                category: "English Vocabulary",
+                translation: "Um / Uma",
+                definition: "Número ou pronome indefinido, dependendo do contexto."
+            },
+            {
+                id: 54,
+                term: "most",
+                category: "English Vocabulary",
+                translation: "Mais / O mais",
+                definition: "Usado para formar o superlativo; indica o grau mais elevado."
+            },
+            {
+                id: 55,
+                term: "pressing",
+                category: "English Vocabulary",
+                translation: "Urgente / Premente",
+                definition: "Que exige atenção ou solução imediata."
+            },
+            {
+                id: 56,
+                term: "challenges",
+                category: "English Vocabulary",
+                translation: "Desafios",
+                definition: "Plural de challenge; situações difíceis que exigem esforço."
+            },
+            {
+                id: 57,
+                term: "our",
+                category: "English Vocabulary",
+                translation: "Nosso / Nossa",
+                definition: "Pronome possessivo que indica algo pertencente a nós."
+            },
+            {
+                id: 58,
+                term: "time",
+                category: "English Vocabulary",
+                translation: "Tempo / Época",
+                definition: "Período ou momento em que vivemos."
+            },
+            {
+                id: 59,
+                term: "Despite",
+                category: "English Vocabulary",
+                translation: "Apesar de",
+                definition: "Expressa contraste ou concessão."
+            },
+            {
+                id: 60,
+                term: "global",
+                category: "English Vocabulary",
+                translation: "Global / Mundial",
+                definition: "Que abrange o mundo todo."
+            },
+            {
+                id: 61,
+                term: "economic",
+                category: "English Vocabulary",
+                translation: "Econômico",
+                definition: "Relacionado à economia, produção, dinheiro e finanças."
+            },
+            {
+                id: 62,
+                term: "growth",
+                category: "English Vocabulary",
+                translation: "Crescimento",
+                definition: "Aumento de tamanho, valor ou quantidade."
+            },
+            {
+                id: 63,
+                term: "profound",
+                category: "English Vocabulary",
+                translation: "Profundo / Intenso",
+                definition: "Que é muito grande, intenso ou significativo."
+            },
+            {
+                id: 64,
+                term: "gap",
+                category: "English Vocabulary",
+                translation: "Lacuna / Distância / Brecha",
+                definition: "Espaço vazio ou diferença entre duas coisas ou grupos."
+            },
+            {
+                id: 65,
+                term: "continues",
+                category: "English Vocabulary",
+                translation: "Continua",
+                definition: "Mantém uma ação ou estado ao longo do tempo."
+            },
+            {
+                id: 66,
+                term: "to",
+                category: "English Vocabulary",
+                translation: "A / Para",
+                definition: "Preposição que pode indicar direção, finalidade ou acompanhar verbos no infinitivo."
+            },
+            {
+                id: 67,
+                term: "separate",
+                category: "English Vocabulary",
+                translation: "Separar / Separado",
+                definition: "Dividir ou manter duas ou mais partes distintas."
+            },
+            {
+                id: 68,
+                term: "privileged",
+                category: "English Vocabulary",
+                translation: "Privilegiados",
+                definition: "Pessoas ou grupos que possuem vantagens ou oportunidades especiais."
+            },
+            {
+                id: 69,
+                term: "from",
+                category: "English Vocabulary",
+                translation: "De / A partir de",
+                definition: "Preposição que indica origem, procedência ou separação."
+            },
+            {
+                id: 70,
+                term: "marginalized",
+                category: "English Vocabulary",
+                translation: "Marginalizados",
+                definition: "Pessoas ou grupos colocados à margem ou excluídos da sociedade."
+            },
+            {
+                id: 71,
+                term: "affecting",
+                category: "English Vocabulary",
+                translation: "Afetando",
+                definition: "Causando impacto, influência ou mudança em algo ou alguém."
+            },
+            {
+                id: 72,
+                term: "human",
+                category: "English Vocabulary",
+                translation: "Humano",
+                definition: "Relacionado às pessoas ou à humanidade."
+            },
+            {
+                id: 73,
+                term: "dignity",
+                category: "English Vocabulary",
+                translation: "Dignidade",
+                definition: "Valor próprio de cada pessoa, que merece respeito."
+            },
+            {
+                id: 74,
+                term: "and",
+                category: "English Vocabulary",
+                translation: "E",
+                definition: "Conectivo aditivo que une palavras, frases ou ideias."
+            },
+            {
+                id: 75,
+                term: "daily",
+                category: "English Vocabulary",
+                translation: "Diário / Diariamente",
+                definition: "Que acontece todos os dias ou se relaciona à rotina."
+            },
+            {
+                id: 76,
+                term: "opportunities",
+                category: "English Vocabulary",
+                translation: "Oportunidades",
+                definition: "Chances ou condições favoráveis para realizar algo."
+            },
+            {
+                id: 77,
+                term: "This",
+                category: "English Vocabulary",
+                translation: "Este / Esta / Isso",
+                definition: "Pronome demonstrativo usado para indicar algo próximo ou já mencionado."
+            },
+            {
+                id: 78,
+                term: "imbalance",
+                category: "English Vocabulary",
+                translation: "Desequilíbrio",
+                definition: "Falta de equilíbrio, proporção ou igualdade."
+            },
+            {
+                id: 79,
+                term: "goes",
+                category: "English Vocabulary",
+                translation: "Vai / Segue",
+                definition: "Forma do verbo to go; em goes beyond, significa vai além."
+            },
+            {
+                id: 80,
+                term: "far",
+                category: "English Vocabulary",
+                translation: "Muito / Longe",
+                definition: "Pode indicar distância ou intensificar uma expressão, como far beyond."
+            },
+            {
+                id: 81,
+                term: "beyond",
+                category: "English Vocabulary",
+                translation: "Além de",
+                definition: "Indica algo que ultrapassa um limite."
+            },
+            {
+                id: 82,
+                term: "income",
+                category: "English Vocabulary",
+                translation: "Renda / Rendimento",
+                definition: "Dinheiro recebido por trabalho, serviços ou investimentos."
+            },
+            {
+                id: 83,
+                term: "Access",
+                category: "English Vocabulary",
+                translation: "Acesso",
+                definition: "Possibilidade, direito ou facilidade de entrar, alcançar ou utilizar algo."
+            },
+            {
+                id: 84,
+                term: "quality",
+                category: "English Vocabulary",
+                translation: "Qualidade",
+                definition: "Característica ou padrão que indica o nível de algo."
+            },
+            {
+                id: 85,
+                term: "education",
+                category: "English Vocabulary",
+                translation: "Educação",
+                definition: "Processo de ensino, aprendizagem e desenvolvimento."
+            },
+            {
+                id: 86,
+                term: "healthcare",
+                category: "English Vocabulary",
+                translation: "Assistência médica / Cuidados de saúde",
+                definition: "Conjunto de serviços e cuidados relacionados à saúde."
+            },
+            {
+                id: 87,
+                term: "stable",
+                category: "English Vocabulary",
+                translation: "Estável / Seguro",
+                definition: "Firme, constante ou que oferece segurança."
+            },
+            {
+                id: 88,
+                term: "employment",
+                category: "English Vocabulary",
+                translation: "Emprego / Trabalho",
+                definition: "Ocupação ou atividade remunerada."
+            },
+            {
+                id: 89,
+                term: "often",
+                category: "English Vocabulary",
+                translation: "Frequentemente / Muitas vezes",
+                definition: "Advérbio que indica algo que acontece com frequência."
+            },
+            {
+                id: 90,
+                term: "determined",
+                category: "English Vocabulary",
+                translation: "Determinado / Definido",
+                definition: "Estabelecido ou influenciado por uma condição ou fator."
+            },
+            {
+                id: 91,
+                term: "by",
+                category: "English Vocabulary",
+                translation: "Por",
+                definition: "Preposição que pode indicar o agente, meio ou causa de uma ação."
+            },
+            {
+                id: 92,
+                term: "socioeconomic",
+                category: "English Vocabulary",
+                translation: "Socioeconômico",
+                definition: "Relacionado aos fatores sociais e econômicos."
+            },
+            {
+                id: 93,
+                term: "background",
+                category: "English Vocabulary",
+                translation: "Origem / Histórico / Contexto",
+                definition: "História pessoal, social, familiar ou financeira de alguém."
+            },
+            {
+                id: 94,
+                term: "or",
+                category: "English Vocabulary",
+                translation: "Ou",
+                definition: "Conectivo que apresenta uma alternativa."
+            },
+            {
+                id: 95,
+                term: "geographic",
+                category: "English Vocabulary",
+                translation: "Geográfico",
+                definition: "Relacionado à localização e às características de uma região."
+            },
+            {
+                id: 96,
+                term: "location",
+                category: "English Vocabulary",
+                translation: "Localização / Lugar",
+                definition: "Ponto ou área onde algo ou alguém está."
+            },
+            {
+                id: 97,
+                term: "Underfunded",
+                category: "English Vocabulary",
+                translation: "Com verba insuficiente / Subfinanciado",
+                definition: "Que recebe menos recursos financeiros do que o necessário."
+            },
+            {
+                id: 98,
+                term: "schools",
+                category: "English Vocabulary",
+                translation: "Escolas",
+                definition: "Instituições destinadas ao ensino e à aprendizagem."
+            },
+            {
+                id: 99,
+                term: "unequal",
+                category: "English Vocabulary",
+                translation: "Desigual",
+                definition: "Que não apresenta igualdade; diferente em quantidade, condição ou oportunidade."
+            },
+            {
+                id: 100,
+                term: "medical",
+                category: "English Vocabulary",
+                translation: "Médico",
+                definition: "Relacionado à medicina ou aos cuidados de saúde."
+            },
+            {
+                id: 101,
+                term: "care",
+                category: "English Vocabulary",
+                translation: "Cuidado / Atendimento",
+                definition: "Atenção, assistência ou tratamento oferecido a alguém."
+            },
+            {
+                id: 102,
+                term: "trap",
+                category: "English Vocabulary",
+                translation: "Prendem / Aprisionam",
+                definition: "Verbo que indica deixar alguém preso ou sem saída."
+            },
+            {
+                id: 103,
+                term: "vulnerable",
+                category: "English Vocabulary",
+                translation: "Vulnerável",
+                definition: "Que está mais exposto a riscos, dificuldades ou danos."
+            },
+            {
+                id: 104,
+                term: "communities",
+                category: "English Vocabulary",
+                translation: "Comunidades",
+                definition: "Grupos de pessoas que vivem na mesma área ou compartilham características."
+            },
+            {
+                id: 105,
+                term: "in",
+                category: "English Vocabulary",
+                translation: "Em / Dentro de",
+                definition: "Preposição que indica lugar, tempo ou condição."
+            },
+            {
+                id: 106,
+                term: "cycle",
+                category: "English Vocabulary",
+                translation: "Ciclo",
+                definition: "Sequência de acontecimentos que se repete."
+            },
+            {
+                id: 107,
+                term: "limited",
+                category: "English Vocabulary",
+                translation: "Limitado / Restrito",
+                definition: "Que possui limites ou poucas opções disponíveis."
+            },
+            {
+                id: 108,
+                term: "preventing",
+                category: "English Vocabulary",
+                translation: "Impedindo / Evitando",
+                definition: "Ação de evitar que algo aconteça."
+            },
+            {
+                id: 109,
+                term: "upward",
+                category: "English Vocabulary",
+                translation: "Ascendente / Para cima",
+                definition: "Que segue em direção a uma posição ou nível mais alto."
+            },
+            {
+                id: 110,
+                term: "mobility",
+                category: "English Vocabulary",
+                translation: "Mobilidade",
+                definition: "Capacidade de se mover ou mudar de posição ou condição social."
+            },
+            {
+                id: 111,
+                term: "Addressing",
+                category: "English Vocabulary",
+                translation: "Enfrentando / Tratando de / Abordando",
+                definition: "Ação de lidar diretamente com um problema ou questão."
+            },
+            {
+                id: 112,
+                term: "requires",
+                category: "English Vocabulary",
+                translation: "Exige / Requer",
+                definition: "Precisa de algo como condição necessária."
+            },
+            {
+                id: 113,
+                term: "systemic",
+                category: "English Vocabulary",
+                translation: "Sistêmico",
+                definition: "Que afeta ou envolve o sistema como um todo."
+            },
+            {
+                id: 114,
+                term: "change",
+                category: "English Vocabulary",
+                translation: "Mudança / Transformação",
+                definition: "Ato ou resultado de alterar algo."
+            },
+            {
+                id: 115,
+                term: "rather",
+                category: "English Vocabulary",
+                translation: "Em vez de / Preferencialmente",
+                definition: "Usado para indicar preferência ou oposição; rather than significa em vez de."
+            },
+            {
+                id: 116,
+                term: "than",
+                category: "English Vocabulary",
+                translation: "Do que",
+                definition: "Palavra usada em comparações, como bigger than."
+            },
+            {
+                id: 117,
+                term: "simple",
+                category: "English Vocabulary",
+                translation: "Simples",
+                definition: "Fácil de entender ou realizar; sem complexidade."
+            },
+            {
+                id: 118,
+                term: "charity",
+                category: "English Vocabulary",
+                translation: "Caridade",
+                definition: "Ajuda voluntária ou doação destinada a pessoas necessitadas."
+            },
+            {
+                id: 119,
+                term: "Governments",
+                category: "English Vocabulary",
+                translation: "Governos",
+                definition: "Autoridades e instituições responsáveis pela administração de um país ou território."
+            },
+            {
+                id: 120,
+                term: "must",
+                category: "English Vocabulary",
+                translation: "Deve / Devem",
+                definition: "Verbo modal que expressa obrigação ou necessidade."
+            },
+            {
+                id: 121,
+                term: "implement",
+                category: "English Vocabulary",
+                translation: "Implementar / Colocar em prática",
+                definition: "Executar ou fazer um plano, ideia ou política funcionar."
+            },
+            {
+                id: 122,
+                term: "inclusive",
+                category: "English Vocabulary",
+                translation: "Inclusivo",
+                definition: "Que procura incluir todas as pessoas, sem discriminação."
+            },
+            {
+                id: 123,
+                term: "policies",
+                category: "English Vocabulary",
+                translation: "Políticas / Diretrizes",
+                definition: "Planos, regras ou linhas de ação adotadas por governos ou instituições."
+            },
+            {
+                id: 124,
+                term: "such",
+                category: "English Vocabulary",
+                translation: "Tal / Tais",
+                definition: "Usado para apresentar exemplos, especialmente na expressão such as (tais como)."
+            },
+            {
+                id: 125,
+                term: "as",
+                category: "English Vocabulary",
+                translation: "Como",
+                definition: "Pode indicar exemplo, função ou comparação, conforme o contexto."
+            },
+            {
+                id: 126,
+                term: "fair",
+                category: "English Vocabulary",
+                translation: "Justo",
+                definition: "Que respeita a igualdade, a imparcialidade e os direitos."
+            },
+            {
+                id: 127,
+                term: "labor",
+                category: "English Vocabulary",
+                translation: "Trabalho / Laboral",
+                definition: "Relacionado ao trabalho e às relações entre empregados e empregadores."
+            },
+            {
+                id: 128,
+                term: "laws",
+                category: "English Vocabulary",
+                translation: "Leis",
+                definition: "Regras obrigatórias estabelecidas por uma autoridade."
+            },
+            {
+                id: 129,
+                term: "equitable",
+                category: "English Vocabulary",
+                translation: "Equitativo / Justo",
+                definition: "Baseado na imparcialidade e em uma distribuição justa."
+            },
+            {
+                id: 130,
+                term: "funding",
+                category: "English Vocabulary",
+                translation: "Financiamento / Recursos financeiros",
+                definition: "Dinheiro ou recursos fornecidos para determinado objetivo."
+            },
+            {
+                id: 131,
+                term: "robust",
+                category: "English Vocabulary",
+                translation: "Robusto / Forte / Sólido",
+                definition: "Resistente, consistente ou bem estruturado."
+            },
+            {
+                id: 132,
+                term: "safety",
+                category: "English Vocabulary",
+                translation: "Segurança / Proteção",
+                definition: "Condição de estar protegido contra perigos ou riscos."
+            },
+            {
+                id: 133,
+                term: "nets",
+                category: "English Vocabulary",
+                translation: "Redes",
+                definition: "Sistemas conectados; em social safety nets, significa redes de proteção social."
+            },
+            {
+                id: 134,
+                term: "Ultimately",
+                category: "English Vocabulary",
+                translation: "Em última análise / No fim das contas",
+                definition: "Advérbio usado para apresentar uma conclusão geral."
+            },
+            {
+                id: 135,
+                term: "society's",
+                category: "English Vocabulary",
+                translation: "Da sociedade",
+                definition: "Forma possessiva de society; indica algo pertencente à sociedade."
+            },
+            {
+                id: 136,
+                term: "true",
+                category: "English Vocabulary",
+                translation: "Verdadeiro / Real",
+                definition: "Que corresponde à realidade ou é genuíno."
+            },
+            {
+                id: 137,
+                term: "success",
+                category: "English Vocabulary",
+                translation: "Sucesso",
+                definition: "Êxito ou resultado positivo."
+            },
+            {
+                id: 138,
+                term: "is",
+                category: "English Vocabulary",
+                translation: "É / Está",
+                definition: "Forma do verbo to be no presente, usada com he, she e it."
+            },
+            {
+                id: 139,
+                term: "measured",
+                category: "English Vocabulary",
+                translation: "Medido / Avaliado",
+                definition: "Calculado ou julgado com base em determinados critérios."
+            },
+            {
+                id: 140,
+                term: "how",
+                category: "English Vocabulary",
+                translation: "Como / De que maneira",
+                definition: "Palavra usada para perguntar ou explicar o modo como algo acontece."
+            },
+            {
+                id: 141,
+                term: "it",
+                category: "English Vocabulary",
+                translation: "Ele / Ela / Isso",
+                definition: "Pronome usado para retomar coisas, animais ou ideias."
+            },
+            {
+                id: 142,
+                term: "supports",
+                category: "English Vocabulary",
+                translation: "Apoia / Sustenta",
+                definition: "Oferece ajuda, suporte ou condições para algo continuar."
+            },
+            {
+                id: 143,
+                term: "members",
+                category: "English Vocabulary",
+                translation: "Membros / Integrantes",
+                definition: "Pessoas que fazem parte de um grupo."
+            },
+            {
+                id: 144,
+                term: "both",
+                category: "English Vocabulary",
+                translation: "Ambos / Tanto ... quanto",
+                definition: "Usado para indicar duas pessoas ou coisas em conjunto."
+            },
+            {
+                id: 145,
+                term: "ethical",
+                category: "English Vocabulary",
+                translation: "Ético",
+                definition: "Relacionado aos princípios morais e ao que é considerado correto."
+            },
+            {
+                id: 146,
+                term: "imperative",
+                category: "English Vocabulary",
+                translation: "Imperativo / Necessidade urgente",
+                definition: "Algo indispensável ou que exige ação."
+            },
+            {
+                id: 147,
+                term: "foundation",
+                category: "English Vocabulary",
+                translation: "Fundação / Base",
+                definition: "Estrutura ou princípio fundamental sobre o qual algo se sustenta."
+            },
+            {
+                id: 148,
+                term: "for",
+                category: "English Vocabulary",
+                translation: "Para / Por",
+                definition: "Preposição que indica finalidade, destino, benefício ou motivo."
+            },
+            {
+                id: 149,
+                term: "a",
+                category: "English Vocabulary",
+                translation: "Um / Uma",
+                definition: "Artigo indefinido usado antes de substantivos no singular."
+            },
+            {
+                id: 150,
+                term: "just",
+                category: "English Vocabulary",
+                translation: "Justo",
+                definition: "Que age com justiça e imparcialidade; como advérbio também pode significar apenas."
+            },
+            {
+                id: 151,
+                term: "future",
+                category: "English Vocabulary",
+                translation: "Futuro",
+                definition: "Tempo que ainda está por vir."
             }
         ];
 
