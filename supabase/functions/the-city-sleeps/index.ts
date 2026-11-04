@@ -504,7 +504,6 @@ async function resolveNight(roomId: string) {
   try {
     const room = await getRoomById(roomId);
     let players = await getRoomPlayers(roomId);
-    const deathsBefore = players.filter((p: any) => !p.is_alive).length;
     let alive = players.filter((p: any) => p.is_alive);
     const { data: currentActions, error: actionError } = await db.from("tcs_night_actions")
       .select("*").eq("room_id", roomId).eq("round_no", room.round_no);
@@ -698,9 +697,13 @@ async function resolveNight(roomId: string) {
     if (room.status !== "finished") {
       const victory = await checkVictory(room);
       if (!victory) {
-        const refreshed = await getRoomPlayers(roomId);
-        const deathsAfter = refreshed.filter((p: any) => !p.is_alive).length;
-        if (deathsAfter === deathsBefore) {
+        const { count: eliminationCount, error: eliminationCountError } = await db.from("tcs_news")
+          .select("id", { count: "exact", head: true })
+          .eq("room_id", roomId)
+          .eq("round_no", room.round_no)
+          .eq("event_type", "elimination");
+        if (eliminationCountError) throw eliminationCountError;
+        if (!eliminationCount) {
           await addNews(roomId, room.round_no, "The city wakes up. No one was eliminated tonight.", "dawn");
         }
         const { error } = await db.from("tcs_rooms").update({
