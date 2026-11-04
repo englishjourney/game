@@ -670,7 +670,7 @@
       if (!country) return;
       lastFocused = document.activeElement;
       document.getElementById('modal-flag').src = 'https://flagcdn.com/w160/' + country.iso + '.png';
-      document.getElementById('modal-flag').alt = 'Flag of ' + country.english;
+      document.getElementById('modal-flag').alt = 'Bandeira de ' + country.name;
       document.getElementById('modal-country-name').textContent = country.name;
       document.getElementById('modal-country-subtitle').textContent = country.english + ' · ' + country.groupLabel;
       document.getElementById('modal-official').textContent = country.official;
@@ -678,7 +678,7 @@
       document.getElementById('modal-role').textContent = country.role;
       document.getElementById('modal-fact').textContent = country.fact;
       document.getElementById('modal-map-img').src = country.mapSrc || '';
-      document.getElementById('modal-map-img').alt = 'Map of ' + country.english;
+      document.getElementById('modal-map-img').alt = 'Mapa de ' + country.name;
       document.getElementById('modal-phrases').innerHTML = country.phrases.map(pair =>
         '<div class="phrase"><strong>' + escapeHtml(pair[0]) + '</strong><span>' + escapeHtml(pair[1]) + '</span></div>'
       ).join('');
