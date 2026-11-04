@@ -1028,8 +1028,9 @@ async function getState(user: any, body: any) {
     username: p.username,
     avatarUrl: p.avatar_url,
     isAlive: p.is_alive && !p.is_puppet,
-    isPuppet: p.is_puppet,
-    shields: p.shields,
+    // Active Puppets are shown in the public eliminated list, but their identity is
+    // disclosed only to living Villains. This keeps their role secret from Citizens.
+    isPuppet: me.category === "Villain" && me.is_alive ? p.is_puppet : false,
     revealedRole: p.revealed_role,
     revealedRoleKey: p.revealed_role ? p.role_key : null,
   });
@@ -1096,7 +1097,7 @@ async function getState(user: any, body: any) {
     counts,
     teamPlayers,
     cultTargets: me.role_key === "cultist"
-      ? alive.filter((p: any) => !p.in_cult && p.id !== me.id).map(publicPlayer)
+      ? players.filter((p: any) => p.is_alive && !p.in_cult && p.id !== me.id).map(publicPlayer)
       : [],
     me: {
       id: me.id,

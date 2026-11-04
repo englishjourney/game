@@ -808,7 +808,7 @@ async function handlePhaseClick(event) {
   if (button.dataset.dawnReady) return sendAction("acknowledge_dawn");
   if (button.dataset.nightTarget) {
     const id = button.dataset.nightTarget;
-    const max = currentState.me.roleKey === "oracle" ? 2 : 1;
+    const max = currentState.me.roleKey === "oracle" ? currentState.me.oracleUsesLeft : 1;
     if (selectedTargets.includes(id)) selectedTargets = selectedTargets.filter((x) => x !== id);
     else if (selectedTargets.length < max) selectedTargets = max === 1 ? [id] : [...selectedTargets, id];
     else if (max === 1) selectedTargets = [id];
