@@ -1,10 +1,20 @@
 import { supabase } from '../supabaseClient.js';
 
+const plannerItemsById = new Map();
+let selectedPlannerItem = null;
+
 export function initPlanner() {
     setupCustomOptions();
     setupDatePickers();
     setupLastTeamToggle();
     loadPlanners();
+    setupActivitiesEditor();
+    const detailsEditButton = document.getElementById('btn-edit-planner-from-details');
+    if (detailsEditButton) detailsEditButton.addEventListener('click', () => {
+        if (!selectedPlannerItem) return;
+        document.getElementById('planner-details-modal').close();
+        window.editPlanner(selectedPlannerItem);
+    });
 
     const updateRequiredFields = () => {
         const isEsp = document.getElementById('cb-especial').checked;
@@ -439,12 +449,12 @@ async function loadPlanners() {
                     let titleHtml = p.special == 4 ? '<p class="adapted-label"><i class="fa-solid fa-puzzle-piece" aria-hidden="true"></i> <strong>ADAPTADO</strong></p>' : (p.special == 2 ? '<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>FOLGA</strong></p>' : (p.special == 3 ? '<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>PROVA</strong></p>' : ''));
                     
                     return `
-                    <div class="data-card ${cardClass}" id="plan-card-${p.id}">
+                    <div class="data-card ${cardClass}" id="plan-card-${p.id}" data-plan-id="${p.id}" role="button" tabindex="0" aria-label="Ver detalhes da aula">
                         <div class="data-card-info">
                             <p><strong>${p.day} - ${p.date}${p.time ? `(${p.time})` : ''}</strong> ${p.duration ? `| Duração: ${p.duration}` : ''}</p>
                             ${titleHtml}${p.tag ? `<p style="font-size:0.85rem;color:var(--text-muted);"><strong>Tag:</strong> ${p.tag}</p>` : ''}${p.serie || p.team ? `<p><strong>Turma:</strong> ${p.serie || ''} ${p.team || ''}</p>` : ''}
-                            ${p.activities ? `<p><strong>Atividades:</strong> ${p.activities}</p>` : ''}
-                            ${p.skills ? `<p><strong>BNCC:</strong> ${p.skills}</p>` : ''}
+                            ${p.activities ? `<div class="planner-card-activities"><strong>Atividades:</strong>${renderPlannerMarkdown(p.activities)}</div>` : ''}
+                            ${p.skills ? `<p><strong>BNCC:</strong> ${escapePlannerHtml(p.skills)}</p>` : ''}
                         </div>
                         <div class="data-card-actions">
                             <button class="btn-small btn-secondary" onclick='window.editPlanner(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Editar</button>
@@ -459,6 +469,21 @@ async function loadPlanners() {
         </div>
         `;
     }).join('');
+
+    plannerItemsById.clear();
+    data.forEach(item => plannerItemsById.set(String(item.id), item));
+    container.querySelectorAll('.data-card[data-plan-id]').forEach(card => {
+        card.addEventListener('click', event => {
+            if (event.target.closest('button')) return;
+            window.viewPlanner(card.dataset.planId);
+        });
+        card.addEventListener('keydown', event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                window.viewPlanner(card.dataset.planId);
+            }
+        });
+    });
 }
 
 // Recupera a data de origem da aula. Se ela já foi movida, mantém a data registrada na tag.
@@ -656,7 +681,31 @@ window.advancePlanner = async (id) => {
     }
 };
 
+window.viewPlanner = id => {
+    const p = plannerItemsById.get(String(id));
+    if (!p) return;
+    selectedPlannerItem = p;
+    const typeLabels = { 0: 'Aula regular', 1: 'Aula especial', 2: 'Folga', 3: 'Prova', 4: 'Aula adaptada' };
+    const fields = [
+        { label: 'Dia', value: p.day || 'Não informado' },
+        { label: 'Data', value: p.date || 'Não informada' },
+        { label: 'Horário', value: p.time || 'Não informado' },
+        { label: 'Série', value: p.serie || 'Não informada' },
+        { label: 'Turma', value: p.team || 'Não informada' },
+        { label: 'Duração', value: p.duration || 'Não informada' },
+        { label: 'Tipo', value: typeLabels[p.special] || 'Aula regular' },
+        { label: 'Tag', value: p.tag || 'Nenhuma' }
+    ];
+    const grid = document.getElementById('planner-details-grid');
+    grid.innerHTML = fields.map(field => '<article class="detail-mini-card"><h4>' + escapePlannerHtml(field.label) + '</h4><p>' + escapePlannerHtml(field.value) + '</p></article>').join('') +
+        '<article class="detail-mini-card full-width"><h4>Habilidades BNCC</h4><div class="planner-markdown-content">' + (p.skills ? renderPlannerMarkdown(p.skills) : '<p>Não informado</p>') + '</div></article>' +
+        '<article class="detail-mini-card full-width"><h4>Atividades</h4><div class="planner-markdown-content">' + (p.activities ? renderPlannerMarkdown(p.activities) : '<p>Não informado</p>') + '</div></article>';
+    document.getElementById('planner-details-modal').showModal();
+};
+
 window.editPlanner = (p) => {
+    const detailsModal = document.getElementById('planner-details-modal');
+    if (detailsModal && detailsModal.open) detailsModal.close();
     document.getElementById('plan-id').value = p.id;
     
     setSelectValueWithCustom('plan-day', p.day || '');
@@ -694,3 +743,126 @@ window.deletePlanner = async (id) => {
         loadPlanners();
     }
 };
+
+
+function escapePlannerHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[character]);
+}
+
+function renderPlannerInlineMarkdown(value) {
+    let html = escapePlannerHtml(value);
+    const mark = String.fromCharCode(96);
+    html = html.replace(new RegExp(mark + '([^' + mark + ']+)' + mark, 'g'), '<code>$1</code>');
+    html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+    html = html.replace(/~~(.+?)~~/g, '<del>$1</del>');
+    return html;
+}
+
+function renderPlannerMarkdown(value) {
+    const lines = String(value == null ? '' : value).replace(/\r/g, '').split('\n');
+    const output = [];
+    let index = 0;
+    while (index < lines.length) {
+        const line = lines[index];
+        if (!line.trim()) { index++; continue; }
+        const heading = line.match(/^(#{1,3})\s+(.+)$/);
+        if (heading) {
+            const level = heading[1].length;
+            output.push('<h' + level + '>' + renderPlannerInlineMarkdown(heading[2]) + '</h' + level + '>');
+            index++;
+            continue;
+        }
+        if (/^\s*([-*_])\1\1+\s*$/.test(line)) {
+            output.push('<hr>'); index++; continue;
+        }
+        if (/^\s*[-*+]\s+/.test(line)) {
+            const items = [];
+            while (index < lines.length && /^\s*[-*+]\s+/.test(lines[index])) {
+                items.push('<li>' + renderPlannerInlineMarkdown(lines[index].replace(/^\s*[-*+]\s+/, '')) + '</li>');
+                index++;
+            }
+            output.push('<ul>' + items.join('') + '</ul>'); continue;
+        }
+        if (/^\s*\d+[.)]\s+/.test(line)) {
+            const items = [];
+            while (index < lines.length && /^\s*\d+[.)]\s+/.test(lines[index])) {
+                items.push('<li>' + renderPlannerInlineMarkdown(lines[index].replace(/^\s*\d+[.)]\s+/, '')) + '</li>');
+                index++;
+            }
+            output.push('<ol>' + items.join('') + '</ol>'); continue;
+        }
+        if (/^\s*>\s?/.test(line)) {
+            const quote = [];
+            while (index < lines.length && /^\s*>\s?/.test(lines[index])) {
+                quote.push(renderPlannerInlineMarkdown(lines[index].replace(/^\s*>\s?/, '')));
+                index++;
+            }
+            output.push('<blockquote>' + quote.join('<br>') + '</blockquote>'); continue;
+        }
+        const paragraph = [];
+        while (index < lines.length && lines[index].trim() &&
+            !/^(#{1,3})\s+/.test(lines[index]) &&
+            !/^\s*[-*+]\s+/.test(lines[index]) &&
+            !/^\s*\d+[.)]\s+/.test(lines[index]) &&
+            !/^\s*>\s?/.test(lines[index]) &&
+            !/^\s*([-*_])\1\1+\s*$/.test(lines[index])) {
+            paragraph.push(renderPlannerInlineMarkdown(lines[index]));
+            index++;
+        }
+        output.push('<p>' + paragraph.join('<br>') + '</p>');
+    }
+    return output.join('');
+}
+
+function setupActivitiesEditor() {
+    const editor = document.getElementById('plan-activities');
+    const preview = document.getElementById('plan-activities-preview');
+    const toolbar = document.getElementById('activities-toolbar');
+    if (!editor || !preview || !toolbar) return;
+
+    const updatePreview = () => {
+        preview.innerHTML = editor.value.trim() ? renderPlannerMarkdown(editor.value)
+            : '<span class="preview-placeholder">A pré-visualização aparecerá aqui.</span>';
+    };
+
+    toolbar.addEventListener('click', event => {
+        const button = event.target.closest('[data-format]');
+        if (!button) return;
+        const format = button.dataset.format;
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const selected = editor.value.slice(start, end);
+        let before = '';
+        let after = '';
+        let inserted = selected;
+
+        if (format === 'bold') { before = '**'; after = '**'; inserted = selected || 'texto em negrito'; }
+        else if (format === 'italic') { before = '*'; after = '*'; inserted = selected || 'texto em itálico'; }
+        else if (format === 'code') { before = String.fromCharCode(96); after = before; inserted = selected || 'código'; }
+        else if (format === 'divider') { before = '\n---\n'; inserted = ''; }
+
+        if (['heading', 'bullet', 'number', 'quote'].includes(format)) {
+            const lineStart = editor.value.lastIndexOf('\n', Math.max(0, start - 1)) + 1;
+            const lineEnd = editor.value.indexOf('\n', end);
+            const actualEnd = lineEnd === -1 ? editor.value.length : lineEnd;
+            const block = editor.value.slice(lineStart, actualEnd);
+            const prefix = format === 'heading' ? '## ' : format === 'bullet' ? '- ' : format === 'number' ? '1. ' : '> ';
+            const replacement = block.split('\n').map(line => prefix + line.replace(/^(#{1,3}\s+|[-*+]\s+|\d+[.)]\s+|>\s?)/, '')).join('\n');
+            editor.value = editor.value.slice(0, lineStart) + replacement + editor.value.slice(actualEnd);
+            editor.focus();
+            editor.setSelectionRange(lineStart, lineStart + replacement.length);
+        } else {
+            editor.value = editor.value.slice(0, start) + before + inserted + after + editor.value.slice(end);
+            editor.focus();
+            const cursorStart = start + before.length;
+            editor.setSelectionRange(cursorStart, cursorStart + inserted.length);
+        }
+        updatePreview();
+    });
+    editor.addEventListener('input', updatePreview);
+    updatePreview();
+}

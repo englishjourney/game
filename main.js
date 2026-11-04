@@ -1,5 +1,5 @@
 // main.js
-import { getSession, clearSession, handleRegister, handleLogin, initSecurity } from './auth.js';
+import { getSession, clearSession, handleRegister, handleLogin } from './auth.js';
 import { openProfile } from './profile.js';
 import { openMissions } from './missions.js';
 import { openRanking } from './rank.js';
@@ -10,9 +10,6 @@ import { supabase } from './supabaseClient.js'; // IMPORTAÇÃO DO SUPABASE PARA
 import { initNotifications } from './notifications.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
-    // Executa a verificação de segurança controlada primeiro
-    await initSecurity();
-
     const session = getSession();
 
     if (session) initNotifications();

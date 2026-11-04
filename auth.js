@@ -1,26 +1,5 @@
 // auth.js
-import { runSecurityChecks } from './firewall.js';
 import { supabase } from './supabaseClient.js';
-
-// Convertido em função para não travar o carregamento dos módulos
-export async function initSecurity() {
-    try {
-        const { data: admData } = await supabase
-            .from('users')
-            .select('auth')
-            .eq('username', 'micael.svg')
-            .single();
-
-        if (!admData || admData.auth !== 'on') {
-            await runSecurityChecks();
-        } else {
-            console.log("Acesso em casa permitido pelo administrador. Ignorando verificações de segurança.");
-        }
-    } catch (error) {
-        console.error("Erro na verificação de segurança, executando firewall por segurança:", error);
-        await runSecurityChecks();
-    }
-}
 
 export function validateUsername(username) {
     const regex = /^[a-z0-9\-\_\.]+$/;

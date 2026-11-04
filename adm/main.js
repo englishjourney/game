@@ -3,6 +3,7 @@ import { initPlanner } from './planner.js';
 import { initUsers } from './users.js';
 import { initMissions } from './missions.js';
 import { initFlashcardsAdm } from './flashcardsAdm.js';
+import { initTasks } from './tasks.js';
 import { supabase } from '../supabaseClient.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -65,13 +66,14 @@ export function showAdmPanel() {
     initUsers();
     initMissions();
     initFlashcardsAdm();
-    initReminders(); // INSERIDO AQUI: Inicialização dos lembretes
+    initReminders(); // Inicialização dos lembretes
+    initTasks();
     
     document.getElementById('btn-logout').addEventListener('click', logout);
 }
 
 function setupNavigation() {
-    const navBtns = document.querySelectorAll('.nav-btn');
+    const navBtns = document.querySelectorAll('.nav-btn[data-target]');
     const sections = document.querySelectorAll('.content-section');
 
     navBtns.forEach(btn => {
@@ -88,8 +90,26 @@ function setupNavigation() {
                     loadRemindersSection();
                 }
             }
+            setMobileNav(false);
         });
     });
+
+    const menu = document.getElementById('adm-navigation');
+    const menuToggle = document.getElementById('mobile-menu-toggle');
+    const menuClose = document.getElementById('mobile-menu-close');
+    const backdrop = document.getElementById('mobile-nav-backdrop');
+    const setMobileNav = open => {
+        if (!menu || !backdrop) return;
+        menu.classList.toggle('mobile-open', open);
+        backdrop.classList.toggle('is-visible', open);
+        backdrop.setAttribute('aria-hidden', String(!open));
+        if (menuToggle) menuToggle.setAttribute('aria-expanded', String(open));
+        document.body.classList.toggle('mobile-nav-active', open);
+    };
+    if (menuToggle) menuToggle.addEventListener('click', () => setMobileNav(!menu.classList.contains('mobile-open')));
+    if (menuClose) menuClose.addEventListener('click', () => setMobileNav(false));
+    if (backdrop) backdrop.addEventListener('click', () => setMobileNav(false));
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') setMobileNav(false); });
 }
 
 async function setupDashboard() {
@@ -443,12 +463,21 @@ function triggerToastNotification(text) {
 
     const toast = document.createElement('div');
     toast.className = 'reminder-toast';
-    toast.innerHTML = `<strong>🔔 Lembrete:</strong><div style="margin-top: 4px;">${text}</div>`;
-
+    const title = document.createElement('strong');
+    title.textContent = '🔔 Lembrete:';
+    const message = document.createElement('div');
+    message.style.marginTop = '4px';
+    message.textContent = text;
+    toast.append(title, message);
     container.appendChild(toast);
+    updateToastStack(container);
+    setTimeout(() => { toast.remove(); updateToastStack(container); }, 5000);
+}
 
-    // Remove do DOM após 5 segundos
-    setTimeout(() => {
-        toast.remove();
-    }, 5000);
+
+function updateToastStack(container) {
+    if (!container) return;
+    const count = container.children.length;
+    container.dataset.notificationCount = String(count);
+    container.classList.toggle('has-stack', count > 2);
 }

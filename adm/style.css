@@ -288,3 +288,78 @@ dialog::backdrop { background: rgba(0,0,0,0.7); }
 .data-card .btn-advance:hover {
     background: #7c3aed !important;
 }
+
+
+/* Modal de detalhes do planner e seus minicards */
+.data-card[data-plan-id] { cursor: pointer; }
+.planner-details-dialog { width: min(94vw, 900px); max-width: 900px; max-height: 90vh; overflow-y: auto; }
+.details-modal-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
+.details-modal-header h3 { color: var(--primary); }
+.planner-details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 12px; }
+.detail-mini-card { min-width: 0; padding: 14px; border-radius: 9px; background: var(--bg-dark); border: 1px solid var(--border); overflow-wrap: anywhere; }
+.detail-mini-card.full-width { grid-column: 1 / -1; }
+.detail-mini-card h4 { margin-bottom: 8px; color: var(--primary); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+.detail-mini-card p { color: var(--text-main); line-height: 1.5; }
+.details-modal-actions { margin-top: 18px; }
+
+/* Editor Markdown de atividades com pré-visualização */
+.activities-toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 7px 0; }
+.activities-toolbar button { background: #334155; color: #f8fafc; border: 1px solid #475569; padding: 6px 9px; font-size: .82rem; }
+.activities-editor-field textarea { width: 100%; resize: vertical; }
+.markdown-preview-label { margin: 10px 0 5px; color: var(--text-muted); font-size: .78rem; text-transform: uppercase; }
+.markdown-preview, .planner-markdown-content { line-height: 1.6; overflow-wrap: anywhere; }
+.markdown-preview { min-height: 46px; padding: 12px; border: 1px solid var(--border); border-radius: 7px; background: var(--bg-dark); }
+.preview-placeholder { color: var(--text-muted); font-style: italic; }
+.markdown-preview h1, .planner-markdown-content h1 { font-size: 1.35rem; margin: .4em 0; }
+.markdown-preview h2, .planner-markdown-content h2 { font-size: 1.2rem; margin: .4em 0; }
+.markdown-preview h3, .planner-markdown-content h3 { font-size: 1.05rem; margin: .4em 0; }
+.markdown-preview p, .planner-markdown-content p { margin: .35em 0; }
+.markdown-preview ul, .markdown-preview ol, .planner-markdown-content ul, .planner-markdown-content ol { padding-left: 24px; margin: .4em 0; }
+.markdown-preview blockquote, .planner-markdown-content blockquote { margin: .5em 0; padding: 5px 12px; border-left: 3px solid var(--primary); color: var(--text-muted); }
+.markdown-preview code, .planner-markdown-content code { background: #334155; padding: 2px 5px; border-radius: 4px; }
+.markdown-preview a, .planner-markdown-content a { color: var(--primary); text-decoration: underline; }
+.planner-card-activities { color: var(--text-muted); font-size: .9rem; margin: 6px 0; }
+.planner-card-activities > strong { display: block; margin-bottom: 3px; }
+.planner-card-activities ul, .planner-card-activities ol { padding-left: 22px; }
+
+/* Notificações agrupadas e empilhadas */
+.reminder-toast-container { align-items: flex-start; max-width: min(360px, calc(100vw - 32px)); max-height: calc(100vh - 40px); overflow-y: auto; }
+.reminder-toast-container.has-stack { padding: 30px 4px 4px; }
+.reminder-toast-container.has-stack::before { content: attr(data-notification-count) " notificações"; position: absolute; top: 0; left: 4px; padding: 5px 9px; border-radius: 20px; color: #fff; background: #0f172a; border: 1px solid #475569; font-size: .75rem; font-weight: 700; }
+.reminder-toast { width: 100%; min-width: 0; box-sizing: border-box; }
+.task-toast { border-left-color: #f59e0b; }
+
+/* Navegação deslizante em telas pequenas */
+.admin-header-brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.mobile-menu-toggle, .mobile-nav-heading { display: none; }
+.nav-backdrop { display: none; }
+nav { flex-wrap: wrap; }
+@media (max-width: 760px) {
+    header { padding: 12px; gap: 10px; }
+    header h1 { font-size: 1.05rem; }
+    .header-controls { gap: 8px; }
+    .mobile-menu-toggle { display: inline-flex; align-items: center; justify-content: center; background: #334155; color: #f8fafc; padding: 9px 12px; font-size: 1.1rem; }
+    nav#adm-navigation { position: fixed; top: 0; left: 0; bottom: 0; z-index: 5001; width: min(84vw, 320px); height: 100dvh; max-height: 100dvh; padding: 14px; display: flex; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 6px; overflow-y: auto; background: var(--bg-card); border-right: 1px solid var(--border); box-shadow: 12px 0 34px rgba(0,0,0,.45); transform: translateX(-105%); transition: transform .25s ease; }
+    nav#adm-navigation.mobile-open { transform: translateX(0); }
+    .mobile-nav-heading { display: flex; align-items: center; justify-content: space-between; padding: 8px 4px 14px; color: var(--primary); }
+    .mobile-nav-heading button { background: transparent; color: #fff; font-size: 1.6rem; padding: 0 8px; }
+    nav#adm-navigation .nav-btn { width: 100%; flex: 0 0 auto; text-align: left; border: 0; border-left: 3px solid transparent; border-radius: 6px; padding: 13px 12px; }
+    nav#adm-navigation .nav-btn.active { border-left-color: var(--primary); background: rgba(56,189,248,.1); }
+    .nav-backdrop.is-visible { display: block; position: fixed; inset: 0; z-index: 5000; background: rgba(2,6,23,.72); }
+    body.mobile-nav-active { overflow: hidden; }
+    main { padding: 12px; }
+    .section-header { align-items: flex-start; flex-wrap: wrap; }
+    .data-card { flex-direction: column; gap: 12px; }
+    .data-card-actions { width: 100%; flex-wrap: wrap; }
+    .data-card-actions button { flex: 1 1 auto; }
+    .form-grid { grid-template-columns: 1fr; }
+    dialog { max-width: 94vw; padding: 16px; max-height: 92vh; overflow-y: auto; }
+    .planner-details-dialog { width: 94vw; }
+    .planner-details-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 420px) {
+    .planner-details-grid { grid-template-columns: 1fr; }
+    .detail-mini-card.full-width { grid-column: auto; }
+    .header-controls { gap: 5px; }
+    .header-controls #btn-logout { padding: 7px 10px; }
+}

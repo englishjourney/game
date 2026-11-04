@@ -21,15 +21,11 @@
     <!-- PAINEL ADM (Oculto inicialmente) -->
     <div id="adm-panel" class="hidden">
         <header>
-            <h1>Prof. Mica - Planejamentos</h1>
+            <div class="admin-header-brand">
+                <button type="button" id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Abrir menu">☰</button>
+                <h1>Prof. Mica - Planejamentos</h1>
+            </div>
             <div class="header-controls">
-                <label class="switch-container">
-                    <span>Permitir acesso em casa</span>
-                    <label class="switch">
-                        <input type="checkbox" id="home-access-toggle">
-                        <span class="slider round"></span>
-                    </label>
-                </label>
                 <button id="btn-logout" class="btn-danger">Sair</button>
                 <!-- === BOTÃO COM DROPDOWN NO CABEÇALHO === -->
 <div class="reminders-wrapper" style="position: relative; display: inline-block; margin-right: 10px;">
@@ -69,10 +65,13 @@
 </div>
             </div>
         </header>
+        <button type="button" id="mobile-nav-backdrop" class="nav-backdrop" aria-label="Fechar menu"></button>
 
-        <nav>
+        <nav id="adm-navigation" aria-label="Navegação administrativa">
+            <div class="mobile-nav-heading"><strong>Menu</strong><button type="button" id="mobile-menu-close" aria-label="Fechar menu">×</button></div>
             <button class="nav-btn active" data-target="dashboard-section">Dashboard</button>
             <button class="nav-btn" data-target="planner-section">Planejamentos</button>
+            <button class="nav-btn" data-target="tasks-section">Tasks</button>
             <button class="nav-btn" data-target="users-section">Usuários</button>
             <button class="nav-btn" data-target="missions-section">Missões</button>
             <button class="nav-btn" data-target="flashcards-section">Flashcards</button>
@@ -119,6 +118,12 @@
                 <div id="planner-list" class="cards-container">
                     <!-- Preenchido via JS -->
                 </div>
+            </section>
+
+            <!-- TASKS SECTION -->
+            <section id="tasks-section" class="content-section hidden">
+                <div class="section-header"><h2>Trabalhos pendentes</h2><button id="btn-add-task" class="btn-primary">+ Novo trabalho</button></div>
+                <div id="tasks-list" class="cards-container"><!-- Preenchido via JS --></div>
             </section>
 
             <!-- USERS SECTION -->
@@ -257,12 +262,39 @@
 
                 <label>Duração: <input type="text" id="plan-duration"></label>
                 <label class="full-width">Habilidades BNCC: <textarea id="plan-skills" rows="3"></textarea></label>
-                <label class="full-width">Atividades: <textarea id="plan-activities" rows="4" required></textarea></label>
+                <label class="full-width activities-editor-field">Atividades:
+                    <div id="activities-toolbar" class="activities-toolbar" aria-label="Formatação das atividades">
+                        <button type="button" data-format="heading" title="Título">H2</button><button type="button" data-format="bold" title="Negrito"><strong>B</strong></button><button type="button" data-format="italic" title="Itálico"><em>I</em></button><button type="button" data-format="bullet" title="Lista com marcadores">• Lista</button><button type="button" data-format="number" title="Lista numerada">1. Lista</button><button type="button" data-format="quote" title="Citação">❝</button><button type="button" data-format="code" title="Código">&lt;/&gt;</button><button type="button" data-format="divider" title="Divisor">―</button>
+                    </div>
+                    <textarea id="plan-activities" rows="5" required placeholder="Escreva as atividades e use os botões para formatar..."></textarea>
+                    <div class="markdown-preview-label">Pré-visualização</div><div id="plan-activities-preview" class="markdown-preview"></div>
+                </label>
             </div>
             <div class="modal-actions">
                 <button type="submit" class="btn-primary">Salvar</button>
                 <button type="button" class="btn-secondary" onclick="document.getElementById('planner-modal').close()">Cancelar</button>
             </div>
+        </form>
+    </dialog>
+
+    <!-- MODAL: DETALHES DA AULA -->
+    <dialog id="planner-details-modal" class="planner-details-dialog">
+        <div class="details-modal-header"><h3>Detalhes da aula</h3><button type="button" class="btn-secondary" onclick="document.getElementById('planner-details-modal').close()" aria-label="Fechar">×</button></div>
+        <div id="planner-details-grid" class="planner-details-grid"></div>
+        <div class="modal-actions details-modal-actions"><button type="button" id="btn-edit-planner-from-details" class="btn-primary">Editar aula</button><button type="button" class="btn-secondary" onclick="document.getElementById('planner-details-modal').close()">Fechar</button></div>
+    </dialog>
+
+    <!-- MODAL: NOVO / EDITAR TRABALHO -->
+    <dialog id="task-modal">
+        <form id="task-form"><h3 id="task-modal-title">Novo trabalho pendente</h3><input type="hidden" id="task-id">
+            <div class="form-grid">
+                <label class="full-width">Título: <input id="task-title" type="text" maxlength="160" required></label>
+                <label class="full-width">Descrição: <textarea id="task-description" rows="4" placeholder="Orientações do trabalho (opcional)"></textarea></label>
+                <label>Série: <select id="task-serie"><option value="">Todas</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>
+                <label>Turma: <select id="task-team"><option value="">Todas</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></label>
+                <label class="full-width">Prazo final: <input id="task-deadline" type="datetime-local" required></label>
+            </div>
+            <div class="modal-actions"><button type="submit" class="btn-primary">Salvar trabalho</button><button type="button" id="btn-cancel-task" class="btn-secondary">Cancelar</button></div>
         </form>
     </dialog>
 
