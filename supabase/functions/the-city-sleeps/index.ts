@@ -2,6 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
 const DB_URL = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const MAX_PLAYERS = 30;
 if (!DB_URL || !SERVICE_KEY) throw new Error("Missing Supabase Edge Function environment variables.");
 
 const db = createClient(DB_URL, SERVICE_KEY, {
@@ -288,7 +289,7 @@ async function joinRoom(user: any, body: any) {
     const { count, error: countError } = await db.from("tcs_players")
       .select("id", { count: "exact", head: true }).eq("room_id", room.id);
     if (countError) throw countError;
-    if ((count || 0) >= 24) throw new GameError("This room has reached its 24-player limit.");
+    if ((count || 0) >= MAX_PLAYERS) throw new GameError("This room has reached its 30-player limit.");
     await createPlayer(room.id, user);
   }
   return { roomCode: room.code, joined: true };
@@ -338,7 +339,7 @@ async function startGame(user: any, body: any) {
 
   const players = await getRoomPlayers(room.id);
   if (players.length < 6) throw new GameError("At least 6 players are required to start.");
-  if (players.length > 24) throw new GameError("This room supports up to 24 players.");
+  if (players.length > MAX_PLAYERS) throw new GameError("This room supports up to 30 players.");
 
   const { data: locked, error: lockError } = await db.from("tcs_rooms")
     .update({ status: "starting" })

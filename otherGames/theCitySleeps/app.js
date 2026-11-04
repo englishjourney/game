@@ -546,7 +546,7 @@ function renderRooms(rooms) {
     const access = room.isPublic ? "Open room" : "Password required";
     const pt = room.isPublic ? "Sala aberta" : "Senha necessária";
     return '<article class="room-list-card"><div class="room-list-main"><div class="room-list-code">' + esc(room.code) + '</div>' +
-      '<div class="room-list-meta"><span>' + esc(room.hostName) + '</span><span>·</span><span>' + room.playerCount + ' / 24 players</span><span>·</span><span class="room-access"' + tooltip(access, pt) + '>' + access + '</span></div></div>' +
+      '<div class="room-list-meta"><span>' + esc(room.hostName) + '</span><span>·</span><span>' + room.playerCount + ' / 30 players</span><span>·</span><span class="room-access"' + tooltip(access, pt) + '>' + access + '</span></div></div>' +
       '<button type="button" class="button button-outline" data-join-room="' + esc(room.code) + '" data-public="' + room.isPublic + '"' + tooltip("Entrar", "Entrar") + '>Join →</button></article>';
   }).join("");
   attachWordTooltips($("rooms-list"));

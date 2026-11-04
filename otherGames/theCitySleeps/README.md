@@ -20,7 +20,7 @@ Roles, categories, night actions, votes, and private messages are stored in tabl
 
 - Room codes are 4 unique characters: 2 letters and 2 digits, shuffled.
 - Open rooms appear in the waiting-room list; private rooms require a code and password.
-- Host is a player. Rooms support 6–24 players.
+- Host is a player. Rooms support 6–30 players.
 - Villain and Neutral slots: \`max(1, floor(playerCount / 6))\` each.
 - Additional Citizen powers are unlocked as player count increases; remaining Citizen slots become Ordinary Citizens.
 - Role reveal is private. Night actions have a 60-second deadline; missing actions become Skip. Discussion lasts 2 minutes. Voting resolves when all living players vote.
