@@ -39,4 +39,4 @@ The game uses short polling rather than exposing private game tables through dat
 - Click the **CS logo** in the top-left corner while signed in and on the game home screen to create a private local test lobby with five computer-controlled characters.
 - The test lobby uses the game interface and phases, while bot profiles, roles, actions, votes, and results are held only in browser memory.
 - No fake student accounts or game records are inserted into Supabase. Exiting the test clears the simulation.
-- Night actions and votes are simulated locally. This mode is useful for trying the interface and game flow, but it does not test the Supabase Edge Function or database persistence.
+- Night actions and votes are simulated locally. Bot votes share a suspicion target to reduce repeated ties, and any missing ballot is safely marked as skipped when the voting timer expires. This mode is useful for trying the interface and game flow, but it does not test the Supabase Edge Function or database persistence.
