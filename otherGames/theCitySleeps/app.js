@@ -1197,6 +1197,9 @@ function activateLocalTestMode() {
   localStorage.removeItem("tcs_current_room");
   $("test-mode-banner").classList.remove("hidden");
   $("btn-leave-room").textContent = "Exit test";
+  $("btn-copy-room-code").classList.add("hidden");
+  $("connection-indicator").innerHTML = "<i></i> Local simulator";
+  $("connection-indicator").classList.add("is-connected");
   showRoomView();
   renderLocalTestState();
   startRoomPolling();
@@ -1218,6 +1221,7 @@ function exitLocalTestMode() {
   localStorage.removeItem("tcs_current_room");
   $("test-mode-banner").classList.add("hidden");
   $("btn-leave-room").textContent = "← Leave room";
+  $("btn-copy-room-code").classList.remove("hidden");
   document.querySelectorAll("dialog[open]").forEach((dialog) => dialog.close());
   initializeHome();
 }
@@ -1588,7 +1592,11 @@ function resolveLocalTestNight() {
       }
     }
   }
-  if (game.room.status !== "finished" && checkLocalTestVictory()) return;
+  if (game.room.status !== "finished" && checkLocalTestVictory()) {
+    game.resolving = false;
+    renderLocalTestState();
+    return;
+  }
   if (game.room.status === "finished") { game.resolving = false; renderLocalTestState(); return; }
   game.room.phase = "dawn";
   game.room.phaseEndsAt = null;
