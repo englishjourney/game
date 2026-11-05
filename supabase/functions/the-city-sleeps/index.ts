@@ -792,7 +792,29 @@ function roleName(key: string) {
     cultist: "The Cultist",
     syren: "The Syren",
   };
-  return names[key] || "an unknown role";
+  const normalizedKey = String(key || "").trim().toLowerCase().replace(/[\\s-]+/g, "_");
+  const canonicalKey = normalizedKey.replace(/^the_/, "").replace(/^sem_teto$/, "homeless");
+  return names[canonicalKey] || "an unknown role";
+}
+
+async function hostAdvanceNight(user: any, body: any) {
+  const room = await getRoomByCode(body.roomCode);
+  if (room.host_user_id !== user.id) throw new GameError("Only the host can end the night for everyone.", 403);
+  if (room.status !== "active" || room.phase !== "night") {
+    throw new GameError("The night is no longer open for actions.");
+  }
+
+  await resolveNight(room.id);
+  await advanceRoom(room.id);
+  const updatedRoom = await getRoomById(room.id);
+  if (updatedRoom.phase === "resolving_night") {
+    return { advanced: false, resolving: true };
+  }
+  if (updatedRoom.phase !== "night") {
+    await addNews(room.id, updatedRoom.round_no, "The host ended the night early. Any missing actions were skipped.", "night_end");
+    return { advanced: true, phase: updatedRoom.phase };
+  }
+  return { advanced: false, phase: updatedRoom.phase };
 }
 
 async function advanceRoom(roomId: string) {
@@ -1076,11 +1098,22 @@ async function getState(user: any, body: any) {
     }))
     : [];
 
+  const actionStatusVisible = ["night", "resolving_night"].includes(currentRoom.phase);
+  let submittedActionIds = new Set<string>();
+  if (actionStatusVisible && currentRoom.round_no > 0) {
+    const { data: submittedActions, error: submittedActionsError } = await db.from("tcs_night_actions")
+      .select("player_id").eq("room_id", room.id).eq("round_no", currentRoom.round_no);
+    if (submittedActionsError) throw submittedActionsError;
+    submittedActionIds = new Set((submittedActions || []).map((action: any) => action.player_id));
+  }
+
   const participants = players.map((p: any) => ({
     id: p.id,
     username: p.username,
     avatarUrl: p.avatar_url,
     isHost: p.user_id === currentRoom.host_user_id,
+    isAlive: p.is_alive,
+    actionSubmitted: actionStatusVisible && p.is_alive && submittedActionIds.has(p.id),
   }));
 
   return {
@@ -1143,6 +1176,7 @@ async function dispatch(action: string, body: any, user: any) {
     case "get_state": return await getState(user, body);
     case "acknowledge_role": return await acknowledgeRole(user, body);
     case "submit_night_action": return await submitNightAction(user, body);
+    case "host_advance_night": return await hostAdvanceNight(user, body);
     case "acknowledge_dawn": return await acknowledgeDawn(user, body);
     case "submit_vote": return await submitVote(user, body);
     default: throw new GameError("Unknown game request.");
