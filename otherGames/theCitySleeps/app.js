@@ -761,11 +761,18 @@ function renderRoom(state) {
   $("participant-count").textContent = room.playerCount;
   $("shortcut-player-count").textContent = room.playerCount + " / 30";
   $("host-badge").classList.toggle("hidden", !room.isHost);
-  $("participants-list").innerHTML = state.participants.map((p) =>
-    '<div class="participant-row">' + avatarMarkup(p) +
-    '<span class="participant-name">' + esc(p.username) + '</span>' +
-    (p.isHost ? '<span class="participant-label">HOST</span>' : "") + '</div>'
-  ).join("");
+  const showActionStatus = ["night", "resolving_night"].includes(room.phase);
+  $("participants-list").innerHTML = state.participants.map((p) => {
+    const actionStatus = !showActionStatus ? "" : !p.isAlive
+      ? '<span class="participant-status is-out">OUT</span>'
+      : p.actionSubmitted
+        ? '<span class="participant-status is-done">✓ DONE</span>'
+        : '<span class="participant-status is-waiting">WAITING</span>';
+    return '<div class="participant-row">' + avatarMarkup(p) +
+      '<span class="participant-name">' + esc(p.username) + '</span>' +
+      actionStatus +
+      (p.isHost ? '<span class="participant-label">HOST</span>' : "") + '</div>';
+  }).join("");
 
   const lobby = room.phase === "lobby";
   $("lobby-controls").classList.toggle("hidden", !lobby);
@@ -895,16 +902,19 @@ function renderPhasePanel(state) {
   }
 
   if (phase === "night") {
+    const hostAdvanceControl = room.isHost
+      ? '<div class="host-night-controls"><button type="button" class="button button-outline" data-host-advance-night="true">End night for everyone →</button><p class="muted">Players who have not submitted an action will automatically skip this night.</p></div>'
+      : "";
     if (!me.isAlive) {
-      panel.innerHTML = '<div class="phase-content"><h2>You have been eliminated.</h2><p class="muted">Watch the city from the sidelines. The next sunrise is coming.</p></div>';
+      panel.innerHTML = '<div class="phase-content"><h2>You have been eliminated.</h2><p class="muted">Watch the city from the sidelines. The next sunrise is coming.</p>' + hostAdvanceControl + '</div>';
       return;
     }
     if (state.myAction) {
-      panel.innerHTML = '<div class="phase-content"><h2>Your action is complete.</h2><div class="waiting-state"><span class="waiting-orb"></span><div><strong>Wait for the city to finish the night.</strong><div class="muted">The next phase begins when everyone finishes or the timer ends.</div></div></div></div>';
+      panel.innerHTML = '<div class="phase-content"><h2>Your action is complete.</h2><div class="waiting-state"><span class="waiting-orb"></span><div><strong>Wait for the city to finish the night.</strong><div class="muted">The next phase begins when everyone finishes or the timer ends.</div></div></div>' + hostAdvanceControl + '</div>';
       return;
     }
-    panel.innerHTML = '<div class="phase-content"><p class="eyebrow">NIGHT ACTION</p><h2>Choose your move</h2><p class="action-note">Your action is private. It will be resolved when everyone finishes or the night timer reaches zero.</p>' +
-      renderNightAction(state) + "</div>";
+    panel.innerHTML = '<div class="phase-content"><p class="eyebrow">NIGHT ACTION</p><h2>Choose your move</h2><p class="action-note">Your action is private. It will be resolved when everyone finishes or the timer ends.</p>' +
+      renderNightAction(state) + hostAdvanceControl + "</div>";
     return;
   }
 
@@ -1060,6 +1070,11 @@ async function handlePhaseClick(event) {
 
   if (button.dataset.roleReady) return sendAction("acknowledge_role");
   if (button.dataset.dawnReady) return sendAction("acknowledge_dawn");
+  if (button.dataset.hostAdvanceNight) {
+    const confirmed = window.confirm("End the night for everyone now? Players who have not acted will skip this night.");
+    if (confirmed) return sendAction("host_advance_night");
+    return;
+  }
   if (button.dataset.nightTarget) {
     const id = button.dataset.nightTarget;
     const max = currentState.me.roleKey === "oracle" ? Math.max(1, currentState.me.oracleUsesLeft) : 1;
@@ -1125,6 +1140,7 @@ async function sendAction(action, extra = {}) {
     await api(action, { roomCode: currentRoomCode, ...extra });
     selectedTargets = [];
     panelKey = "";
+    if (action === "host_advance_night") notify("The night has ended for everyone.");
     await refreshRoomState();
   } catch (error) {
     notify(error.message, true);
