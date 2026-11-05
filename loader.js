@@ -1,10 +1,11 @@
 // loader.js
-import { getSession } from './auth.js';
+export function showLoader(gradeOverride = null) {
+    // Lê a sessão diretamente para evitar dependência circular com auth.js.
+    let session = null;
+    try { session = JSON.parse(localStorage.getItem('studentSession') || 'null'); } catch (_) {}
 
-export function showLoader() {
-    const session = getSession();
     // Verifica se é Ensino Médio (1º, 2º ou 3º ano)
-    const grade = session && (session.grade || session.serie); // Legacy session fallback only.
+    const grade = gradeOverride || (session && (session.grade || session.serie)); // Legacy session fallback only.
     const firstGradeDigit = String(grade || '').trim().charAt(0);
     const isHighSchool = ['1', '2', '3'].includes(firstGradeDigit);
 
