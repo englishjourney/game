@@ -2816,38 +2816,71 @@
             if (rawQuery.length) clearBtn.classList.remove('hidden');
             else {
                 clearBtn.classList.add('hidden');
-                hideSuggestions(); hideDidYouMean(); showEmptyState(); return;
+                hideSuggestions();
+                hideDidYouMean();
+                showEmptyState();
+                return;
             }
+
             if (!query.length) return;
-            const wordCount = rawQuery.trim().split(' ').filter(Boolean).length;
+
+            const wordCount = rawQuery.trim().split(/\s+/).filter(Boolean).length;
             if (wordCount > 6 || rawQuery.length > 80) {
-                hideSuggestions(); hideDidYouMean();
+                hideSuggestions();
+                hideDidYouMean();
                 showEmptyState("Traduza palavra por palavra, evite textos longos.");
                 return;
             }
 
-            const matches = dictionary.filter(item =>
-                getSearchableTerms(item).some(value => normalizeStr(value).includes(query))
+            // 1. Prioridade absoluta: correspondência exata, ignorando maiúsculas,
+            // minúsculas e acentos. Nunca escolhe uma correspondência parcial como tradução.
+            const exactMatches = dictionary.filter(item =>
+                getSearchableTerms(item).some(value => normalizeStr(value) === query)
             );
-            if (matches.length) {
+
+            if (exactMatches.length === 1) {
+                hideSuggestions();
                 hideDidYouMean();
-                renderSuggestions(matches, query);
-                const exact = matches.find(item => getSearchableTerms(item).some(value => normalizeStr(value) === query));
-                const selected = exact || matches[0];
-                displayResult(selected, getDisplayInput(selected, query));
+                const exactItem = exactMatches[0];
+                displayResult(exactItem, getDisplayInput(exactItem, query));
                 return;
             }
 
+            if (exactMatches.length > 1) {
+                hideDidYouMean();
+                renderSuggestions(exactMatches, query);
+                showEmptyState("Encontramos mais de uma tradução exata. Selecione a opção correta.");
+                return;
+            }
+
+            // 2. Sem correspondência exata: procurar apenas pequenos erros de digitação.
+            // A sugestão é exibida separadamente; a tradução só aparece após o clique.
             hideSuggestions();
-            let closestItem = null, closestTerm = '', minDistance = Infinity;
-            dictionary.forEach(item => getSearchableTerms(item).forEach(testTerm => {
-                const distance = levenshteinDistance(query, normalizeStr(testTerm));
-                if (distance < minDistance) { minDistance = distance; closestItem = item; closestTerm = testTerm; }
-            }));
-            if (closestItem && minDistance <= Math.max(3, Math.floor(query.length * 0.5))) {
-                showDidYouMean(closestItem, closestTerm); showEmptyState();
+            let closestItem = null;
+            let closestTerm = '';
+            let minDistance = Infinity;
+
+            if (query.length >= 3) {
+                dictionary.forEach(item => {
+                    getSearchableTerms(item).forEach(testTerm => {
+                        const normalizedTerm = normalizeStr(testTerm);
+                        const distance = levenshteinDistance(query, normalizedTerm);
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            closestItem = item;
+                            closestTerm = testTerm;
+                        }
+                    });
+                });
+            }
+
+            const maxTypoDistance = query.length <= 5 ? 1 : query.length <= 9 ? 2 : 3;
+            if (closestItem && minDistance > 0 && minDistance <= maxTypoDistance) {
+                showDidYouMean(closestItem, closestTerm);
+                showEmptyState("Nenhuma correspondência exata. Confira a sugestão antes de abrir a tradução.");
             } else {
-                hideDidYouMean(); showEmptyState("Nenhum termo encontrado. Tente pesquisar outra palavra.");
+                hideDidYouMean();
+                showEmptyState("Nenhuma correspondência exata encontrada. Confira a escrita ou tente outra palavra.");
             }
         }
 
@@ -2855,20 +2888,26 @@
             suggestionsList.innerHTML = '';
             matches.slice(0, 8).forEach(item => {
                 const inputTerm = getDisplayInput(item, query);
-                const outputTerm = searchDirection === 'en-to-pt' ? getTranslations(item).join(' / ') : item.term;
+                const outputTerm = searchDirection === 'en-to-pt'
+                    ? getTranslations(item).join(' / ')
+                    : item.term;
                 const row = document.createElement('div');
                 row.className = 'px-4 py-2.5 hover:bg-blue-50 dark:hover:bg-google-darkBorder cursor-pointer flex items-center justify-between border-b last:border-0 border-gray-100 dark:border-google-darkBorder transition-colors';
+
                 const left = document.createElement('span');
                 left.className = 'font-medium text-sm text-gray-800 dark:text-gray-200 truncate';
                 left.textContent = inputTerm;
+
                 const right = document.createElement('span');
                 right.className = 'text-xs text-gray-400 truncate max-w-[150px] ml-3';
                 right.textContent = outputTerm;
-                row.append(left,right);
+
+                row.append(left, right);
                 row.addEventListener('click', () => {
                     searchInput.value = inputTerm;
-                    displayResult(item,inputTerm);
-                    hideSuggestions(); hideDidYouMean();
+                    displayResult(item, inputTerm);
+                    hideSuggestions();
+                    hideDidYouMean();
                 });
                 suggestionsList.appendChild(row);
             });
@@ -2885,7 +2924,8 @@
             suggestedTermBtn.textContent = inputTerm;
             suggestedTermBtn.onclick = () => {
                 searchInput.value = inputTerm;
-                displayResult(suggestedItem,inputTerm);
+                hideSuggestions();
+                displayResult(suggestedItem, inputTerm);
                 hideDidYouMean();
             };
         }
