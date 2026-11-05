@@ -232,3 +232,51 @@ body{background:radial-gradient(ellipse at 14% 0%,#30205f 0,transparent 42%),rad
 .test-mode-exit{border:1px solid #f7c4e45c;border-radius:99px;background:#ff91c51c;color:#ffe4f0;padding:5px 9px;font-size:.62rem;font-weight:800}
 @media(max-width:850px){.test-mode-banner{order:3;grid-column:1/-1;margin:0 auto 8px}}
 @media(max-width:600px){.test-mode-banner{flex-wrap:wrap;justify-content:center;border-radius:15px;padding:8px 10px}.test-mode-banner small{width:100%;text-align:center}}
+
+
+/* Modal actions stay clear of headings, and lobby start is always visible. */
+.dialog-card:has(> .dialog-close) {
+  padding-top: 58px;
+}
+.dialog-card > .dialog-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  float: none;
+  margin: 0;
+  z-index: 5;
+}
+.lobby-controls.lobby-controls-outside {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 12px 0 18px;
+  padding: 14px 18px;
+  border: 1px solid #ab9cff3b;
+  border-radius: 17px;
+  background: linear-gradient(110deg,#8b7bff18,#5bdde714);
+  box-shadow: 0 12px 30px #03071635;
+}
+.lobby-controls-outside .lobby-controls-copy {
+  display: grid;
+  gap: 5px;
+}
+.lobby-controls-outside p,
+.lobby-controls-outside small {
+  margin: 0;
+  text-align: left;
+}
+.lobby-controls-outside .button {
+  min-width: 180px;
+}
+@media(max-width:600px) {
+  .lobby-controls.lobby-controls-outside {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .lobby-controls-outside .button {
+    width: 100%;
+  }
+}
