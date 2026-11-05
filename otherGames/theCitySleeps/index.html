@@ -74,6 +74,11 @@
       <section id="room-view" class="hidden">
         <div class="room-topline">
           <button id="btn-leave-room" type="button" class="button button-quiet" data-pt="Sair da sala">← Leave room</button>
+          <div id="test-mode-banner" class="test-mode-banner hidden">
+            <span class="test-mode-dot"></span><strong>LOCAL TEST MODE</strong>
+            <small>Five computer players · Not saved to Supabase</small>
+            <button id="btn-exit-test" type="button" class="test-mode-exit">Exit</button>
+          </div>
           <div class="room-code-block"><span class="muted">ROOM CODE</span><strong id="room-code-display">----</strong><button id="btn-copy-room-code" type="button" title="Copy room code" aria-label="Copy room code">▢</button></div>
         </div>
 

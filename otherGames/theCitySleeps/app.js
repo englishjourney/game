@@ -16,6 +16,14 @@ let homePoll = null;
 let clockPoll = null;
 let requestBusy = false;
 const seenPrivateMessages = new Set();
+let localTestMode = false;
+let localTestGame = null;
+let localTestTicker = null;
+const LOCAL_TEST_BOTS = ["Alex", "Maya", "Noah", "Luna", "Theo"];
+const LOCAL_TEST_NIGHT_MS = 45000;
+const LOCAL_TEST_DISCUSSION_MS = 15000;
+const LOCAL_TEST_VOTING_MS = 20000;
+const LOCAL_TEST_RESULT_MS = 4000;
 
 const MINI_GAMES = [
   { file: "memory.html", name: "Memory - Animals", title: "Memory Game" },
@@ -500,6 +508,7 @@ async function initialize() {
     if (button) openJoinDialog(button.dataset.joinRoom, button.dataset.public === "true");
   });
   $("btn-leave-room").addEventListener("click", leaveRoom);
+  $("btn-exit-test").addEventListener("click", exitLocalTestMode);
   $("btn-start-game").addEventListener("click", startGame);
   $("btn-copy-room-code").addEventListener("click", copyRoomCode);
 
@@ -668,6 +677,7 @@ function enterRoom(code) {
 }
 
 async function refreshRoomState() {
+  if (localTestMode) { renderLocalTestState(); return; }
   if (!currentRoomCode || requestBusy) return;
   requestBusy = true;
   try {
@@ -699,6 +709,7 @@ function stopRoomPolling() {
 }
 
 async function leaveRoom() {
+  if (localTestMode) return exitLocalTestMode();
   if (!currentRoomCode) return initializeHome();
   if (currentState && currentState.room.status === "active") {
     notify("You cannot leave while the game is running. You can close this tab and return later.");
@@ -714,6 +725,7 @@ async function leaveRoom() {
 }
 
 async function startGame() {
+  if (localTestMode) return startLocalTestGame();
   const button = $("btn-start-game");
   button.disabled = true;
   try {
@@ -1094,6 +1106,7 @@ async function submitNightAction(action) {
 }
 
 async function sendAction(action, extra = {}) {
+  if (localTestMode) { handleLocalTestAction(action, extra); return; }
   try {
     await api(action, { roomCode: currentRoomCode, ...extra });
     selectedTargets = [];
@@ -1126,5 +1139,561 @@ function updateCountdown() {
   const secondsText = String(seconds % 60).padStart(2, "0");
   clock.querySelector("strong").textContent = minutesText + ":" + secondsText;
 }
+
+
+function localRandomItem(items) { return items.length ? items[Math.floor(Math.random() * items.length)] : null; }
+function localShuffle(items) {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+function makeLocalTestRoleRoster() {
+  return localShuffle([
+    { roleKey: "werewolf", category: "Villain" },
+    { roleKey: "harlequin", category: "Neutral" },
+    { roleKey: "witch", category: "Citizen" },
+    { roleKey: "angel", category: "Citizen" },
+    { roleKey: "ordinary_citizen", category: "Citizen" },
+    { roleKey: "ordinary_citizen", category: "Citizen" },
+  ]);
+}
+function createLocalTestPlayer(id, username, isHuman, avatarUrl = null) {
+  return {
+    id, username, avatarUrl, isHuman, isBot: !isHuman, roleKey: null, category: null,
+    isAlive: true, isPuppet: false, revealedRole: false, roleReady: false, phaseReady: false,
+    inCult: false, shields: 0, witchHealsLeft: 2, witchPoisonsLeft: 2, oracleUsesLeft: 2,
+    angelLastUsedRound: null, dwarfLastUsedRound: null, syrenSeductionCount: 0,
+    puppetKills: 0, lastHouseId: null,
+  };
+}
+function activateLocalTestMode() {
+  if (!sessionToken) {
+    openSessionDialog();
+    notify("Sign in before starting a local test match.", true);
+    return;
+  }
+  if (currentRoomCode) {
+    notify("Leave your current room before opening a local test match.", true);
+    return;
+  }
+  localTestMode = true;
+  localTestGame = {
+    room: { code: "CPU5", status: "waiting", phase: "lobby", roundNo: 0, phaseEndsAt: null, winnerCategory: null, winnerMessage: null, isPublic: false },
+    players: [
+      createLocalTestPlayer("local-human", gameSession.username || "You", true, gameSession.avatar_url || null),
+      ...LOCAL_TEST_BOTS.map((name, index) => createLocalTestPlayer("local-bot-" + (index + 1), name, false)),
+    ],
+    actions: new Map(), votes: new Map(), news: [], privateMessages: [], nextMessageId: 1, resolving: false,
+  };
+  currentRoomCode = "CPU5";
+  currentState = null;
+  panelKey = "";
+  selectedTargets = [];
+  assignedMiniGame = "";
+  assignedMiniGameRound = 0;
+  localStorage.removeItem("tcs_current_room");
+  $("test-mode-banner").classList.remove("hidden");
+  $("btn-leave-room").textContent = "Exit test";
+  showRoomView();
+  renderLocalTestState();
+  startRoomPolling();
+  if (localTestTicker) clearInterval(localTestTicker);
+  localTestTicker = window.setInterval(tickLocalTestGame, 250);
+  notify("Local test mode: five computer players joined. Nothing is saved to Supabase.");
+}
+function exitLocalTestMode() {
+  if (!localTestMode) return;
+  localTestMode = false;
+  if (localTestTicker) clearInterval(localTestTicker);
+  localTestTicker = null;
+  localTestGame = null;
+  stopRoomPolling();
+  currentRoomCode = "";
+  currentState = null;
+  panelKey = "";
+  selectedTargets = [];
+  localStorage.removeItem("tcs_current_room");
+  $("test-mode-banner").classList.add("hidden");
+  $("btn-leave-room").textContent = "← Leave room";
+  document.querySelectorAll("dialog[open]").forEach((dialog) => dialog.close());
+  initializeHome();
+}
+function startLocalTestGame() {
+  const game = localTestGame;
+  if (!localTestMode || !game || game.room.phase !== "lobby") return;
+  const roster = makeLocalTestRoleRoster();
+  localShuffle(game.players).forEach((player, index) => {
+    Object.assign(player, {
+      roleKey: roster[index].roleKey, category: roster[index].category,
+      inCult: roster[index].roleKey === "cultist", isAlive: true, isPuppet: false,
+      roleReady: player.isBot, phaseReady: false, revealedRole: false, shields: 0,
+      witchHealsLeft: 2, witchPoisonsLeft: 2, oracleUsesLeft: 2,
+      angelLastUsedRound: null, dwarfLastUsedRound: null, syrenSeductionCount: 0, puppetKills: 0,
+    });
+  });
+  game.room.status = "active";
+  game.room.phase = "role_reveal";
+  game.room.roundNo = 0;
+  game.room.phaseEndsAt = null;
+  game.actions.clear();
+  game.votes.clear();
+  localTestAddNews("The host has started the local test. Check your secret role.", "game_start");
+  panelKey = "";
+  renderLocalTestState();
+}
+function localTestAddNews(message, eventType = "announcement") {
+  if (!localTestGame) return;
+  localTestGame.news.push({ id: "local-" + localTestGame.nextMessageId++, round_no: localTestGame.room.roundNo, event_type: eventType, message, created_at: new Date().toISOString() });
+}
+function localTestAddPrivateMessage(playerId, message, messageType = "info") {
+  if (!localTestGame) return;
+  localTestGame.privateMessages.push({ id: "local-" + localTestGame.nextMessageId++, playerId, message, message_type: messageType, created_at: new Date().toISOString() });
+}
+function localTestPublicPlayer(player) {
+  return {
+    id: player.id, username: player.username, avatarUrl: player.avatarUrl,
+    isAlive: player.isAlive && !player.isPuppet, isPuppet: false,
+    revealedRole: player.revealedRole, revealedRoleKey: player.revealedRole ? player.roleKey : null,
+  };
+}
+function buildLocalTestState() {
+  const game = localTestGame;
+  const human = game.players.find((player) => player.isHuman);
+  const alive = game.players.filter((player) => player.isAlive);
+  const living = alive.filter((player) => !player.isPuppet);
+  const dead = game.players.filter((player) => !player.isAlive || player.isPuppet);
+  const teamPlayers = human.category === "Villain" && human.isAlive
+    ? alive.filter((player) => player.category === "Villain").map((player) => ({ id: player.id, username: player.username, avatarUrl: player.avatarUrl, tag: player.isPuppet ? "Puppet" : "Villain" }))
+    : [];
+  const counts = {
+    Villain: alive.filter((player) => player.category === "Villain").length,
+    Neutral: alive.filter((player) => player.category === "Neutral").length,
+    Citizen: alive.filter((player) => player.category === "Citizen").length,
+  };
+  const myAction = game.actions.get(human.id);
+  const myVote = game.votes.get(human.id);
+  return {
+    room: {
+      code: game.room.code, status: game.room.status, phase: game.room.phase,
+      roundNo: game.room.roundNo, phaseStartedAt: game.room.phaseStartedAt || null,
+      phaseEndsAt: game.room.phaseEndsAt, winnerCategory: game.room.winnerCategory,
+      winnerMessage: game.room.winnerMessage, isHost: true, isPublic: false,
+      playerCount: game.players.length, voteCount: game.votes.size,
+    },
+    participants: game.players.map((player) => ({ id: player.id, username: player.username, avatarUrl: player.avatarUrl, isHost: player.isHuman })),
+    alivePlayers: living.map(localTestPublicPlayer),
+    deadPlayers: dead.map(localTestPublicPlayer),
+    counts, teamPlayers,
+    cultTargets: human.roleKey === "cultist" ? living.filter((player) => !player.inCult && player.id !== human.id).map(localTestPublicPlayer) : [],
+    me: {
+      id: human.id, username: human.username, avatarUrl: human.avatarUrl,
+      isAlive: human.isAlive, isPuppet: human.isPuppet, roleKey: human.roleKey || "ordinary_citizen",
+      category: human.category || "Citizen", roleReady: human.roleReady, phaseReady: human.phaseReady,
+      inCult: human.inCult, shields: human.shields, witchHealsLeft: human.witchHealsLeft,
+      witchPoisonsLeft: human.witchPoisonsLeft, oracleUsesLeft: human.oracleUsesLeft,
+      angelLastUsedRound: human.angelLastUsedRound, dwarfLastUsedRound: human.dwarfLastUsedRound,
+      syrenSeductionCount: human.syrenSeductionCount, puppetKills: human.puppetKills,
+    },
+    news: [...game.news],
+    privateMessages: game.privateMessages.filter((message) => message.playerId === human.id),
+    myAction: myAction ? { action: myAction.action, target_player_ids: myAction.targetPlayerIds || [] } : null,
+    myVote: myVote ? { target_player_id: myVote.targetPlayerId } : null,
+  };
+}
+function renderLocalTestState() {
+  if (!localTestMode || !localTestGame) return;
+  currentState = buildLocalTestState();
+  renderRoom(currentState);
+  processPrivateMessages(currentState.privateMessages || []);
+}
+function localTestRandomTarget(players, excludeId) {
+  return localRandomItem(players.filter((player) => player.isAlive && !player.isPuppet && player.id !== excludeId));
+}
+function chooseLocalBotNightAction(bot) {
+  const game = localTestGame;
+  const alive = game.players.filter((player) => player.isAlive && !player.isPuppet);
+  const target = () => localTestRandomTarget(alive, bot.id);
+  if (bot.roleKey === "ordinary_citizen") return { action: "task_done", targetPlayerIds: [] };
+  if (bot.roleKey === "werewolf") {
+    const picked = localRandomItem(alive.filter((player) => player.id !== bot.id && player.category !== "Villain"));
+    return picked ? { action: "kill", targetPlayerIds: [picked.id] } : { action: "skip", targetPlayerIds: [] };
+  }
+  if (bot.roleKey === "witch") {
+    const picked = target();
+    if (!picked) return { action: "skip", targetPlayerIds: [] };
+    const heal = bot.witchHealsLeft > 0 && (bot.witchPoisonsLeft <= 0 || Math.random() < 0.65);
+    return heal ? { action: "heal", targetPlayerIds: [picked.id] } : bot.witchPoisonsLeft > 0 ? { action: "poison", targetPlayerIds: [picked.id] } : { action: "skip", targetPlayerIds: [] };
+  }
+  if (bot.roleKey === "angel") {
+    const ready = bot.angelLastUsedRound === null || game.room.roundNo - bot.angelLastUsedRound >= 2;
+    const picked = ready ? target() : null;
+    return picked ? { action: "protect", targetPlayerIds: [picked.id] } : { action: "skip", targetPlayerIds: [] };
+  }
+  if (bot.roleKey === "oracle") {
+    const picked = target();
+    return picked && bot.oracleUsesLeft > 0 ? { action: "inspect", targetPlayerIds: [picked.id] } : { action: "skip", targetPlayerIds: [] };
+  }
+  if (bot.roleKey === "dwarf") {
+    const ready = bot.dwarfLastUsedRound === null || game.room.roundNo - bot.dwarfLastUsedRound >= 2;
+    const picked = ready ? localRandomItem(alive) : null;
+    return picked ? { action: "shield", targetPlayerIds: [picked.id] } : { action: "skip", targetPlayerIds: [] };
+  }
+  if (bot.roleKey === "homeless") {
+    const picked = target();
+    return picked ? { action: "sleep", targetPlayerIds: [picked.id] } : { action: "skip", targetPlayerIds: [] };
+  }
+  if (bot.roleKey === "hunter") {
+    const picked = target();
+    return picked ? { action: "hunt", targetPlayerIds: [picked.id] } : { action: "skip", targetPlayerIds: [] };
+  }
+  if (bot.roleKey === "necromancer") {
+    const picked = localRandomItem(game.players.filter((player) => !player.isAlive && !player.isPuppet));
+    return picked ? { action: "revive", targetPlayerIds: [picked.id] } : { action: "skip", targetPlayerIds: [] };
+  }
+  if (bot.roleKey === "puppet") {
+    const picked = localRandomItem(alive.filter((player) => player.id !== bot.id && player.category !== "Villain"));
+    return picked ? { action: "puppet_kill", targetPlayerIds: [picked.id] } : { action: "skip", targetPlayerIds: [] };
+  }
+  if (bot.roleKey === "cultist") {
+    const picked = localRandomItem(alive.filter((player) => !player.inCult && player.id !== bot.id));
+    return picked ? { action: "recruit", targetPlayerIds: [picked.id] } : { action: "skip", targetPlayerIds: [] };
+  }
+  if (bot.roleKey === "syren") {
+    const picked = target();
+    return picked ? { action: "seduce", targetPlayerIds: [picked.id] } : { action: "skip", targetPlayerIds: [] };
+  }
+  return { action: "skip", targetPlayerIds: [] };
+}
+function beginLocalTestNight() {
+  const game = localTestGame;
+  if (!game || game.room.status === "finished") return;
+  game.room.phase = "night";
+  game.room.roundNo += 1;
+  game.room.phaseStartedAt = new Date().toISOString();
+  game.room.phaseEndsAt = new Date(Date.now() + LOCAL_TEST_NIGHT_MS).toISOString();
+  game.actions.clear();
+  game.votes.clear();
+  game.resolving = false;
+  localTestAddNews("Night has fallen. Choose your secret action.", "night_start");
+  const bots = game.players.filter((player) => player.isBot && player.isAlive);
+  bots.forEach((bot, index) => {
+    window.setTimeout(() => {
+      if (!localTestMode || !localTestGame || localTestGame.room.phase !== "night" || localTestGame.room.roundNo !== game.room.roundNo || !bot.isAlive) return;
+      game.actions.set(bot.id, chooseLocalBotNightAction(bot));
+      maybeResolveLocalTestNight();
+      renderLocalTestState();
+    }, 450 + index * 220);
+  });
+  renderLocalTestState();
+}
+function handleLocalTestAction(action, extra = {}) {
+  const game = localTestGame;
+  if (!localTestMode || !game) return;
+  const human = game.players.find((player) => player.isHuman);
+  if (action === "acknowledge_role" && game.room.phase === "role_reveal") {
+    human.roleReady = true;
+    if (game.players.filter((player) => player.isAlive).every((player) => player.roleReady)) beginLocalTestNight();
+    else renderLocalTestState();
+    return;
+  }
+  if (action === "acknowledge_dawn" && game.room.phase === "dawn") {
+    human.phaseReady = true;
+    if (game.players.filter((player) => player.isAlive).every((player) => player.phaseReady)) beginLocalTestDiscussion();
+    else renderLocalTestState();
+    return;
+  }
+  if (action === "submit_night_action" && game.room.phase === "night") {
+    const chosen = String(extra.action || "skip");
+    const targets = Array.isArray(extra.targetPlayerIds) ? extra.targetPlayerIds : [];
+    const needsTarget = ["heal","poison","protect","inspect","shield","sleep","hunt","kill","revive","puppet_kill","recruit","seduce"].includes(chosen);
+    if (needsTarget && !targets.length) { notify("Choose a player first.", true); return; }
+    if (game.actions.has(human.id)) return;
+    game.actions.set(human.id, { action: chosen, targetPlayerIds: targets });
+    selectedTargets = [];
+    panelKey = "";
+    maybeResolveLocalTestNight();
+    renderLocalTestState();
+    notify("Your action was recorded in the local simulation.");
+    return;
+  }
+  if (action === "submit_vote" && game.room.phase === "voting") {
+    if (game.votes.has(human.id)) return;
+    const targetId = String(extra.targetPlayerId || "");
+    const target = game.players.find((player) => player.id === targetId && player.isAlive);
+    if (!target || target.id === human.id) { notify("Choose another living player.", true); return; }
+    game.votes.set(human.id, { targetPlayerId: target.id });
+    selectedTargets = [];
+    panelKey = "";
+    maybeResolveLocalTestVote();
+    renderLocalTestState();
+    notify("Your vote was recorded in the local simulation.");
+  }
+}
+function maybeResolveLocalTestNight(force = false) {
+  const game = localTestGame;
+  if (!game || game.room.phase !== "night" || game.resolving) return;
+  const living = game.players.filter((player) => player.isAlive);
+  if (force) living.forEach((player) => { if (!game.actions.has(player.id)) game.actions.set(player.id, { action: "skip", targetPlayerIds: [] }); });
+  if (living.every((player) => game.actions.has(player.id))) resolveLocalTestNight();
+}
+function eliminateLocalTestPlayer(player, message, revealRole = false) {
+  const game = localTestGame;
+  if (!player || !player.isAlive || !game) return;
+  player.isAlive = false;
+  player.revealedRole = revealRole;
+  localTestAddNews(message, "elimination");
+  if (player.roleKey === "harlequin") finishLocalTestGame("Solo", player.username + " was the Harlequin. The Harlequin wins alone!");
+}
+function finishLocalTestGame(category, message) {
+  const game = localTestGame;
+  if (!game) return;
+  game.room.status = "finished";
+  game.room.phase = "finished";
+  game.room.phaseEndsAt = null;
+  game.room.winnerCategory = category;
+  game.room.winnerMessage = message;
+  localTestAddNews(message, "victory");
+}
+function checkLocalTestVictory() {
+  const game = localTestGame;
+  if (!game || game.room.status === "finished") return true;
+  const alive = game.players.filter((player) => player.isAlive);
+  const villains = alive.filter((player) => player.category === "Villain");
+  const neutrals = alive.filter((player) => player.category === "Neutral");
+  const citizens = alive.filter((player) => player.category === "Citizen");
+  const cultist = alive.find((player) => player.roleKey === "cultist");
+  if (cultist && alive.length && alive.every((player) => player.inCult)) {
+    finishLocalTestGame("Solo", cultist.username + " completed the Cultist's circle. The Cultist wins alone!");
+    return true;
+  }
+  const syren = alive.find((player) => player.roleKey === "syren");
+  if (syren && alive.length === 2 && citizens.length >= 1) {
+    finishLocalTestGame("Solo", syren.username + " survived with a Citizen. The Syren wins alone!");
+    return true;
+  }
+  if (alive.length <= 3) {
+    if (villains.length) {
+      if (neutrals.length >= 2) finishLocalTestGame("Neutral", "The Neutral players outlasted the other factions. Neutrals win!");
+      else finishLocalTestGame("Villain", "The remaining players give the Villains control of the city. Villains win!");
+      return true;
+    }
+    if (neutrals.length) {
+      finishLocalTestGame("Neutral", "The Neutral players are the last faction standing. Neutrals win!");
+      return true;
+    }
+    finishLocalTestGame("Citizen", "No Villains or Neutrals remain. Citizens win!");
+    return true;
+  }
+  if (!villains.length && !neutrals.length) {
+    finishLocalTestGame("Citizen", "No Villains or Neutrals remain. Citizens win!");
+    return true;
+  }
+  return false;
+}
+function resolveLocalTestNight() {
+  const game = localTestGame;
+  if (!game || game.room.phase !== "night" || game.resolving) return;
+  game.resolving = true;
+  game.room.phase = "resolving_night";
+  const players = game.players;
+  const aliveAtStart = players.filter((player) => player.isAlive);
+  const protectedPlayers = new Map();
+  const sleepByHomeless = new Map();
+  const attacks = [];
+  for (const player of aliveAtStart) {
+    const action = game.actions.get(player.id) || { action: "skip", targetPlayerIds: [] };
+    const targetId = action.targetPlayerIds[0];
+    if ((action.action === "heal" || action.action === "protect") && targetId) protectedPlayers.set(targetId, action.action);
+    if (action.action === "sleep" && targetId) sleepByHomeless.set(player.id, targetId);
+    if (action.action === "shield" && targetId) {
+      const target = players.find((item) => item.id === targetId && item.isAlive);
+      if (target) { target.shields += 1; localTestAddNews("A shield was built for " + target.username + ".", "protection"); }
+    }
+    if (action.action === "inspect") {
+      (action.targetPlayerIds || []).forEach((id) => {
+        const target = players.find((item) => item.id === id);
+        if (target) localTestAddPrivateMessage(player.id, target.username + " belongs to the " + target.category + " category.", "oracle");
+      });
+      player.oracleUsesLeft = Math.max(0, player.oracleUsesLeft - (action.targetPlayerIds || []).length);
+    }
+    if (action.action === "recruit" && targetId) {
+      const target = players.find((item) => item.id === targetId && item.isAlive);
+      if (target && !target.inCult) {
+        target.inCult = true;
+        localTestAddPrivateMessage(target.id, "You are now in the Cultist's cult.", "cult");
+        localTestAddNews("The Cultist's group has grown.", "cult");
+      }
+    }
+    if (action.action === "seduce" && targetId) {
+      const target = players.find((item) => item.id === targetId && item.isAlive);
+      if (target) {
+        target.syrenSeductionCount += 1;
+        if (target.syrenSeductionCount >= 3) eliminateLocalTestPlayer(target, target.username + " was claimed by the Syren after three visits.");
+      }
+    }
+    if (action.action === "revive" && targetId) {
+      const target = players.find((item) => item.id === targetId && !item.isAlive && !item.isPuppet);
+      if (target) {
+        target.isAlive = true; target.isPuppet = true; target.roleKey = "puppet";
+        target.category = "Villain"; target.puppetKills = 0; target.revealedRole = false;
+        localTestAddNews(target.username + " returned as a Puppet.", "revival");
+      }
+    }
+    if (action.action === "heal" && player.roleKey === "witch") player.witchHealsLeft = Math.max(0, player.witchHealsLeft - 1);
+    if (action.action === "poison" && player.roleKey === "witch") player.witchPoisonsLeft = Math.max(0, player.witchPoisonsLeft - 1);
+    if (action.action === "protect") player.angelLastUsedRound = game.room.roundNo;
+    if (action.action === "shield") player.dwarfLastUsedRound = game.room.roundNo;
+    if (action.action === "kill" && targetId) attacks.push({ source: "The Werewolf", targetId, attacker: player });
+    if (action.action === "poison" && targetId) attacks.push({ source: "The Witch", targetId, attacker: player });
+    if (action.action === "puppet_kill" && targetId) attacks.push({ source: "The Puppet", targetId, attacker: player, isPuppet: true });
+    if (action.action === "hunt" && targetId) attacks.push({ source: "The Hunter", targetId, attacker: player, isHunter: true });
+  }
+  const resolveAttack = (target, source) => {
+    if (!target || !target.isAlive) return false;
+    if (target.roleKey === "homeless" && sleepByHomeless.has(target.id)) { localTestAddNews(target.username + " was away from home and escaped an attack.", "escape"); return false; }
+    if (protectedPlayers.has(target.id)) {
+      localTestAddNews((protectedPlayers.get(target.id) === "protect" ? "The Angel saved " : "A healing potion saved ") + target.username + ".", "protection");
+      return false;
+    }
+    if (target.shields > 0) { target.shields -= 1; localTestAddNews(target.username + " was protected by a shield. One shield broke.", "protection"); return false; }
+    eliminateLocalTestPlayer(target, target.username + " was eliminated by " + source + ".");
+    return true;
+  };
+  for (const attack of attacks) {
+    if (game.room.status === "finished") break;
+    const target = players.find((player) => player.id === attack.targetId);
+    if (attack.isHunter) {
+      if (!target || !target.isAlive) continue;
+      if (target.category === "Villain" || target.category === "Neutral") resolveAttack(target, "The Hunter");
+      else eliminateLocalTestPlayer(attack.attacker, "The Hunter attacked a Citizen and was eliminated.");
+      continue;
+    }
+    const killed = resolveAttack(target, attack.source);
+    if (killed && attack.isPuppet) {
+      attack.attacker.puppetKills += 1;
+      if (attack.attacker.puppetKills >= 2) {
+        attack.attacker.isAlive = false;
+        localTestAddNews(attack.attacker.username + " completed two Puppet eliminations and returned to the graveyard.", "elimination");
+      }
+    }
+    if (killed) {
+      for (const [homelessId, houseId] of sleepByHomeless.entries()) {
+        if (houseId === target.id) {
+          const homeless = players.find((player) => player.id === homelessId);
+          if (homeless && homeless.isAlive) eliminateLocalTestPlayer(homeless, homeless.username + " was also lost while staying at " + target.username + "'s home.");
+        }
+      }
+    }
+  }
+  if (game.room.status !== "finished" && checkLocalTestVictory()) return;
+  if (game.room.status === "finished") { game.resolving = false; renderLocalTestState(); return; }
+  game.room.phase = "dawn";
+  game.room.phaseEndsAt = null;
+  game.players.forEach((player) => { player.phaseReady = player.isBot; });
+  localTestAddNews("The city wakes. Read the report and prepare for discussion.", "dawn");
+  game.resolving = false;
+  renderLocalTestState();
+  const human = game.players.find((player) => player.isHuman);
+  if (!human.isAlive) {
+    window.setTimeout(() => {
+      if (localTestMode && localTestGame && localTestGame.room.phase === "dawn") beginLocalTestDiscussion();
+    }, 900);
+  }
+}
+function beginLocalTestDiscussion() {
+  const game = localTestGame;
+  if (!game || game.room.phase !== "dawn") return;
+  game.room.phase = "discussion";
+  game.room.phaseStartedAt = new Date().toISOString();
+  game.room.phaseEndsAt = new Date(Date.now() + LOCAL_TEST_DISCUSSION_MS).toISOString();
+  localTestAddNews("The players are discussing who may be hiding among the Villains.", "discussion");
+  renderLocalTestState();
+}
+function chooseLocalBotVote(bot) {
+  const candidates = localTestGame.players.filter((player) => player.isAlive && !player.isPuppet && player.id !== bot.id);
+  if (!candidates.length) return null;
+  if (bot.category === "Villain") {
+    const nonVillains = candidates.filter((player) => player.category !== "Villain");
+    return localRandomItem(nonVillains.length ? nonVillains : candidates);
+  }
+  return localRandomItem(candidates);
+}
+function beginLocalTestVoting() {
+  const game = localTestGame;
+  if (!game || game.room.phase !== "discussion") return;
+  game.room.phase = "voting";
+  game.room.phaseStartedAt = new Date().toISOString();
+  game.room.phaseEndsAt = new Date(Date.now() + LOCAL_TEST_VOTING_MS).toISOString();
+  game.votes.clear();
+  localTestAddNews("Discussion is over. Cast your vote.", "voting");
+  game.players.filter((player) => player.isBot && player.isAlive).forEach((bot, index) => {
+    window.setTimeout(() => {
+      if (!localTestMode || !localTestGame || localTestGame.room.phase !== "voting" || !bot.isAlive) return;
+      const target = chooseLocalBotVote(bot);
+      if (target) game.votes.set(bot.id, { targetPlayerId: target.id });
+      maybeResolveLocalTestVote();
+      renderLocalTestState();
+    }, 450 + index * 250);
+  });
+  renderLocalTestState();
+}
+function maybeResolveLocalTestVote(force = false) {
+  const game = localTestGame;
+  if (!game || game.room.phase !== "voting" || game.resolving) return;
+  const alive = game.players.filter((player) => player.isAlive);
+  if (force) {
+    const human = alive.find((player) => player.isHuman);
+    if (human && !game.votes.has(human.id)) game.votes.set(human.id, { targetPlayerId: null, skipped: true });
+  }
+  if (alive.every((player) => game.votes.has(player.id))) resolveLocalTestVote();
+}
+function resolveLocalTestVote() {
+  const game = localTestGame;
+  if (!game || game.room.phase !== "voting" || game.resolving) return;
+  game.resolving = true;
+  game.room.phase = "resolving_vote";
+  const totals = new Map();
+  game.votes.forEach((vote) => {
+    if (vote.targetPlayerId) totals.set(vote.targetPlayerId, (totals.get(vote.targetPlayerId) || 0) + 1);
+  });
+  const highest = Math.max(0, ...totals.values());
+  const leaders = [...totals.entries()].filter((entry) => entry[1] === highest);
+  if (!highest || leaders.length !== 1) {
+    localTestAddNews("The vote ended in a tie. No one was eliminated.", "vote_result");
+  } else {
+    const target = game.players.find((player) => player.id === leaders[0][0] && player.isAlive);
+    if (target) eliminateLocalTestPlayer(target, target.username + " was " + (ROLES[target.roleKey]?.name || "an unknown role") + ".", true);
+  }
+  if (game.room.status !== "finished" && !checkLocalTestVictory()) {
+    game.room.phase = "vote_result";
+    game.room.phaseStartedAt = new Date().toISOString();
+    game.room.phaseEndsAt = new Date(Date.now() + LOCAL_TEST_RESULT_MS).toISOString();
+    localTestAddNews("The next night will begin shortly.", "announcement");
+  }
+  game.resolving = false;
+  renderLocalTestState();
+}
+function tickLocalTestGame() {
+  const game = localTestGame;
+  if (!localTestMode || !game || game.room.status === "finished" || !game.room.phaseEndsAt) return;
+  if (Date.now() < new Date(game.room.phaseEndsAt).getTime()) return;
+  if (game.room.phase === "night") maybeResolveLocalTestNight(true);
+  else if (game.room.phase === "discussion") beginLocalTestVoting();
+  else if (game.room.phase === "voting") maybeResolveLocalTestVote(true);
+  else if (game.room.phase === "vote_result") beginLocalTestNight();
+  renderLocalTestState();
+}
+function handleLocalTestHotkey(event) {
+  const isShortcut = event.ctrlKey && event.shiftKey && (event.key === "Tab" || event.code === "Tab");
+  if (!isShortcut || event.altKey || event.metaKey) return;
+  event.preventDefault();
+  event.stopPropagation();
+  if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+  if (!localTestMode) activateLocalTestMode();
+}
+window.addEventListener("keydown", handleLocalTestHotkey, true);
 
 document.addEventListener("DOMContentLoaded", initialize);

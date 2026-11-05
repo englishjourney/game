@@ -224,3 +224,11 @@ body{background:radial-gradient(ellipse at 14% 0%,#30205f 0,transparent 42%),rad
  .game-dialog[open]{animation:none}
  .shortcut-card,.button{transition:none}
 }
+
+.test-mode-banner{display:inline-flex;align-items:center;gap:9px;margin:0 auto;padding:8px 12px;border:1px solid #9a8cff70;border-radius:99px;background:linear-gradient(100deg,#7d67ef32,#5cd4e82b);color:#f1edff;box-shadow:0 8px 25px #05061655}
+.test-mode-dot{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:#7df5d1;box-shadow:0 0 12px #7df5d1;animation:pulse 1.4s infinite}
+.test-mode-banner strong{font-size:.6rem;letter-spacing:.13em;white-space:nowrap}
+.test-mode-banner small{font-size:.62rem;color:#d1cafa}
+.test-mode-exit{border:1px solid #f7c4e45c;border-radius:99px;background:#ff91c51c;color:#ffe4f0;padding:5px 9px;font-size:.62rem;font-weight:800}
+@media(max-width:850px){.test-mode-banner{order:3;grid-column:1/-1;margin:0 auto 8px}}
+@media(max-width:600px){.test-mode-banner{flex-wrap:wrap;justify-content:center;border-radius:15px;padding:8px 10px}.test-mode-banner small{width:100%;text-align:center}}

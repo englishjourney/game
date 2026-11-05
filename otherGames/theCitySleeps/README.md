@@ -32,3 +32,11 @@ Ordinary Citizens are assigned one existing activity per night from Memory, Colo
 ## Notes
 
 The game uses short polling rather than exposing private game tables through database subscriptions. Phase transitions are resolved by the Edge Function when connected players poll the room state. The current implementation should be tested with a full 6-player session before classroom use.
+
+
+## Local computer test mode
+
+- Press **Ctrl + Shift + Tab** while signed in and on the game home screen to create a private local test lobby with five computer-controlled characters.
+- The test lobby uses the game interface and phases, while bot profiles, roles, actions, votes, and results are held only in browser memory.
+- No fake student accounts or game records are inserted into Supabase. Exiting the test clears the simulation.
+- Night actions and votes are simulated locally. This mode is useful for trying the interface and game flow, but it does not test the Supabase Edge Function or database persistence.
