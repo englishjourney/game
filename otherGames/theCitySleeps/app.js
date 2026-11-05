@@ -460,6 +460,13 @@ async function initialize() {
   // Prevent closing the required sign-in dialog with the Escape key.
   $("session-dialog").addEventListener("cancel", (event) => event.preventDefault());
   $("signed-in-user").textContent = gameSession.username || "";
+  const localTestTrigger = $("brand-local-test-trigger");
+  if (localTestTrigger) {
+    localTestTrigger.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (!localTestMode) activateLocalTestMode();
+    });
+  }
   $("btn-open-session").addEventListener("click", openSessionDialog);
   $("session-form").addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -1694,14 +1701,6 @@ function tickLocalTestGame() {
   else if (game.room.phase === "vote_result") beginLocalTestNight();
   renderLocalTestState();
 }
-function handleLocalTestHotkey(event) {
-  const isShortcut = event.ctrlKey && event.altKey && event.shiftKey && (event.key === "Backspace" || event.code === "Backspace");
-  if (!isShortcut || event.metaKey) return;
-  event.preventDefault();
-  event.stopPropagation();
-  if (event.stopImmediatePropagation) event.stopImmediatePropagation();
-  if (!localTestMode) activateLocalTestMode();
-}
-window.addEventListener("keydown", handleLocalTestHotkey, true);
+
 
 document.addEventListener("DOMContentLoaded", initialize);
