@@ -21,6 +21,14 @@ export function initUsers() {
                 div.className = 'search-item';
                 div.innerText = name;
                 div.onclick = () => {
+                    const teamSection = row.closest('.team-section');
+                    const teamContent = teamSection && teamSection.querySelector('.team-content');
+                    const minimizeButton = teamSection && teamSection.querySelector('.team-header .minimize-btn');
+                    if (teamContent) teamContent.classList.remove('hidden');
+                    if (minimizeButton) {
+                        minimizeButton.textContent = 'Minimizar';
+                        minimizeButton.setAttribute('aria-expanded', 'true');
+                    }
                     row.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     row.style.backgroundColor = 'rgba(56, 189, 248, 0.4)';
                     setTimeout(() => row.style.backgroundColor = '', 2000);
