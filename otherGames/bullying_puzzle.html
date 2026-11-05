@@ -249,6 +249,48 @@
     .piece-card:active { cursor: grabbing; }
     .piece-card.dragging { opacity: .45; }
 
+    /* Translation tooltip appears when a text block is hovered or keyboard-focused. */
+    .piece-card[data-tooltip],
+    .slot-content.filled[data-tooltip] { position: relative; }
+    .piece-card[data-tooltip]:hover,
+    .piece-card[data-tooltip]:focus-visible,
+    .slot-content.filled[data-tooltip]:hover { z-index: 20; }
+    .piece-card[data-tooltip]::after,
+    .slot-content.filled[data-tooltip]::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 8px;
+      top: calc(100% + 7px);
+      z-index: 60;
+      display: block;
+      width: max-content;
+      max-width: min(340px, calc(100vw - 64px));
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 10px;
+      background: #0f172a;
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(15,23,42,.24);
+      font-family: 'Inter', sans-serif;
+      font-size: .78rem;
+      font-weight: 500;
+      line-height: 1.5;
+      text-align: left;
+      white-space: normal;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(-4px);
+      transition: opacity .15s ease, transform .15s ease, visibility .15s ease;
+    }
+    .piece-card[data-tooltip]:hover::after,
+    .piece-card[data-tooltip]:focus-visible::after,
+    .slot-content.filled[data-tooltip]:hover::after {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
     .status {
       min-height: 25px;
       margin: 15px 0 0;
@@ -313,7 +355,7 @@
       <div class="intro-card">
         <div class="intro-icon">🧩</div>
         <p>Put the text back in the correct order! The title and the two parts of each paragraph are mixed up. Arrange all <strong>7 pieces</strong> before the time runs out.</p>
-        <p><strong>You have 1 minute.</strong> Drag each piece to a position. On a touchscreen, tap a piece and then tap the position where it belongs.</p>
+        <p><strong>You have 5 minutes.</strong> Drag each piece to a position. Hover over a text block to see its Portuguese translation. On a touchscreen, tap a piece and then tap the position where it belongs.</p>
         <button id="start-btn" class="primary-btn">Start Puzzle</button>
       </div>
     </section>
@@ -321,7 +363,7 @@
     <section id="game-screen" class="hidden">
       <div class="game-top">
         <div class="game-name">🧩 Put the text in order!</div>
-        <div id="timer" class="timer-box" aria-live="off">01:00</div>
+        <div id="timer" class="timer-box" aria-live="off">05:00</div>
       </div>
       <p class="instructions">Complete the text from beginning to end. The title must come first. You can move a piece again whenever you need.</p>
 
@@ -358,13 +400,13 @@
 
     // The title is piece 1. Each of the three original paragraphs is split into two pieces.
     const puzzlePieces = [
-      { id: 'title', text: 'Understanding and Stopping Bullying', isTitle: true },
-      { id: 'p1a', text: 'Bullying is a serious problem that affects many students in schools around the world. It happens when someone repeatedly hurts, threatens, or humiliates another person on purpose.' },
-      { id: 'p1b', text: 'This behavior can be physical, verbal, or even online through social media, creating a hostile environment for everyone involved.' },
-      { id: 'p2a', text: 'The impact of bullying on victims can be deeply damaging and long-lasting. Children and teenagers who experience bullying often suffer from anxiety, depression, a drop in school performance, and feelings of isolation.' },
-      { id: 'p2b', text: 'Because they feel unsafe and unsupported, it becomes very difficult for them to focus on learning and enjoying their daily lives.' },
-      { id: 'p3a', text: 'Stopping bullying requires a collective effort from students, teachers, and parents. Schools must enforce strict anti-bullying rules, while adults need to teach empathy, respect, and kindness.' },
-      { id: 'p3b', text: 'By speaking up and supporting one another, we can create a safe environment where every young person feels valued and protected.' }
+      { id: 'title', text: 'Understanding and Stopping Bullying', translation: "Compreendendo e combatendo o bullying", isTitle: true },
+      { id: 'p1a', text: 'Bullying is a serious problem that affects many students in schools around the world. It happens when someone repeatedly hurts, threatens, or humiliates another person on purpose.', translation: "O bullying é um problema sério que afeta muitos estudantes em escolas ao redor do mundo. Ele acontece quando alguém machuca, ameaça ou humilha repetidamente outra pessoa de propósito." },
+      { id: 'p1b', text: 'This behavior can be physical, verbal, or even online through social media, creating a hostile environment for everyone involved.', translation: "Esse comportamento pode ser físico, verbal ou até mesmo online, por meio das redes sociais, criando um ambiente hostil para todos os envolvidos." },
+      { id: 'p2a', text: 'The impact of bullying on victims can be deeply damaging and long-lasting. Children and teenagers who experience bullying often suffer from anxiety, depression, a drop in school performance, and feelings of isolation.', translation: "O impacto do bullying sobre as vítimas pode ser profundamente prejudicial e duradouro. Crianças e adolescentes que sofrem bullying frequentemente enfrentam ansiedade, depressão, queda no desempenho escolar e sentimentos de isolamento." },
+      { id: 'p2b', text: 'Because they feel unsafe and unsupported, it becomes very difficult for them to focus on learning and enjoying their daily lives.', translation: "Como se sentem inseguros e sem apoio, torna-se muito difícil para eles se concentrarem no aprendizado e aproveitarem o dia a dia." },
+      { id: 'p3a', text: 'Stopping bullying requires a collective effort from students, teachers, and parents. Schools must enforce strict anti-bullying rules, while adults need to teach empathy, respect, and kindness.', translation: "Combater o bullying exige um esforço conjunto de estudantes, professores e pais. As escolas devem aplicar regras rigorosas contra o bullying, enquanto os adultos precisam ensinar empatia, respeito e gentileza." },
+      { id: 'p3b', text: 'By speaking up and supporting one another, we can create a safe environment where every young person feels valued and protected.', translation: "Ao se manifestar e apoiar uns aos outros, podemos criar um ambiente seguro onde todo jovem se sinta valorizado e protegido." }
     ];
     const correctOrder = puzzlePieces.map(piece => piece.id);
 
@@ -387,7 +429,7 @@
     let placedPieces = Array(7).fill(null);
     let selectedSource = null;
     let dragSource = null;
-    let timeLeft = 60;
+    let timeLeft = 300;
     let timerInterval = null;
     let gameEnded = false;
 
@@ -406,7 +448,7 @@
       placedPieces = Array(7).fill(null);
       selectedSource = null;
       dragSource = null;
-      timeLeft = 60;
+      timeLeft = 300;
       gameEnded = false;
       startScreen.classList.add('hidden');
       gameScreen.classList.remove('hidden');
@@ -466,8 +508,10 @@
           content.classList.add('filled');
           if (piece.isTitle) content.classList.add('title-piece');
           content.textContent = piece.text;
+          content.dataset.tooltip = piece.translation;
+          content.setAttribute('aria-label', piece.text + '. Tradução: ' + piece.translation);
           content.draggable = !gameEnded;
-          content.title = 'Tap to select this piece, or drag it to another position.';
+          content.title = 'Tradução: ' + piece.translation + '. Tap to select this piece, or drag it to another position.';
           content.addEventListener('dragstart', event => beginDrag(event, { type: 'slot', index }));
           content.addEventListener('dragend', () => { dragSource = null; });
         } else {
@@ -486,6 +530,8 @@
         const card = document.createElement('div');
         card.className = 'piece-card';
         card.textContent = piece.text;
+        card.dataset.tooltip = piece.translation;
+        card.title = 'Tradução: ' + piece.translation;
         card.draggable = !gameEnded;
         card.tabIndex = gameEnded ? -1 : 0;
         card.setAttribute('role', 'button');
@@ -631,7 +677,7 @@
       } else {
         resultPanel.classList.add('failed');
         resultTitle.textContent = "Time's up! ⏰";
-        resultMessage.textContent = 'The 1-minute challenge is over. Restart the puzzle and try to put all 7 pieces in the correct order.';
+        resultMessage.textContent = 'The 5-minute challenge is over. Restart the puzzle and try to put all 7 pieces in the correct order.';
         statusDisplay.textContent = 'Time is over. The pieces are locked until you restart.';
       }
       document.getElementById('restart-btn').textContent = won ? 'Play again' : 'Restart puzzle';
