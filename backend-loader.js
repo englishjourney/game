@@ -33,6 +33,16 @@
     "  background: rgba(0,0,0,.82) !important;",
     "  -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);",
     "}",
+    "dialog#global-loader.ej-loader-dialog[data-theme=\"fundamental\"]::backdrop {",
+    "  background: linear-gradient(145deg, #082f72 0%, #0b438e 52%, #082f72 100%) !important;",
+    "  -webkit-backdrop-filter: none; backdrop-filter: none;",
+    "}",
+    ".ej-fund-starfield { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }",
+    ".ej-fund-starfield > span { position: absolute; display: block; color: rgba(224,244,255,.9); line-height: 1;",
+    "  text-shadow: 0 0 7px rgba(151,213,255,.75); animation: ej-fund-star-float var(--float-duration, 4s) ease-in-out infinite;",
+    "  animation-delay: var(--float-delay, 0s); will-change: transform, opacity; }",
+    ".ej-fund-content { position: relative; z-index: 1; }",
+    "@keyframes ej-fund-star-float { 0%,100% { transform: translateY(0) scale(1); opacity: .58; } 50% { transform: translateY(-5px) scale(1.08); opacity: 1; } }",
     ".ej-loader-content {",
     "  display: flex; flex-direction: column; align-items: center; justify-content: center;",
     "  gap: 10px; padding: 20px; max-width: calc(100vw - 32px); text-align: center;",
@@ -140,7 +150,9 @@
     const letters = Array.from("Carregando").map((letter, index) =>
       '<span style="--letter-index:' + index + '">' + letter + '</span>'
     ).join("");
-    return '<div class="ej-loader-content ej-fund-content" role="status" aria-live="polite">' +
+    const stars = '<span style="left:8%;top:12%;font-size:10px;--float-duration:3.8s;--float-delay:-0s">✦</span><span style="left:18%;top:28%;font-size:7px;--float-duration:4.6s;--float-delay:-0.7s">✦</span><span style="left:29%;top:11%;font-size:12px;--float-duration:4.1s;--float-delay:-1.2s">✦</span><span style="left:41%;top:22%;font-size:8px;--float-duration:5s;--float-delay:-0.3s">✦</span><span style="left:54%;top:9%;font-size:6px;--float-duration:4.3s;--float-delay:-1.5s">✦</span><span style="left:67%;top:19%;font-size:11px;--float-duration:4.8s;--float-delay:-0.5s">✦</span><span style="left:82%;top:10%;font-size:8px;--float-duration:3.9s;--float-delay:-1s">✦</span><span style="left:93%;top:29%;font-size:12px;--float-duration:5.2s;--float-delay:-0.2s">✦</span><span style="left:6%;top:48%;font-size:7px;--float-duration:4.5s;--float-delay:-0.9s">✦</span><span style="left:15%;top:68%;font-size:11px;--float-duration:5.1s;--float-delay:-0.4s">✦</span><span style="left:27%;top:53%;font-size:6px;--float-duration:3.7s;--float-delay:-1.4s">✦</span><span style="left:38%;top:77%;font-size:9px;--float-duration:4.9s;--float-delay:-0.6s">✦</span><span style="left:50%;top:61%;font-size:7px;--float-duration:4.2s;--float-delay:-1.1s">✦</span><span style="left:62%;top:82%;font-size:12px;--float-duration:5.3s;--float-delay:-0.1s">✦</span><span style="left:74%;top:57%;font-size:8px;--float-duration:4.4s;--float-delay:-0.8s">✦</span><span style="left:88%;top:72%;font-size:6px;--float-duration:3.9s;--float-delay:-1.6s">✦</span><span style="left:4%;top:88%;font-size:10px;--float-duration:4.7s;--float-delay:-0.2s">✦</span><span style="left:21%;top:91%;font-size:6px;--float-duration:3.8s;--float-delay:-1.3s">✦</span><span style="left:34%;top:92%;font-size:11px;--float-duration:5.1s;--float-delay:-0.5s">✦</span><span style="left:47%;top:89%;font-size:7px;--float-duration:4.3s;--float-delay:-1.7s">✦</span><span style="left:58%;top:94%;font-size:9px;--float-duration:4.8s;--float-delay:-0.4s">✦</span><span style="left:71%;top:91%;font-size:6px;--float-duration:3.7s;--float-delay:-1s">✦</span><span style="left:84%;top:89%;font-size:10px;--float-duration:5.2s;--float-delay:-0.7s">✦</span><span style="left:97%;top:86%;font-size:7px;--float-duration:4.1s;--float-delay:-1.4s">✦</span><span style="left:12%;top:6%;font-size:5px;--float-duration:4.6s;--float-delay:-1.1s">✦</span><span style="left:24%;top:39%;font-size:5px;--float-duration:3.9s;--float-delay:-0.2s">✦</span><span style="left:45%;top:43%;font-size:5px;--float-duration:4.8s;--float-delay:-0.9s">✦</span><span style="left:59%;top:34%;font-size:5px;--float-duration:4.2s;--float-delay:-1.6s">✦</span><span style="left:77%;top:39%;font-size:5px;--float-duration:5s;--float-delay:-0.3s">✦</span><span style="left:91%;top:51%;font-size:5px;--float-duration:4.5s;--float-delay:-1.2s">✦</span>';
+    return '<div class="ej-fund-starfield" aria-hidden="true">' + stars + '</div>' +
+      '<div class="ej-loader-content ej-fund-content" role="status" aria-live="polite">' +
       '<div class="ej-loader-star-stage"><span class="ej-loader-star" aria-hidden="true">⭐</span></div>' +
       '<div class="ej-loader-bubble-word" aria-hidden="true">' + letters +
       '<span class="ej-dots">...</span></div>' +
