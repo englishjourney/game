@@ -8,6 +8,7 @@ export function initPlanner() {
     setupDatePickers();
     setupLastTeamToggle();
     loadPlanners();
+    loadCompletedPlanners();
     setupActivitiesEditor();
     const detailsEditButton = document.getElementById('btn-edit-planner-from-details');
     if (detailsEditButton) detailsEditButton.addEventListener('click', () => {
@@ -178,7 +179,7 @@ export function initPlanner() {
             if (q.length < 2) { resultsContainer.classList.add('hidden'); return; }
             
             let found = false;
-            document.querySelectorAll('.data-card').forEach(card => {
+            document.querySelectorAll('#planner-list .data-card').forEach(card => {
                 if (card.innerText.toLowerCase().includes(q)) {
                     found = true;
                     const info = card.querySelector('.data-card-info').innerText.split('\n')[0];
@@ -399,83 +400,41 @@ window.togglePlannerSection = (btn, title) => {
     localStorage.setItem(`planner_state_${title}`, isHidden);
 };
 
-async function loadPlanners() {
-    const container = document.getElementById('planner-list');
-    container.innerHTML = 'Carregando...';
+function renderPlannerCard(p, mode = 'active') {
+    const cardClass = p.special == 4 ? 'card-adapted' :
+        (p.special == 1 ? 'card-special-1' : (p.special == 2 ? 'card-special-2' :
+        (p.special == 3 ? 'card-special-3' : '')));
+    const titleHtml = p.special == 4
+        ? '<p class="adapted-label"><i class="fa-solid fa-puzzle-piece" aria-hidden="true"></i> <strong>ADAPTADO</strong></p>'
+        : (p.special == 2
+            ? '<p class="planner-special-label"><strong>FOLGA</strong></p>'
+            : (p.special == 3 ? '<p class="planner-special-label"><strong>PROVA</strong></p>' : ''));
+    const actions = mode === 'completed'
+        ? '<button class="btn-small btn-danger" onclick="window.deleteCompletedPlanner(\'' + p.id + '\')">Excluir</button>'
+        : '<button class="btn-small btn-secondary" onclick=\'window.editPlanner(' + JSON.stringify(p).replace(/'/g, "&#39;") + ')\'>Editar</button>' +
+          '<button class="btn-small btn-postpone" onclick="window.deferPlanner(\'' + p.id + '\')" title="Mover esta aula para a data e hora da próxima aula">Adiar</button>' +
+          '<button class="btn-small btn-advance" onclick="window.advancePlanner(\'' + p.id + '\')" title="Trazer esta aula para a próxima data futura da turma">Adiantar</button>' +
+          '<button class="btn-small btn-complete" onclick="window.completePlanner(\'' + p.id + '\')" title="Mover esta aula para Aulas passadas">Concluída</button>';
 
-    const { data, error } = await supabase.from('planner').select('*').order('id', { ascending: false });
-    if (error) return container.innerHTML = 'Erro ao carregar planos.';
-    if (!data.length) return container.innerHTML = 'Nenhuma aula planejada.';
+    return '<div class="data-card ' + cardClass + ' ' + (mode === 'completed' ? 'completed-card' : '') + '"' +
+        ' id="plan-card-' + p.id + '" data-plan-id="' + p.id + '" role="button" tabindex="0" aria-label="Ver detalhes da aula">' +
+        '<div class="data-card-info">' +
+            '<p><strong>' + escapePlannerHtml(p.day || '') + ' - ' + escapePlannerHtml(p.date || '') +
+            (p.time ? ' (' + escapePlannerHtml(p.time) + ')' : '') + '</strong>' +
+            (p.duration ? ' | Duração: ' + escapePlannerHtml(p.duration) : '') + '</p>' +
+            titleHtml +
+            (p.tag ? '<p class="planner-card-tag"><strong>Tag:</strong> ' + escapePlannerHtml(p.tag) + '</p>' : '') +
+            (p.serie || p.team ? '<p><strong>Turma:</strong> ' + escapePlannerHtml(p.serie || '') + ' ' + escapePlannerHtml(p.team || '') + '</p>' : '') +
+            (p.activities ? '<div class="planner-card-activities"><strong>Atividades:</strong>' + renderPlannerMarkdown(p.activities) + '</div>' : '') +
+            (p.skills ? '<p><strong>BNCC:</strong> ' + escapePlannerHtml(p.skills) + '</p>' : '') +
+            (mode === 'completed' && p.completed_at ? '<p class="completed-at"><i class="fa-solid fa-circle-check"></i> Concluída em ' + new Date(p.completed_at).toLocaleString('pt-BR') + '</p>' : '') +
+        '</div><div class="data-card-actions">' + actions + '</div></div>';
+}
 
-    data.sort((a, b) => {
-        const parseDateTime = (dateStr, timeStr) => {
-            if (!dateStr) return 0;
-            let parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-');
-            let year = parts[2].length === 4 ? parts[2] : parts[0];
-            let month = parts[1];
-            let day = parts[2].length === 4 ? parts[0] : parts[2];
-            return new Date(`${year}/${month}/${day} ${timeStr || '00:00'}`).getTime();
-        };
-        return parseDateTime(a.date, a.time) - parseDateTime(b.date, b.time);
-    });
-
-    const groups = data.reduce((acc, item) => {
-        const title = item.day ? `${item.day} - ${item.date}` : item.date;
-        if (!acc[title]) acc[title] = [];
-        acc[title].push(item);
-        return acc;
-    }, {});
-
-    container.innerHTML = Object.entries(groups).map(([title, items]) => {
-        const isHidden = localStorage.getItem(`planner_state_${title}`) === 'true';
-        const displayClass = isHidden ? 'hidden' : '';
-        const btnText = isHidden ? 'Maximizar' : 'Minimizar';
-
-        const firstItem = items[0] || {};
-        const itemDay = firstItem.day || '';
-        const itemDate = firstItem.date || '';
-
-        return `
-        <div class="planner-section" style="margin-bottom: 24px;">
-            <h3 class="planner-section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; border-bottom: 2px solid #ccc; padding-bottom: 4px;">
-                <span>${title}</span>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <button class="btn-small btn-primary" onclick="window.addPlanForDay('${itemDay}', '${itemDate}')">+ Nova aula</button>
-                    <button class="minimize-btn" style="color:var(--text-muted);" onclick="window.togglePlannerSection(this, '${title}')">${btnText}</button>
-                </div>
-            </h3>
-            <div class="planner-section-content ${displayClass}">
-                ${items.map(p => {
-                    let cardClass = p.special == 4 ? 'card-adapted' : (p.special == 1 ? 'card-special-1' : (p.special == 2 ? 'card-special-2' : (p.special == 3 ? 'card-special-3' : '')));
-                    let titleHtml = p.special == 4 ? '<p class="adapted-label"><i class="fa-solid fa-puzzle-piece" aria-hidden="true"></i> <strong>ADAPTADO</strong></p>' : (p.special == 2 ? '<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>FOLGA</strong></p>' : (p.special == 3 ? '<p style="font-size: 1.2rem; text-transform: uppercase;"><strong>PROVA</strong></p>' : ''));
-                    
-                    return `
-                    <div class="data-card ${cardClass}" id="plan-card-${p.id}" data-plan-id="${p.id}" role="button" tabindex="0" aria-label="Ver detalhes da aula">
-                        <div class="data-card-info">
-                            <p><strong>${p.day} - ${p.date}${p.time ? `(${p.time})` : ''}</strong> ${p.duration ? `| Duração: ${p.duration}` : ''}</p>
-                            ${titleHtml}${p.tag ? `<p style="font-size:0.85rem;color:var(--text-muted);"><strong>Tag:</strong> ${p.tag}</p>` : ''}${p.serie || p.team ? `<p><strong>Turma:</strong> ${p.serie || ''} ${p.team || ''}</p>` : ''}
-                            ${p.activities ? `<div class="planner-card-activities"><strong>Atividades:</strong>${renderPlannerMarkdown(p.activities)}</div>` : ''}
-                            ${p.skills ? `<p><strong>BNCC:</strong> ${escapePlannerHtml(p.skills)}</p>` : ''}
-                        </div>
-                        <div class="data-card-actions">
-                            <button class="btn-small btn-secondary" onclick='window.editPlanner(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Editar</button>
-                            <button class="btn-small btn-postpone" onclick='window.deferPlanner("${p.id}")' title="Mover esta aula para a data e hora da próxima aula">Adiar</button>
-                            <button class="btn-small btn-advance" onclick='window.advancePlanner("${p.id}")' title="Trazer esta aula para a próxima data futura da turma">Adiantar</button>
-                            <button class="btn-small" style="background-color: #ff4444; color: white; border: none;" onclick='window.deletePlanner("${p.id}")'>Excluir</button>
-                        </div>
-                    </div>
-                    `;
-                }).join('')}
-            </div>
-        </div>
-        `;
-    }).join('');
-
-    plannerItemsById.clear();
-    data.forEach(item => plannerItemsById.set(String(item.id), item));
+function setupPlannerCardInteractions(container) {
     container.querySelectorAll('.data-card[data-plan-id]').forEach(card => {
         card.addEventListener('click', event => {
-            if (event.target.closest('button')) return;
+            if (event.target.closest('button, a')) return;
             window.viewPlanner(card.dataset.planId);
         });
         card.addEventListener('keydown', event => {
@@ -485,6 +444,137 @@ async function loadPlanners() {
             }
         });
     });
+}
+
+async function loadPlanners() {
+    const container = document.getElementById('planner-list');
+    if (!container) return;
+    container.innerHTML = 'Carregando...';
+
+    const { data, error } = await supabase
+        .from('planner')
+        .select('*')
+        .is('completed_at', null)
+        .order('id', { ascending: false });
+
+    if (error) {
+        console.error('Erro ao carregar aulas planejadas:', error);
+        container.innerHTML = 'Erro ao carregar planos.';
+        return;
+    }
+    if (!data || !data.length) {
+        container.innerHTML = '<div class="empty-state">Nenhuma aula planejada.</div>';
+        return;
+    }
+
+    const parseDateTime = (dateStr, timeStr) => {
+        if (!dateStr) return 0;
+        const parts = String(dateStr).split(/[/-]/);
+        if (parts.length !== 3) return 0;
+        const [year, month, day] = parts[0].length === 4
+            ? parts
+            : [parts[2], parts[1], parts[0]];
+        return new Date(year + '/' + month + '/' + day + ' ' + (timeStr || '00:00')).getTime();
+    };
+    data.sort((a, b) => parseDateTime(a.date, a.time) - parseDateTime(b.date, b.time));
+
+    const groups = data.reduce((acc, item) => {
+        const title = item.day ? item.day + ' - ' + item.date : item.date;
+        if (!acc[title]) acc[title] = [];
+        acc[title].push(item);
+        return acc;
+    }, {});
+
+    container.innerHTML = Object.entries(groups).map(([title, items]) => {
+        const isHidden = localStorage.getItem('planner_state_' + title) === 'true';
+        const displayClass = isHidden ? 'hidden' : '';
+        const btnText = isHidden ? 'Maximizar' : 'Minimizar';
+        const firstItem = items[0] || {};
+
+        return '<div class="planner-section">' +
+            '<h3 class="planner-section-title"><span>' + escapePlannerHtml(title) + '</span>' +
+                '<div class="planner-section-heading-actions">' +
+                    '<button class="btn-small btn-primary" onclick="window.addPlanForDay(\'' + escapePlannerHtml(firstItem.day || '') + '\', \'' + escapePlannerHtml(firstItem.date || '') + '\')">+ Nova aula</button>' +
+                    '<button class="minimize-btn" onclick="window.togglePlannerSection(this, \'' + escapePlannerHtml(title) + '\')">' + btnText + '</button>' +
+                '</div>' +
+            '</h3>' +
+            '<div class="planner-section-content ' + displayClass + '">' +
+                items.map(item => renderPlannerCard(item, 'active')).join('') +
+            '</div></div>';
+    }).join('');
+
+    data.forEach(item => plannerItemsById.set(String(item.id), item));
+    setupPlannerCardInteractions(container);
+}
+
+async function loadCompletedPlanners() {
+    const container = document.getElementById('completed-planner-container');
+    if (!container) return;
+    container.innerHTML = '<div class="empty-state">Carregando aulas passadas...</div>';
+
+    const { data, error } = await supabase
+        .from('planner')
+        .select('*')
+        .not('completed_at', 'is', null)
+        .order('completed_at', { ascending: false });
+
+    if (error) {
+        console.error('Erro ao carregar aulas concluídas:', error);
+        container.innerHTML = '<div class="empty-state">Erro ao carregar aulas passadas.</div>';
+        return;
+    }
+    if (!data || !data.length) {
+        container.innerHTML = '<div class="empty-state">Nenhuma aula concluída até o momento.</div>';
+        return;
+    }
+
+    const groups = new Map();
+    data.forEach(item => {
+        const serie = String(item.serie || '').trim();
+        const team = String(item.team || '').trim();
+        const key = serie + '::' + team;
+        const label = serie && team ? 'Turma ' + serie + team :
+            (serie ? 'Série ' + serie : (team ? 'Turma ' + team : 'Sem turma'));
+        if (!groups.has(key)) groups.set(key, { label, items: [] });
+        groups.get(key).items.push(item);
+        plannerItemsById.set(String(item.id), item);
+    });
+
+    const sortedGroups = [...groups.entries()].sort((a, b) =>
+        a[1].label.localeCompare(b[1].label, 'pt-BR', { numeric: true, sensitivity: 'base' })
+    );
+
+    container.innerHTML =
+        '<div class="completed-class-tabs" role="tablist" aria-label="Filtrar aulas passadas por turma">' +
+            sortedGroups.map(([key, group], index) =>
+                '<button type="button" class="completed-class-tab ' + (index === 0 ? 'active' : '') +
+                '" role="tab" aria-selected="' + (index === 0 ? 'true' : 'false') +
+                '" data-completed-tab="' + index + '">' + escapePlannerHtml(group.label) + '</button>'
+            ).join('') +
+        '</div><div class="completed-class-panels">' +
+            sortedGroups.map(([key, group], index) =>
+                '<div class="completed-class-panel ' + (index === 0 ? '' : 'hidden') +
+                '" role="tabpanel" data-completed-panel="' + index + '">' +
+                    '<div class="cards-container">' + group.items.map(item => renderPlannerCard(item, 'completed')).join('') + '</div>' +
+                '</div>'
+            ).join('') +
+        '</div>';
+
+    container.querySelectorAll('[data-completed-tab]').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const selectedIndex = tab.dataset.completedTab;
+            container.querySelectorAll('[data-completed-tab]').forEach(button => {
+                const isActive = button.dataset.completedTab === selectedIndex;
+                button.classList.toggle('active', isActive);
+                button.setAttribute('aria-selected', String(isActive));
+            });
+            container.querySelectorAll('[data-completed-panel]').forEach(panel => {
+                panel.classList.toggle('hidden', panel.dataset.completedPanel !== selectedIndex);
+            });
+        });
+    });
+
+    setupPlannerCardInteractions(container);
 }
 
 // Recupera a data de origem da aula. Se ela já foi movida, mantém a data registrada na tag.
@@ -732,18 +822,40 @@ window.editPlanner = (p) => {
     document.getElementById('planner-modal').showModal();
 };
                             
-window.deletePlanner = async (id) => {
-    if (!confirm('Tem certeza que deseja excluir esta aula? Esta ação não pode ser desfeita.')) {
-        return; 
+window.completePlanner = async id => {
+    const confirmation = confirm('Marcar esta aula como concluída? Ela será movida para a guia Aulas passadas.');
+    if (!confirmation) return;
+
+    const { error } = await supabase
+        .from('planner')
+        .update({ completed_at: new Date().toISOString() })
+        .eq('id', id)
+        .is('completed_at', null);
+
+    if (error) {
+        alert('Erro ao concluir a aula: ' + error.message);
+        return;
     }
 
-    const { error } = await supabase.from('planner').delete().eq('id', id);
+    await Promise.all([loadPlanners(), loadCompletedPlanners()]);
+};
+
+window.deleteCompletedPlanner = async id => {
+    if (!confirm('Excluir definitivamente esta aula do histórico? Esta ação não pode ser desfeita.')) return;
+
+    const { error } = await supabase
+        .from('planner')
+        .delete()
+        .eq('id', id)
+        .not('completed_at', 'is', null);
 
     if (error) {
         alert('Erro ao excluir a aula: ' + error.message);
-    } else {
-        loadPlanners();
+        return;
     }
+
+    plannerItemsById.delete(String(id));
+    await loadCompletedPlanners();
 };
 
 
