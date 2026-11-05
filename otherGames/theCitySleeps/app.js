@@ -606,11 +606,11 @@ async function joinFromDialog(event) {
 async function joinRoom(code, password) {
   try {
     const result = await api("join_room", { roomCode: String(code || "").trim().toUpperCase(), password });
+    await enterRoom(result.roomCode);
     closeDialog("join-room-dialog");
     closeDialog("join-code-dialog");
     $("manual-room-password").value = "";
     $("manual-room-code").value = "";
-    enterRoom(result.roomCode);
   } catch (error) {
     if ($("join-code-dialog").open) $("join-code-error").textContent = error.message;
     else if ($("join-room-dialog").open) $("join-room-error").textContent = error.message;
@@ -629,10 +629,10 @@ async function createRoom(event) {
       isPublic,
       password: isPublic ? "" : $("new-room-password").value,
     });
+    await enterRoom(result.roomCode);
     closeDialog("create-room-dialog");
     $("create-room-form").reset();
     $("room-password-field").classList.add("hidden");
-    enterRoom(result.roomCode);
   } catch (error) {
     $("create-room-error").textContent = error.message;
   } finally {
@@ -648,29 +648,53 @@ function showRoomView() {
   if (homePoll) clearInterval(homePoll);
 }
 
-function enterRoom(code) {
-  currentRoomCode = String(code).toUpperCase();
+async function enterRoom(code) {
+  const roomCode = String(code || "").trim().toUpperCase();
+  if (!roomCode) throw new Error("A valid room code is required.");
+
+  // Stop the home/previous-room polling before changing the active room.
+  stopRoomPolling();
+  if (homePoll) {
+    clearInterval(homePoll);
+    homePoll = null;
+  }
+
+  currentRoomCode = roomCode;
   localStorage.setItem("tcs_current_room", currentRoomCode);
   panelKey = "";
   selectedTargets = [];
   assignedMiniGame = "";
   assignedMiniGameRound = 0;
+
+  // Do not show an empty room screen: confirm membership and load the lobby first.
+  const state = await api("get_state", { roomCode });
+  if (!state || !state.room || String(state.room.code || "").toUpperCase() !== roomCode) {
+    throw new Error("The room was joined, but its lobby could not be loaded. Please try again.");
+  }
+
+  currentState = state;
   showRoomView();
-  refreshRoomState();
+  renderRoom(state);
+  processPrivateMessages(state.privateMessages || []);
+  setConnection(true);
   startRoomPolling();
 }
 
 async function refreshRoomState() {
   if (localTestMode) { renderLocalTestState(); return; }
   if (!currentRoomCode || requestBusy) return;
+  const requestedRoomCode = currentRoomCode;
   requestBusy = true;
   try {
-    const state = await api("get_state", { roomCode: currentRoomCode });
+    const state = await api("get_state", { roomCode: requestedRoomCode });
+    // Ignore late responses from a room that is no longer the active one.
+    if (requestedRoomCode !== currentRoomCode) return;
     currentState = state;
     setConnection(true);
     renderRoom(state);
     processPrivateMessages(state.privateMessages || []);
   } catch (error) {
+    if (requestedRoomCode !== currentRoomCode) return;
     setConnection(false);
     if (/not a participant|could not be found/i.test(error.message)) {
       stopRoomPolling();
