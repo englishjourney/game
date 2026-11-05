@@ -792,7 +792,7 @@ function roleName(key: string) {
     cultist: "The Cultist",
     syren: "The Syren",
   };
-  const normalizedKey = String(key || "").trim().toLowerCase().replace(/[\\s-]+/g, "_");
+  const normalizedKey = String(key || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
   const canonicalKey = normalizedKey.replace(/^the_/, "").replace(/^sem_teto$/, "homeless");
   return names[canonicalKey] || "an unknown role";
 }
