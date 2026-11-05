@@ -100,6 +100,14 @@
           </button>
         </nav>
 
+        <div id="lobby-controls" class="lobby-controls lobby-controls-outside hidden">
+          <div class="lobby-controls-copy">
+            <p id="lobby-hint" class="muted">Waiting for the host...</p>
+            <small class="muted">Minimum 6 players · Maximum 30 players</small>
+          </div>
+          <button id="btn-start-game" class="button button-primary" type="button" disabled data-pt="Iniciar jogo">Start game <span>▶</span></button>
+        </div>
+
         <div class="room-layout">
           <section class="room-main">
             <div class="panel-card phase-card">
@@ -182,13 +190,8 @@
       <button type="button" class="dialog-close" data-close-dialog="players-dialog" aria-label="Close">×</button>
       <p class="eyebrow">THE LOBBY</p>
       <div class="section-heading"><h2>Players <span id="participant-count" class="inline-count">0</span></h2><span id="host-badge" class="host-badge hidden">HOST</span></div>
-      <p class="muted">See who has joined the city. The host can begin once at least six players are ready.</p>
+      <p class="muted">See everyone who has joined the city.</p>
       <div id="participants-list" class="participants-list"></div>
-      <div id="lobby-controls" class="lobby-controls">
-        <p id="lobby-hint" class="muted">Waiting for the host...</p>
-        <button id="btn-start-game" class="button button-primary full-button" type="button" disabled data-pt="Iniciar jogo">Start game <span>▶</span></button>
-        <small class="muted">Minimum 6 players · Maximum 30 players</small>
-      </div>
     </div>
   </dialog>
 
