@@ -100,12 +100,15 @@
                 
                 <!-- Panel Header Bar -->
                 <div class="flex items-center justify-between pb-3 mb-2 border-b border-gray-100 dark:border-google-darkBorder">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-google-blue dark:text-blue-400 flex items-center gap-1.5">
+                    <span id="searchDirectionLabel" class="text-xs font-semibold uppercase tracking-wider text-google-blue dark:text-blue-400 flex items-center gap-1.5">
                         <i class="fa-solid fa-font text-xs"></i> Termo em Inglês / Pesquisa
                     </span>
-                    <button id="clearBtn" class="hidden text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 flex items-center gap-1 px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-google-darkBorder">
-                        <i class="fa-solid fa-xmark"></i> Limpar
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button id="directionToggleBtn" type="button" aria-pressed="false" title="Inverter para Português → Inglês" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-google-lightBorder dark:border-google-darkBorder text-google-blue dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-google-darkBorder transition-colors whitespace-nowrap">EN → PT</button>
+                        <button id="clearBtn" class="hidden text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 flex items-center gap-1 px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-google-darkBorder">
+                            <i class="fa-solid fa-xmark"></i> Limpar
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Input Textarea with Live Search -->
@@ -152,7 +155,7 @@
                     <!-- Result Panel Header Bar -->
                     <div class="flex items-center justify-between pb-3 mb-2 border-b border-google-lightBorder dark:border-google-darkBorder">
                         <span class="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                            <i class="fa-solid fa-language text-xs"></i> Tradução & Significado (Português)
+                            <i class="fa-solid fa-language text-xs"></i> <span id="resultPanelHeading">Tradução &amp; Significado (Português)</span>
                         </span>
                         <span id="resultPartOfSpeechBadge" class="hidden text-xs font-medium px-2 py-0.5 rounded-full bg-gray-200 dark:bg-google-darkBorder text-gray-700 dark:text-gray-300">
                             <!-- Grammatical class badge -->
@@ -173,7 +176,7 @@
                             <h2 id="resultTermTitle" class="text-2xl font-bold text-google-blue dark:text-blue-400 mb-1 tracking-tight"></h2>
                             <p id="resultTranslationText" class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3"></p>
                             
-                            <div id="resultDefinitionBox" class="p-3.5 bg-white dark:bg-google-darkCard rounded-xl border border-google-lightBorder dark:border-google-darkBorder text-sm leading-relaxed text-gray-700 dark:text-gray-300 shadow-sm">
+                            <div id="resultDefinitionBox" class="p-3.5 bg-white dark:bg-google-darkCard rounded-xl border border-google-lightBorder dark:border-google-darkBorder text-sm leading-relaxed whitespace-pre-line text-gray-700 dark:text-gray-300 shadow-sm">
                                 <!-- Definition detail -->
                             </div>
                         </div>
@@ -231,1481 +234,2479 @@
         // 1. DATASET OF DICTIONARY TERMS
         // ----------------------------------------------------
         const dictionary = [
-            {
-                id: 1,
-                term: "Cybersecurity",
-                partOfSpeech: "Substantivo",
-                translation: "Segurança cibernética",
-                definition: "Conjunto de práticas, tecnologias e processos projetados para proteger computadores, redes, programas e dados contra ataques, danos ou acesso não autorizado."
-            },
-            {
-                id: 2,
-                term: "Data Breach",
-                partOfSpeech: "Substantivo",
-                translation: "Vazamento / violação de dados",
-                definition: "Incidente de segurança no qual dados confidenciais, protegidos ou sensíveis são copiados, transmitidos, visualizados ou roubados por uma pessoa não autorizada."
-            },
-            {
-                id: 3,
-                term: "Malware",
-                partOfSpeech: "Substantivo",
-                translation: "Softwares maliciosos (vírus, spyware, ransomware)",
-                definition: "Qualquer software intencionalmente projetado para causar danos a um computador, servidor, cliente ou rede de computadores."
-            },
-            {
-                id: 4,
-                term: "Ransomware",
-                partOfSpeech: "Substantivo",
-                translation: "Tipo de vírus sequestrador",
-                definition: "Tipo de malware que criptografa os arquivos do computador e cobra um resgate (geralmente em criptomoedas) para reestabelecer o acesso."
-            },
-            {
-                id: 5,
-                term: "Spyware",
-                partOfSpeech: "Substantivo",
-                translation: "Programa espião",
-                definition: "Software malicioso que monitora e coleta remotamente suas atividades, senhas e informações pessoais sem a sua permissão."
-            },
-            {
-                id: 6,
-                term: "Two-Factor Authentication (2FA) / Multi-Factor Authentication (MFA)",
-                partOfSpeech: "Substantivo",
-                aliases: ["2FA", "MFA", "Two-Factor Authentication", "Multi-Factor Authentication"],
-                translation: "Autenticação em duas etapas / de múltiplos fatores",
-                definition: "Método de verificação de identidade que exige duas ou mais provas independentes para conceder acesso a uma conta."
-            },
-            {
-                id: 7,
-                term: "Encryption",
-                partOfSpeech: "Substantivo",
-                translation: "Criptografia",
-                definition: "Processo de codificação de informações para que apenas partes autorizadas com uma chave secreta consigam ler o conteúdo."
-            },
-            {
-                id: 8,
-                term: "Firewall",
-                partOfSpeech: "Substantivo",
-                translation: "Barreira de segurança de rede",
-                definition: "Dispositivo ou software de segurança que monitora e filtra o tráfego de rede de entrada e saída com base em regras estabelecidas."
-            },
-            {
-                id: 9,
-                term: "Strong Password",
-                partOfSpeech: "Substantivo",
-                translation: "Senha forte",
-                definition: "Senha complexa contendo combinação de números, letras maiúsculas/minúsculas e símbolos especiais para dificultar invasões."
-            },
-            {
-                id: 10,
-                term: "Data Privacy",
-                partOfSpeech: "Substantivo",
-                translation: "Privacidade de dados",
-                definition: "Área focada no tratamento e manipulação correta de dados pessoais, garantindo o consentimento e a segurança do titular."
-            },
-            {
-                id: 11,
-                term: "Phishing",
-                partOfSpeech: "Substantivo",
-                translation: "Golpe de roubo de dados por fraude",
-                definition: "Golpe digital projetado para enganar o usuário (via links ou e-mails falsos) e roubar dados confidenciais como senhas e cartões de crédito."
-            },
-            {
-                id: 12,
-                term: "Spear Phishing",
-                partOfSpeech: "Substantivo",
-                translation: "Phishing direcionado e personalizado",
-                definition: "Ataque de phishing altamente específico e direcionado a um indivíduo, cargo ou empresa específica para aumentar as chances de sucesso."
-            },
-            {
-                id: 13,
-                term: "Smishing",
-                partOfSpeech: "Substantivo",
-                translation: "Phishing por mensagens de texto (SMS)",
-                definition: "Variante do phishing realizada especificamente por meio de mensagens SMS maliciosas em celulares."
-            },
-            {
-                id: 14,
-                term: "Vishing",
-                partOfSpeech: "Substantivo",
-                translation: "Phishing por chamadas de voz",
-                definition: "Prática de phishing por telefone (Voice Phishing) onde o golpista finge ser de uma instituição confiável via ligação telefônica."
-            },
-            {
-                id: 15,
-                term: "Spoofing",
-                partOfSpeech: "Substantivo",
-                translation: "Falsificação de identidade digital",
-                definition: "Técnica onde o invasor se disfarça de outra entidade/endereço (ex: Email Spoofing onde o e-mail parece vir de um banco legítimo)."
-            },
-            {
-                id: 16,
-                term: "Malicious Link / Suspicious Link",
-                partOfSpeech: "Substantivo",
-                aliases: ["Malicious Link", "Suspicious Link"],
-                translation: "Link malicioso / link suspeito",
-                definition: "Hiperlink criado para redirecionar a vítima para sites fraudulentos, infectados ou preparados para capturar credenciais."
-            },
-            {
-                id: 17,
-                term: "Bait / Baiting",
-                partOfSpeech: "Substantivo",
-                aliases: ["Bait", "Baiting"],
-                translation: "Isca / uso de isca para atração",
-                definition: "Tática de seduzir a vítima oferecendo algo atraente (como downloads grátis ou pen drives 'achados') contendo malware."
-            },
-            {
-                id: 18,
-                term: "Scam / Scammer",
-                partOfSpeech: "Substantivo",
-                aliases: ["Scam", "Scammer"],
-                translation: "Golpe / Golpista",
-                definition: "Termo geral para esquemas ou fraudes desonestas na internet / pessoa ou grupo que executa tais golpes."
-            },
-            {
-                id: 19,
-                term: "Credential Stuffing",
-                partOfSpeech: "Substantivo",
-                translation: "Uso automatizado de senhas vazadas",
-                definition: "Ataque automatizado onde hackers testam grandes listas de pares de e-mail e senhas vazadas em múltiplos outros sites."
-            },
-            {
-                id: 20,
-                term: "Social Engineering",
-                partOfSpeech: "Substantivo",
-                translation: "Engenharia social",
-                definition: "Manipulação psicológica de pessoas para fazê-las executar ações involuntárias ou divulgar informações confidenciais."
-            },
-            {
-                id: 21,
-                term: "Pretexting",
-                partOfSpeech: "Substantivo",
-                translation: "Criação de história/cenário falso",
-                definition: "Prática de inventar uma história ou situação convincente (pretexto) para enganar a vítima e obter dados confidenciais."
-            },
-            {
-                id: 22,
-                term: "Impersonation / Impersonate",
-                partOfSpeech: "Múltiplas classes",
-                aliases: ["Impersonation", "Impersonate"],
-                translation: "Falsificação de identidade / se passar por outro",
-                definition: "Ação de fingir ser outra pessoa, funcionário de TI ou autoridade para manipular a confiança de uma vítima."
-            },
-            {
-                id: 23,
-                term: "Urgency / Sense of Urgency",
-                partOfSpeech: "Substantivo",
-                aliases: ["Urgency", "Sense of Urgency"],
-                translation: "Senso de urgência artificial",
-                definition: "Tática que induz medo ou pressa na vítima para que ela tome uma decisão precipitada sem checar os fatos."
-            },
-            {
-                id: 24,
-                term: "Trust",
-                partOfSpeech: "Substantivo",
-                translation: "Confiança",
-                definition: "Relação de credibilidade explorada por golpistas para que a vítima baixe a guarda durante uma interação."
-            },
-            {
-                id: 25,
-                term: "Authority",
-                partOfSpeech: "Substantivo",
-                translation: "Abuso de autoridade",
-                definition: "Estratégia de se passar por figuras de liderança, policiais ou suporte técnico para forçar obediência rápida."
-            },
-            {
-                id: 26,
-                term: "Quid Pro Quo",
-                partOfSpeech: "Expressão",
-                translation: "Troca de favores ilusória",
-                definition: "Oferta de um benefício ou serviço falso (ex: suporte técnico gratuito) em troca de senhas ou acesso."
-            },
-            {
-                id: 27,
-                term: "Fake News",
-                partOfSpeech: "Substantivo",
-                translation: "Notícias falsas",
-                definition: "Informações deliberadamente falsas ou enganosas apresentadas como se fossem notícias reais para manipular a opinião pública."
-            },
-            {
-                id: 28,
-                term: "Misinformation",
-                partOfSpeech: "Substantivo",
-                translation: "Informação incorreta sem má intenção",
-                definition: "Compartilhamento de informações errôneas sem a intenção direta de prejudicar (ex: engano ou mal-entendido)."
-            },
-            {
-                id: 29,
-                term: "Disinformation",
-                partOfSpeech: "Substantivo",
-                translation: "Desinformação intencional",
-                definition: "Criação e difusão de informações falsas criadas intencionalmente para enganar, prejudicar ou desestabilizar."
-            },
-            {
-                id: 30,
-                term: "Deepfake",
-                partOfSpeech: "Substantivo",
-                translation: "Mídia sintética hiper-realista",
-                definition: "Vídeo, áudio ou foto alterados por Inteligência Artificial de alta precisão para simular alguém dizendo ou fazendo algo irreal."
-            },
-            {
-                id: 31,
-                term: "Clickbait",
-                partOfSpeech: "Substantivo",
-                translation: "Conteúdo caça-clique",
-                definition: "Títulos ou imagens apelativas e exageradas criadas unicamente para atiçar curiosidade e gerar acessos a sites."
-            },
-            {
-                id: 32,
-                term: "Bias / Unbiased",
-                partOfSpeech: "Múltiplas classes",
-                aliases: ["Bias", "Unbiased"],
-                translation: "Viés / Imparcial",
-                definition: "Tendência pré-conceituosa ou parcial em relatar fatos / Atitude neutra e sem viés ideológico."
-            },
-            {
-                id: 33,
-                term: "Echo Chamber",
-                partOfSpeech: "Substantivo",
-                translation: "Câmara de eco",
-                definition: "Ambiente (como redes sociais) onde o usuário consome apenas opiniões que concordam com as suas próprias crenças."
-            },
-            {
-                id: 34,
-                term: "Out of Context",
-                partOfSpeech: "Expressão",
-                translation: "Fora de contexto",
-                definition: "Citação, foto ou vídeo real removido do seu contexto original para distorcer o seu significado verdadeiro."
-            },
-            {
-                id: 35,
-                term: "Sensationalism",
-                partOfSpeech: "Substantivo",
-                translation: "Sensacionalismo",
-                definition: "Estilo de apelo emocional exagerado focado em causar impacto, medo ou escândalo ao invés da verdade dos fatos."
-            },
-            {
-                id: 36,
-                term: "Fact-Checking",
-                partOfSpeech: "Substantivo",
-                translation: "Checagem de fatos",
-                definition: "Processo metódico de investigação e verificação de alegações e dados para confirmar se são verdadeiros."
-            },
-            {
-                id: 37,
-                term: "Reliable / Credible Source",
-                partOfSpeech: "Substantivo",
-                aliases: ["Reliable Source", "Credible Source"],
-                translation: "Fonte confiável / credível",
-                definition: "Origem de informação respaldada por especialistas, histórico de precisão, transparência e reputação sólida."
-            },
-            {
-                id: 38,
-                term: "Unreliable Source",
-                partOfSpeech: "Substantivo",
-                translation: "Fonte não confiável",
-                definition: "Veículo de informação sem credibilidade, com histórico de erros, anonimato suspeito ou viés extremado."
-            },
-            {
-                id: 39,
-                term: "Cross-reference / Cross-check",
-                partOfSpeech: "Múltiplas classes",
-                aliases: ["Cross-reference", "Cross-check"],
-                translation: "Cruzar informações / checagem dupla",
-                definition: "Comparar a mesma notícia em múltiplos veículos confiáveis e independentes para confirmar a veracidade."
-            },
-            {
-                id: 40,
-                term: "Primary Source",
-                partOfSpeech: "Substantivo",
-                translation: "Fonte primária",
-                definition: "Documento, testemunha direta ou gravação original sem intermediários ou interpretações secundárias."
-            },
-            {
-                id: 41,
-                term: "Domain Name",
-                partOfSpeech: "Substantivo",
-                translation: "Nome de domínio de site",
-                definition: "Endereço web oficial. Deve ser verificado se possui extensões confiáveis (ex: .gov, .edu) ou caracteres alterados."
-            },
-            {
-                id: 42,
-                term: "Byline / Author Credentials",
-                partOfSpeech: "Substantivo",
-                aliases: ["Byline", "Author Credentials"],
-                translation: "Assinatura e credenciais do autor",
-                definition: "Identificação formal do jornalista ou especialista responsável pelo artigo e suas qualificações profissionais."
-            },
-            {
-                id: 43,
-                term: "Correction Policy",
-                partOfSpeech: "Substantivo",
-                translation: "Política de correção",
-                definition: "Diretrizes públicas do veículo que demonstram transparência na retificação clara de erros cometidos em publicações."
-            },
-            {
-                id: 44,
-                term: "Reverse Image Search",
-                partOfSpeech: "Substantivo",
-                translation: "Pesquisa reversa de imagem",
-                definition: "Técnica de busca para descobrir a data original, contexto e fonte real onde uma foto foi publicada originalmente."
-            }
-            ,
-            {
-                id: 45,
-                term: "Bridging",
-                partOfSpeech: "Verbo",
-                translation: "Conectando / Reduzindo (uma distância ou lacuna)",
-                definition: "Ato de unir duas coisas separadas ou diminuir uma diferença."
-            },
-            {
-                id: 46,
-                term: "the",
-                partOfSpeech: "Artigo",
-                translation: "O / A / Os / As",
-                definition: "Artigo definido usado antes de um substantivo específico."
-            },
-            {
-                id: 47,
-                term: "Divide",
-                partOfSpeech: "Substantivo",
-                translation: "Divisão / A divisão / A lacuna",
-                definition: "Separação entre dois grupos ou realidades."
-            },
-            {
-                id: 48,
-                term: "Challenge",
-                partOfSpeech: "Substantivo",
-                translation: "Desafio",
-                definition: "Tarefa ou situação difícil que exige esforço para ser superada."
-            },
-            {
-                id: 49,
-                term: "of",
-                partOfSpeech: "Preposição",
-                translation: "De / Dos",
-                definition: "Preposição que indica posse, origem ou relação entre elementos."
-            },
-            {
-                id: 50,
-                term: "Social",
-                partOfSpeech: "Adjetivo",
-                translation: "Social",
-                definition: "Relacionado à sociedade e às relações entre as pessoas."
-            },
-            {
-                id: 51,
-                term: "Inequality",
-                partOfSpeech: "Substantivo",
-                translation: "Desigualdade",
-                definition: "Falta de igualdade, especialmente em direitos, oportunidades e riqueza."
-            },
-            {
-                id: 52,
-                term: "remains",
-                partOfSpeech: "Verbo",
-                translation: "Permanece",
-                definition: "Continua a existir em determinado estado ou situação."
-            },
-            {
-                id: 53,
-                term: "one",
-                partOfSpeech: "Determinante numeral",
-                translation: "Um / Uma",
-                definition: "Número ou pronome indefinido, dependendo do contexto."
-            },
-            {
-                id: 54,
-                term: "most",
-                partOfSpeech: "Advérbio",
-                translation: "Mais / O mais",
-                definition: "Usado para formar o superlativo; indica o grau mais elevado."
-            },
-            {
-                id: 55,
-                term: "pressing",
-                partOfSpeech: "Adjetivo",
-                translation: "Urgente / Premente",
-                definition: "Que exige atenção ou solução imediata."
-            },
-            {
-                id: 56,
-                term: "challenges",
-                partOfSpeech: "Substantivo",
-                translation: "Desafios",
-                definition: "Plural de challenge; situações difíceis que exigem esforço."
-            },
-            {
-                id: 57,
-                term: "our",
-                partOfSpeech: "Determinante possessivo",
-                translation: "Nosso / Nossa",
-                definition: "Pronome possessivo que indica algo pertencente a nós."
-            },
-            {
-                id: 58,
-                term: "time",
-                partOfSpeech: "Substantivo",
-                translation: "Tempo / Época",
-                definition: "Período ou momento em que vivemos."
-            },
-            {
-                id: 59,
-                term: "Despite",
-                partOfSpeech: "Preposição",
-                translation: "Apesar de",
-                definition: "Expressa contraste ou concessão."
-            },
-            {
-                id: 60,
-                term: "global",
-                partOfSpeech: "Adjetivo",
-                translation: "Global / Mundial",
-                definition: "Que abrange o mundo todo."
-            },
-            {
-                id: 61,
-                term: "economic",
-                partOfSpeech: "Adjetivo",
-                translation: "Econômico",
-                definition: "Relacionado à economia, produção, dinheiro e finanças."
-            },
-            {
-                id: 62,
-                term: "growth",
-                partOfSpeech: "Substantivo",
-                translation: "Crescimento",
-                definition: "Aumento de tamanho, valor ou quantidade."
-            },
-            {
-                id: 63,
-                term: "profound",
-                partOfSpeech: "Adjetivo",
-                translation: "Profundo / Intenso",
-                definition: "Que é muito grande, intenso ou significativo."
-            },
-            {
-                id: 64,
-                term: "gap",
-                partOfSpeech: "Substantivo",
-                translation: "Lacuna / Distância / Brecha",
-                definition: "Espaço vazio ou diferença entre duas coisas ou grupos."
-            },
-            {
-                id: 65,
-                term: "continues",
-                partOfSpeech: "Verbo",
-                translation: "Continua",
-                definition: "Mantém uma ação ou estado ao longo do tempo."
-            },
-            {
-                id: 66,
-                term: "to",
-                partOfSpeech: "Partícula do infinitivo",
-                translation: "A / Para",
-                definition: "Preposição que pode indicar direção, finalidade ou acompanhar verbos no infinitivo."
-            },
-            {
-                id: 67,
-                term: "separate",
-                partOfSpeech: "Verbo",
-                translation: "Separar / Separado",
-                definition: "Dividir ou manter duas ou mais partes distintas."
-            },
-            {
-                id: 68,
-                term: "privileged",
-                partOfSpeech: "Adjetivo",
-                translation: "Privilegiados",
-                definition: "Pessoas ou grupos que possuem vantagens ou oportunidades especiais."
-            },
-            {
-                id: 69,
-                term: "from",
-                partOfSpeech: "Preposição",
-                translation: "De / A partir de",
-                definition: "Preposição que indica origem, procedência ou separação."
-            },
-            {
-                id: 70,
-                term: "marginalized",
-                partOfSpeech: "Adjetivo",
-                translation: "Marginalizados",
-                definition: "Pessoas ou grupos colocados à margem ou excluídos da sociedade."
-            },
-            {
-                id: 71,
-                term: "affecting",
-                partOfSpeech: "Verbo",
-                translation: "Afetando",
-                definition: "Causando impacto, influência ou mudança em algo ou alguém."
-            },
-            {
-                id: 72,
-                term: "human",
-                partOfSpeech: "Adjetivo",
-                translation: "Humano",
-                definition: "Relacionado às pessoas ou à humanidade."
-            },
-            {
-                id: 73,
-                term: "dignity",
-                partOfSpeech: "Substantivo",
-                translation: "Dignidade",
-                definition: "Valor próprio de cada pessoa, que merece respeito."
-            },
-            {
-                id: 74,
-                term: "and",
-                partOfSpeech: "Conjunção",
-                translation: "E",
-                definition: "Conectivo aditivo que une palavras, frases ou ideias."
-            },
-            {
-                id: 75,
-                term: "daily",
-                partOfSpeech: "Adjetivo",
-                translation: "Diário / Diariamente",
-                definition: "Que acontece todos os dias ou se relaciona à rotina."
-            },
-            {
-                id: 76,
-                term: "opportunities",
-                partOfSpeech: "Substantivo",
-                translation: "Oportunidades",
-                definition: "Chances ou condições favoráveis para realizar algo."
-            },
-            {
-                id: 77,
-                term: "This",
-                partOfSpeech: "Determinante demonstrativo",
-                translation: "Este / Esta / Isso",
-                definition: "Pronome demonstrativo usado para indicar algo próximo ou já mencionado."
-            },
-            {
-                id: 78,
-                term: "imbalance",
-                partOfSpeech: "Substantivo",
-                translation: "Desequilíbrio",
-                definition: "Falta de equilíbrio, proporção ou igualdade."
-            },
-            {
-                id: 79,
-                term: "goes",
-                partOfSpeech: "Verbo",
-                translation: "Vai / Segue",
-                definition: "Forma do verbo to go; em goes beyond, significa vai além."
-            },
-            {
-                id: 80,
-                term: "far",
-                partOfSpeech: "Advérbio",
-                translation: "Muito / Longe",
-                definition: "Pode indicar distância ou intensificar uma expressão, como far beyond."
-            },
-            {
-                id: 81,
-                term: "beyond",
-                partOfSpeech: "Preposição",
-                translation: "Além de",
-                definition: "Indica algo que ultrapassa um limite."
-            },
-            {
-                id: 82,
-                term: "income",
-                partOfSpeech: "Substantivo",
-                translation: "Renda / Rendimento",
-                definition: "Dinheiro recebido por trabalho, serviços ou investimentos."
-            },
-            {
-                id: 83,
-                term: "Access",
-                partOfSpeech: "Substantivo",
-                translation: "Acesso",
-                definition: "Possibilidade, direito ou facilidade de entrar, alcançar ou utilizar algo."
-            },
-            {
-                id: 84,
-                term: "quality",
-                partOfSpeech: "Adjetivo",
-                translation: "Qualidade",
-                definition: "Característica ou padrão que indica o nível de algo."
-            },
-            {
-                id: 85,
-                term: "education",
-                partOfSpeech: "Substantivo",
-                translation: "Educação",
-                definition: "Processo de ensino, aprendizagem e desenvolvimento."
-            },
-            {
-                id: 86,
-                term: "healthcare",
-                partOfSpeech: "Substantivo",
-                translation: "Assistência médica / Cuidados de saúde",
-                definition: "Conjunto de serviços e cuidados relacionados à saúde."
-            },
-            {
-                id: 87,
-                term: "stable",
-                partOfSpeech: "Adjetivo",
-                translation: "Estável / Seguro",
-                definition: "Firme, constante ou que oferece segurança."
-            },
-            {
-                id: 88,
-                term: "employment",
-                partOfSpeech: "Substantivo",
-                translation: "Emprego / Trabalho",
-                definition: "Ocupação ou atividade remunerada."
-            },
-            {
-                id: 89,
-                term: "often",
-                partOfSpeech: "Advérbio",
-                translation: "Frequentemente / Muitas vezes",
-                definition: "Advérbio que indica algo que acontece com frequência."
-            },
-            {
-                id: 90,
-                term: "determined",
-                partOfSpeech: "Adjetivo",
-                translation: "Determinado / Definido",
-                definition: "Estabelecido ou influenciado por uma condição ou fator."
-            },
-            {
-                id: 91,
-                term: "by",
-                partOfSpeech: "Preposição",
-                translation: "Por",
-                definition: "Preposição que pode indicar o agente, meio ou causa de uma ação."
-            },
-            {
-                id: 92,
-                term: "socioeconomic",
-                partOfSpeech: "Adjetivo",
-                translation: "Socioeconômico",
-                definition: "Relacionado aos fatores sociais e econômicos."
-            },
-            {
-                id: 93,
-                term: "background",
-                partOfSpeech: "Substantivo",
-                translation: "Origem / Histórico / Contexto",
-                definition: "História pessoal, social, familiar ou financeira de alguém."
-            },
-            {
-                id: 94,
-                term: "or",
-                partOfSpeech: "Conjunção",
-                translation: "Ou",
-                definition: "Conectivo que apresenta uma alternativa."
-            },
-            {
-                id: 95,
-                term: "geographic",
-                partOfSpeech: "Adjetivo",
-                translation: "Geográfico",
-                definition: "Relacionado à localização e às características de uma região."
-            },
-            {
-                id: 96,
-                term: "location",
-                partOfSpeech: "Substantivo",
-                translation: "Localização / Lugar",
-                definition: "Ponto ou área onde algo ou alguém está."
-            },
-            {
-                id: 97,
-                term: "Underfunded",
-                partOfSpeech: "Adjetivo",
-                translation: "Com verba insuficiente / Subfinanciado",
-                definition: "Que recebe menos recursos financeiros do que o necessário."
-            },
-            {
-                id: 98,
-                term: "schools",
-                partOfSpeech: "Substantivo",
-                translation: "Escolas",
-                definition: "Instituições destinadas ao ensino e à aprendizagem."
-            },
-            {
-                id: 99,
-                term: "unequal",
-                partOfSpeech: "Adjetivo",
-                translation: "Desigual",
-                definition: "Que não apresenta igualdade; diferente em quantidade, condição ou oportunidade."
-            },
-            {
-                id: 100,
-                term: "medical",
-                partOfSpeech: "Adjetivo",
-                translation: "Médico",
-                definition: "Relacionado à medicina ou aos cuidados de saúde."
-            },
-            {
-                id: 101,
-                term: "care",
-                partOfSpeech: "Substantivo",
-                translation: "Cuidado / Atendimento",
-                definition: "Atenção, assistência ou tratamento oferecido a alguém."
-            },
-            {
-                id: 102,
-                term: "trap",
-                partOfSpeech: "Verbo",
-                translation: "Prendem / Aprisionam",
-                definition: "Verbo que indica deixar alguém preso ou sem saída."
-            },
-            {
-                id: 103,
-                term: "vulnerable",
-                partOfSpeech: "Adjetivo",
-                translation: "Vulnerável",
-                definition: "Que está mais exposto a riscos, dificuldades ou danos."
-            },
-            {
-                id: 104,
-                term: "communities",
-                partOfSpeech: "Substantivo",
-                translation: "Comunidades",
-                definition: "Grupos de pessoas que vivem na mesma área ou compartilham características."
-            },
-            {
-                id: 105,
-                term: "in",
-                partOfSpeech: "Preposição",
-                translation: "Em / Dentro de",
-                definition: "Preposição que indica lugar, tempo ou condição."
-            },
-            {
-                id: 106,
-                term: "cycle",
-                partOfSpeech: "Substantivo",
-                translation: "Ciclo",
-                definition: "Sequência de acontecimentos que se repete."
-            },
-            {
-                id: 107,
-                term: "limited",
-                partOfSpeech: "Adjetivo",
-                translation: "Limitado / Restrito",
-                definition: "Que possui limites ou poucas opções disponíveis."
-            },
-            {
-                id: 108,
-                term: "preventing",
-                partOfSpeech: "Verbo",
-                translation: "Impedindo / Evitando",
-                definition: "Ação de evitar que algo aconteça."
-            },
-            {
-                id: 109,
-                term: "upward",
-                partOfSpeech: "Adjetivo",
-                translation: "Ascendente / Para cima",
-                definition: "Que segue em direção a uma posição ou nível mais alto."
-            },
-            {
-                id: 110,
-                term: "mobility",
-                partOfSpeech: "Substantivo",
-                translation: "Mobilidade",
-                definition: "Capacidade de se mover ou mudar de posição ou condição social."
-            },
-            {
-                id: 111,
-                term: "Addressing",
-                partOfSpeech: "Verbo",
-                translation: "Enfrentando / Tratando de / Abordando",
-                definition: "Ação de lidar diretamente com um problema ou questão."
-            },
-            {
-                id: 112,
-                term: "requires",
-                partOfSpeech: "Verbo",
-                translation: "Exige / Requer",
-                definition: "Precisa de algo como condição necessária."
-            },
-            {
-                id: 113,
-                term: "systemic",
-                partOfSpeech: "Adjetivo",
-                translation: "Sistêmico",
-                definition: "Que afeta ou envolve o sistema como um todo."
-            },
-            {
-                id: 114,
-                term: "change",
-                partOfSpeech: "Substantivo",
-                translation: "Mudança / Transformação",
-                definition: "Ato ou resultado de alterar algo."
-            },
-            {
-                id: 115,
-                term: "rather",
-                partOfSpeech: "Advérbio",
-                translation: "Em vez de / Preferencialmente",
-                definition: "Usado para indicar preferência ou oposição; rather than significa em vez de."
-            },
-            {
-                id: 116,
-                term: "than",
-                partOfSpeech: "Conjunção",
-                translation: "Do que",
-                definition: "Palavra usada em comparações, como bigger than."
-            },
-            {
-                id: 117,
-                term: "simple",
-                partOfSpeech: "Adjetivo",
-                translation: "Simples",
-                definition: "Fácil de entender ou realizar; sem complexidade."
-            },
-            {
-                id: 118,
-                term: "charity",
-                partOfSpeech: "Substantivo",
-                translation: "Caridade",
-                definition: "Ajuda voluntária ou doação destinada a pessoas necessitadas."
-            },
-            {
-                id: 119,
-                term: "Governments",
-                partOfSpeech: "Substantivo",
-                translation: "Governos",
-                definition: "Autoridades e instituições responsáveis pela administração de um país ou território."
-            },
-            {
-                id: 120,
-                term: "must",
-                partOfSpeech: "Verbo modal",
-                translation: "Deve / Devem",
-                definition: "Verbo modal que expressa obrigação ou necessidade."
-            },
-            {
-                id: 121,
-                term: "implement",
-                partOfSpeech: "Verbo",
-                translation: "Implementar / Colocar em prática",
-                definition: "Executar ou fazer um plano, ideia ou política funcionar."
-            },
-            {
-                id: 122,
-                term: "inclusive",
-                partOfSpeech: "Adjetivo",
-                translation: "Inclusivo",
-                definition: "Que procura incluir todas as pessoas, sem discriminação."
-            },
-            {
-                id: 123,
-                term: "policies",
-                partOfSpeech: "Substantivo",
-                translation: "Políticas / Diretrizes",
-                definition: "Planos, regras ou linhas de ação adotadas por governos ou instituições."
-            },
-            {
-                id: 124,
-                term: "such",
-                partOfSpeech: "Determinante",
-                translation: "Tal / Tais",
-                definition: "Usado para apresentar exemplos, especialmente na expressão such as (tais como)."
-            },
-            {
-                id: 125,
-                term: "as",
-                partOfSpeech: "Preposição",
-                translation: "Como",
-                definition: "Pode indicar exemplo, função ou comparação, conforme o contexto."
-            },
-            {
-                id: 126,
-                term: "fair",
-                partOfSpeech: "Adjetivo",
-                translation: "Justo",
-                definition: "Que respeita a igualdade, a imparcialidade e os direitos."
-            },
-            {
-                id: 127,
-                term: "labor",
-                partOfSpeech: "Adjetivo",
-                translation: "Trabalho / Laboral",
-                definition: "Relacionado ao trabalho e às relações entre empregados e empregadores."
-            },
-            {
-                id: 128,
-                term: "laws",
-                partOfSpeech: "Substantivo",
-                translation: "Leis",
-                definition: "Regras obrigatórias estabelecidas por uma autoridade."
-            },
-            {
-                id: 129,
-                term: "equitable",
-                partOfSpeech: "Adjetivo",
-                translation: "Equitativo / Justo",
-                definition: "Baseado na imparcialidade e em uma distribuição justa."
-            },
-            {
-                id: 130,
-                term: "funding",
-                partOfSpeech: "Substantivo",
-                translation: "Financiamento / Recursos financeiros",
-                definition: "Dinheiro ou recursos fornecidos para determinado objetivo."
-            },
-            {
-                id: 131,
-                term: "robust",
-                partOfSpeech: "Adjetivo",
-                translation: "Robusto / Forte / Sólido",
-                definition: "Resistente, consistente ou bem estruturado."
-            },
-            {
-                id: 132,
-                term: "safety",
-                partOfSpeech: "Substantivo",
-                translation: "Segurança / Proteção",
-                definition: "Condição de estar protegido contra perigos ou riscos."
-            },
-            {
-                id: 133,
-                term: "nets",
-                partOfSpeech: "Substantivo",
-                translation: "Redes",
-                definition: "Sistemas conectados; em social safety nets, significa redes de proteção social."
-            },
-            {
-                id: 134,
-                term: "Ultimately",
-                partOfSpeech: "Advérbio",
-                translation: "Em última análise / No fim das contas",
-                definition: "Advérbio usado para apresentar uma conclusão geral."
-            },
-            {
-                id: 135,
-                term: "society's",
-                partOfSpeech: "Substantivo",
-                translation: "Da sociedade",
-                definition: "Forma possessiva de society; indica algo pertencente à sociedade."
-            },
-            {
-                id: 136,
-                term: "true",
-                partOfSpeech: "Adjetivo",
-                translation: "Verdadeiro / Real",
-                definition: "Que corresponde à realidade ou é genuíno."
-            },
-            {
-                id: 137,
-                term: "success",
-                partOfSpeech: "Substantivo",
-                translation: "Sucesso",
-                definition: "Êxito ou resultado positivo."
-            },
-            {
-                id: 138,
-                term: "is",
-                partOfSpeech: "Verbo",
-                translation: "É / Está",
-                definition: "Forma do verbo to be no presente, usada com he, she e it."
-            },
-            {
-                id: 139,
-                term: "measured",
-                partOfSpeech: "Verbo",
-                translation: "Medido / Avaliado",
-                definition: "Calculado ou julgado com base em determinados critérios."
-            },
-            {
-                id: 140,
-                term: "how",
-                partOfSpeech: "Advérbio",
-                translation: "Como / De que maneira",
-                definition: "Palavra usada para perguntar ou explicar o modo como algo acontece."
-            },
-            {
-                id: 141,
-                term: "it",
-                partOfSpeech: "Pronome",
-                translation: "Ele / Ela / Isso",
-                definition: "Pronome usado para retomar coisas, animais ou ideias."
-            },
-            {
-                id: 142,
-                term: "supports",
-                partOfSpeech: "Verbo",
-                translation: "Apoia / Sustenta",
-                definition: "Oferece ajuda, suporte ou condições para algo continuar."
-            },
-            {
-                id: 143,
-                term: "members",
-                partOfSpeech: "Substantivo",
-                translation: "Membros / Integrantes",
-                definition: "Pessoas que fazem parte de um grupo."
-            },
-            {
-                id: 144,
-                term: "both",
-                partOfSpeech: "Determinante",
-                translation: "Ambos / Tanto ... quanto",
-                definition: "Usado para indicar duas pessoas ou coisas em conjunto."
-            },
-            {
-                id: 145,
-                term: "ethical",
-                partOfSpeech: "Adjetivo",
-                translation: "Ético",
-                definition: "Relacionado aos princípios morais e ao que é considerado correto."
-            },
-            {
-                id: 146,
-                term: "imperative",
-                partOfSpeech: "Substantivo",
-                translation: "Imperativo / Necessidade urgente",
-                definition: "Algo indispensável ou que exige ação."
-            },
-            {
-                id: 147,
-                term: "foundation",
-                partOfSpeech: "Substantivo",
-                translation: "Fundação / Base",
-                definition: "Estrutura ou princípio fundamental sobre o qual algo se sustenta."
-            },
-            {
-                id: 148,
-                term: "for",
-                partOfSpeech: "Preposição",
-                translation: "Para / Por",
-                definition: "Preposição que indica finalidade, destino, benefício ou motivo."
-            },
-            {
-                id: 149,
-                term: "a",
-                partOfSpeech: "Artigo",
-                translation: "Um / Uma",
-                definition: "Artigo indefinido usado antes de substantivos no singular."
-            },
-            {
-                id: 150,
-                term: "just",
-                partOfSpeech: "Adjetivo",
-                translation: "Justo",
-                definition: "Que age com justiça e imparcialidade; como advérbio também pode significar apenas."
-            },
-            {
-                id: 151,
-                term: "future",
-                partOfSpeech: "Substantivo",
-                translation: "Futuro",
-                definition: "Tempo que ainda está por vir."
-            },
-            {
-                id: 152,
-                term: "English",
-                partOfSpeech: "Adjetivo / Substantivo",
-                translation: "Inglês",
-                definition: "Relacionado à língua inglesa ou ao idioma inglês."
-            },
-            {
-                id: 153,
-                term: "Speaking",
-                partOfSpeech: "Particípio / Adjetivo",
-                translation: "Falantes / que falam",
-                definition: "Forma relacionada ao verbo speak; pode indicar pessoas que falam um idioma ou a ação de falar."
-            },
-            {
-                id: 154,
-                term: "Countries",
-                partOfSpeech: "Substantivo plural",
-                translation: "Países",
-                definition: "Forma plural de country; refere-se a nações ou territórios."
-            },
-            {
-                id: 155,
-                term: "widely",
-                partOfSpeech: "Advérbio",
-                translation: "Amplamente",
-                definition: "De maneira extensa ou muito difundida."
-            },
-            {
-                id: 156,
-                term: "spoken",
-                partOfSpeech: "Particípio",
-                translation: "Falado",
-                definition: "Particípio passado do verbo speak; usado para indicar um idioma que é falado."
-            },
-            {
-                id: 157,
-                term: "languages",
-                partOfSpeech: "Substantivo plural",
-                translation: "Idiomas / Línguas",
-                definition: "Forma plural de language; sistemas de comunicação usados por comunidades."
-            },
-            {
-                id: 158,
-                term: "world",
-                partOfSpeech: "Substantivo",
-                translation: "Mundo",
-                definition: "O planeta Terra ou o conjunto de seus povos e sociedades."
-            },
-            {
-                id: 159,
-                term: "serving",
-                partOfSpeech: "Verbo / Gerúndio",
-                translation: "Servindo",
-                definition: "Forma em -ing do verbo serve; indica a ação de prestar um serviço ou exercer uma função."
-            },
-            {
-                id: 160,
-                term: "an",
-                partOfSpeech: "Artigo",
-                translation: "Um / Uma",
-                definition: "Artigo indefinido usado antes de palavras iniciadas por som de vogal."
-            },
-            {
-                id: 161,
-                term: "official",
-                partOfSpeech: "Adjetivo",
-                translation: "Oficial",
-                definition: "Que é reconhecido ou autorizado por uma autoridade."
-            },
-            {
-                id: 162,
-                term: "primary",
-                partOfSpeech: "Adjetivo",
-                translation: "Principal",
-                definition: "Que vem primeiro em importância ou prioridade."
-            },
-            {
-                id: 163,
-                term: "language",
-                partOfSpeech: "Substantivo",
-                translation: "Idioma / Língua",
-                definition: "Sistema de comunicação usado por pessoas ou comunidades."
-            },
-            {
-                id: 164,
-                term: "dozens",
-                partOfSpeech: "Substantivo plural",
-                translation: "Dezenas",
-                definition: "Plural de dozen; conjuntos ou quantidades de doze."
-            },
-            {
-                id: 165,
-                term: "nations",
-                partOfSpeech: "Substantivo plural",
-                translation: "Nações",
-                definition: "Plural de nation; países ou comunidades com identidade política ou cultural."
-            },
-            {
-                id: 166,
-                term: "across",
-                partOfSpeech: "Preposição / Advérbio",
-                translation: "Através / Em todo",
-                definition: "Indica movimento de um lado a outro ou distribuição por uma área."
-            },
-            {
-                id: 167,
-                term: "globe",
-                partOfSpeech: "Substantivo",
-                translation: "Globo",
-                definition: "Representação esférica da Terra; também pode significar o mundo."
-            },
-            {
-                id: 168,
-                term: "prominent",
-                partOfSpeech: "Adjetivo",
-                translation: "Proeminentes / Destacados",
-                definition: "Que se destaca por importância, posição ou reconhecimento."
-            },
-            {
-                id: 169,
-                term: "called",
-                partOfSpeech: "Verbo / Particípio",
-                translation: "Chamados",
-                definition: "Forma do verbo call; pode indicar que alguém ou algo recebe determinado nome."
-            },
-            {
-                id: 170,
-                term: "Inner",
-                partOfSpeech: "Adjetivo",
-                translation: "Interno",
-                definition: "Que está dentro ou na parte interior de algo."
-            },
-            {
-                id: 171,
-                term: "Circle",
-                partOfSpeech: "Substantivo",
-                translation: "Círculo",
-                definition: "Forma geométrica redonda; também pode indicar um grupo ou conjunto."
-            },
-            {
-                id: 172,
-                term: "include",
-                partOfSpeech: "Verbo",
-                translation: "Incluem",
-                definition: "Verbo que significa conter como parte de um grupo ou conjunto."
-            },
-            {
-                id: 173,
-                term: "United",
-                partOfSpeech: "Adjetivo",
-                translation: "Unidos",
-                definition: "Que estão juntos ou reunidos; também integra nomes próprios de países."
-            },
-            {
-                id: 174,
-                term: "States",
-                partOfSpeech: "Substantivo plural",
-                translation: "Estados",
-                definition: "Plural de state; pode indicar unidades políticas ou regiões de um país."
-            },
-            {
-                id: 175,
-                term: "Kingdom",
-                partOfSpeech: "Substantivo",
-                translation: "Reino",
-                definition: "Território ou país governado por um rei ou uma rainha."
-            },
-            {
-                id: 176,
-                term: "Canada",
-                partOfSpeech: "Substantivo próprio",
-                translation: "Canadá",
-                definition: "Nome próprio de um país da América do Norte."
-            },
-            {
-                id: 177,
-                term: "Australia",
-                partOfSpeech: "Substantivo próprio",
-                translation: "Austrália",
-                definition: "Nome próprio de um país e continente."
-            },
-            {
-                id: 178,
-                term: "New",
-                partOfSpeech: "Adjetivo",
-                translation: "Nova",
-                definition: "Que existe há pouco tempo ou que é recente."
-            },
-            {
-                id: 179,
-                term: "Zealand",
-                partOfSpeech: "Substantivo próprio",
-                translation: "Zelândia",
-                definition: "Parte do nome próprio New Zealand, traduzido como Nova Zelândia."
-            },
-            {
-                id: 180,
-                term: "Ireland",
-                partOfSpeech: "Substantivo próprio",
-                translation: "Irlanda",
-                definition: "Nome próprio de uma ilha e de um país europeu."
-            },
-            {
-                id: 181,
-                term: "However",
-                partOfSpeech: "Conjunção / Advérbio",
-                translation: "No entanto / Porém",
-                definition: "Introduz uma ideia de contraste ou oposição."
-            },
-            {
-                id: 182,
-                term: "also",
-                partOfSpeech: "Advérbio",
-                translation: "Também",
-                definition: "Indica adição ou inclusão de outra informação."
-            },
-            {
-                id: 183,
-                term: "millions",
-                partOfSpeech: "Substantivo plural",
-                translation: "Milhões",
-                definition: "Plural de million; quantidade equivalente a mil vezes mil."
-            },
-            {
-                id: 184,
-                term: "second",
-                partOfSpeech: "Numeral / Adjetivo",
-                translation: "Segundo",
-                definition: "Indica a posição número dois em uma sequência."
-            },
-            {
-                id: 185,
-                term: "like",
-                partOfSpeech: "Preposição",
-                translation: "Como",
-                definition: "Pode indicar semelhança ou comparação."
-            },
-            {
-                id: 186,
-                term: "India",
-                partOfSpeech: "Substantivo próprio",
-                translation: "Índia",
-                definition: "Nome próprio de um país do sul da Ásia."
-            },
-            {
-                id: 187,
-                term: "South",
-                partOfSpeech: "Substantivo / Adjetivo",
-                translation: "Sul",
-                definition: "Ponto cardeal oposto ao norte; também indica uma região meridional."
-            },
-            {
-                id: 188,
-                term: "Africa",
-                partOfSpeech: "Substantivo próprio",
-                translation: "África",
-                definition: "Nome próprio de um continente."
-            },
-            {
-                id: 189,
-                term: "Nigeria",
-                partOfSpeech: "Substantivo próprio",
-                translation: "Nigéria",
-                definition: "Nome próprio de um país africano."
-            },
-            {
-                id: 190,
-                term: "Philippines",
-                partOfSpeech: "Substantivo próprio plural",
-                translation: "Filipinas",
-                definition: "Nome próprio de um país do Sudeste Asiático."
-            },
-            {
-                id: 191,
-                term: "where",
-                partOfSpeech: "Advérbio / Pronome",
-                translation: "Onde",
-                definition: "Usado para indicar ou perguntar sobre lugar."
-            },
-            {
-                id: 192,
-                term: "acts",
-                partOfSpeech: "Verbo",
-                translation: "Atua / Age",
-                definition: "Forma do verbo act na terceira pessoa do singular do presente."
-            },
-            {
-                id: 193,
-                term: "vital",
-                partOfSpeech: "Adjetivo",
-                translation: "Vital",
-                definition: "Essencial ou extremamente importante."
-            },
-            {
-                id: 194,
-                term: "bridge",
-                partOfSpeech: "Substantivo",
-                translation: "Ponte",
-                definition: "Estrutura que liga dois lugares; também pode indicar algo que conecta pessoas ou ideias."
-            },
-            {
-                id: 195,
-                term: "business",
-                partOfSpeech: "Substantivo",
-                translation: "Negócios",
-                definition: "Atividade comercial, empresa ou conjunto de atividades econômicas."
-            },
-            {
-                id: 196,
-                term: "international",
-                partOfSpeech: "Adjetivo",
-                translation: "Internacional",
-                definition: "Que envolve ou se relaciona a mais de um país."
-            },
-            {
-                id: 197,
-                term: "communication",
-                partOfSpeech: "Substantivo",
-                translation: "Comunicação",
-                definition: "Ato ou processo de transmitir e compartilhar informações."
-            },
-            {
-                id: 198,
-                term: "Because",
-                partOfSpeech: "Conjunção",
-                translation: "Por causa",
-                definition: "Palavra usada para introduzir uma razão ou explicação."
-            },
-            {
-                id: 199,
-                term: "reach",
-                partOfSpeech: "Substantivo / Verbo",
-                translation: "Alcance",
-                definition: "Extensão ou capacidade de atingir pessoas, lugares ou objetivos."
-            },
-            {
-                id: 200,
-                term: "learning",
-                partOfSpeech: "Substantivo / Verbo",
-                translation: "Aprender / Aprendizado",
-                definition: "Pode indicar o processo de adquirir conhecimento ou a ação de aprender."
-            },
-            {
-                id: 201,
-                term: "opens",
-                partOfSpeech: "Verbo",
-                translation: "Abre",
-                definition: "Forma do verbo open na terceira pessoa do singular do presente."
-            },
-            {
-                id: 202,
-                term: "doors",
-                partOfSpeech: "Substantivo plural",
-                translation: "Portas",
-                definition: "Plural de door; também pode ser usado figuradamente para oportunidades."
-            },
-            {
-                id: 203,
-                term: "connect",
-                partOfSpeech: "Verbo",
-                translation: "Conectar",
-                definition: "Unir ou estabelecer uma ligação entre pessoas, coisas ou ideias."
-            },
-            {
-                id: 204,
-                term: "with",
-                partOfSpeech: "Preposição",
-                translation: "Com",
-                definition: "Indica companhia, associação ou relação."
-            },
-            {
-                id: 205,
-                term: "people",
-                partOfSpeech: "Substantivo plural",
-                translation: "Pessoas",
-                definition: "Plural de person; seres humanos."
-            },
-            {
-                id: 206,
-                term: "completely",
-                partOfSpeech: "Advérbio",
-                translation: "Completamente",
-                definition: "De maneira total ou integral."
-            },
-            {
-                id: 207,
-                term: "different",
-                partOfSpeech: "Adjetivo",
-                translation: "Diferentes",
-                definition: "Que não são iguais ou que apresentam características distintas."
-            },
-            {
-                id: 208,
-                term: "cultures",
-                partOfSpeech: "Substantivo plural",
-                translation: "Culturas",
-                definition: "Plural de culture; costumes, valores e práticas de um grupo."
-            },
-            {
-                id: 209,
-                term: "backgrounds",
-                partOfSpeech: "Substantivo plural",
-                translation: "Origens / Contextos",
-                definition: "Plural de background; experiências, origens ou contextos de uma pessoa."
-            }
-        ];
+    {
+        "id": 1,
+        "term": "Cybersecurity",
+        "partOfSpeech": "Substantivo",
+        "translation": "Segurança cibernética",
+        "definition": "Conjunto de práticas, tecnologias e processos projetados para proteger computadores, redes, programas e dados contra ataques, danos ou acesso não autorizado."
+    },
+    {
+        "id": 2,
+        "term": "Data Breach",
+        "partOfSpeech": "Substantivo",
+        "translation": "Vazamento / violação de dados",
+        "definition": "Incidente de segurança no qual dados confidenciais, protegidos ou sensíveis são copiados, transmitidos, visualizados ou roubados por uma pessoa não autorizada."
+    },
+    {
+        "id": 3,
+        "term": "Malware",
+        "partOfSpeech": "Substantivo",
+        "translation": "Softwares maliciosos (vírus, spyware, ransomware)",
+        "definition": "Qualquer software intencionalmente projetado para causar danos a um computador, servidor, cliente ou rede de computadores."
+    },
+    {
+        "id": 4,
+        "term": "Ransomware",
+        "partOfSpeech": "Substantivo",
+        "translation": "Tipo de vírus sequestrador",
+        "definition": "Tipo de malware que criptografa os arquivos do computador e cobra um resgate (geralmente em criptomoedas) para reestabelecer o acesso."
+    },
+    {
+        "id": 5,
+        "term": "Spyware",
+        "partOfSpeech": "Substantivo",
+        "translation": "Programa espião",
+        "definition": "Software malicioso que monitora e coleta remotamente suas atividades, senhas e informações pessoais sem a sua permissão."
+    },
+    {
+        "id": 6,
+        "term": "Two-Factor Authentication (2FA) / Multi-Factor Authentication (MFA)",
+        "partOfSpeech": "Substantivo",
+        "aliases": [
+            "2FA",
+            "MFA",
+            "Two-Factor Authentication",
+            "Multi-Factor Authentication"
+        ],
+        "translation": "Autenticação em duas etapas / de múltiplos fatores",
+        "definition": "Método de verificação de identidade que exige duas ou mais provas independentes para conceder acesso a uma conta."
+    },
+    {
+        "id": 7,
+        "term": "Encryption",
+        "partOfSpeech": "Substantivo",
+        "translation": "Criptografia",
+        "definition": "Processo de codificação de informações para que apenas partes autorizadas com uma chave secreta consigam ler o conteúdo."
+    },
+    {
+        "id": 8,
+        "term": "Firewall",
+        "partOfSpeech": "Substantivo",
+        "translation": "Barreira de segurança de rede",
+        "definition": "Dispositivo ou software de segurança que monitora e filtra o tráfego de rede de entrada e saída com base em regras estabelecidas."
+    },
+    {
+        "id": 9,
+        "term": "Strong Password",
+        "partOfSpeech": "Substantivo",
+        "translation": "Senha forte",
+        "definition": "Senha complexa contendo combinação de números, letras maiúsculas/minúsculas e símbolos especiais para dificultar invasões."
+    },
+    {
+        "id": 10,
+        "term": "Data Privacy",
+        "partOfSpeech": "Substantivo",
+        "translation": "Privacidade de dados",
+        "definition": "Área focada no tratamento e manipulação correta de dados pessoais, garantindo o consentimento e a segurança do titular."
+    },
+    {
+        "id": 11,
+        "term": "Phishing",
+        "partOfSpeech": "Substantivo",
+        "translation": "Golpe de roubo de dados por fraude",
+        "definition": "Golpe digital projetado para enganar o usuário (via links ou e-mails falsos) e roubar dados confidenciais como senhas e cartões de crédito."
+    },
+    {
+        "id": 12,
+        "term": "Spear Phishing",
+        "partOfSpeech": "Substantivo",
+        "translation": "Phishing direcionado e personalizado",
+        "definition": "Ataque de phishing altamente específico e direcionado a um indivíduo, cargo ou empresa específica para aumentar as chances de sucesso."
+    },
+    {
+        "id": 13,
+        "term": "Smishing",
+        "partOfSpeech": "Substantivo",
+        "translation": "Phishing por mensagens de texto (SMS)",
+        "definition": "Variante do phishing realizada especificamente por meio de mensagens SMS maliciosas em celulares."
+    },
+    {
+        "id": 14,
+        "term": "Vishing",
+        "partOfSpeech": "Substantivo",
+        "translation": "Phishing por chamadas de voz",
+        "definition": "Prática de phishing por telefone (Voice Phishing) onde o golpista finge ser de uma instituição confiável via ligação telefônica."
+    },
+    {
+        "id": 15,
+        "term": "Spoofing",
+        "partOfSpeech": "Substantivo",
+        "translation": "Falsificação de identidade digital",
+        "definition": "Técnica onde o invasor se disfarça de outra entidade/endereço (ex: Email Spoofing onde o e-mail parece vir de um banco legítimo)."
+    },
+    {
+        "id": 16,
+        "term": "Malicious Link / Suspicious Link",
+        "partOfSpeech": "Substantivo",
+        "aliases": [
+            "Malicious Link",
+            "Suspicious Link"
+        ],
+        "translation": "Link malicioso / link suspeito",
+        "definition": "Hiperlink criado para redirecionar a vítima para sites fraudulentos, infectados ou preparados para capturar credenciais."
+    },
+    {
+        "id": 17,
+        "term": "Bait / Baiting",
+        "partOfSpeech": "Substantivo",
+        "aliases": [
+            "Bait",
+            "Baiting"
+        ],
+        "translation": "Isca / uso de isca para atração",
+        "definition": "Tática de seduzir a vítima oferecendo algo atraente (como downloads grátis ou pen drives 'achados') contendo malware."
+    },
+    {
+        "id": 18,
+        "term": "Scam / Scammer",
+        "partOfSpeech": "Substantivo",
+        "aliases": [
+            "Scam",
+            "Scammer"
+        ],
+        "translation": "Golpe / Golpista",
+        "definition": "Termo geral para esquemas ou fraudes desonestas na internet / pessoa ou grupo que executa tais golpes."
+    },
+    {
+        "id": 19,
+        "term": "Credential Stuffing",
+        "partOfSpeech": "Substantivo",
+        "translation": "Uso automatizado de senhas vazadas",
+        "definition": "Ataque automatizado onde hackers testam grandes listas de pares de e-mail e senhas vazadas em múltiplos outros sites."
+    },
+    {
+        "id": 20,
+        "term": "Social Engineering",
+        "partOfSpeech": "Substantivo",
+        "translation": "Engenharia social",
+        "definition": "Manipulação psicológica de pessoas para fazê-las executar ações involuntárias ou divulgar informações confidenciais."
+    },
+    {
+        "id": 21,
+        "term": "Pretexting",
+        "partOfSpeech": "Substantivo",
+        "translation": "Criação de história/cenário falso",
+        "definition": "Prática de inventar uma história ou situação convincente (pretexto) para enganar a vítima e obter dados confidenciais."
+    },
+    {
+        "id": 22,
+        "term": "Impersonation / Impersonate",
+        "partOfSpeech": "Múltiplas classes",
+        "aliases": [
+            "Impersonation",
+            "Impersonate"
+        ],
+        "translation": "Falsificação de identidade / se passar por outro",
+        "definition": "Ação de fingir ser outra pessoa, funcionário de TI ou autoridade para manipular a confiança de uma vítima."
+    },
+    {
+        "id": 23,
+        "term": "Urgency / Sense of Urgency",
+        "partOfSpeech": "Substantivo",
+        "aliases": [
+            "Urgency",
+            "Sense of Urgency"
+        ],
+        "translation": "Senso de urgência artificial",
+        "definition": "Tática que induz medo ou pressa na vítima para que ela tome uma decisão precipitada sem checar os fatos."
+    },
+    {
+        "id": 24,
+        "term": "Trust",
+        "partOfSpeech": "Substantivo",
+        "translation": "Confiança",
+        "definition": "Relação de credibilidade explorada por golpistas para que a vítima baixe a guarda durante uma interação."
+    },
+    {
+        "id": 25,
+        "term": "Authority",
+        "partOfSpeech": "Substantivo",
+        "translation": "Abuso de autoridade",
+        "definition": "Estratégia de se passar por figuras de liderança, policiais ou suporte técnico para forçar obediência rápida."
+    },
+    {
+        "id": 26,
+        "term": "Quid Pro Quo",
+        "partOfSpeech": "Expressão",
+        "translation": "Troca de favores ilusória",
+        "definition": "Oferta de um benefício ou serviço falso (ex: suporte técnico gratuito) em troca de senhas ou acesso."
+    },
+    {
+        "id": 27,
+        "term": "Fake News",
+        "partOfSpeech": "Substantivo",
+        "translation": "Notícias falsas",
+        "definition": "Informações deliberadamente falsas ou enganosas apresentadas como se fossem notícias reais para manipular a opinião pública."
+    },
+    {
+        "id": 28,
+        "term": "Misinformation",
+        "partOfSpeech": "Substantivo",
+        "translation": "Informação incorreta sem má intenção",
+        "definition": "Compartilhamento de informações errôneas sem a intenção direta de prejudicar (ex: engano ou mal-entendido)."
+    },
+    {
+        "id": 29,
+        "term": "Disinformation",
+        "partOfSpeech": "Substantivo",
+        "translation": "Desinformação intencional",
+        "definition": "Criação e difusão de informações falsas criadas intencionalmente para enganar, prejudicar ou desestabilizar."
+    },
+    {
+        "id": 30,
+        "term": "Deepfake",
+        "partOfSpeech": "Substantivo",
+        "translation": "Mídia sintética hiper-realista",
+        "definition": "Vídeo, áudio ou foto alterados por Inteligência Artificial de alta precisão para simular alguém dizendo ou fazendo algo irreal."
+    },
+    {
+        "id": 31,
+        "term": "Clickbait",
+        "partOfSpeech": "Substantivo",
+        "translation": "Conteúdo caça-clique",
+        "definition": "Títulos ou imagens apelativas e exageradas criadas unicamente para atiçar curiosidade e gerar acessos a sites."
+    },
+    {
+        "id": 32,
+        "term": "Bias / Unbiased",
+        "partOfSpeech": "Múltiplas classes",
+        "aliases": [
+            "Bias",
+            "Unbiased"
+        ],
+        "translation": "Viés / Imparcial",
+        "definition": "Tendência pré-conceituosa ou parcial em relatar fatos / Atitude neutra e sem viés ideológico."
+    },
+    {
+        "id": 33,
+        "term": "Echo Chamber",
+        "partOfSpeech": "Substantivo",
+        "translation": "Câmara de eco",
+        "definition": "Ambiente (como redes sociais) onde o usuário consome apenas opiniões que concordam com as suas próprias crenças."
+    },
+    {
+        "id": 34,
+        "term": "Out of Context",
+        "partOfSpeech": "Expressão",
+        "translation": "Fora de contexto",
+        "definition": "Citação, foto ou vídeo real removido do seu contexto original para distorcer o seu significado verdadeiro."
+    },
+    {
+        "id": 35,
+        "term": "Sensationalism",
+        "partOfSpeech": "Substantivo",
+        "translation": "Sensacionalismo",
+        "definition": "Estilo de apelo emocional exagerado focado em causar impacto, medo ou escândalo ao invés da verdade dos fatos."
+    },
+    {
+        "id": 36,
+        "term": "Fact-Checking",
+        "partOfSpeech": "Substantivo",
+        "translation": "Checagem de fatos",
+        "definition": "Processo metódico de investigação e verificação de alegações e dados para confirmar se são verdadeiros."
+    },
+    {
+        "id": 37,
+        "term": "Reliable / Credible Source",
+        "partOfSpeech": "Substantivo",
+        "aliases": [
+            "Reliable Source",
+            "Credible Source"
+        ],
+        "translation": "Fonte confiável / credível",
+        "definition": "Origem de informação respaldada por especialistas, histórico de precisão, transparência e reputação sólida."
+    },
+    {
+        "id": 38,
+        "term": "Unreliable Source",
+        "partOfSpeech": "Substantivo",
+        "translation": "Fonte não confiável",
+        "definition": "Veículo de informação sem credibilidade, com histórico de erros, anonimato suspeito ou viés extremado."
+    },
+    {
+        "id": 39,
+        "term": "Cross-reference / Cross-check",
+        "partOfSpeech": "Múltiplas classes",
+        "aliases": [
+            "Cross-reference",
+            "Cross-check"
+        ],
+        "translation": "Cruzar informações / checagem dupla",
+        "definition": "Comparar a mesma notícia em múltiplos veículos confiáveis e independentes para confirmar a veracidade."
+    },
+    {
+        "id": 40,
+        "term": "Primary Source",
+        "partOfSpeech": "Substantivo",
+        "translation": "Fonte primária",
+        "definition": "Documento, testemunha direta ou gravação original sem intermediários ou interpretações secundárias."
+    },
+    {
+        "id": 41,
+        "term": "Domain Name",
+        "partOfSpeech": "Substantivo",
+        "translation": "Nome de domínio de site",
+        "definition": "Endereço web oficial. Deve ser verificado se possui extensões confiáveis (ex: .gov, .edu) ou caracteres alterados."
+    },
+    {
+        "id": 42,
+        "term": "Byline / Author Credentials",
+        "partOfSpeech": "Substantivo",
+        "aliases": [
+            "Byline",
+            "Author Credentials"
+        ],
+        "translation": "Assinatura e credenciais do autor",
+        "definition": "Identificação formal do jornalista ou especialista responsável pelo artigo e suas qualificações profissionais."
+    },
+    {
+        "id": 43,
+        "term": "Correction Policy",
+        "partOfSpeech": "Substantivo",
+        "translation": "Política de correção",
+        "definition": "Diretrizes públicas do veículo que demonstram transparência na retificação clara de erros cometidos em publicações."
+    },
+    {
+        "id": 44,
+        "term": "Reverse Image Search",
+        "partOfSpeech": "Substantivo",
+        "translation": "Pesquisa reversa de imagem",
+        "definition": "Técnica de busca para descobrir a data original, contexto e fonte real onde uma foto foi publicada originalmente."
+    },
+    {
+        "id": 45,
+        "term": "Bridging",
+        "partOfSpeech": "Verbo",
+        "translation": "Conectando / Reduzindo (uma distância ou lacuna)",
+        "definition": "Ato de unir duas coisas separadas ou diminuir uma diferença."
+    },
+    {
+        "id": 46,
+        "term": "the",
+        "partOfSpeech": "Artigo",
+        "translation": "O / A / Os / As",
+        "definition": "Artigo definido usado antes de um substantivo específico.",
+        "translations": [
+            "o",
+            "a",
+            "os",
+            "as"
+        ]
+    },
+    {
+        "id": 47,
+        "term": "Divide",
+        "partOfSpeech": "Substantivo",
+        "translation": "Divisão / A divisão / A lacuna",
+        "definition": "Separação entre dois grupos ou realidades."
+    },
+    {
+        "id": 48,
+        "term": "Challenge",
+        "partOfSpeech": "Substantivo",
+        "translation": "Desafio",
+        "definition": "Tarefa ou situação difícil que exige esforço para ser superada."
+    },
+    {
+        "id": 49,
+        "term": "of",
+        "partOfSpeech": "Preposição",
+        "translation": "De / Do / Da / Dos / Das",
+        "definition": "Preposição que indica posse, origem ou relação entre elementos.",
+        "translations": [
+            "de",
+            "do",
+            "da",
+            "dos",
+            "das"
+        ]
+    },
+    {
+        "id": 50,
+        "term": "Social",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Social",
+        "definition": "Relacionado à sociedade e às relações entre as pessoas."
+    },
+    {
+        "id": 51,
+        "term": "Inequality",
+        "partOfSpeech": "Substantivo",
+        "translation": "Desigualdade",
+        "definition": "Falta de igualdade, especialmente em direitos, oportunidades e riqueza."
+    },
+    {
+        "id": 52,
+        "term": "remains",
+        "partOfSpeech": "Verbo",
+        "translation": "Permanece",
+        "definition": "Continua a existir em determinado estado ou situação."
+    },
+    {
+        "id": 53,
+        "term": "one",
+        "partOfSpeech": "Determinante numeral",
+        "translation": "Um / Uma",
+        "definition": "Número ou pronome indefinido, dependendo do contexto."
+    },
+    {
+        "id": 54,
+        "term": "most",
+        "partOfSpeech": "Advérbio",
+        "translation": "Mais / O mais",
+        "definition": "Usado para formar o superlativo; indica o grau mais elevado."
+    },
+    {
+        "id": 55,
+        "term": "pressing",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Urgente / Premente",
+        "definition": "Que exige atenção ou solução imediata."
+    },
+    {
+        "id": 56,
+        "term": "challenges",
+        "partOfSpeech": "Substantivo",
+        "translation": "Desafios",
+        "definition": "Plural de challenge; situações difíceis que exigem esforço."
+    },
+    {
+        "id": 57,
+        "term": "our",
+        "partOfSpeech": "Determinante possessivo",
+        "translation": "Nosso / Nossa",
+        "definition": "Pronome possessivo que indica algo pertencente a nós."
+    },
+    {
+        "id": 58,
+        "term": "time",
+        "partOfSpeech": "Substantivo",
+        "translation": "Tempo / Época",
+        "definition": "Período ou momento em que vivemos."
+    },
+    {
+        "id": 59,
+        "term": "Despite",
+        "partOfSpeech": "Preposição",
+        "translation": "Apesar de",
+        "definition": "Expressa contraste ou concessão."
+    },
+    {
+        "id": 60,
+        "term": "global",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Global / Mundial",
+        "definition": "Que abrange o mundo todo."
+    },
+    {
+        "id": 61,
+        "term": "economic",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Econômico",
+        "definition": "Relacionado à economia, produção, dinheiro e finanças."
+    },
+    {
+        "id": 62,
+        "term": "growth",
+        "partOfSpeech": "Substantivo",
+        "translation": "Crescimento",
+        "definition": "Aumento de tamanho, valor ou quantidade."
+    },
+    {
+        "id": 63,
+        "term": "profound",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Profundo / Intenso",
+        "definition": "Que é muito grande, intenso ou significativo."
+    },
+    {
+        "id": 64,
+        "term": "gap",
+        "partOfSpeech": "Substantivo",
+        "translation": "Lacuna / Distância / Brecha",
+        "definition": "Espaço vazio ou diferença entre duas coisas ou grupos."
+    },
+    {
+        "id": 65,
+        "term": "continues",
+        "partOfSpeech": "Verbo",
+        "translation": "Continua",
+        "definition": "Mantém uma ação ou estado ao longo do tempo."
+    },
+    {
+        "id": 66,
+        "term": "to",
+        "partOfSpeech": "Partícula do infinitivo",
+        "translation": "A / Para",
+        "definition": "Preposição que pode indicar direção, finalidade ou acompanhar verbos no infinitivo.",
+        "translations": [
+            "a",
+            "para"
+        ]
+    },
+    {
+        "id": 67,
+        "term": "separate",
+        "partOfSpeech": "Verbo",
+        "translation": "Separar / Separado",
+        "definition": "Dividir ou manter duas ou mais partes distintas."
+    },
+    {
+        "id": 68,
+        "term": "privileged",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Privilegiados",
+        "definition": "Pessoas ou grupos que possuem vantagens ou oportunidades especiais."
+    },
+    {
+        "id": 69,
+        "term": "from",
+        "partOfSpeech": "Preposição",
+        "translation": "De / Desde / A partir de",
+        "definition": "Preposição que indica origem, procedência ou separação.",
+        "translations": [
+            "de",
+            "desde",
+            "a partir de"
+        ]
+    },
+    {
+        "id": 70,
+        "term": "marginalized",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Marginalizados",
+        "definition": "Pessoas ou grupos colocados à margem ou excluídos da sociedade."
+    },
+    {
+        "id": 71,
+        "term": "affecting",
+        "partOfSpeech": "Verbo",
+        "translation": "Afetando",
+        "definition": "Causando impacto, influência ou mudança em algo ou alguém."
+    },
+    {
+        "id": 72,
+        "term": "human",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Humano",
+        "definition": "Relacionado às pessoas ou à humanidade."
+    },
+    {
+        "id": 73,
+        "term": "dignity",
+        "partOfSpeech": "Substantivo",
+        "translation": "Dignidade",
+        "definition": "Valor próprio de cada pessoa, que merece respeito."
+    },
+    {
+        "id": 74,
+        "term": "and",
+        "partOfSpeech": "Conjunção",
+        "translation": "E",
+        "definition": "Conectivo aditivo que une palavras, frases ou ideias.",
+        "translations": [
+            "e"
+        ]
+    },
+    {
+        "id": 75,
+        "term": "daily",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Diário / Diariamente",
+        "definition": "Que acontece todos os dias ou se relaciona à rotina."
+    },
+    {
+        "id": 76,
+        "term": "opportunities",
+        "partOfSpeech": "Substantivo",
+        "translation": "Oportunidades",
+        "definition": "Chances ou condições favoráveis para realizar algo."
+    },
+    {
+        "id": 77,
+        "term": "This",
+        "partOfSpeech": "Determinante demonstrativo",
+        "translation": "Este / Esta / Isso",
+        "definition": "Pronome demonstrativo usado para indicar algo próximo ou já mencionado."
+    },
+    {
+        "id": 78,
+        "term": "imbalance",
+        "partOfSpeech": "Substantivo",
+        "translation": "Desequilíbrio",
+        "definition": "Falta de equilíbrio, proporção ou igualdade."
+    },
+    {
+        "id": 79,
+        "term": "goes",
+        "partOfSpeech": "Verbo",
+        "translation": "Vai / Segue",
+        "definition": "Forma do verbo to go; em goes beyond, significa vai além."
+    },
+    {
+        "id": 80,
+        "term": "far",
+        "partOfSpeech": "Advérbio",
+        "translation": "Muito / Longe",
+        "definition": "Pode indicar distância ou intensificar uma expressão, como far beyond."
+    },
+    {
+        "id": 81,
+        "term": "beyond",
+        "partOfSpeech": "Preposição",
+        "translation": "Além de",
+        "definition": "Indica algo que ultrapassa um limite."
+    },
+    {
+        "id": 82,
+        "term": "income",
+        "partOfSpeech": "Substantivo",
+        "translation": "Renda / Rendimento",
+        "definition": "Dinheiro recebido por trabalho, serviços ou investimentos."
+    },
+    {
+        "id": 83,
+        "term": "Access",
+        "partOfSpeech": "Substantivo",
+        "translation": "Acesso",
+        "definition": "Possibilidade, direito ou facilidade de entrar, alcançar ou utilizar algo."
+    },
+    {
+        "id": 84,
+        "term": "quality",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Qualidade",
+        "definition": "Característica ou padrão que indica o nível de algo."
+    },
+    {
+        "id": 85,
+        "term": "education",
+        "partOfSpeech": "Substantivo",
+        "translation": "Educação",
+        "definition": "Processo de ensino, aprendizagem e desenvolvimento."
+    },
+    {
+        "id": 86,
+        "term": "healthcare",
+        "partOfSpeech": "Substantivo",
+        "translation": "Assistência médica / Cuidados de saúde",
+        "definition": "Conjunto de serviços e cuidados relacionados à saúde."
+    },
+    {
+        "id": 87,
+        "term": "stable",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Estável / Seguro",
+        "definition": "Firme, constante ou que oferece segurança."
+    },
+    {
+        "id": 88,
+        "term": "employment",
+        "partOfSpeech": "Substantivo",
+        "translation": "Emprego / Trabalho",
+        "definition": "Ocupação ou atividade remunerada."
+    },
+    {
+        "id": 89,
+        "term": "often",
+        "partOfSpeech": "Advérbio",
+        "translation": "Frequentemente / Muitas vezes",
+        "definition": "Advérbio que indica algo que acontece com frequência."
+    },
+    {
+        "id": 90,
+        "term": "determined",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Determinado / Definido",
+        "definition": "Estabelecido ou influenciado por uma condição ou fator."
+    },
+    {
+        "id": 91,
+        "term": "by",
+        "partOfSpeech": "Preposição",
+        "translation": "Por / Pelo / Pela / Ao lado de / Até",
+        "definition": "Preposição que pode indicar o agente, meio ou causa de uma ação.",
+        "translations": [
+            "por",
+            "pelo",
+            "pela",
+            "ao lado de",
+            "até"
+        ]
+    },
+    {
+        "id": 92,
+        "term": "socioeconomic",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Socioeconômico",
+        "definition": "Relacionado aos fatores sociais e econômicos."
+    },
+    {
+        "id": 93,
+        "term": "background",
+        "partOfSpeech": "Substantivo",
+        "translation": "Origem / Histórico / Contexto",
+        "definition": "História pessoal, social, familiar ou financeira de alguém."
+    },
+    {
+        "id": 94,
+        "term": "or",
+        "partOfSpeech": "Conjunção",
+        "translation": "Ou",
+        "definition": "Conectivo que apresenta uma alternativa."
+    },
+    {
+        "id": 95,
+        "term": "geographic",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Geográfico",
+        "definition": "Relacionado à localização e às características de uma região."
+    },
+    {
+        "id": 96,
+        "term": "location",
+        "partOfSpeech": "Substantivo",
+        "translation": "Localização / Lugar",
+        "definition": "Ponto ou área onde algo ou alguém está."
+    },
+    {
+        "id": 97,
+        "term": "Underfunded",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Com verba insuficiente / Subfinanciado",
+        "definition": "Que recebe menos recursos financeiros do que o necessário."
+    },
+    {
+        "id": 98,
+        "term": "schools",
+        "partOfSpeech": "Substantivo",
+        "translation": "Escolas",
+        "definition": "Instituições destinadas ao ensino e à aprendizagem."
+    },
+    {
+        "id": 99,
+        "term": "unequal",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Desigual",
+        "definition": "Que não apresenta igualdade; diferente em quantidade, condição ou oportunidade."
+    },
+    {
+        "id": 100,
+        "term": "medical",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Médico",
+        "definition": "Relacionado à medicina ou aos cuidados de saúde."
+    },
+    {
+        "id": 101,
+        "term": "care",
+        "partOfSpeech": "Substantivo",
+        "translation": "Cuidado / Atendimento",
+        "definition": "Atenção, assistência ou tratamento oferecido a alguém."
+    },
+    {
+        "id": 102,
+        "term": "trap",
+        "partOfSpeech": "Verbo",
+        "translation": "Prendem / Aprisionam",
+        "definition": "Verbo que indica deixar alguém preso ou sem saída."
+    },
+    {
+        "id": 103,
+        "term": "vulnerable",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Vulnerável",
+        "definition": "Que está mais exposto a riscos, dificuldades ou danos."
+    },
+    {
+        "id": 104,
+        "term": "communities",
+        "partOfSpeech": "Substantivo",
+        "translation": "Comunidades",
+        "definition": "Grupos de pessoas que vivem na mesma área ou compartilham características."
+    },
+    {
+        "id": 105,
+        "term": "in",
+        "partOfSpeech": "Preposição",
+        "translation": "Em / Dentro de / No / Na",
+        "definition": "Preposição que indica lugar, tempo ou condição.",
+        "translations": [
+            "em",
+            "dentro de",
+            "no",
+            "na"
+        ]
+    },
+    {
+        "id": 106,
+        "term": "cycle",
+        "partOfSpeech": "Substantivo",
+        "translation": "Ciclo",
+        "definition": "Sequência de acontecimentos que se repete."
+    },
+    {
+        "id": 107,
+        "term": "limited",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Limitado / Restrito",
+        "definition": "Que possui limites ou poucas opções disponíveis."
+    },
+    {
+        "id": 108,
+        "term": "preventing",
+        "partOfSpeech": "Verbo",
+        "translation": "Impedindo / Evitando",
+        "definition": "Ação de evitar que algo aconteça."
+    },
+    {
+        "id": 109,
+        "term": "upward",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Ascendente / Para cima",
+        "definition": "Que segue em direção a uma posição ou nível mais alto."
+    },
+    {
+        "id": 110,
+        "term": "mobility",
+        "partOfSpeech": "Substantivo",
+        "translation": "Mobilidade",
+        "definition": "Capacidade de se mover ou mudar de posição ou condição social."
+    },
+    {
+        "id": 111,
+        "term": "Addressing",
+        "partOfSpeech": "Verbo",
+        "translation": "Enfrentando / Tratando de / Abordando",
+        "definition": "Ação de lidar diretamente com um problema ou questão."
+    },
+    {
+        "id": 112,
+        "term": "requires",
+        "partOfSpeech": "Verbo",
+        "translation": "Exige / Requer",
+        "definition": "Precisa de algo como condição necessária."
+    },
+    {
+        "id": 113,
+        "term": "systemic",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Sistêmico",
+        "definition": "Que afeta ou envolve o sistema como um todo."
+    },
+    {
+        "id": 114,
+        "term": "change",
+        "partOfSpeech": "Substantivo",
+        "translation": "Mudança / Transformação",
+        "definition": "Ato ou resultado de alterar algo."
+    },
+    {
+        "id": 115,
+        "term": "rather",
+        "partOfSpeech": "Advérbio",
+        "translation": "Em vez de / Preferencialmente",
+        "definition": "Usado para indicar preferência ou oposição; rather than significa em vez de."
+    },
+    {
+        "id": 116,
+        "term": "than",
+        "partOfSpeech": "Conjunção",
+        "translation": "Do que",
+        "definition": "Palavra usada em comparações, como bigger than."
+    },
+    {
+        "id": 117,
+        "term": "simple",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Simples",
+        "definition": "Fácil de entender ou realizar; sem complexidade."
+    },
+    {
+        "id": 118,
+        "term": "charity",
+        "partOfSpeech": "Substantivo",
+        "translation": "Caridade",
+        "definition": "Ajuda voluntária ou doação destinada a pessoas necessitadas."
+    },
+    {
+        "id": 119,
+        "term": "Governments",
+        "partOfSpeech": "Substantivo",
+        "translation": "Governos",
+        "definition": "Autoridades e instituições responsáveis pela administração de um país ou território."
+    },
+    {
+        "id": 120,
+        "term": "must",
+        "partOfSpeech": "Verbo modal",
+        "translation": "Deve / Devem",
+        "definition": "Verbo modal que expressa obrigação ou necessidade."
+    },
+    {
+        "id": 121,
+        "term": "implement",
+        "partOfSpeech": "Verbo",
+        "translation": "Implementar / Colocar em prática",
+        "definition": "Executar ou fazer um plano, ideia ou política funcionar."
+    },
+    {
+        "id": 122,
+        "term": "inclusive",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Inclusivo",
+        "definition": "Que procura incluir todas as pessoas, sem discriminação."
+    },
+    {
+        "id": 123,
+        "term": "policies",
+        "partOfSpeech": "Substantivo",
+        "translation": "Políticas / Diretrizes",
+        "definition": "Planos, regras ou linhas de ação adotadas por governos ou instituições."
+    },
+    {
+        "id": 124,
+        "term": "such",
+        "partOfSpeech": "Determinante",
+        "translation": "Tal / Tais",
+        "definition": "Usado para apresentar exemplos, especialmente na expressão such as (tais como)."
+    },
+    {
+        "id": 125,
+        "term": "as",
+        "partOfSpeech": "Preposição",
+        "translation": "Como / Enquanto / Na qualidade de",
+        "definition": "Pode indicar exemplo, função ou comparação, conforme o contexto.",
+        "translations": [
+            "como",
+            "enquanto",
+            "na qualidade de"
+        ]
+    },
+    {
+        "id": 126,
+        "term": "fair",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Justo",
+        "definition": "Que respeita a igualdade, a imparcialidade e os direitos."
+    },
+    {
+        "id": 127,
+        "term": "labor",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Trabalho / Laboral",
+        "definition": "Relacionado ao trabalho e às relações entre empregados e empregadores."
+    },
+    {
+        "id": 128,
+        "term": "laws",
+        "partOfSpeech": "Substantivo",
+        "translation": "Leis",
+        "definition": "Regras obrigatórias estabelecidas por uma autoridade."
+    },
+    {
+        "id": 129,
+        "term": "equitable",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Equitativo / Justo",
+        "definition": "Baseado na imparcialidade e em uma distribuição justa."
+    },
+    {
+        "id": 130,
+        "term": "funding",
+        "partOfSpeech": "Substantivo",
+        "translation": "Financiamento / Recursos financeiros",
+        "definition": "Dinheiro ou recursos fornecidos para determinado objetivo."
+    },
+    {
+        "id": 131,
+        "term": "robust",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Robusto / Forte / Sólido",
+        "definition": "Resistente, consistente ou bem estruturado."
+    },
+    {
+        "id": 132,
+        "term": "safety",
+        "partOfSpeech": "Substantivo",
+        "translation": "Segurança / Proteção",
+        "definition": "Condição de estar protegido contra perigos ou riscos."
+    },
+    {
+        "id": 133,
+        "term": "nets",
+        "partOfSpeech": "Substantivo",
+        "translation": "Redes",
+        "definition": "Sistemas conectados; em social safety nets, significa redes de proteção social."
+    },
+    {
+        "id": 134,
+        "term": "Ultimately",
+        "partOfSpeech": "Advérbio",
+        "translation": "Em última análise / No fim das contas",
+        "definition": "Advérbio usado para apresentar uma conclusão geral."
+    },
+    {
+        "id": 135,
+        "term": "society's",
+        "partOfSpeech": "Substantivo",
+        "translation": "Da sociedade",
+        "definition": "Forma possessiva de society; indica algo pertencente à sociedade."
+    },
+    {
+        "id": 136,
+        "term": "true",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Verdadeiro / Real",
+        "definition": "Que corresponde à realidade ou é genuíno."
+    },
+    {
+        "id": 137,
+        "term": "success",
+        "partOfSpeech": "Substantivo",
+        "translation": "Sucesso",
+        "definition": "Êxito ou resultado positivo."
+    },
+    {
+        "id": 138,
+        "term": "is",
+        "partOfSpeech": "Verbo",
+        "translation": "É / Está",
+        "definition": "Forma do verbo to be no presente, usada com he, she e it."
+    },
+    {
+        "id": 139,
+        "term": "measured",
+        "partOfSpeech": "Verbo",
+        "translation": "Medido / Avaliado",
+        "definition": "Calculado ou julgado com base em determinados critérios."
+    },
+    {
+        "id": 140,
+        "term": "how",
+        "partOfSpeech": "Advérbio",
+        "translation": "Como / De que maneira",
+        "definition": "Palavra usada para perguntar ou explicar o modo como algo acontece."
+    },
+    {
+        "id": 141,
+        "term": "it",
+        "partOfSpeech": "Pronome",
+        "translation": "Ele / Ela / Isso",
+        "definition": "Pronome usado para retomar coisas, animais ou ideias.",
+        "translations": [
+            "ele",
+            "ela",
+            "isso"
+        ]
+    },
+    {
+        "id": 142,
+        "term": "supports",
+        "partOfSpeech": "Verbo",
+        "translation": "Apoia / Sustenta",
+        "definition": "Oferece ajuda, suporte ou condições para algo continuar."
+    },
+    {
+        "id": 143,
+        "term": "members",
+        "partOfSpeech": "Substantivo",
+        "translation": "Membros / Integrantes",
+        "definition": "Pessoas que fazem parte de um grupo."
+    },
+    {
+        "id": 144,
+        "term": "both",
+        "partOfSpeech": "Determinante",
+        "translation": "Ambos / Tanto ... quanto",
+        "definition": "Usado para indicar duas pessoas ou coisas em conjunto."
+    },
+    {
+        "id": 145,
+        "term": "ethical",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Ético",
+        "definition": "Relacionado aos princípios morais e ao que é considerado correto."
+    },
+    {
+        "id": 146,
+        "term": "imperative",
+        "partOfSpeech": "Substantivo",
+        "translation": "Imperativo / Necessidade urgente",
+        "definition": "Algo indispensável ou que exige ação."
+    },
+    {
+        "id": 147,
+        "term": "foundation",
+        "partOfSpeech": "Substantivo",
+        "translation": "Fundação / Base",
+        "definition": "Estrutura ou princípio fundamental sobre o qual algo se sustenta."
+    },
+    {
+        "id": 148,
+        "term": "for",
+        "partOfSpeech": "Preposição",
+        "translation": "Para / Por / Durante",
+        "definition": "Preposição que indica finalidade, destino, benefício ou motivo.",
+        "translations": [
+            "para",
+            "por",
+            "durante"
+        ]
+    },
+    {
+        "id": 149,
+        "term": "a",
+        "partOfSpeech": "Artigo",
+        "translation": "Um / Uma",
+        "definition": "Artigo indefinido usado antes de substantivos no singular.",
+        "translations": [
+            "um",
+            "uma"
+        ]
+    },
+    {
+        "id": 150,
+        "term": "just",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Justo",
+        "definition": "Que age com justiça e imparcialidade; como advérbio também pode significar apenas."
+    },
+    {
+        "id": 151,
+        "term": "future",
+        "partOfSpeech": "Substantivo",
+        "translation": "Futuro",
+        "definition": "Tempo que ainda está por vir."
+    },
+    {
+        "id": 152,
+        "term": "English",
+        "partOfSpeech": "Adjetivo / Substantivo",
+        "translation": "Inglês",
+        "definition": "Relacionado à língua inglesa ou ao idioma inglês."
+    },
+    {
+        "id": 153,
+        "term": "Speaking",
+        "partOfSpeech": "Particípio / Adjetivo",
+        "translation": "Falantes / que falam",
+        "definition": "Forma relacionada ao verbo speak; pode indicar pessoas que falam um idioma ou a ação de falar."
+    },
+    {
+        "id": 154,
+        "term": "Countries",
+        "partOfSpeech": "Substantivo plural",
+        "translation": "Países",
+        "definition": "Forma plural de country; refere-se a nações ou territórios."
+    },
+    {
+        "id": 155,
+        "term": "widely",
+        "partOfSpeech": "Advérbio",
+        "translation": "Amplamente",
+        "definition": "De maneira extensa ou muito difundida."
+    },
+    {
+        "id": 156,
+        "term": "spoken",
+        "partOfSpeech": "Particípio",
+        "translation": "Falado",
+        "definition": "Particípio passado do verbo speak; usado para indicar um idioma que é falado."
+    },
+    {
+        "id": 157,
+        "term": "languages",
+        "partOfSpeech": "Substantivo plural",
+        "translation": "Idiomas / Línguas",
+        "definition": "Forma plural de language; sistemas de comunicação usados por comunidades."
+    },
+    {
+        "id": 158,
+        "term": "world",
+        "partOfSpeech": "Substantivo",
+        "translation": "Mundo",
+        "definition": "O planeta Terra ou o conjunto de seus povos e sociedades."
+    },
+    {
+        "id": 159,
+        "term": "serving",
+        "partOfSpeech": "Verbo / Gerúndio",
+        "translation": "Servindo",
+        "definition": "Forma em -ing do verbo serve; indica a ação de prestar um serviço ou exercer uma função."
+    },
+    {
+        "id": 160,
+        "term": "an",
+        "partOfSpeech": "Artigo",
+        "translation": "Um / Uma",
+        "definition": "Artigo indefinido usado antes de palavras iniciadas por som de vogal."
+    },
+    {
+        "id": 161,
+        "term": "official",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Oficial",
+        "definition": "Que é reconhecido ou autorizado por uma autoridade."
+    },
+    {
+        "id": 162,
+        "term": "primary",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Principal",
+        "definition": "Que vem primeiro em importância ou prioridade."
+    },
+    {
+        "id": 163,
+        "term": "language",
+        "partOfSpeech": "Substantivo",
+        "translation": "Idioma / Língua",
+        "definition": "Sistema de comunicação usado por pessoas ou comunidades."
+    },
+    {
+        "id": 164,
+        "term": "dozens",
+        "partOfSpeech": "Substantivo plural",
+        "translation": "Dezenas",
+        "definition": "Plural de dozen; conjuntos ou quantidades de doze."
+    },
+    {
+        "id": 165,
+        "term": "nations",
+        "partOfSpeech": "Substantivo plural",
+        "translation": "Nações",
+        "definition": "Plural de nation; países ou comunidades com identidade política ou cultural."
+    },
+    {
+        "id": 166,
+        "term": "across",
+        "partOfSpeech": "Preposição / Advérbio",
+        "translation": "Através / Em todo",
+        "definition": "Indica movimento de um lado a outro ou distribuição por uma área."
+    },
+    {
+        "id": 167,
+        "term": "globe",
+        "partOfSpeech": "Substantivo",
+        "translation": "Globo",
+        "definition": "Representação esférica da Terra; também pode significar o mundo."
+    },
+    {
+        "id": 168,
+        "term": "prominent",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Proeminentes / Destacados",
+        "definition": "Que se destaca por importância, posição ou reconhecimento."
+    },
+    {
+        "id": 169,
+        "term": "called",
+        "partOfSpeech": "Verbo / Particípio",
+        "translation": "Chamados",
+        "definition": "Forma do verbo call; pode indicar que alguém ou algo recebe determinado nome."
+    },
+    {
+        "id": 170,
+        "term": "Inner",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Interno",
+        "definition": "Que está dentro ou na parte interior de algo."
+    },
+    {
+        "id": 171,
+        "term": "Circle",
+        "partOfSpeech": "Substantivo",
+        "translation": "Círculo",
+        "definition": "Forma geométrica redonda; também pode indicar um grupo ou conjunto."
+    },
+    {
+        "id": 172,
+        "term": "include",
+        "partOfSpeech": "Verbo",
+        "translation": "Incluem",
+        "definition": "Verbo que significa conter como parte de um grupo ou conjunto."
+    },
+    {
+        "id": 173,
+        "term": "United",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Unidos",
+        "definition": "Que estão juntos ou reunidos; também integra nomes próprios de países."
+    },
+    {
+        "id": 174,
+        "term": "States",
+        "partOfSpeech": "Substantivo plural",
+        "translation": "Estados",
+        "definition": "Plural de state; pode indicar unidades políticas ou regiões de um país."
+    },
+    {
+        "id": 175,
+        "term": "Kingdom",
+        "partOfSpeech": "Substantivo",
+        "translation": "Reino",
+        "definition": "Território ou país governado por um rei ou uma rainha."
+    },
+    {
+        "id": 176,
+        "term": "Canada",
+        "partOfSpeech": "Substantivo próprio",
+        "translation": "Canadá",
+        "definition": "Nome próprio de um país da América do Norte."
+    },
+    {
+        "id": 177,
+        "term": "Australia",
+        "partOfSpeech": "Substantivo próprio",
+        "translation": "Austrália",
+        "definition": "Nome próprio de um país e continente."
+    },
+    {
+        "id": 178,
+        "term": "New",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Nova",
+        "definition": "Que existe há pouco tempo ou que é recente."
+    },
+    {
+        "id": 179,
+        "term": "Zealand",
+        "partOfSpeech": "Substantivo próprio",
+        "translation": "Zelândia",
+        "definition": "Parte do nome próprio New Zealand, traduzido como Nova Zelândia."
+    },
+    {
+        "id": 180,
+        "term": "Ireland",
+        "partOfSpeech": "Substantivo próprio",
+        "translation": "Irlanda",
+        "definition": "Nome próprio de uma ilha e de um país europeu."
+    },
+    {
+        "id": 181,
+        "term": "However",
+        "partOfSpeech": "Conjunção / Advérbio",
+        "translation": "No entanto / Porém",
+        "definition": "Introduz uma ideia de contraste ou oposição."
+    },
+    {
+        "id": 182,
+        "term": "also",
+        "partOfSpeech": "Advérbio",
+        "translation": "Também",
+        "definition": "Indica adição ou inclusão de outra informação."
+    },
+    {
+        "id": 183,
+        "term": "millions",
+        "partOfSpeech": "Substantivo plural",
+        "translation": "Milhões",
+        "definition": "Plural de million; quantidade equivalente a mil vezes mil."
+    },
+    {
+        "id": 184,
+        "term": "second",
+        "partOfSpeech": "Numeral / Adjetivo",
+        "translation": "Segundo",
+        "definition": "Indica a posição número dois em uma sequência."
+    },
+    {
+        "id": 185,
+        "term": "like",
+        "partOfSpeech": "Preposição",
+        "translation": "Como",
+        "definition": "Pode indicar semelhança ou comparação."
+    },
+    {
+        "id": 186,
+        "term": "India",
+        "partOfSpeech": "Substantivo próprio",
+        "translation": "Índia",
+        "definition": "Nome próprio de um país do sul da Ásia."
+    },
+    {
+        "id": 187,
+        "term": "South",
+        "partOfSpeech": "Substantivo / Adjetivo",
+        "translation": "Sul",
+        "definition": "Ponto cardeal oposto ao norte; também indica uma região meridional."
+    },
+    {
+        "id": 188,
+        "term": "Africa",
+        "partOfSpeech": "Substantivo próprio",
+        "translation": "África",
+        "definition": "Nome próprio de um continente."
+    },
+    {
+        "id": 189,
+        "term": "Nigeria",
+        "partOfSpeech": "Substantivo próprio",
+        "translation": "Nigéria",
+        "definition": "Nome próprio de um país africano."
+    },
+    {
+        "id": 190,
+        "term": "Philippines",
+        "partOfSpeech": "Substantivo próprio plural",
+        "translation": "Filipinas",
+        "definition": "Nome próprio de um país do Sudeste Asiático."
+    },
+    {
+        "id": 191,
+        "term": "where",
+        "partOfSpeech": "Advérbio / Pronome",
+        "translation": "Onde",
+        "definition": "Usado para indicar ou perguntar sobre lugar."
+    },
+    {
+        "id": 192,
+        "term": "acts",
+        "partOfSpeech": "Verbo",
+        "translation": "Atua / Age",
+        "definition": "Forma do verbo act na terceira pessoa do singular do presente."
+    },
+    {
+        "id": 193,
+        "term": "vital",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Vital",
+        "definition": "Essencial ou extremamente importante."
+    },
+    {
+        "id": 194,
+        "term": "bridge",
+        "partOfSpeech": "Substantivo",
+        "translation": "Ponte",
+        "definition": "Estrutura que liga dois lugares; também pode indicar algo que conecta pessoas ou ideias."
+    },
+    {
+        "id": 195,
+        "term": "business",
+        "partOfSpeech": "Substantivo",
+        "translation": "Negócios",
+        "definition": "Atividade comercial, empresa ou conjunto de atividades econômicas."
+    },
+    {
+        "id": 196,
+        "term": "international",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Internacional",
+        "definition": "Que envolve ou se relaciona a mais de um país."
+    },
+    {
+        "id": 197,
+        "term": "communication",
+        "partOfSpeech": "Substantivo",
+        "translation": "Comunicação",
+        "definition": "Ato ou processo de transmitir e compartilhar informações."
+    },
+    {
+        "id": 198,
+        "term": "Because",
+        "partOfSpeech": "Conjunção",
+        "translation": "Por causa",
+        "definition": "Palavra usada para introduzir uma razão ou explicação."
+    },
+    {
+        "id": 199,
+        "term": "reach",
+        "partOfSpeech": "Substantivo / Verbo",
+        "translation": "Alcance",
+        "definition": "Extensão ou capacidade de atingir pessoas, lugares ou objetivos."
+    },
+    {
+        "id": 200,
+        "term": "learning",
+        "partOfSpeech": "Substantivo / Verbo",
+        "translation": "Aprender / Aprendizado",
+        "definition": "Pode indicar o processo de adquirir conhecimento ou a ação de aprender."
+    },
+    {
+        "id": 201,
+        "term": "opens",
+        "partOfSpeech": "Verbo",
+        "translation": "Abre",
+        "definition": "Forma do verbo open na terceira pessoa do singular do presente."
+    },
+    {
+        "id": 202,
+        "term": "doors",
+        "partOfSpeech": "Substantivo plural",
+        "translation": "Portas",
+        "definition": "Plural de door; também pode ser usado figuradamente para oportunidades."
+    },
+    {
+        "id": 203,
+        "term": "connect",
+        "partOfSpeech": "Verbo",
+        "translation": "Conectar",
+        "definition": "Unir ou estabelecer uma ligação entre pessoas, coisas ou ideias."
+    },
+    {
+        "id": 204,
+        "term": "with",
+        "partOfSpeech": "Preposição",
+        "translation": "Com",
+        "definition": "Indica companhia, associação ou relação.",
+        "translations": [
+            "com"
+        ]
+    },
+    {
+        "id": 205,
+        "term": "people",
+        "partOfSpeech": "Substantivo plural",
+        "translation": "Pessoas",
+        "definition": "Plural de person; seres humanos."
+    },
+    {
+        "id": 206,
+        "term": "completely",
+        "partOfSpeech": "Advérbio",
+        "translation": "Completamente",
+        "definition": "De maneira total ou integral."
+    },
+    {
+        "id": 207,
+        "term": "different",
+        "partOfSpeech": "Adjetivo",
+        "translation": "Diferentes",
+        "definition": "Que não são iguais ou que apresentam características distintas."
+    },
+    {
+        "id": 208,
+        "term": "cultures",
+        "partOfSpeech": "Substantivo plural",
+        "translation": "Culturas",
+        "definition": "Plural de culture; costumes, valores e práticas de um grupo."
+    },
+    {
+        "id": 209,
+        "term": "backgrounds",
+        "partOfSpeech": "Substantivo plural",
+        "translation": "Origens / Contextos",
+        "definition": "Plural de background; experiências, origens ou contextos de uma pessoa."
+    },
+    {
+        "id": 210,
+        "term": "of the",
+        "partOfSpeech": "Expressão preposicional",
+        "translation": "Do / Da / Dos / Das",
+        "translations": [
+            "do",
+            "da",
+            "dos",
+            "das"
+        ],
+        "definition": "Combinação de of + the. Em português, normalmente corresponde a do, da, dos ou das, conforme o gênero e o número do substantivo.",
+        "example": "The pages of the book are old. — As páginas do livro são antigas."
+    },
+    {
+        "id": 211,
+        "term": "Wake up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Acordar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Acordar.",
+        "example": "I usually wake up at 6:00 AM."
+    },
+    {
+        "id": 212,
+        "term": "Get up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Levantar-se (da cama)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Levantar-se (da cama).",
+        "example": "It's hard to get up on cold mornings."
+    },
+    {
+        "id": 213,
+        "term": "Get in",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Entrar (em carros ou táxis)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Entrar (em carros ou táxis).",
+        "example": "Get in the car, we're going to be late!"
+    },
+    {
+        "id": 214,
+        "term": "Get out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Sair (de lugares fechados ou veículos)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Sair (de lugares fechados ou veículos).",
+        "example": "Please get out of the room for a minute."
+    },
+    {
+        "id": 215,
+        "term": "Get on",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Subir / Entrar (em ônibus, trens ou aviões)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Subir / Entrar (em ônibus, trens ou aviões).",
+        "example": "Get on the bus before it leaves."
+    },
+    {
+        "id": 216,
+        "term": "Get off",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Descer (de ônibus, trens ou aviões)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Descer (de ônibus, trens ou aviões).",
+        "example": "I need to get off at the next stop."
+    },
+    {
+        "id": 217,
+        "term": "Sit down",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Sentar-se",
+        "definition": "Expressão verbal cujo significado depende do contexto: Sentar-se.",
+        "example": "Please, sit down and make yourself comfortable."
+    },
+    {
+        "id": 218,
+        "term": "Stand up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Ficar de pé / Levantar-se",
+        "definition": "Expressão verbal cujo significado depende do contexto: Ficar de pé / Levantar-se.",
+        "example": "Stand up when the national anthem plays."
+    },
+    {
+        "id": 219,
+        "term": "Turn on",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Ligar (aparelhos eletrônicos ou luzes)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Ligar (aparelhos eletrônicos ou luzes).",
+        "example": "Can you turn on the TV, please?"
+    },
+    {
+        "id": 220,
+        "term": "Turn off",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Desligar (aparelhos eletrônicos ou luzes)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Desligar (aparelhos eletrônicos ou luzes).",
+        "example": "Remember to turn off the lights when you leave."
+    },
+    {
+        "id": 221,
+        "term": "Switch on",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Ligar (interruptor)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Ligar (interruptor).",
+        "example": "Switch on the lamp so you can see better."
+    },
+    {
+        "id": 222,
+        "term": "Switch off",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Desligar (interruptor)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Desligar (interruptor).",
+        "example": "Always switch off your phone during the flight."
+    },
+    {
+        "id": 223,
+        "term": "Pick up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Pegar / Atender (o telefone) / Buscar (alguém)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Pegar / Atender (o telefone) / Buscar (alguém).",
+        "examples": [
+            "Can you pick up that pen for me?",
+            "Why aren't you picking up your phone?",
+            "I will pick you up at 8 PM."
+        ]
+    },
+    {
+        "id": 224,
+        "term": "Put down",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Colocar no chão / Abaixar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Colocar no chão / Abaixar.",
+        "example": "Put the heavy bag down on the table."
+    },
+    {
+        "id": 225,
+        "term": "Take off",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Tirar (roupas ou sapatos) / Decolar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Tirar (roupas ou sapatos) / Decolar.",
+        "example": "Take off your shoes before entering the house."
+    },
+    {
+        "id": 226,
+        "term": "Put on",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Vestir / Colocar (roupas ou acessórios)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Vestir / Colocar (roupas ou acessórios).",
+        "example": "Put on a jacket, it's freezing outside."
+    },
+    {
+        "id": 227,
+        "term": "Try on",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Experimentar (roupas)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Experimentar (roupas).",
+        "example": "I want to try on this blue shirt."
+    },
+    {
+        "id": 228,
+        "term": "Look at",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Olhar para",
+        "definition": "Expressão verbal cujo significado depende do contexto: Olhar para.",
+        "example": "Look at this amazing sunset!"
+    },
+    {
+        "id": 229,
+        "term": "Look for",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Procurar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Procurar.",
+        "example": "I am looking for my keys. Have you seen them?"
+    },
+    {
+        "id": 230,
+        "term": "Look after",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Cuidar de (pessoas ou animais)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Cuidar de (pessoas ou animais).",
+        "example": "Can you look after my dog this weekend?"
+    },
+    {
+        "id": 231,
+        "term": "Speak up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Falar mais alto",
+        "definition": "Expressão verbal cujo significado depende do contexto: Falar mais alto.",
+        "example": "I can't hear you. Please speak up."
+    },
+    {
+        "id": 232,
+        "term": "Shut up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Calar a boca / Silenciar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Calar a boca / Silenciar.",
+        "example": "I was so shocked I didn't know what to say; I just shut up.",
+        "usage": "Informal; pode ser rude quando dirigido a outra pessoa."
+    },
+    {
+        "id": 233,
+        "term": "Call back",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Retornar a ligação",
+        "definition": "Expressão verbal cujo significado depende do contexto: Retornar a ligação.",
+        "example": "I'm busy right now. Can I call you back later?"
+    },
+    {
+        "id": 234,
+        "term": "Hang up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Desligar o telefone",
+        "definition": "Expressão verbal cujo significado depende do contexto: Desligar o telefone.",
+        "example": "She said goodbye and hung up."
+    },
+    {
+        "id": 235,
+        "term": "Cut off",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Interromper / Cortar a ligação",
+        "definition": "Expressão verbal cujo significado depende do contexto: Interromper / Cortar a ligação.",
+        "example": "Our phone call was cut off suddenly."
+    },
+    {
+        "id": 236,
+        "term": "Talk over",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Falar por cima / Discutir algo",
+        "definition": "Expressão verbal cujo significado depende do contexto: Falar por cima / Discutir algo.",
+        "example": "Let's talk over our plans for the trip."
+    },
+    {
+        "id": 237,
+        "term": "Point out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Apontar / Destacar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Apontar / Destacar.",
+        "example": "The teacher pointed out my mistakes in the essay."
+    },
+    {
+        "id": 238,
+        "term": "Find out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Descobrir / Averiguar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Descobrir / Averiguar.",
+        "example": "I need to find out what time the store opens."
+    },
+    {
+        "id": 239,
+        "term": "Figure out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Compreender / Resolver (um problema)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Compreender / Resolver (um problema).",
+        "example": "I can't figure out how this gadget works."
+    },
+    {
+        "id": 240,
+        "term": "Turn out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Resultar / Acontecer no final",
+        "definition": "Expressão verbal cujo significado depende do contexto: Resultar / Acontecer no final.",
+        "example": "Everything turned out fine in the end."
+    },
+    {
+        "id": 241,
+        "term": "Write down",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Anotar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Anotar.",
+        "example": "Write down the address so you don't forget it."
+    },
+    {
+        "id": 242,
+        "term": "Cross out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Riscar / Cancelar no texto",
+        "definition": "Expressão verbal cujo significado depende do contexto: Riscar / Cancelar no texto.",
+        "example": "Cross out the incorrect words on the list."
+    },
+    {
+        "id": 243,
+        "term": "Spell out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Soletrar / Explicar detalhadamente",
+        "definition": "Expressão verbal cujo significado depende do contexto: Soletrar / Explicar detalhadamente.",
+        "example": "Can you spell out your last name, please?"
+    },
+    {
+        "id": 244,
+        "term": "Ask out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Convidar para sair",
+        "definition": "Expressão verbal cujo significado depende do contexto: Convidar para sair.",
+        "example": "He wants to ask her out on a date."
+    },
+    {
+        "id": 245,
+        "term": "Tell off",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Dar uma bronca / Repreender",
+        "definition": "Expressão verbal cujo significado depende do contexto: Dar uma bronca / Repreender.",
+        "example": "The boss told him off for arriving late."
+    },
+    {
+        "id": 246,
+        "term": "Catch up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Atualizar-se / Colocar o papo em dia",
+        "definition": "Expressão verbal cujo significado depende do contexto: Atualizar-se / Colocar o papo em dia.",
+        "example": "We met for coffee to catch up."
+    },
+    {
+        "id": 247,
+        "term": "Give away",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Revelar (um segredo) / Doar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Revelar (um segredo) / Doar.",
+        "example": "Don't give away the ending of the movie!"
+    },
+    {
+        "id": 248,
+        "term": "Hand over",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Entregar / Passar o controle",
+        "definition": "Expressão verbal cujo significado depende do contexto: Entregar / Passar o controle.",
+        "example": "You must hand over your passport at the counter."
+    },
+    {
+        "id": 249,
+        "term": "Pass on",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Repassar / Transmitir (uma mensagem)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Repassar / Transmitir (uma mensagem).",
+        "example": "Please pass on this message to your manager."
+    },
+    {
+        "id": 250,
+        "term": "Go out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Sair (para se divertir)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Sair (para se divertir).",
+        "example": "Do you want to go out tonight?"
+    },
+    {
+        "id": 251,
+        "term": "Come back",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Voltar / Retornar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Voltar / Retornar.",
+        "example": "What time will you come back home?"
+    },
+    {
+        "id": 252,
+        "term": "Go back",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Voltar (para um lugar)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Voltar (para um lugar).",
+        "example": "I left my phone at work, so I have to go back."
+    },
+    {
+        "id": 253,
+        "term": "Come in",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Entrar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Entrar.",
+        "example": "It's cold outside, come in!"
+    },
+    {
+        "id": 254,
+        "term": "Run away",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Fugir / Escapar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Fugir / Escapar.",
+        "example": "The cat ran away when it heard the noise."
+    },
+    {
+        "id": 255,
+        "term": "Walk away",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Afastar-se caminhando",
+        "definition": "Expressão verbal cujo significado depende do contexto: Afastar-se caminhando.",
+        "example": "Don't just walk away from this conversation."
+    },
+    {
+        "id": 256,
+        "term": "Drive away",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Ir embora de carro",
+        "definition": "Expressão verbal cujo significado depende do contexto: Ir embora de carro.",
+        "example": "He got into his car and drove away."
+    },
+    {
+        "id": 257,
+        "term": "Move on",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Seguir em frente",
+        "definition": "Expressão verbal cujo significado depende do contexto: Seguir em frente.",
+        "example": "It's time to move on and forget the past."
+    },
+    {
+        "id": 258,
+        "term": "Hurry up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Apressar-se",
+        "definition": "Expressão verbal cujo significado depende do contexto: Apressar-se.",
+        "example": "Hurry up or we will miss the train!"
+    },
+    {
+        "id": 259,
+        "term": "Slow down",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Desacelerar / Ir mais devagar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Desacelerar / Ir mais devagar.",
+        "example": "You are driving too fast; please slow down."
+    },
+    {
+        "id": 260,
+        "term": "Turn around",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Virar-se / Dar meia-volta",
+        "definition": "Expressão verbal cujo significado depende do contexto: Virar-se / Dar meia-volta.",
+        "example": "Turn around and look at the view behind you."
+    },
+    {
+        "id": 261,
+        "term": "Step back",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Dar um passo para trás",
+        "definition": "Expressão verbal cujo significado depende do contexto: Dar um passo para trás.",
+        "example": "Step back from the edge of the platform."
+    },
+    {
+        "id": 262,
+        "term": "Fall down",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Cair (no chão)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Cair (no chão).",
+        "example": "Be careful not to fall down on the ice."
+    },
+    {
+        "id": 263,
+        "term": "Check in",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Fazer check-in",
+        "definition": "Expressão verbal cujo significado depende do contexto: Fazer check-in.",
+        "example": "We need to check in at the hotel reception."
+    },
+    {
+        "id": 264,
+        "term": "Check out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Fazer check-out / Dar uma olhada",
+        "definition": "Expressão verbal cujo significado depende do contexto: Fazer check-out / Dar uma olhada.",
+        "example": "Let's check out that new restaurant downtown."
+    },
+    {
+        "id": 265,
+        "term": "Set off",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Partir / Iniciar uma jornada",
+        "definition": "Expressão verbal cujo significado depende do contexto: Partir / Iniciar uma jornada.",
+        "example": "We set off early in the morning to avoid traffic."
+    },
+    {
+        "id": 266,
+        "term": "Drop off",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Deixar alguém ou algo (em um lugar)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Deixar alguém ou algo (em um lugar).",
+        "example": "Can you drop me off at the station?"
+    },
+    {
+        "id": 267,
+        "term": "Break down",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Quebrar (veículo ou máquina) / Parar de funcionar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Quebrar (veículo ou máquina) / Parar de funcionar.",
+        "example": "My car broke down on the highway."
+    },
+    {
+        "id": 268,
+        "term": "Hold on",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Esperar um momento / Segurar firme",
+        "definition": "Expressão verbal cujo significado depende do contexto: Esperar um momento / Segurar firme.",
+        "example": "Hold on a second, I'll be right back."
+    },
+    {
+        "id": 269,
+        "term": "Work out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Malhar / Exercitar-se / Dar certo",
+        "definition": "Expressão verbal cujo significado depende do contexto: Malhar / Exercitar-se / Dar certo.",
+        "example": "I work out at the gym three times a week."
+    },
+    {
+        "id": 270,
+        "term": "Carry out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Realizar / Executar (uma tarefa)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Realizar / Executar (uma tarefa).",
+        "example": "Scientists carried out an important experiment."
+    },
+    {
+        "id": 271,
+        "term": "Set up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Configurar / Estabelecer / Montar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Configurar / Estabelecer / Montar.",
+        "example": "I need to set up my new computer."
+    },
+    {
+        "id": 272,
+        "term": "Fill out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Preencher (um formulário)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Preencher (um formulário).",
+        "example": "Please fill out this application form."
+    },
+    {
+        "id": 273,
+        "term": "Fill in",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Preencher (lacunas) / Substituir alguém",
+        "definition": "Expressão verbal cujo significado depende do contexto: Preencher (lacunas) / Substituir alguém.",
+        "example": "Can you fill in for me tomorrow?"
+    },
+    {
+        "id": 274,
+        "term": "Look into",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Investigar / Analisar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Investigar / Analisar.",
+        "example": "Customer service is looking into the issue."
+    },
+    {
+        "id": 275,
+        "term": "Log in",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Fazer login / Entrar em um sistema",
+        "definition": "Expressão verbal cujo significado depende do contexto: Fazer login / Entrar em um sistema.",
+        "example": "Enter your password to log in.",
+        "aliases": [
+            "Sign in"
+        ]
+    },
+    {
+        "id": 276,
+        "term": "Log out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Desconectar / Sair do sistema",
+        "definition": "Expressão verbal cujo significado depende do contexto: Desconectar / Sair do sistema.",
+        "example": "Always log out when using a public computer.",
+        "aliases": [
+            "Sign out"
+        ]
+    },
+    {
+        "id": 277,
+        "term": "Sign up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Inscrever-se / Cadastrar-se",
+        "definition": "Expressão verbal cujo significado depende do contexto: Inscrever-se / Cadastrar-se.",
+        "example": "Click here to sign up for the newsletter."
+    },
+    {
+        "id": 278,
+        "term": "Back up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Fazer backup / Dar apoio",
+        "definition": "Expressão verbal cujo significado depende do contexto: Fazer backup / Dar apoio.",
+        "example": "Make sure to back up your files regularly."
+    },
+    {
+        "id": 279,
+        "term": "Print out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Imprimir",
+        "definition": "Expressão verbal cujo significado depende do contexto: Imprimir.",
+        "example": "I need to print out this ticket before traveling."
+    },
+    {
+        "id": 280,
+        "term": "Drop out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Abandonar (escola, faculdade ou curso)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Abandonar (escola, faculdade ou curso).",
+        "example": "He decided to drop out of university to start a business."
+    },
+    {
+        "id": 281,
+        "term": "Brush up on",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Reciclar / Aperfeiçoar (conhecimento)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Reciclar / Aperfeiçoar (conhecimento).",
+        "example": "I need to brush up on my English grammar.",
+        "aliases": [
+            "Brush up"
+        ]
+    },
+    {
+        "id": 282,
+        "term": "Catch up on",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Pôr em dia (trabalho atrasado)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Pôr em dia (trabalho atrasado).",
+        "example": "I stayed late to catch up on my emails."
+    },
+    {
+        "id": 283,
+        "term": "Think over",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Ponderar / Pensar bem sobre algo",
+        "definition": "Expressão verbal cujo significado depende do contexto: Ponderar / Pensar bem sobre algo.",
+        "example": "Give me time to think over your job offer."
+    },
+    {
+        "id": 284,
+        "term": "Knock out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Nocautear / Deixar exausto / Impressionar muito",
+        "definition": "Expressão verbal cujo significado depende do contexto: Nocautear / Deixar exausto / Impressionar muito.",
+        "example": "The intense workout knocked me out."
+    },
+    {
+        "id": 285,
+        "term": "Put off",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Adiar / Postergar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Adiar / Postergar.",
+        "example": "We had to put off the meeting until next week."
+    },
+    {
+        "id": 286,
+        "term": "Call off",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Cancelar (um evento ou reunião)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Cancelar (um evento ou reunião).",
+        "example": "They had to call off the match because of rain."
+    },
+    {
+        "id": 287,
+        "term": "Get through",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Terminar (algo difícil) / Superar / Conseguir contato",
+        "definition": "Expressão verbal cujo significado depende do contexto: Terminar (algo difícil) / Superar / Conseguir contato.",
+        "example": "I finally got through my exam preparation."
+    },
+    {
+        "id": 288,
+        "term": "Get ahead",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Progredir / Avançar na carreira",
+        "definition": "Expressão verbal cujo significado depende do contexto: Progredir / Avançar na carreira.",
+        "example": "Working hard helps you get ahead in life."
+    },
+    {
+        "id": 289,
+        "term": "Grow up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Crescer / Amadurecer",
+        "definition": "Expressão verbal cujo significado depende do contexto: Crescer / Amadurecer.",
+        "example": "I grew up in a small coastal town."
+    },
+    {
+        "id": 290,
+        "term": "Bring up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Criar / Educar (filhos) / Mencionar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Criar / Educar (filhos) / Mencionar.",
+        "example": "She brought up three children on her own."
+    },
+    {
+        "id": 291,
+        "term": "Give up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Desistir",
+        "definition": "Expressão verbal cujo significado depende do contexto: Desistir.",
+        "example": "Don't give up, you are almost there!"
+    },
+    {
+        "id": 292,
+        "term": "Calm down",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Acalmar-se",
+        "definition": "Expressão verbal cujo significado depende do contexto: Acalmar-se.",
+        "example": "Take a deep breath and calm down."
+    },
+    {
+        "id": 293,
+        "term": "Cheer up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Animar-se / Alegrar-se",
+        "definition": "Expressão verbal cujo significado depende do contexto: Animar-se / Alegrar-se.",
+        "example": "Cheer up! Things will get better."
+    },
+    {
+        "id": 294,
+        "term": "Look forward to",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Ansiar por / Esperar com entusiasmo",
+        "definition": "Expressão verbal cujo significado depende do contexto: Ansiar por / Esperar com entusiasmo.",
+        "example": "I am looking forward to the weekend."
+    },
+    {
+        "id": 295,
+        "term": "Get along with",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Dar-se bem com alguém",
+        "definition": "Expressão verbal cujo significado depende do contexto: Dar-se bem com alguém.",
+        "example": "I get along very well with my coworkers.",
+        "aliases": [
+            "Get along"
+        ]
+    },
+    {
+        "id": 296,
+        "term": "Fall in love",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Apaixonar-se",
+        "definition": "Expressão verbal cujo significado depende do contexto: Apaixonar-se.",
+        "example": "They fell in love at first sight."
+    },
+    {
+        "id": 297,
+        "term": "Break up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Terminar (um relacionamento)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Terminar (um relacionamento).",
+        "example": "They decided to break up after five years together."
+    },
+    {
+        "id": 298,
+        "term": "Make up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Fazer as pazes / Inventar (uma história) / Maquiar-se",
+        "definition": "Expressão verbal cujo significado depende do contexto: Fazer as pazes / Inventar (uma história) / Maquiar-se.",
+        "example": "They argued, but they soon made up."
+    },
+    {
+        "id": 299,
+        "term": "Count on",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Contar com / Confiar em",
+        "definition": "Expressão verbal cujo significado depende do contexto: Contar com / Confiar em.",
+        "example": "You can always count on me for help."
+    },
+    {
+        "id": 300,
+        "term": "Depend on",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Depender de",
+        "definition": "Expressão verbal cujo significado depende do contexto: Depender de.",
+        "example": "It depends on the weather."
+    },
+    {
+        "id": 301,
+        "term": "End up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Acabar (em algum lugar ou situação)",
+        "definition": "Expressão verbal cujo significado depende do contexto: Acabar (em algum lugar ou situação).",
+        "example": "We missed the bus and ended up walking home."
+    },
+    {
+        "id": 302,
+        "term": "Pass away",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Falecer",
+        "definition": "Expressão verbal cujo significado depende do contexto: Falecer.",
+        "example": "His grandfather passed away last year."
+    },
+    {
+        "id": 303,
+        "term": "Show up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Aparecer / Comparecer",
+        "definition": "Expressão verbal cujo significado depende do contexto: Aparecer / Comparecer.",
+        "example": "Half the guests didn't show up for the party."
+    },
+    {
+        "id": 304,
+        "term": "Turn up",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Aparecer inesperadamente / Aumentar o volume",
+        "definition": "Expressão verbal cujo significado depende do contexto: Aparecer inesperadamente / Aumentar o volume.",
+        "example": "My lost keys suddenly turned up in my pocket."
+    },
+    {
+        "id": 305,
+        "term": "Keep on",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Continuar fazendo algo",
+        "definition": "Expressão verbal cujo significado depende do contexto: Continuar fazendo algo.",
+        "example": "Keep on practicing and you will improve."
+    },
+    {
+        "id": 306,
+        "term": "Run out of",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Esgotar-se / Ficar sem",
+        "definition": "Expressão verbal cujo significado depende do contexto: Esgotar-se / Ficar sem.",
+        "example": "We have run out of milk. I need to buy more.",
+        "aliases": [
+            "Run out"
+        ]
+    },
+    {
+        "id": 307,
+        "term": "Sort out",
+        "partOfSpeech": "Expressão verbal",
+        "category": "Phrasal Verb",
+        "translation": "Resolver / Organizar",
+        "definition": "Expressão verbal cujo significado depende do contexto: Resolver / Organizar.",
+        "example": "Don't worry, I will sort out this mess."
+    }
+];
 
         // ----------------------------------------------------
         // 2. HELPER UTILITIES: NORMALIZATION & LEVENSHTEIN DISTANCE
@@ -1761,7 +2762,11 @@
         // ----------------------------------------------------
         let currentFilter = 'all';
         let activeSelectedTerm = null;
+        let searchDirection = 'en-to-pt';
 
+        const directionToggleBtn = document.getElementById('directionToggleBtn');
+        const searchDirectionLabel = document.getElementById('searchDirectionLabel');
+        const resultPanelHeading = document.getElementById('resultPanelHeading');
         const searchInput = document.getElementById('searchInput');
         const clearBtn = document.getElementById('clearBtn');
         const suggestionsList = document.getElementById('suggestionsList');
@@ -1786,110 +2791,86 @@
         // ----------------------------------------------------
         // 4. CORE SEARCH & MATCHING LOGIC
         // ----------------------------------------------------
+        function getTranslations(item) {
+            if (Array.isArray(item.translations) && item.translations.length) return item.translations;
+            return String(item.translation || '').split('/').map(value => value.trim()).filter(Boolean);
+        }
+
+        function getSearchableTerms(item) {
+            return searchDirection === 'en-to-pt' ? [item.term, ...(item.aliases || [])] : getTranslations(item);
+        }
+
+        function getDisplayInput(item, query = '') {
+            if (searchDirection === 'en-to-pt') return item.term;
+            const values = getTranslations(item);
+            return values.find(value => normalizeStr(value) === normalizeStr(query))
+                || values.find(value => normalizeStr(value).includes(normalizeStr(query)))
+                || values[0] || item.translation;
+        }
+
         function handleSearchInput() {
             const rawQuery = searchInput.value;
             const query = normalizeStr(rawQuery);
             charCount.textContent = `${rawQuery.length} caracteres`;
 
-            // Toggle clear button
-            if (rawQuery.length > 0) {
-                clearBtn.classList.remove('hidden');
-            } else {
+            if (rawQuery.length) clearBtn.classList.remove('hidden');
+            else {
                 clearBtn.classList.add('hidden');
-                hideSuggestions();
-                hideDidYouMean();
-                showEmptyState();
-                return;
+                hideSuggestions(); hideDidYouMean(); showEmptyState(); return;
             }
-
-            if (query.length < 1) return;
-
-            // Bloqueia textos longos para manter a consulta focada em palavras e expressões.
-            const wordCount = rawQuery.trim().split(/\s+/).filter(Boolean).length;
-            const MAX_SEARCH_WORDS = 6;
-            const MAX_SEARCH_CHARS = 80;
-            if (wordCount > MAX_SEARCH_WORDS || rawQuery.length > MAX_SEARCH_CHARS) {
-                hideSuggestions();
-                hideDidYouMean();
+            if (!query.length) return;
+            const wordCount = rawQuery.trim().split(' ').filter(Boolean).length;
+            if (wordCount > 6 || rawQuery.length > 80) {
+                hideSuggestions(); hideDidYouMean();
                 showEmptyState("Traduza palavra por palavra, evite textos longos.");
                 return;
             }
 
-            // 1. Direct or Partial Substring Matches
-            const directMatches = dictionary.filter(item => {
-                const termNorm = normalizeStr(item.term);
-                const transNorm = normalizeStr(item.translation);
-                const aliasesNorm = (item.aliases || []).map(a => normalizeStr(a));
-                
-                return termNorm.includes(query) || 
-                       transNorm.includes(query) || 
-                       aliasesNorm.some(a => a.includes(query));
-            });
-
-            if (directMatches.length > 0) {
+            const matches = dictionary.filter(item =>
+                getSearchableTerms(item).some(value => normalizeStr(value).includes(query))
+            );
+            if (matches.length) {
                 hideDidYouMean();
-                renderSuggestions(directMatches, query);
+                renderSuggestions(matches, query);
+                const exact = matches.find(item => getSearchableTerms(item).some(value => normalizeStr(value) === query));
+                const selected = exact || matches[0];
+                displayResult(selected, getDisplayInput(selected, query));
+                return;
+            }
 
-                // Auto select if exact match or single result
-                const exactMatch = directMatches.find(item => 
-                    normalizeStr(item.term) === query || 
-                    normalizeStr(item.translation) === query ||
-                    (item.aliases && item.aliases.some(a => normalizeStr(a) === query))
-                );
-
-                if (exactMatch) {
-                    displayResult(exactMatch);
-                } else {
-                    displayResult(directMatches[0]);
-                }
+            hideSuggestions();
+            let closestItem = null, closestTerm = '', minDistance = Infinity;
+            dictionary.forEach(item => getSearchableTerms(item).forEach(testTerm => {
+                const distance = levenshteinDistance(query, normalizeStr(testTerm));
+                if (distance < minDistance) { minDistance = distance; closestItem = item; closestTerm = testTerm; }
+            }));
+            if (closestItem && minDistance <= Math.max(3, Math.floor(query.length * 0.5))) {
+                showDidYouMean(closestItem, closestTerm); showEmptyState();
             } else {
-                // 2. Fuzzy Match via Levenshtein Distance for "Did You Mean?"
-                hideSuggestions();
-                let closestItem = null;
-                let minDistance = Infinity;
-
-                dictionary.forEach(item => {
-                    const termsToTest = [item.term, item.translation, ...(item.aliases || [])];
-                    termsToTest.forEach(testTerm => {
-                        const normTest = normalizeStr(testTerm);
-                        const dist = levenshteinDistance(query, normTest);
-                        if (dist < minDistance) {
-                            minDistance = dist;
-                            closestItem = item;
-                        }
-                    });
-                });
-
-                // Threshold based on query length (allow typos if distance <= 4)
-                if (closestItem && minDistance <= Math.max(3, Math.floor(query.length * 0.5))) {
-                    showDidYouMean(closestItem);
-                    showEmptyState();
-                } else {
-                    hideDidYouMean();
-                    showEmptyState("Nenhum termo encontrado. Tente pesquisar outra palavra.");
-                }
+                hideDidYouMean(); showEmptyState("Nenhum termo encontrado. Tente pesquisar outra palavra.");
             }
         }
 
         function renderSuggestions(matches, query) {
             suggestionsList.innerHTML = '';
-            matches.slice(0, 6).forEach(item => {
-                const li = document.createElement('div');
-                li.className = 'px-4 py-2.5 hover:bg-blue-50 dark:hover:bg-google-darkBorder cursor-pointer flex items-center justify-between border-b last:border-0 border-gray-100 dark:border-google-darkBorder transition-colors';
-                li.innerHTML = `
-                    <div class="flex items-center space-x-2">
-                        <i class="fa-solid fa-magnifying-glass text-xs text-gray-400"></i>
-                        <span class="font-medium text-sm text-gray-800 dark:text-gray-200">${item.term}</span>
-                    </div>
-                    <span class="text-xs text-gray-400 truncate max-w-[150px]">${item.translation}</span>
-                `;
-                li.addEventListener('click', () => {
-                    searchInput.value = item.term;
-                    displayResult(item);
-                    hideSuggestions();
-                    hideDidYouMean();
+            matches.slice(0, 8).forEach(item => {
+                const inputTerm = getDisplayInput(item, query);
+                const outputTerm = searchDirection === 'en-to-pt' ? getTranslations(item).join(' / ') : item.term;
+                const row = document.createElement('div');
+                row.className = 'px-4 py-2.5 hover:bg-blue-50 dark:hover:bg-google-darkBorder cursor-pointer flex items-center justify-between border-b last:border-0 border-gray-100 dark:border-google-darkBorder transition-colors';
+                const left = document.createElement('span');
+                left.className = 'font-medium text-sm text-gray-800 dark:text-gray-200 truncate';
+                left.textContent = inputTerm;
+                const right = document.createElement('span');
+                right.className = 'text-xs text-gray-400 truncate max-w-[150px] ml-3';
+                right.textContent = outputTerm;
+                row.append(left,right);
+                row.addEventListener('click', () => {
+                    searchInput.value = inputTerm;
+                    displayResult(item,inputTerm);
+                    hideSuggestions(); hideDidYouMean();
                 });
-                suggestionsList.appendChild(li);
+                suggestionsList.appendChild(row);
             });
             suggestionsList.classList.remove('hidden');
         }
@@ -1898,14 +2879,14 @@
             suggestionsList.classList.add('hidden');
         }
 
-        function showDidYouMean(suggestedItem) {
+        function showDidYouMean(suggestedItem, suggestedText) {
             didYouMeanBox.classList.remove('hidden');
-            suggestedTermBtn.textContent = suggestedItem.term;
+            const inputTerm = suggestedText || getDisplayInput(suggestedItem);
+            suggestedTermBtn.textContent = inputTerm;
             suggestedTermBtn.onclick = () => {
-                searchInput.value = suggestedItem.term;
-                displayResult(suggestedItem);
+                searchInput.value = inputTerm;
+                displayResult(suggestedItem,inputTerm);
                 hideDidYouMean();
-                handleSearchInput();
             };
         }
 
@@ -1916,20 +2897,27 @@
         // ----------------------------------------------------
         // 5. DISPLAY & RESULT HANDLING
         // ----------------------------------------------------
-        function displayResult(item) {
+        function displayResult(item, matchedInput = '') {
             activeSelectedTerm = item;
             emptyResultState.classList.add('hidden');
             activeResultState.classList.remove('hidden');
-
-            resultTermTitle.textContent = item.term;
-            resultTranslationText.textContent = item.translation;
-            resultDefinitionBox.textContent = item.definition;
-
-            // Grammatical class badge
+            if (searchDirection === 'en-to-pt') {
+                resultTermTitle.textContent = item.term;
+                resultTranslationText.textContent = getTranslations(item).join(' / ');
+            } else {
+                resultTermTitle.textContent = matchedInput || getTranslations(item)[0] || item.translation;
+                resultTranslationText.textContent = item.term;
+            }
+            const details = [item.definition || ''];
+            if (item.usage) details.push('Uso: ' + item.usage);
+            if (item.example) details.push('Exemplo: ' + item.example);
+            if (Array.isArray(item.examples) && item.examples.length) {
+                details.push('Exemplos:\n' + item.examples.map((value,index)=>(index+1)+'. '+value).join('\n'));
+            }
+            resultDefinitionBox.textContent = details.filter(Boolean).join('\n\n');
             resultPartOfSpeechBadge.classList.remove('hidden');
-            resultPartOfSpeechBadge.textContent = item.partOfSpeech;
-
-            // Enable action buttons
+            resultPartOfSpeechBadge.textContent = item.category === 'Phrasal Verb'
+                ? 'PHRASAL VERB · ' + item.partOfSpeech : item.partOfSpeech;
             speakEnglishBtn.disabled = false;
             copyResultBtn.disabled = false;
         }
@@ -1953,6 +2941,22 @@
         // ----------------------------------------------------
         // 6. TEXT-TO-SPEECH (SPEECH SYNTHESIS)
         // ----------------------------------------------------
+        function toggleSearchDirection() {
+            searchDirection = searchDirection === 'en-to-pt' ? 'pt-to-en' : 'en-to-pt';
+            const reverse = searchDirection === 'pt-to-en';
+            directionToggleBtn.textContent = reverse ? 'PT → EN' : 'EN → PT';
+            directionToggleBtn.setAttribute('aria-pressed', String(reverse));
+            directionToggleBtn.title = reverse ? 'Inverter para Inglês → Português' : 'Inverter para Português → Inglês';
+            searchDirectionLabel.innerHTML = reverse
+                ? '<i class="fa-solid fa-font text-xs"></i> Termo em Português / Pesquisa'
+                : '<i class="fa-solid fa-font text-xs"></i> Termo em Inglês / Pesquisa';
+            resultPanelHeading.textContent = reverse ? 'Palavra correspondente em Inglês' : 'Tradução & Significado (Português)';
+            searchInput.placeholder = reverse ? 'Digite uma palavra ou expressão em português...' : 'Digite uma palavra ou expressão em inglês...';
+            searchInput.value = '';
+            charCount.textContent = '0 caracteres';
+            hideSuggestions(); hideDidYouMean(); showEmptyState();
+        }
+
         function speakEnglishText(text) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel(); // Stop active speech
@@ -1993,6 +2997,7 @@
             );
             const buttons = [
                 { value: 'all', label: 'Todas as palavras', icon: 'fa-layer-group' },
+                { value: 'phrasal', label: 'Phrasal Verbs', icon: 'fa-puzzle-piece' },
                 ...availableClasses.map(label => ({ value: label, label, icon: 'fa-tag' }))
             ];
 
@@ -2011,9 +3016,11 @@
         function renderDictionaryGrid() {
             dictionaryGrid.innerHTML = '';
             
-            const filteredItems = currentFilter === 'all' 
-                ? dictionary 
-                : dictionary.filter(item => item.partOfSpeech === currentFilter);
+            const filteredItems = currentFilter === 'all'
+                ? dictionary
+                : currentFilter === 'phrasal'
+                    ? dictionary.filter(item => item.category === 'Phrasal Verb')
+                    : dictionary.filter(item => item.partOfSpeech === currentFilter);
 
             termCountDisplay.textContent = filteredItems.length;
 
@@ -2024,9 +3031,10 @@
                 card.innerHTML = `
                     <div>
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-google-blue dark:text-blue-300">
-                                ${item.partOfSpeech}
-                            </span>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-google-blue dark:text-blue-300">${item.partOfSpeech}</span>
+                                ${item.category === 'Phrasal Verb' ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300">PHRASAL VERB</span>' : ''}
+                            </div>
                             <i class="fa-solid fa-arrow-up-right-from-square text-xs text-gray-300 dark:text-gray-600 group-hover:text-google-blue transition-colors"></i>
                         </div>
                         <h4 class="font-bold text-base text-gray-800 dark:text-gray-100 group-hover:text-google-blue dark:group-hover:text-blue-400 transition-colors">
@@ -2042,8 +3050,9 @@
                 `;
 
                 card.addEventListener('click', () => {
-                    searchInput.value = item.term;
-                    displayResult(item);
+                    const inputTerm = searchDirection === 'en-to-pt' ? item.term : getTranslations(item)[0];
+                    searchInput.value = inputTerm;
+                    displayResult(item,inputTerm);
                     hideDidYouMean();
                     hideSuggestions();
                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2094,6 +3103,8 @@
         // ----------------------------------------------------
         window.addEventListener('DOMContentLoaded', () => {
 
+            directionToggleBtn.addEventListener('click', toggleSearchDirection);
+
             // Search listeners
             searchInput.addEventListener('input', handleSearchInput);
 
@@ -2107,7 +3118,7 @@
             speakEnglishBtn.addEventListener('click', () => {
                 if (activeSelectedTerm) {
                     speakEnglishText(activeSelectedTerm.term);
-                } else if (searchInput.value) {
+                } else if (searchInput.value && searchDirection === 'en-to-pt') {
                     speakEnglishText(searchInput.value);
                 }
             });
@@ -2118,7 +3129,11 @@
 
             copyResultBtn.addEventListener('click', () => {
                 if (activeSelectedTerm) {
-                    const textToCopy = `${activeSelectedTerm.term}: ${activeSelectedTerm.translation}\n${activeSelectedTerm.definition}`;
+                    const english = activeSelectedTerm.term;
+                    const portuguese = getTranslations(activeSelectedTerm).join(' / ');
+                    const textToCopy = searchDirection === 'en-to-pt'
+                        ? `${english}: ${portuguese}\n${activeSelectedTerm.definition}`
+                        : `${portuguese}: ${english}\n${activeSelectedTerm.definition}`;
                     copyToClipboard(textToCopy);
                 }
             });
