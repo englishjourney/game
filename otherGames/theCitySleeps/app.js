@@ -1652,9 +1652,10 @@ function beginLocalTestVoting() {
   game.players.filter((player) => player.isBot && player.isAlive).forEach((bot, index) => {
     window.setTimeout(() => {
       if (!localTestMode || localTestGame !== game || game.room.phase !== "voting" || !bot.isAlive || game.votes.has(bot.id)) return;
+      // The selected target abstains rather than creating a second competing vote.
       const target = consensusTarget && consensusTarget.id !== bot.id && consensusTarget.isAlive
         ? consensusTarget
-        : chooseLocalBotVote(bot);
+        : null;
       game.votes.set(bot.id, target
         ? { targetPlayerId: target.id }
         : { targetPlayerId: null, skipped: true });
