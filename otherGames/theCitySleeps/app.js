@@ -902,19 +902,16 @@ function renderPhasePanel(state) {
   }
 
   if (phase === "night") {
-    const hostAdvanceControl = room.isHost
-      ? '<div class="host-night-controls"><button type="button" class="button button-outline" data-host-advance-night="true">End night for everyone →</button><p class="muted">Players who have not submitted an action will automatically skip this night.</p></div>'
-      : "";
     if (!me.isAlive) {
-      panel.innerHTML = '<div class="phase-content"><h2>You have been eliminated.</h2><p class="muted">Watch the city from the sidelines. The next sunrise is coming.</p>' + hostAdvanceControl + '</div>';
+      panel.innerHTML = '<div class="phase-content"><h2>You have been eliminated.</h2><p class="muted">Watch the city from the sidelines. The next sunrise is coming.</p></div>';
       return;
     }
     if (state.myAction) {
-      panel.innerHTML = '<div class="phase-content"><h2>Your action is complete.</h2><div class="waiting-state"><span class="waiting-orb"></span><div><strong>Wait for the city to finish the night.</strong><div class="muted">The next phase begins when everyone finishes or the timer ends.</div></div></div>' + hostAdvanceControl + '</div>';
+      panel.innerHTML = '<div class="phase-content"><h2>Your action is complete.</h2><div class="waiting-state"><span class="waiting-orb"></span><div><strong>Wait for the city to finish the night.</strong><div class="muted">The next phase begins when everyone finishes or the timer ends.</div></div></div></div>';
       return;
     }
     panel.innerHTML = '<div class="phase-content"><p class="eyebrow">NIGHT ACTION</p><h2>Choose your move</h2><p class="action-note">Your action is private. It will be resolved when everyone finishes or the timer ends.</p>' +
-      renderNightAction(state) + hostAdvanceControl + "</div>";
+      renderNightAction(state) + "</div>";
     return;
   }
 
@@ -925,12 +922,15 @@ function renderPhasePanel(state) {
 
   if (phase === "dawn") {
     const currentNews = state.news.filter((item) => item.round_no === room.roundNo);
+    const hostContinueControl = room.isHost
+      ? '<div class="host-continue-controls"><button type="button" class="button button-outline" data-host-continue-dawn="true">Continue for everyone →</button><p class="muted">This will move all living players to the discussion phase.</p></div>'
+      : "";
     panel.innerHTML = '<div class="phase-content"><p class="eyebrow">DAILY REPORT</p><h2>Here is what happened last night.</h2>' +
       '<div class="news-list">' + (currentNews.length ? currentNews.map((item) => '<div class="news-item">' + esc(item.message) + "</div>").join("") : '<p class="muted">The city wakes up quietly.</p>') + '</div>' +
       (me.isAlive
         ? (me.phaseReady ? '<div class="waiting-state"><span class="waiting-orb"></span><span>Waiting for everyone to read the report...</span></div>'
           : '<div class="phase-actions"><button type="button" class="button button-primary" data-dawn-ready="true">Continue to discussion →</button></div>')
-        : '<p class="muted">You are eliminated. You can still follow the daily news.</p>') + "</div>";
+        : '<p class="muted">You are eliminated. You can still follow the daily news.</p>') + hostContinueControl + "</div>";
     return;
   }
 
@@ -1070,9 +1070,9 @@ async function handlePhaseClick(event) {
 
   if (button.dataset.roleReady) return sendAction("acknowledge_role");
   if (button.dataset.dawnReady) return sendAction("acknowledge_dawn");
-  if (button.dataset.hostAdvanceNight) {
-    const confirmed = window.confirm("End the night for everyone now? Players who have not acted will skip this night.");
-    if (confirmed) return sendAction("host_advance_night");
+  if (button.dataset.hostContinueDawn) {
+    const confirmed = window.confirm("Continue to the discussion phase for all living players?");
+    if (confirmed) return sendAction("host_continue_dawn");
     return;
   }
   if (button.dataset.nightTarget) {
@@ -1140,7 +1140,7 @@ async function sendAction(action, extra = {}) {
     await api(action, { roomCode: currentRoomCode, ...extra });
     selectedTargets = [];
     panelKey = "";
-    if (action === "host_advance_night") notify("The night has ended for everyone.");
+    if (action === "host_continue_dawn") notify("The host moved everyone to the discussion phase.");
     await refreshRoomState();
   } catch (error) {
     notify(error.message, true);
