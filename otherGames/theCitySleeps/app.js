@@ -437,7 +437,8 @@ async function establishSession(username, password) {
   gameSession.username = result.user.username;
   gameSession.name = result.user.name;
   gameSession.avatar_url = result.user.avatarUrl;
-  gameSession.serie = result.user.serie;
+  gameSession.grade = result.user.grade;
+  delete gameSession.serie;
   gameSession.tcsSessionToken = sessionToken;
   saveSession(gameSession);
   $("signed-in-user").textContent = result.user.username;

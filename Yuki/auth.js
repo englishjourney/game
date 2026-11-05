@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Usa o supabaseClient (declarado no script.js) para verificar usuário e senha na tabela customizada 'users'
       const { data: user, error } = await supabaseClient
         .from("users")
-        .select("id, name, username, avatar_url, serie, team")
+        .select("id, name, username, avatar_url, grade")
         .eq("username", username)
         .eq("psswd", password)
         .single();

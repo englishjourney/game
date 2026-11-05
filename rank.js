@@ -50,7 +50,7 @@ export async function openRanking() {
         users.forEach((user, index) => {
             const pos = index + 1;
             const username = user.username || "Usuário";
-            const serieTurma = `${user.serie || ''} ${user.turma || ''}`.trim() || 'Geral';
+            const serieTurma = user.grade || 'Geral';
             
             // Variáveis numéricas garantidas para a exibição
             const score = Number(user.score) || 0;

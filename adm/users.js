@@ -60,16 +60,15 @@ async function loadUsers() {
 
     const { data, error } = await supabase
         .from('users')
-        .select('id, name, username, score, class, rank, serie, team, stars, hearts, nota1, nota2, nota3, nota4')
+        .select('id, name, username, score, class, rank, grade, stars, hearts, nota1, nota2, nota3, nota4')
         .neq('username', 'micael.svg')
-        .order('serie', { ascending: true })
-        .order('team', { ascending: true })
+        .order('grade', { ascending: true })
         .order('name', { ascending: true });
 
     if (error) return container.innerHTML = 'Erro ao carregar alunos.';
     const teams = {};
     data.forEach(u => {
-        let groupName = (u.serie || u.team) ? `${u.serie || ''} ${u.team || ''}`.trim() : 'Sem Turma';
+        let groupName = u.grade ? String(u.grade).trim().toUpperCase() : 'Sem Turma';
         if (!teams[groupName]) teams[groupName] = [];
         teams[groupName].push(u);
     });

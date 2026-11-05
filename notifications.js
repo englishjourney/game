@@ -55,7 +55,7 @@ export function initNotifications() {
         try {
             const [{ data: missions, error: missionError }, { data: users, error: usersError }] = await Promise.all([
                 supabase.from('missions').select('id, mission_name, notif').order('id', { ascending: true }),
-                supabase.from('users').select('username, score, rank, serie, team').neq('username', 'micael.svg')
+                supabase.from('users').select('username, score, rank, grade').neq('username', 'micael.svg')
             ]);
             if (missionError) throw missionError;
             if (usersError) throw usersError;
@@ -102,7 +102,7 @@ export function initNotifications() {
         if (!user) return { position: null, rank: null, score: null, superstar: null };
         const sorted = [...users].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
         const position = sorted.findIndex(item => item.username === username) + 1;
-        const classmates = sorted.filter(item => String(item.serie) === String(user.serie) && String(item.team) === String(user.team));
+        const classmates = sorted.filter(item => String(item.grade || '') === String(user.grade || ''));
         return {
             position: position > 0 ? position : null,
             rank: user.rank || null,

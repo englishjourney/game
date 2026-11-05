@@ -287,7 +287,7 @@ function saveSession(user) {
   // Mantém o mesmo formato usado pelo auth.js do EnglishJourney.
   localStorage.setItem(SESSION_KEY, JSON.stringify({
     username: user.username,
-    serie: user.serie
+    grade: user.grade
   }));
 }
 
@@ -303,7 +303,7 @@ function parseHistory(value) {
 }
 
 function classCode(profile) {
-  return String(profile.serie || "").trim() + String(profile.team || "").trim().toUpperCase();
+  return String(profile.grade || "").trim().toUpperCase();
 }
 
 function showToast(message) {
@@ -327,7 +327,7 @@ function showLogin(errorMessage = "") {
 async function loadProfile(username) {
   const { data, error } = await supabase
     .from("users")
-    .select("username,name,serie,team,avatar_url")
+    .select("username,name,grade,avatar_url")
     .eq("username", username)
     .maybeSingle();
 
@@ -336,8 +336,8 @@ async function loadProfile(username) {
 }
 
 async function enterWithProfile(profile) {
-  if (!profile || !profile.username || !profile.serie || !profile.team) {
-    throw new Error("Não foi possível identificar a série e a turma desta conta.");
+  if (!profile || !profile.username || !profile.grade) {
+    throw new Error("Não foi possível identificar a turma desta conta.");
   }
 
   currentProfile = profile;
@@ -382,7 +382,7 @@ $("login-form").addEventListener("submit", async (event) => {
   try {
     const { data, error } = await supabase
       .from("users")
-      .select("username,serie")
+      .select("username,grade")
       .eq("username", username)
       .eq("psswd", password)
       .maybeSingle();
@@ -410,8 +410,7 @@ async function loadPartners() {
   const { data, error } = await supabase
     .from("users")
     .select("username,name,avatar_url")
-    .eq("serie", currentProfile.serie)
-    .eq("team", currentProfile.team)
+    .eq("grade", currentProfile.grade)
     .neq("username", currentProfile.username)
     .order("username", { ascending: true });
 

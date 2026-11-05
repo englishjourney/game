@@ -4,7 +4,9 @@ import { getSession } from './auth.js';
 export function showLoader() {
     const session = getSession();
     // Verifica se é Ensino Médio (1º, 2º ou 3º ano)
-    const isHighSchool = session && ['1', '2', '3'].includes(session.serie);
+    const grade = session && (session.grade || session.serie); // Legacy session fallback only.
+    const firstGradeDigit = String(grade || '').trim().charAt(0);
+    const isHighSchool = ['1', '2', '3'].includes(firstGradeDigit);
 
     // Remove loader anterior se houver
     hideLoader();

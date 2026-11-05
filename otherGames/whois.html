@@ -511,15 +511,11 @@
         // Save to cache
         localStorage.setItem('englishjourney_username', currentUser.username);
 
-        // Fetch classmates matching BOTH serie AND team
+        // Fetch only classmates with the same consolidated grade.
         let classQuery = supabaseClient.from('users').select('name, username');
-        
-        if (currentUser.serie !== undefined && currentUser.serie !== null) {
-          classQuery = classQuery.eq('serie', currentUser.serie);
-        }
-        if (currentUser.team !== undefined && currentUser.team !== null) {
-          classQuery = classQuery.eq('team', currentUser.team);
-        }
+        classQuery = currentUser.grade
+          ? classQuery.eq('grade', currentUser.grade)
+          : classQuery.is('grade', null);
 
         const { data: classData, error: classError } = await classQuery;
 
@@ -532,9 +528,7 @@
 
         // Initialize HUD Info
         hudUser.textContent = currentUser.name || currentUser.username;
-        const serieText = currentUser.serie ? `${currentUser.serie}ª` : 'N/A';
-        const teamText = currentUser.team ? currentUser.team : 'N/A';
-        hudTeam.textContent = `${serieText} - Turma ${teamText}`;
+        hudTeam.textContent = `Turma ${currentUser.grade || 'N/A'}`;
         hudScore.textContent = currentUser.score || 0;
 
         populateClassmatesDropdown();

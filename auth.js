@@ -35,8 +35,9 @@ export async function handleRegister(event) {
     const name = document.getElementById('reg-name').value;
     const username = document.getElementById('reg-username').value;
     const psswd = document.getElementById('reg-password').value;
-    const serie = document.getElementById('reg-serie').value;
-    const team = document.getElementById('reg-team').value;
+    const serie = document.getElementById('reg-serie').value.trim();
+    const team = document.getElementById('reg-team').value.trim().toUpperCase();
+    const grade = serie + team;
 
     const userValidation = validateUsername(username);
     if (!userValidation.valid) return alert(userValidation.message);
@@ -61,8 +62,7 @@ export async function handleRegister(event) {
                 name: name,
                 username: username,
                 psswd: psswd,
-                serie: serie,
-                team: team,
+                grade: grade,
                 score: 0,
                 stars: 0,
                 hearts: 3,
@@ -93,7 +93,7 @@ export async function handleLogin(event) {
     try {
         const { data, error } = await supabase
             .from('users')
-            .select('username, serie, name, avatar_url')
+            .select('username, grade, name, avatar_url')
             .eq('username', username)
             .eq('psswd', psswd)
             .maybeSingle();
@@ -114,7 +114,7 @@ export async function handleLogin(event) {
 
         saveSession({
             username: data.username,
-            serie: data.serie,
+            grade: data.grade,
             name: data.name,
             avatar_url: data.avatar_url,
             tcsSessionToken

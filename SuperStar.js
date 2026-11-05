@@ -62,7 +62,7 @@ export async function openSuperStars() {
         const { data: rawUsers, error } = await runWithLoader(async () => {
             return await supabase
                 .from('users')
-                .select('username, score, stars, serie, team, avatar_url, rank')
+                .select('username, score, stars, grade, avatar_url, rank')
                 .neq('username', 'micael.svg'); // Remove o admin da busca
         });
 
@@ -93,10 +93,12 @@ export async function openSuperStars() {
         const superStarsData = {};
         
         sortedUsers.forEach(user => {
-            if (!user.serie || !user.team) return; // Pula usuários sem série ou turma
+            const grade = String(user.grade || '').trim().toUpperCase();
+            const gradeParts = grade.match(/^([0-9]+)([A-Z]+)$/);
+            if (!gradeParts) return;
 
-            const serieStr = String(user.serie).trim();
-            const teamStr = String(user.team).trim().toUpperCase();
+            const serieStr = gradeParts[1];
+            const teamStr = gradeParts[2];
 
             if (!superStarsData[serieStr]) {
                 superStarsData[serieStr] = {};

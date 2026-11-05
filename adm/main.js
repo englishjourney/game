@@ -128,13 +128,13 @@ async function setupDashboard() {
             resultsContainer.classList.remove('hidden');
 
             try {
-                const { data: users } = await supabase.from('users').select('name, username, team').ilike('name', `%${query}%`).limit(3);
+                const { data: users } = await supabase.from('users').select('name, username, grade').ilike('name', `%${query}%`).limit(3);
                 const { data: planners } = await supabase.from('planner').select('serie, team, activities').ilike('activities', `%${query}%`).limit(3);
 
                 let html = '';
                 if (users && users.length) {
                     html += '<div style="padding: 5px 10px; color: var(--primary); font-size: 0.8em">Alunos</div>';
-                    users.forEach(u => html += `<div class="search-item">${u.name} (${u.username}) - ${u.team}</div>`);
+                    users.forEach(u => html += `<div class="search-item">${u.name} (${u.username}) - ${u.grade || 'Sem turma'}</div>`);
                 }
                 if (planners && planners.length) {
                     html += '<div style="padding: 5px 10px; color: var(--primary); font-size: 0.8em">Planejamentos</div>';

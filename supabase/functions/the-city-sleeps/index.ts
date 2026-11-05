@@ -109,7 +109,7 @@ async function createSession(body: any) {
   const username = String(requireValue(body.username, "Enter your EnglishJourney username.")).trim().toLowerCase();
   const password = String(requireValue(body.password, "Enter your password."));
   const { data: user, error } = await db.from("users")
-    .select("id, username, name, avatar_url, serie")
+    .select("id, username, name, avatar_url, grade")
     .eq("username", username)
     .eq("psswd", password)
     .maybeSingle();
@@ -128,7 +128,7 @@ async function createSession(body: any) {
   return {
     sessionToken: token,
     expiresAt,
-    user: { username: user.username, name: user.name, avatarUrl: user.avatar_url, serie: user.serie },
+    user: { username: user.username, name: user.name, avatarUrl: user.avatar_url, grade: user.grade },
   };
 }
 

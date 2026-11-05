@@ -222,7 +222,7 @@
         // Variáveis Globais
         let currentGoingTo = '';
         let myStudentName = localStorage.getItem('queue_name') || null;
-        let myStudentSerieTurma = localStorage.getItem('queue_serie_turma') || null;
+        let myStudentGrade = localStorage.getItem('queue_grade') || null;
         let deferredPrompt;
 
         // ==========================================
@@ -266,22 +266,19 @@
         }
         setupPWA();
 
-        // Helper para formatar Serie e Team em SerieTurma
-        function formatSerieTurma(serie, team) {
-            if (!serie && !team) return 'Sem Turma';
-            if (!serie) return `${team}`;
-            if (!team) return `${serie}`;
-            return `${serie} - ${team}`;
+        // Format the consolidated profile class identifier (e.g. 8A).
+        function formatGrade(grade) {
+            return String(grade || '').trim().toUpperCase() || 'Sem Turma';
         }
 
         // Helper para verificar se uma turma está bloqueada
-        async function checkIfTurmaBlocked(serieTurma) {
-            if (!serieTurma) return false;
+        async function checkIfTurmaBlocked(grade) {
+            if (!grade) return false;
             try {
                 const { data } = await db
                     .from('queue')
                     .select('name')
-                    .eq('name', 'BLOCK:' + serieTurma);
+                    .eq('name', 'BLOCK:' + grade);
                 return data && data.length > 0;
             } catch (err) {
                 console.error('Erro ao verificar bloqueio:', err);
@@ -294,17 +291,16 @@
         // ==========================================
         window.onload = async () => {
             if (myStudentName) {
-                if (!myStudentSerieTurma) {
-                    const { data: user } = await db
-                        .from('users')
-                        .select('serie, team')
-                        .eq('name', myStudentName)
-                        .single();
-                    if (user) {
-                        myStudentSerieTurma = formatSerieTurma(user.serie, user.team);
-                        localStorage.setItem('queue_serie_turma', myStudentSerieTurma);
-                    }
-                }
+                // Refresh class from Supabase; older devices may cache a split class value.
+                const { data: user } = await db
+                    .from('users')
+                    .select('grade')
+                    .eq('name', myStudentName)
+                    .maybeSingle();
+                myStudentGrade = user ? formatGrade(user.grade) : null;
+                if (myStudentGrade) localStorage.setItem('queue_grade', myStudentGrade);
+                else localStorage.removeItem('queue_grade');
+                localStorage.removeItem('queue_serie_turma');
                 switchScreen('screen-queue');
                 checkQueue();
             }
@@ -336,19 +332,19 @@
             btn.innerText = 'Verificando...';
 
             try {
-                // 1. Validar usuário e pegar 'name', 'serie' e 'team'
+                // 1. Validate the user and retrieve their name and grade.
                 const { data: user, error: userError } = await db
                     .from('users')
-                    .select('name, serie, team')
+                    .select('name, grade')
                     .eq('username', usernameInput)
                     .single();
 
                 if (userError || !user) throw new Error('Usuário não encontrado.');
                 const realName = user.name;
-                const serieTurma = formatSerieTurma(user.serie, user.team);
+                const grade = formatGrade(user.grade);
 
                 // Verificar se a fila desta turma está bloqueada
-                const isBlocked = await checkIfTurmaBlocked(serieTurma);
+                const isBlocked = await checkIfTurmaBlocked(grade);
                 if (isBlocked) {
                     alert('A fila virtual so funciona na aula de inglês');
                     return;
@@ -387,9 +383,9 @@
 
                 // Salvar localmente e mostrar tela
                 myStudentName = realName;
-                myStudentSerieTurma = serieTurma;
+                myStudentGrade = grade;
                 localStorage.setItem('queue_name', myStudentName);
-                localStorage.setItem('queue_serie_turma', myStudentSerieTurma);
+                localStorage.setItem('queue_grade', myStudentGrade);
                 closeModal('modal-user');
                 switchScreen('screen-queue');
                 checkQueue();
@@ -410,22 +406,22 @@
             posDisplay.innerText = '...';
             posDisplay.classList.remove('status-0');
 
-            // Recuperar serieTurma se necessário
-            if (!myStudentSerieTurma) {
+            // Recuperar grade se necessário
+            if (!myStudentGrade) {
                 const { data: user } = await db
                     .from('users')
-                    .select('serie, team')
+                    .select('grade')
                     .eq('name', myStudentName)
                     .single();
                 if (user) {
-                    myStudentSerieTurma = formatSerieTurma(user.serie, user.team);
-                    localStorage.setItem('queue_serie_turma', myStudentSerieTurma);
+                    myStudentGrade = formatGrade(user.grade);
+                    localStorage.setItem('queue_grade', myStudentGrade);
                 }
             }
 
             // Verificar se a fila da turma do aluno está bloqueada
-            if (myStudentSerieTurma) {
-                const isBlocked = await checkIfTurmaBlocked(myStudentSerieTurma);
+            if (myStudentGrade) {
+                const isBlocked = await checkIfTurmaBlocked(myStudentGrade);
                 if (isBlocked) {
                     posDisplay.innerText = '-';
                     msgDisplay.innerText = 'A fila virtual so funciona na aula de inglês';
@@ -447,9 +443,9 @@
             if (!myEntry) {
                 // Usuário foi removido (pelo admin ou por si mesmo noutro PC)
                 localStorage.removeItem('queue_name');
-                localStorage.removeItem('queue_serie_turma');
+                localStorage.removeItem('queue_grade');
                 myStudentName = null;
-                myStudentSerieTurma = null;
+                myStudentGrade = null;
                 switchScreen('screen-home');
                 return;
             }
@@ -458,18 +454,18 @@
             const names = allQueue.map(q => q.name);
             const { data: usersData } = await db
                 .from('users')
-                .select('name, serie, team')
+                .select('name, grade')
                 .in('name', names);
 
             const userMap = {};
             if (usersData) {
                 usersData.forEach(u => {
-                    userMap[u.name] = formatSerieTurma(u.serie, u.team);
+                    userMap[u.name] = formatGrade(u.grade);
                 });
             }
 
-            // Filtrar somente a fila da mesma serie-turma do aluno
-            const filteredQueue = allQueue.filter(item => userMap[item.name] === myStudentSerieTurma);
+            // Filter only students in the same grade.
+            const filteredQueue = allQueue.filter(item => userMap[item.name] === myStudentGrade);
 
             // Posição na fila virtual da turma
             const virtualIndex = filteredQueue.findIndex(item => item.name === myStudentName);
@@ -492,9 +488,9 @@
             await removeUserFromQueue(myStudentName);
             
             localStorage.removeItem('queue_name');
-            localStorage.removeItem('queue_serie_turma');
+            localStorage.removeItem('queue_grade');
             myStudentName = null;
-            myStudentSerieTurma = null;
+            myStudentGrade = null;
             switchScreen('screen-home');
         }
 
@@ -550,12 +546,12 @@
 
             const { data: users } = await db
                 .from('users')
-                .select('serie, team');
+                .select('grade');
 
             const turmasSet = new Set();
             if (users) {
                 users.forEach(u => {
-                    const st = formatSerieTurma(u.serie, u.team);
+                    const st = formatGrade(u.grade);
                     if (st && st !== 'Sem Turma') turmasSet.add(st);
                 });
             }
@@ -687,13 +683,13 @@
             const names = queueData.map(q => q.name);
             const { data: usersData } = await db
                 .from('users')
-                .select('name, serie, team')
+                .select('name, grade')
                 .in('name', names);
 
             const userMap = {};
             if (usersData) {
                 usersData.forEach(u => {
-                    userMap[u.name] = formatSerieTurma(u.serie, u.team);
+                    userMap[u.name] = formatGrade(u.grade);
                 });
             }
 

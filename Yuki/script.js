@@ -64,7 +64,13 @@ async function loadUserData() {
   const parsedUser = JSON.parse(localUser);
 
   currentUser = parsedUser;
-  currentUser.gradeClass = `${currentUser.serie || ''}${currentUser.team || ''}`;
+  // Normalize cached profiles created before the grade migration.
+  currentUser.grade = currentUser.grade
+    || (String(currentUser.serie || '').trim() + String(currentUser.team || '').trim().toUpperCase());
+  delete currentUser.serie;
+  delete currentUser.team;
+  currentUser.gradeClass = currentUser.grade || '';
+  localStorage.setItem("game_user", JSON.stringify(currentUser));
   
   console.log("Usuário carregado com sucesso do cache:", currentUser.name);
 

@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (session) {
         document.getElementById('auth-screen').classList.add('hidden');
         document.getElementById('app-screen').classList.remove('hidden');
-        applyTheme(session.serie);
+        applyTheme(session.grade || session.serie); // Fallback for sessions cached before the grade migration
 
         // ==========================================
         // CARREGAMENTO DO AVATAR DO USUÁRIO
@@ -192,8 +192,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 });
 
-function applyTheme(serie) {
-    const isHighSchool = ['1', '2', '3'].includes(serie);
+function applyTheme(grade) {
+    const firstGradeDigit = String(grade || '').trim().charAt(0);
+    const isHighSchool = ['1', '2', '3'].includes(firstGradeDigit);
     const themeStyle = document.getElementById('theme-highschool');
     const logoImg = document.getElementById('app-logo');
 
