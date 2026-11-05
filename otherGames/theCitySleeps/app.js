@@ -968,7 +968,7 @@ function playerPicker(players, max = 1, selected = selectedTargets) {
   if (!players.length) return '<p class="muted">No eligible players are available.</p>';
   return '<div class="player-picker">' + players.map((p) => {
     const chosen = selected.includes(p.id);
-    return '<button type="button" class="player-choice' + (chosen ? " selected" : "") + '" data-night-target="' + esc(p.id) + '">' +
+    return '<button type="button" class="player-choice' + (chosen ? " selected" : "") + '" aria-pressed="' + (chosen ? "true" : "false") + '" data-night-target="' + esc(p.id) + '">' +
       avatarMarkup(p) + '<span>' + esc(p.username) + '</span>' + (p.id === currentState.me.id ? '<small>YOU</small>' : "") + '</button>';
   }).join("") + "</div>";
 }
@@ -1061,12 +1061,18 @@ async function handlePhaseClick(event) {
   if (button.dataset.dawnReady) return sendAction("acknowledge_dawn");
   if (button.dataset.nightTarget) {
     const id = button.dataset.nightTarget;
-    const max = currentState.me.roleKey === "oracle" ? currentState.me.oracleUsesLeft : 1;
+    const max = currentState.me.roleKey === "oracle" ? Math.max(1, currentState.me.oracleUsesLeft) : 1;
     if (selectedTargets.includes(id)) selectedTargets = selectedTargets.filter((x) => x !== id);
     else if (selectedTargets.length < max) selectedTargets = max === 1 ? [id] : [...selectedTargets, id];
     else if (max === 1) selectedTargets = [id];
-    panelKey = "";
-    renderRoom(currentState);
+
+    // Update the picker directly. Re-rendering the whole room here resets
+    // selectedTargets inside renderRoom before the UI can reflect the choice.
+    $("phase-panel").querySelectorAll("[data-night-target]").forEach((item) => {
+      const isSelected = selectedTargets.includes(item.dataset.nightTarget);
+      item.classList.toggle("selected", isSelected);
+      item.setAttribute("aria-pressed", String(isSelected));
+    });
     return;
   }
   if (button.dataset.nightAction) {
