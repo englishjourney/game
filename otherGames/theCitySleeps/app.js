@@ -56,7 +56,7 @@ const ROLE_PORTRAITS = {
   hunter: "https://preview.redd.it/gy7n1o0wd4ee1.jpeg?auto=webp&s=16575331786b596e11d306da81cb1d0400d39e58",
   werewolf: "https://i.pinimg.com/736x/db/9a/cc/db9acc860558e002b467b9f2e0ef8204.jpg",
   necromancer: "https://static0.cbrimages.com/wordpress/wp-content/uploads/2025/12/solo_leveling_s2_ep2.jpg?q=49&fit=crop&w=300&h=273&dpr=2",
-  puppet: "https://static0.cbrimages.com/wordpress/wp-content/uploads/2025/12/solo_leveling_s2_ep2.jpg?q=49&fit=crop&w=300&h=273&dpr=2",
+  puppet: "https://i.pinimg.com/474x/c0/40/4e/c0404e7b962860ac196b2465f25e50fb.jpg",
   harlequin: "https://i.pinimg.com/736x/e9/3e/9f/e93e9f65639b61142faad9e290edd15d.jpg",
   cultist: "https://i.redd.it/m3sbezy6gjxc1.jpg",
   syren: "https://i.scdn.co/image/ab67616d0000b273b9339f06b26c10684dddb409",
