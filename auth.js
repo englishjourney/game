@@ -1,5 +1,35 @@
 // auth.js
 import { supabase } from './supabaseClient.js';
+import { showLoader, hideLoader } from './loader.js';
+
+// Bloqueia submissões simultâneas, inclusive cliques muito rápidos.
+let authInProgress = false;
+
+function beginAuth(form, grade = null) {
+    if (authInProgress) return false;
+    authInProgress = true;
+    const submitButton = form?.querySelector('button[type="submit"]');
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.dataset.originalText = submitButton.textContent;
+        submitButton.textContent = 'Aguarde...';
+    }
+    showLoader(grade);
+    return true;
+}
+
+function endAuth(form) {
+    authInProgress = false;
+    const submitButton = form?.querySelector('button[type="submit"]');
+    if (submitButton) {
+        submitButton.disabled = false;
+        if (submitButton.dataset.originalText) {
+            submitButton.textContent = submitButton.dataset.originalText;
+            delete submitButton.dataset.originalText;
+        }
+    }
+    hideLoader();
+}
 
 export function validateUsername(username) {
     const regex = /^[a-z0-9\-\_\.]+$/;
@@ -30,7 +60,10 @@ export function getSession() {
 }
 
 export async function handleRegister(event) {
-    event.preventDefault(); 
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    if (authInProgress) return;
 
     const name = document.getElementById('reg-name').value;
     const username = document.getElementById('reg-username').value;
@@ -45,15 +78,20 @@ export async function handleRegister(event) {
     const passValidation = validatePassword(psswd);
     if (!passValidation.valid) return alert(passValidation.message);
 
+    if (!beginAuth(form, grade)) return;
+
     try {
-        const { data: existingUser } = await supabase
+        const { data: existingUser, error: lookupError } = await supabase
             .from('users')
             .select('username')
             .eq('username', username)
             .maybeSingle();
 
+        if (lookupError) throw lookupError;
+
         if (existingUser) {
-            return alert("Este nome de usuário já está em uso. Escolha outro.");
+            alert("Este nome de usuário já está em uso. Escolha outro.");
+            return;
         }
 
         const { error: insertError } = await supabase
@@ -81,11 +119,16 @@ export async function handleRegister(event) {
     } catch (error) {
         console.error("Erro no cadastro:", error);
         alert("Ocorreu um erro ao tentar cadastrar. Verifique o console.");
+    } finally {
+        endAuth(form);
     }
 }
 
 export async function handleLogin(event) {
     event.preventDefault();
+
+    const form = event.currentTarget;
+    if (authInProgress || !beginAuth(form)) return;
 
     const username = document.getElementById('login-username').value;
     const psswd = document.getElementById('login-password').value;
@@ -99,8 +142,12 @@ export async function handleLogin(event) {
             .maybeSingle();
 
         if (error || !data) {
-            return alert("Usuário ou senha incorretos!");
+            alert("Usuário ou senha incorretos!");
+            return;
         }
+
+        // Atualiza a aparência do loader assim que conhecemos a série do usuário.
+        showLoader(data.grade);
 
         let tcsSessionToken = null;
         try {
@@ -124,5 +171,7 @@ export async function handleLogin(event) {
     } catch (error) {
         console.error("Erro no login:", error);
         alert("Ocorreu um erro ao tentar fazer login.");
+    } finally {
+        endAuth(form);
     }
 }
