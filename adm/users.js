@@ -72,9 +72,9 @@ async function loadUsers() {
         <div class="team-section">
             <div class="team-header" style="display:flex; justify-content:space-between; align-items:center;">
                 <span>Turma: ${team}</span>
-                <button class="minimize-btn" style="color:var(--primary);" onclick="this.parentElement.nextElementSibling.classList.toggle('hidden'); this.textContent = this.textContent === 'Minimizar' ? 'Maximizar' : 'Minimizar'">Minimizar</button>
+                <button class="minimize-btn" style="color:var(--primary);" aria-expanded="false" onclick="const content=this.parentElement.nextElementSibling; const isHidden=content.classList.toggle('hidden'); this.textContent=isHidden?'Maximizar':'Minimizar'; this.setAttribute('aria-expanded',String(!isHidden));">Maximizar</button>
             </div>
-            <div class="team-content" style="overflow-x: auto;">
+            <div class="team-content hidden" style="overflow-x: auto;">
                 <table class="users-table">
                     <thead>
                         <tr>
