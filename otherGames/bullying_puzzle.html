@@ -327,6 +327,52 @@
     .result-panel h2 { margin: 0 0 7px; color: var(--green-dark); font-size: 1.7rem; }
     .result-panel.failed h2 { color: #b91c1c; }
     .result-panel p { margin: 0 0 16px; color: #475569; line-height: 1.55; }
+    .certificate-actions {
+      max-width: 480px;
+      margin: 20px auto 18px;
+      padding: 18px;
+      border: 1px solid #bbf7d0;
+      border-radius: 13px;
+      background: rgba(255,255,255,.82);
+      text-align: left;
+    }
+    .certificate-actions label {
+      display: block;
+      margin-bottom: 7px;
+      color: #166534;
+      font-size: .86rem;
+      font-weight: 700;
+    }
+    .certificate-actions input {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 11px 12px;
+      border: 1px solid #bbf7d0;
+      border-radius: 9px;
+      outline: none;
+      color: #1e293b;
+      background: white;
+      font: inherit;
+    }
+    .certificate-actions input:focus {
+      border-color: #16a34a;
+      box-shadow: 0 0 0 3px rgba(22,163,74,.12);
+    }
+    .certificate-actions .primary-btn {
+      width: 100%;
+      font-size: 1rem;
+    }
+    .certificate-actions .primary-btn:disabled {
+      cursor: not-allowed;
+      opacity: .5;
+      transform: none;
+    }
+    .certificate-note {
+      margin: 9px 0 0 !important;
+      color: #64748b !important;
+      font-size: .75rem;
+      text-align: center;
+    }
     @keyframes appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
     @media (max-width: 760px) {
@@ -390,6 +436,12 @@
       <section id="result-panel" class="result-panel hidden" aria-live="polite">
         <h2 id="result-title">Time's up!</h2>
         <p id="result-message">Try again and rebuild the text.</p>
+        <div id="certificate-actions" class="certificate-actions hidden">
+          <label for="certificate-student-name">Student name for the certificate</label>
+          <input id="certificate-student-name" type="text" maxlength="70" autocomplete="name" placeholder="Type the student's full name">
+          <button id="download-certificate-btn" class="primary-btn" type="button" disabled>Download completion certificate (PDF)</button>
+          <p class="certificate-note">The certificate is generated as a PDF and saved to your device.</p>
+        </div>
         <button id="restart-btn" class="primary-btn">Restart puzzle</button>
       </section>
     </section>
@@ -424,6 +476,9 @@
     const resultPanel = document.getElementById('result-panel');
     const resultTitle = document.getElementById('result-title');
     const resultMessage = document.getElementById('result-message');
+    const certificateActions = document.getElementById('certificate-actions');
+    const certificateStudentName = document.getElementById('certificate-student-name');
+    const downloadCertificateButton = document.getElementById('download-certificate-btn');
 
     let availablePieces = [];
     let placedPieces = Array(7).fill(null);
@@ -453,6 +508,9 @@
       startScreen.classList.add('hidden');
       gameScreen.classList.remove('hidden');
       resultPanel.classList.add('hidden');
+      certificateActions.classList.add('hidden');
+      certificateStudentName.value = '';
+      downloadCertificateButton.disabled = true;
       statusDisplay.textContent = 'Choose a piece to begin.';
       timerDisplay.classList.remove('low-time');
       renderGame();
@@ -661,6 +719,222 @@
       }
     }
 
+    function drawCertificateText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = String(text).split(/\s+/);
+      let line = '';
+      let currentY = y;
+      for (const word of words) {
+        const testLine = line ? line + ' ' + word : word;
+        if (ctx.measureText(testLine).width > maxWidth && line) {
+          ctx.fillText(line, x, currentY);
+          line = word;
+          currentY += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      if (line) ctx.fillText(line, x, currentY);
+      return currentY;
+    }
+
+    function createCertificatePdf(studentName) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 2400;
+      canvas.height = 1697;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas is not available in this browser.');
+
+      const width = canvas.width;
+      const height = canvas.height;
+
+      // Soft paper background with a subtle green tint.
+      ctx.fillStyle = '#fbfdf9';
+      ctx.fillRect(0, 0, width, height);
+      const background = ctx.createLinearGradient(0, 0, width, height);
+      background.addColorStop(0, '#f0fdf4');
+      background.addColorStop(.5, '#ffffff');
+      background.addColorStop(1, '#eff6ff');
+      ctx.fillStyle = background;
+      ctx.fillRect(0, 0, width, height);
+
+      // Double frame and corner ornaments.
+      ctx.strokeStyle = '#166534';
+      ctx.lineWidth = 12;
+      ctx.strokeRect(62, 62, width - 124, height - 124);
+      ctx.strokeStyle = '#d4a84f';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(88, 88, width - 176, height - 176);
+
+      const centerX = width / 2;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#166534';
+      ctx.font = '700 40px Georgia, serif';
+      ctx.fillText('ENGLISH JOURNEY', centerX, 250);
+
+      ctx.strokeStyle = '#d4a84f';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(690, 292);
+      ctx.lineTo(1710, 292);
+      ctx.stroke();
+
+      ctx.fillStyle = '#15803d';
+      ctx.font = '700 88px Georgia, serif';
+      ctx.fillText('CERTIFICADO DE CONCLUSÃO', centerX, 450);
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = 'italic 36px Georgia, serif';
+      ctx.fillText('Certificate of Completion', centerX, 515);
+
+      ctx.fillStyle = '#334155';
+      ctx.font = '36px Georgia, serif';
+      ctx.fillText('Certificamos que', centerX, 660);
+
+      ctx.fillStyle = '#14532d';
+      ctx.font = 'bold 76px Georgia, serif';
+      const safeName = studentName.trim().slice(0, 70);
+      const displayName = safeName.length > 42 ? safeName.slice(0, 39) + '...' : safeName;
+      ctx.fillText(displayName, centerX, 790, 1900);
+
+      ctx.strokeStyle = '#d4a84f';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(420, 830);
+      ctx.lineTo(1980, 830);
+      ctx.stroke();
+
+      ctx.fillStyle = '#334155';
+      ctx.font = '34px Georgia, serif';
+      drawCertificateText(
+        ctx,
+        'pela conclusão da atividade Bullying Puzzle, organizando corretamente o texto em inglês e demonstrando dedicação à compreensão do tema.',
+        centerX,
+        940,
+        1720,
+        58
+      );
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '30px Georgia, serif';
+      const completedDate = new Intl.DateTimeFormat('pt-BR', {
+        day: 'numeric', month: 'long', year: 'numeric'
+      }).format(new Date());
+      ctx.fillText('Concluído em ' + completedDate, centerX, 1190);
+
+      // Simple medal seal.
+      ctx.beginPath();
+      ctx.arc(centerX, 1380, 78, 0, Math.PI * 2);
+      ctx.fillStyle = '#dcfce7';
+      ctx.fill();
+      ctx.strokeStyle = '#d4a84f';
+      ctx.lineWidth = 6;
+      ctx.stroke();
+      ctx.fillStyle = '#166534';
+      ctx.font = 'bold 64px Georgia, serif';
+      ctx.fillText('★', centerX, 1402);
+
+      ctx.fillStyle = '#166534';
+      ctx.font = '700 30px Georgia, serif';
+      ctx.fillText('ENGLISH JOURNEY  •  OTHER GAMES', centerX, 1540);
+
+      // Convert the certificate artwork into a single-page PDF image.
+      const jpegData = canvas.toDataURL('image/jpeg', .96).split(',')[1];
+      const jpegBinary = atob(jpegData);
+      const jpegBytes = new Uint8Array(jpegBinary.length);
+      for (let i = 0; i < jpegBinary.length; i++) jpegBytes[i] = jpegBinary.charCodeAt(i);
+
+      const encoder = new TextEncoder();
+      const chunks = [];
+      const offsets = [0];
+      let byteLength = 0;
+      const pushText = value => {
+        const bytes = encoder.encode(value);
+        chunks.push(bytes);
+        byteLength += bytes.length;
+      };
+      const pushBytes = bytes => {
+        chunks.push(bytes);
+        byteLength += bytes.length;
+      };
+
+      pushText('%PDF-1.4\n');
+      offsets[1] = byteLength;
+      pushText('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+
+      offsets[2] = byteLength;
+      pushText('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
+
+      offsets[3] = byteLength;
+      pushText('3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n');
+
+      offsets[4] = byteLength;
+      pushText('4 0 obj\n<< /Type /XObject /Subtype /Image /Width 2400 /Height 1697 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + jpegBytes.length + ' >>\nstream\n');
+      pushBytes(jpegBytes);
+      pushText('\nendstream\nendobj\n');
+
+      const pageContent = 'q\n842 0 0 595 0 0 cm\n/Im0 Do\nQ\n';
+      const pageContentBytes = encoder.encode(pageContent);
+      offsets[5] = byteLength;
+      pushText('5 0 obj\n<< /Length ' + pageContentBytes.length + ' >>\nstream\n');
+      pushBytes(pageContentBytes);
+      pushText('endstream\nendobj\n');
+
+      const xrefOffset = byteLength;
+      pushText('xref\n0 6\n0000000000 65535 f \n');
+      for (let i = 1; i <= 5; i++) {
+        pushText(String(offsets[i]).padStart(10, '0') + ' 00000 n \n');
+      }
+      pushText('trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n' + xrefOffset + '\n%%EOF');
+
+      const pdfBytes = new Uint8Array(byteLength);
+      let position = 0;
+      for (const chunk of chunks) {
+        pdfBytes.set(chunk, position);
+        position += chunk.length;
+      }
+      return new Blob([pdfBytes], { type: 'application/pdf' });
+    }
+
+    function downloadCertificate() {
+      if (!gameEnded || !placedPieces.every((piece, index) => piece && piece.id === correctOrder[index])) {
+        return;
+      }
+
+      const studentName = certificateStudentName.value.trim();
+      if (!studentName) {
+        certificateStudentName.focus();
+        statusDisplay.textContent = 'Enter the student name before downloading the certificate.';
+        return;
+      }
+
+      try {
+        const pdfBlob = createCertificatePdf(studentName);
+        const downloadUrl = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        const fileName = studentName.normalize('NFD')
+          .replace(/[\\u0300-\\u036f]/g, '')
+          .replace(/[^a-zA-Z0-9]+/g, '-')
+          .replace(/^-|-$/g, '')
+          .toLowerCase() || 'student';
+
+        link.href = downloadUrl;
+        link.download = 'bullying-puzzle-certificate-' + fileName + '.pdf';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(downloadUrl), 1500);
+        statusDisplay.textContent = 'Certificate generated successfully!';
+      } catch (error) {
+        console.error('Certificate generation failed:', error);
+        statusDisplay.textContent = 'The certificate could not be generated in this browser. Please try again.';
+      }
+    }
+
+    certificateStudentName.addEventListener('input', () => {
+      downloadCertificateButton.disabled = !certificateStudentName.value.trim();
+    });
+    downloadCertificateButton.addEventListener('click', downloadCertificate);
+
     function endGame(won) {
       if (gameEnded) return;
       gameEnded = true;
@@ -670,11 +944,13 @@
       renderGame();
       resultPanel.classList.remove('hidden', 'failed');
       if (won) {
+        certificateActions.classList.remove('hidden');
         resultTitle.textContent = 'You did it! 🎉';
         resultMessage.textContent = 'Excellent work! You rebuilt the text about understanding and stopping bullying.';
         statusDisplay.textContent = 'Puzzle completed successfully!';
         timerDisplay.classList.remove('low-time');
       } else {
+        certificateActions.classList.add('hidden');
         resultPanel.classList.add('failed');
         resultTitle.textContent = "Time's up! ⏰";
         resultMessage.textContent = 'The 5-minute challenge is over. Restart the puzzle and try to put all 7 pieces in the correct order.';
