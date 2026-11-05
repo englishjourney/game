@@ -1695,8 +1695,8 @@ function tickLocalTestGame() {
   renderLocalTestState();
 }
 function handleLocalTestHotkey(event) {
-  const isShortcut = event.ctrlKey && event.shiftKey && (event.key === "Tab" || event.code === "Tab");
-  if (!isShortcut || event.altKey || event.metaKey) return;
+  const isShortcut = event.ctrlKey && event.altKey && event.shiftKey && (event.key === "Backspace" || event.code === "Backspace");
+  if (!isShortcut || event.metaKey) return;
   event.preventDefault();
   event.stopPropagation();
   if (event.stopImmediatePropagation) event.stopImmediatePropagation();
