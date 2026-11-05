@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="../../backend-loader.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#100b2b">
@@ -244,16 +245,7 @@
       <iframe id="mini-game-frame" title="EnglishJourney mini-game" loading="lazy"></iframe>
       <div class="mini-game-actions"><p class="muted">Finish the activity, then return to the city.</p><button id="btn-complete-mini-game" type="button" class="button button-primary" data-pt="Concluir atividade">I completed my task ✓</button></div>
     </div>
-  </dialog>
-
-  <div id="database-loader" class="database-loader" role="status" aria-live="polite" aria-hidden="true">
-    <div class="database-loader-card">
-      <span class="database-loader-spinner" aria-hidden="true"></span>
-      <strong id="database-loader-message">Working...</strong>
-      <small>Please wait a moment</small>
-    </div>
-  </div>
-  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+  </dialog><div id="toast-container" class="toast-container" aria-live="polite"></div>
   <script type="module" src="./app.js"></script>
 </body>
 </html>

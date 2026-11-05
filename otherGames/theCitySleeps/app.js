@@ -1,4 +1,5 @@
 import { supabase } from "../../supabaseClient.js";
+import { showLoader, hideLoader } from "../../loader.js";
 import { getSession, saveSession } from "../../auth.js";
 
 const FUNCTION_NAME = "the-city-sleeps";
@@ -331,41 +332,16 @@ function notify(message, isError = false) {
   window.setTimeout(() => toast.remove(), 4200);
 }
 
-const LOADING_LABELS = {
-  create_session: "Signing in...",
-  create_room: "Creating your room...",
-  join_room: "Joining the room...",
-  leave_room: "Leaving the room...",
-  start_game: "Starting the game...",
-  submit_action: "Saving your action...",
-  acknowledge_role: "Saving your response...",
-  acknowledge_dawn: "Saving your response...",
-  cast_vote: "Recording your vote...",
-  task_done: "Saving your task...",
-  advance_phase: "Updating the game...",
-};
-
 let loadingRequests = 0;
-let loadingTimer = null;
 
-function beginDatabaseLoading(action) {
+function beginDatabaseLoading() {
   loadingRequests += 1;
-  if (loadingRequests !== 1) return;
-  const overlay = $("database-loader");
-  if (!overlay) return;
-  $("database-loader-message").textContent = LOADING_LABELS[action] || "Saving to the game...";
-  loadingTimer = window.setTimeout(() => {
-    if (loadingRequests > 0) overlay.classList.add("is-visible");
-  }, 220);
+  if (loadingRequests === 1) showLoader();
 }
 
 function endDatabaseLoading() {
   loadingRequests = Math.max(0, loadingRequests - 1);
-  if (loadingRequests > 0) return;
-  if (loadingTimer) window.clearTimeout(loadingTimer);
-  loadingTimer = null;
-  const overlay = $("database-loader");
-  if (overlay) overlay.classList.remove("is-visible");
+  if (loadingRequests === 0) hideLoader();
 }
 
 async function api(action, payload = {}) {
