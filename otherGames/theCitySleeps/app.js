@@ -823,7 +823,7 @@ function renderRoom(state) {
       '<p class="role-description">' + esc(role.description) + '</p><p class="role-warning">Keep your role secret. Do not show this screen to other players.</p></div></div>';
 
   const key = [room.phase, room.roundNo, state.me.id, !!state.me.roleReady, !!state.me.phaseReady,
-    !!state.myAction, !!state.myVote, room.winnerMessage || ""].join("|");
+    !!state.myAction, !!state.myVote, room.voteCount || 0, room.winnerMessage || ""].join("|");
   if (key !== panelKey) {
     panelKey = key;
     selectedTargets = [];
@@ -1644,11 +1644,20 @@ function beginLocalTestVoting() {
   game.room.phaseEndsAt = new Date(Date.now() + LOCAL_TEST_VOTING_MS).toISOString();
   game.votes.clear();
   localTestAddNews("Discussion is over. Cast your vote.", "voting");
+
+  // Give the bots a shared suspicion target so random independent choices do not
+  // create repeated ties in the six-player local simulation.
+  const botTargets = game.players.filter((player) => player.isBot && player.isAlive && !player.isPuppet);
+  const consensusTarget = localRandomItem(botTargets);
   game.players.filter((player) => player.isBot && player.isAlive).forEach((bot, index) => {
     window.setTimeout(() => {
-      if (!localTestMode || !localTestGame || localTestGame.room.phase !== "voting" || !bot.isAlive) return;
-      const target = chooseLocalBotVote(bot);
-      if (target) game.votes.set(bot.id, { targetPlayerId: target.id });
+      if (!localTestMode || localTestGame !== game || game.room.phase !== "voting" || !bot.isAlive || game.votes.has(bot.id)) return;
+      const target = consensusTarget && consensusTarget.id !== bot.id && consensusTarget.isAlive
+        ? consensusTarget
+        : chooseLocalBotVote(bot);
+      game.votes.set(bot.id, target
+        ? { targetPlayerId: target.id }
+        : { targetPlayerId: null, skipped: true });
       maybeResolveLocalTestVote();
       renderLocalTestState();
     }, 450 + index * 250);
@@ -1660,8 +1669,12 @@ function maybeResolveLocalTestVote(force = false) {
   if (!game || game.room.phase !== "voting" || game.resolving) return;
   const alive = game.players.filter((player) => player.isAlive);
   if (force) {
-    const human = alive.find((player) => player.isHuman);
-    if (human && !game.votes.has(human.id)) game.votes.set(human.id, { targetPlayerId: null, skipped: true });
+    // A missed simulated action must never leave the local vote waiting forever.
+    alive.forEach((player) => {
+      if (!game.votes.has(player.id)) {
+        game.votes.set(player.id, { targetPlayerId: null, skipped: true });
+      }
+    });
   }
   if (alive.every((player) => game.votes.has(player.id))) resolveLocalTestVote();
 }
@@ -1670,6 +1683,7 @@ function resolveLocalTestVote() {
   if (!game || game.room.phase !== "voting" || game.resolving) return;
   game.resolving = true;
   game.room.phase = "resolving_vote";
+  game.room.phaseEndsAt = null;
   const totals = new Map();
   game.votes.forEach((vote) => {
     if (vote.targetPlayerId) totals.set(vote.targetPlayerId, (totals.get(vote.targetPlayerId) || 0) + 1);
