@@ -797,24 +797,19 @@ function roleName(key: string) {
   return names[canonicalKey] || "an unknown role";
 }
 
-async function hostAdvanceNight(user: any, body: any) {
+async function hostContinueDawn(user: any, body: any) {
   const room = await getRoomByCode(body.roomCode);
-  if (room.host_user_id !== user.id) throw new GameError("Only the host can end the night for everyone.", 403);
-  if (room.status !== "active" || room.phase !== "night") {
-    throw new GameError("The night is no longer open for actions.");
+  if (room.host_user_id !== user.id) throw new GameError("Only the host can continue for everyone.", 403);
+  if (room.status !== "active" || room.phase !== "dawn") {
+    throw new GameError("The daily report is no longer waiting for confirmation.");
   }
 
-  await resolveNight(room.id);
+  const { error } = await db.from("tcs_players").update({ phase_ready: true })
+    .eq("room_id", room.id).eq("is_alive", true);
+  if (error) throw error;
+
   await advanceRoom(room.id);
-  const updatedRoom = await getRoomById(room.id);
-  if (updatedRoom.phase === "resolving_night") {
-    return { advanced: false, resolving: true };
-  }
-  if (updatedRoom.phase !== "night") {
-    await addNews(room.id, updatedRoom.round_no, "The host ended the night early. Any missing actions were skipped.", "night_end");
-    return { advanced: true, phase: updatedRoom.phase };
-  }
-  return { advanced: false, phase: updatedRoom.phase };
+  return { continued: true };
 }
 
 async function advanceRoom(roomId: string) {
@@ -1176,7 +1171,7 @@ async function dispatch(action: string, body: any, user: any) {
     case "get_state": return await getState(user, body);
     case "acknowledge_role": return await acknowledgeRole(user, body);
     case "submit_night_action": return await submitNightAction(user, body);
-    case "host_advance_night": return await hostAdvanceNight(user, body);
+    case "host_continue_dawn": return await hostContinueDawn(user, body);
     case "acknowledge_dawn": return await acknowledgeDawn(user, body);
     case "submit_vote": return await submitVote(user, body);
     default: throw new GameError("Unknown game request.");
