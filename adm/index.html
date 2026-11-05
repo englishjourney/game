@@ -71,6 +71,7 @@
             <div class="mobile-nav-heading"><strong>Menu</strong><button type="button" id="mobile-menu-close" aria-label="Fechar menu">×</button></div>
             <button class="nav-btn active" data-target="dashboard-section">Dashboard</button>
             <button class="nav-btn" data-target="planner-section">Planejamentos</button>
+            <button class="nav-btn" data-target="completed-planner-section">Aulas passadas</button>
             <button class="nav-btn" data-target="tasks-section">Tasks</button>
             <button class="nav-btn" data-target="users-section">Usuários</button>
             <button class="nav-btn" data-target="missions-section">Missões</button>
@@ -116,6 +117,17 @@
                     </label>
                 </div>
                 <div id="planner-list" class="cards-container">
+                    <!-- Preenchido via JS -->
+                </div>
+            </section>
+
+            <!-- COMPLETED PLANNER SECTION -->
+            <section id="completed-planner-section" class="content-section hidden">
+                <div class="section-header">
+                    <h2>Aulas passadas</h2>
+                </div>
+                <p class="section-description">Aulas marcadas como concluídas, organizadas por turma.</p>
+                <div id="completed-planner-container" class="completed-planner-container">
                     <!-- Preenchido via JS -->
                 </div>
             </section>
