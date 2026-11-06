@@ -1,0 +1,13 @@
+/* Estilos específicos desta missão.
+   O visual compartilhado fica em components/mission.css. */
+.ej-mission-content .ej-days-grid {
+    align-items: stretch;
+}
+
+.ej-mission-content .ej-day-card {
+    min-height: 116px;
+}
+
+.ej-mission-content .ej-day-name {
+    letter-spacing: -.02em;
+}
