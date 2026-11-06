@@ -8,7 +8,7 @@ Cada etapa combina um campo de vocabulário com um objetivo gramatical. A trilha
 
 | Etapa | Tema e vocabulário | Foco gramatical / comunicativo |
 |---|---|---|
-| 01 | Introductions & classroom — apresentações, pessoas e objetos da sala | Subject pronouns, verb *to be* e frases afirmativas |
+| 01 | Days of the Week — dias da semana, sequência semanal e weekdays / weekend | Vocabulário básico de calendário e referência a dias |
 | 02 | Numbers, dates & daily routine — números, horários e rotina | Simple present: afirmativas e negativas |
 | 03 | Free time & hobbies — lazer, esportes e interesses | Simple present: perguntas, respostas curtas e frequência |
 | 04 | Places in town — lugares da cidade e serviços | There is / there are e preposições de lugar |
