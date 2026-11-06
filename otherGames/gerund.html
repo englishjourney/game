@@ -345,6 +345,7 @@
     let timerSeconds = 20;
     let hasSavedScore = false;
     let gameOverHandled = false;
+    let questionRevealed = false;
 
     // --- AVATARS LIST ---
     const AVATARS = [
@@ -957,10 +958,14 @@
     function broadcastState(action, data) {
       const payload = { action, ...data };
       if (realtimeChannel && !isDemoMode) {
-        realtimeChannel.send({
+        Promise.resolve(realtimeChannel.send({
           type: 'broadcast',
           event: 'game_event',
           payload: payload
+        })).then(status => {
+          if (status !== 'ok') console.warn('Realtime broadcast não confirmado:', action, status);
+        }).catch(error => {
+          console.error('Falha ao transmitir evento Realtime:', action, error);
         });
       }
       handleBroadcastEvent(payload);
@@ -972,6 +977,7 @@
       switch (data.action) {
         case 'START_GAME':
           gameOverHandled = false;
+          questionRevealed = false;
           currentQuestionIndex = 0;
           playerAnswersSubmitted = {};
           if (userRole === 'player') {
@@ -1004,7 +1010,10 @@
         }
 
         case 'REVEAL_ANSWERS':
-          if (data.questionIndex === currentQuestionIndex) showAnswerReveal(data.questionIndex);
+          if (data.questionIndex === currentQuestionIndex && !questionRevealed) {
+            questionRevealed = true;
+            showAnswerReveal(data.questionIndex);
+          }
           break;
 
         case 'SCOREBOARD_UPDATE': {
@@ -1033,18 +1042,27 @@
           startQuestionTimer();
           break;
 
-        case 'GAME_OVER':
+        case 'GAME_OVER': {
           if (gameOverHandled) break;
           gameOverHandled = true;
-          if (userRole === 'player') updateDatabaseScores();
-          showFinalPodium(Array.isArray(data.topPlayers) ? data.topPlayers : []);
+          const finalPlayers = Array.isArray(data.topPlayers) ? data.topPlayers : [];
+          if (userRole === 'player') {
+            const myFinalResult = finalPlayers.find(player =>
+              getPlayerKey(player) === getPlayerKey(currentUser)
+            );
+            if (myFinalResult) currentUser.score = Number(myFinalResult.score) || 0;
+            updateDatabaseScores();
+          }
+          showFinalPodium(finalPlayers);
           break;
+        }
       }
     }
 
     // --- QUESTION RENDER & TIMER ---
     function renderQuestion(index) {
       const q = QUESTIONS[index];
+      questionRevealed = false;
       playerAnswersSubmitted = {};
       currentUser.hasAnswered = false;
 
@@ -1138,7 +1156,7 @@
 
         if (myAnswer === q.correct) {
           card.className = "p-6 rounded-2xl mb-6 text-2xl font-black bg-kahoot-green text-white animate-bounce";
-          card.innerHTML = '<i class="fa-solid fa-circle-check mr-2"></i> RESPOSTA CORRETA!';
+          card.innerHTML = '<i class="fa-solid fa-circle-check mr-2"></i> RESPOSTA CORRETA! +10 pts';
           playSound('correct');
         } else {
           card.className = "p-6 rounded-2xl mb-6 text-2xl font-black bg-kahoot-red text-white";
