@@ -422,7 +422,8 @@ function renderMergePreviewCard(item, label) {
         '<p><strong>Duração:</strong> ' + escapePlannerHtml(item.duration || 'Não informada') + '</p>' +
         '<div class="merge-preview-activities"><strong>Atividades:</strong>' +
             (item.activities ? renderPlannerMarkdown(item.activities) : '<p class="merge-no-activities">Sem atividades cadastradas.</p>') +
-        '</div></article>';
+        '</div>' + (label === 'Aula de destino' ? '<button type="button" id="btn-change-merge-target" class="btn-secondary merge-change-target">Trocar aula</button>' : '') +
+        '</article>';
 }
 
 function renderMergeCandidateCard(item) {
@@ -467,7 +468,7 @@ function setupPlannerMerge() {
 
     if (targetPreview) {
         targetPreview.addEventListener('click', event => {
-            if (event.target.closest('#btn-open-merge-picker')) {
+            if (event.target.closest('#btn-open-merge-picker, #btn-change-merge-target')) {
                 window.showPlannerMergePicker();
             }
         });
