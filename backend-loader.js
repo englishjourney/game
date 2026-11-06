@@ -288,17 +288,26 @@
     };
   }
 
-  function isBackendUrl(input) {
+  function isBackendUrl(input, init) {
     try {
       const rawUrl = typeof input === "string" ? input :
         (input && typeof input.url === "string" ? input.url : String(input || ""));
       const parsed = new URL(rawUrl, window.location.href);
       const host = parsed.hostname.toLowerCase();
+      const method = String((init && init.method) || (input && input.method) || "GET").toUpperCase();
       const isSupabase = host === SUPABASE_HOST || host.endsWith(".supabase.co");
+
       if (isSupabase && parsed.pathname.startsWith("/functions/v1/the-city-sleeps")) {
         // The City Sleeps already has its own loader and suppresses background polling.
         return false;
       }
+
+      if (isSupabase && parsed.pathname === "/rest/v1/reminders" && method === "GET") {
+        // The admin panel checks reminder expiration in the background every 10 seconds.
+        // These silent status checks must not cover the entire page with the global loader.
+        return false;
+      }
+
       return isSupabase || host === "script.google.com" || host.endsWith(".googleusercontent.com");
     } catch (_) {
       return false;
@@ -310,7 +319,7 @@
     const originalFetch = window.fetch;
     window.fetch = function () {
       const args = arguments;
-      if (!isBackendUrl(args[0])) return originalFetch.apply(this, args);
+      if (!isBackendUrl(args[0], args[1])) return originalFetch.apply(this, args);
 
       const finish = beginOperation({ immediate: false });
       let request;
