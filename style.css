@@ -28,6 +28,49 @@
 }
 .auth-box input::placeholder { color: #005a8c; }
 
+/* Ícones do menu principal no tema High School. */
+.menu-btn i {
+    display: inline-block;
+    width: 1.35em;
+    margin-right: 0.45em;
+    text-align: center;
+    color: var(--primary-color);
+}
+
+body.high-school-theme .mission-map-dialog {
+    background: #080f1d;
+    border-color: var(--primary-color);
+    color: #e7fbff;
+}
+
+body.high-school-theme .mission-view-heading,
+body.high-school-theme .mission-map-dialog-header h2 i,
+body.high-school-theme .mission-empty-state > i,
+body.high-school-theme .mission-loading > i {
+    color: var(--primary-color);
+}
+
+body.high-school-theme .mission-map-trigger,
+body.high-school-theme .mission-return-current {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+body.high-school-theme .mission-current-card {
+    border-color: rgba(0, 225, 255, 0.42);
+    background: rgba(0, 25, 45, 0.55);
+}
+
+body.high-school-theme .mission-number-pill {
+    background: var(--primary-color);
+    color: #05101a;
+}
+
+body.high-school-theme .mission-map-node {
+    border-color: rgba(0, 225, 255, 0.18);
+    background: rgba(0, 25, 45, 0.45);
+}
+
 /* ================= BOTÕES DO MENU (ESTILO NEON/SCAN) ================= */
 .btn-primary, .menu-btn {
     background: rgba(0, 20, 40, 0.8);
