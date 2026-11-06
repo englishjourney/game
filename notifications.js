@@ -159,9 +159,6 @@ export function initNotifications() {
     }
 
     persist();
-    // Sincroniza ao entrar no jogo e a cada retorno à aba.
-    syncNotifications();
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') syncNotifications();
-    });
+    // A sincronização ocorre somente quando o usuário abre o sino de notificações.
+    // Não há consultas automáticas ao retornar à aba.
 }
