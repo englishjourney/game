@@ -414,6 +414,15 @@ function openMissionMap() {
     window.addEventListener('resize', redrawRoute);
 }
 
+
+window.addEventListener('message', event => {
+    if (event.origin !== window.location.origin) return;
+    const iframe = document.querySelector('.mission-frame-container iframe');
+    if (!iframe || event.source !== iframe.contentWindow) return;
+    if (event.data?.type !== 'ENGLISHJOURNEY_MISSION_COMPLETED') return;
+    openMissions();
+});
+
 export async function openMissions() {
     const session = getSession();
     if (!session?.username) return;
