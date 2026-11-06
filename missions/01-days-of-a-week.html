@@ -294,7 +294,7 @@ function renderExerciseQuestion(){
  document.getElementById("exercise-next")?.addEventListener("click",()=>{if(exerciseIndex===0){exerciseIndex=1;renderExerciseQuestion()}else renderRaceIntro()});
 }
 function renderRaceIntro(){
- setMissionProgress("GAME",3,3,58);setArtie("Ready, driver? Encontre na pista a palavra em inglês que corresponde ao dia em português!","artie_smiling_pointing_right.png");
+ setMissionProgress("GAME",3,3,100);setArtie("Ready, driver? Encontre na pista a palavra em inglês que corresponde ao dia em português!","artie_smiling_pointing_right.png");
  setMissionContent(`
  <span class="ej-kicker">FINAL CHALLENGE • DAY RACER</span><h1 class="ej-screen-title">Let’s race!</h1>
  <p class="ej-screen-copy">Cada palavra correta vale um ponto. Alcance <strong>${missionSettings.missionScore??"—"}</strong> pontos para concluir a missão.</p>
