@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const session = getSession();
 
     if (session) initNotifications();
+    else applyTheme(null); // A tela inicial usa o tema padrão do Fundamental.
 
     // Controle de exibição (Logado vs Deslogado)
     if (session) {
@@ -197,12 +198,42 @@ function applyTheme(grade) {
     const isHighSchool = ['1', '2', '3'].includes(firstGradeDigit);
     const themeStyle = document.getElementById('theme-highschool');
     const logoImg = document.getElementById('app-logo');
+    document.body.classList.toggle('high-school-theme', isHighSchool);
 
     if (isHighSchool) {
         if (themeStyle) themeStyle.href = 'style.css';
         if (logoImg) logoImg.src = 'logorpg.png';
-    } else {
-        if (themeStyle) themeStyle.href = '';
-        if (logoImg) logoImg.src = 'logoarcade.png';
+        return;
     }
+
+    if (themeStyle) themeStyle.href = '';
+    if (logoImg) logoImg.src = 'logoarcade.png';
+    createFundamentalStars();
+}
+
+function createFundamentalStars() {
+    const container = document.getElementById('fundamental-stars');
+    if (!container || container.childElementCount > 0) return;
+
+    // Distribuição fixa para manter o visual consistente entre carregamentos.
+    const positions = [
+        [5, 12, 16], [14, 31, 13], [23, 9, 18], [33, 24, 14],
+        [44, 8, 12], [54, 19, 17], [66, 11, 14], [78, 27, 19],
+        [91, 13, 15], [8, 52, 13], [18, 72, 18], [29, 49, 15],
+        [40, 83, 13], [51, 62, 17], [63, 88, 14], [74, 57, 19],
+        [86, 76, 13], [96, 48, 16], [3, 89, 17], [25, 93, 14],
+        [36, 66, 18], [48, 39, 13], [59, 31, 15], [69, 42, 12],
+        [82, 6, 14], [94, 92, 18]
+    ];
+
+    positions.forEach(([left, top, size], index) => {
+        const star = document.createElement('span');
+        star.textContent = index % 4 === 0 ? '✧' : '✦';
+        star.style.left = left + '%';
+        star.style.top = top + '%';
+        star.style.setProperty('--star-size', size + 'px');
+        star.style.setProperty('--float-duration', (6 + (index % 5) * 0.8) + 's');
+        star.style.setProperty('--float-delay', (-0.45 * (index % 7)) + 's');
+        container.appendChild(star);
+    });
 }
