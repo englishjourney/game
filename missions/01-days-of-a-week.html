@@ -24,6 +24,37 @@
 }
 
 
+
+/* Day Racer */
+.ej-race{position:relative;min-height:570px;overflow:hidden;border-radius:22px;background:#82cfea;isolation:isolate;touch-action:pan-y}
+.ej-race-sky{position:absolute;inset:0 0 52%;background:linear-gradient(#69c5ed,#d9f6ff);overflow:hidden}
+.ej-cloud{position:absolute;width:100px;height:28px;border-radius:30px;background:#fff;opacity:.9;animation:ej-cloud-move 20s linear infinite}
+.ej-cloud:before,.ej-cloud:after{content:"";position:absolute;bottom:5px;border-radius:50%;background:#fff}
+.ej-cloud:before{width:42px;height:42px;left:15px}.ej-cloud:after{width:35px;height:35px;right:13px}
+.ej-cloud:nth-child(1){top:20%;left:-120px;animation-duration:17s}.ej-cloud:nth-child(2){top:55%;left:-120px;animation-duration:26s;animation-delay:-9s;scale:.7}.ej-cloud:nth-child(3){top:36%;left:-120px;animation-duration:31s;animation-delay:-18s;scale:1.2}
+@keyframes ej-cloud-move{to{transform:translateX(calc(100vw + 250px))}}
+.ej-road{position:absolute;inset:43% -35% -12%;background:linear-gradient(90deg,#60656b,#34383e 50%,#60656b);clip-path:polygon(42% 0,58% 0,100% 100%,0 100%);overflow:hidden}
+.ej-road:before{content:"";position:absolute;top:0;bottom:0;left:calc(50% - 2px);width:4px;background:repeating-linear-gradient(to bottom,#fff 0 34px,transparent 34px 78px);animation:ej-lines .55s linear infinite}
+.ej-road:after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle,#aeb5bc 1.3px,transparent 2px),radial-gradient(circle,#818991 1px,transparent 2px);background-size:34px 47px,57px 63px;animation:ej-specks .7s linear infinite}
+@keyframes ej-lines{to{background-position-y:78px}}@keyframes ej-specks{to{background-position:0 47px,20px 63px}}
+.ej-race-hud{position:absolute;z-index:5;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;gap:8px}
+.ej-race-hud>div{padding:8px 13px;border-radius:13px;background:#ffffffeb;color:#243044;font-weight:900;box-shadow:0 3px 10px #0002}
+.ej-race-hud strong{display:block;font-size:1.25rem}
+.ej-race-words{position:absolute;z-index:3;inset:43% 0 0;pointer-events:none}
+.ej-race-word{position:absolute;top:-12%;width:clamp(70px,18%,110px);padding:8px 3px;border:2px solid white;border-bottom-width:5px;border-radius:12px;background:#fff5c9;color:#273548;text-align:center;font-weight:1000;font-size:clamp(.72rem,2.5vw,.95rem);transform:translateX(-50%);box-shadow:0 4px 8px #0003}
+.ej-car{position:absolute;z-index:4;bottom:8%;left:50%;width:65px;height:105px;transform:translateX(-50%);border:3px solid white;border-radius:18px 18px 12px 12px;background:linear-gradient(90deg,#9d1822,#f04443 45%,#b71e28);box-shadow:0 8px 12px #0005;transition:left .09s}
+.ej-car:before{content:"";position:absolute;top:15px;left:10px;right:10px;height:30px;border-radius:8px 8px 4px 4px;background:linear-gradient(#c4f2ff,#3986a4);border:2px solid #8e1d24}
+.ej-car:after{content:"";position:absolute;bottom:9px;left:13px;right:13px;height:15px;border-radius:4px;background:#ffe58a;box-shadow:-17px 8px 0 -3px #15191d,17px 8px 0 -3px #15191d}
+.ej-race-controls{position:absolute;z-index:6;bottom:10px;left:0;right:0;display:flex;justify-content:space-between;padding:0 13px;pointer-events:none}
+.ej-race-controls button{pointer-events:auto;width:56px;height:48px;border:2px solid white;border-radius:14px;background:#ffffffdf;color:#263548;font-size:1.4rem;font-weight:900;touch-action:none}
+.ej-race-overlay{position:absolute;z-index:8;inset:0;display:grid;place-items:center;background:#102a3b66}
+.ej-race-overlay[hidden]{display:none}
+.ej-race-feedback{position:absolute;z-index:7;top:36%;left:50%;translate:-50% -50%;padding:8px 15px;border-radius:18px;background:white;color:#238019;font-weight:1000;opacity:0}
+.ej-race-feedback.show{animation:ej-pop .7s ease}
+@keyframes ej-pop{20%,70%{opacity:1;scale:1.08}to{opacity:0;scale:.9}}
+.ej-race-help{text-align:center;color:#64748b;font-size:.83rem}
+@media(max-width:600px){.ej-race{min-height:520px}.ej-car{width:57px;height:94px}}
+
 /* Estado de carregamento dos áudios dos flashcards. */
 .ej-audio-button:disabled { cursor: not-allowed; opacity: .72; }
 .ej-audio-button.is-loading { cursor: wait; opacity: 1; }
@@ -262,212 +293,99 @@ function renderLesson() {
     document.getElementById("start-mini-exercise")?.addEventListener("click", renderWarmup);
 }
 
-function renderWarmup() {
-    setMissionProgress("QUICK CHECK", 2, 3, 42);
-    setArtie("Let's see what you remember! Não se preocupe: esta é só uma pequena prática antes do jogo.", "artie_standing_smiling.png");
 
-    setMissionContent(`
-        <span class="ej-kicker">QUICK CHECK • 1 QUESTION</span>
-        <h1 class="ej-screen-title">Let’s practice!</h1>
-        <p class="ej-screen-copy">Escolha a resposta correta para conferir se você aprendeu a sequência.</p>
-        <section class="ej-quiz-card">
-            <p class="ej-question-number">QUESTION 01</p>
-            <h2 class="ej-question-title">Which day comes after Tuesday?</h2>
-            <div class="ej-answer-list" id="warmup-answers">
-                <button class="ej-answer-option" type="button" data-warmup-answer="Sunday">Sunday</button>
-                <button class="ej-answer-option" type="button" data-warmup-answer="Wednesday">Wednesday</button>
-                <button class="ej-answer-option" type="button" data-warmup-answer="Friday">Friday</button>
-            </div>
-        </section>
-    `);
+const exerciseQuestions = [
+ {prompt:"Which day comes after Tuesday?",options:["Sunday","Wednesday","Friday"],answer:"Wednesday",explanation:"Wednesday comes after Tuesday."},
+ {prompt:"What day comes before Friday?",options:["Thursday","Saturday","Monday"],answer:"Thursday",explanation:"Thursday comes right before Friday."}
+];
+let exerciseIndex=0, exerciseCorrect=0;
+let raceScore=0,raceRunning=false,raceFrame=0,raceLast=0,raceSpawn=0,raceX=50,raceTarget=null,raceWords=[],racePointer=null;
 
-    document.querySelectorAll("[data-warmup-answer]").forEach(button => {
-        button.addEventListener("click", () => {
-            document.querySelectorAll("[data-warmup-answer]").forEach(option => option.disabled = true);
-            const isCorrect = button.dataset.warmupAnswer === "Wednesday";
-
-            if (isCorrect) {
-                button.classList.add("is-correct");
-                setArtie("Excellent! Você acertou. Agora vamos para o desafio!", "artie_smiling_happy_hand_clenched_fists.png");
-                showMissionDialog({
-                    title: "Great job!",
-                    message: "That’s correct! Wednesday comes after Tuesday. Você está pronto para jogar.",
-                    buttonText: "Go to game",
-                    tone: "success",
-                    onAction: startGame
-                });
-            } else {
-                document.querySelector('[data-warmup-answer="Wednesday"]')?.classList.add("is-correct");
-                button.classList.add("is-wrong");
-                setArtie("No problem! Errar faz parte do aprendizado. Veja a sequência e tente aplicar no jogo.", "artie_sad.png");
-                showMissionDialog({
-                    title: "Let’s learn from it!",
-                    message: "A resposta correta é Wednesday. A sequência é Monday, Tuesday, Wednesday: portanto, Wednesday vem depois de Tuesday.",
-                    buttonText: "Go to game",
-                    tone: "warning",
-                    onAction: startGame
-                });
-            }
-        });
-    });
+function renderWarmup(){exerciseIndex=0;exerciseCorrect=0;renderExerciseQuestion();}
+function renderExerciseQuestion(){
+ const q=exerciseQuestions[exerciseIndex];
+ setMissionProgress("EXERCISE",2,3,exerciseIndex?48:35);
+ setArtie("Responda às duas questões para liberar o jogo!","artie_standing_smiling.png");
+ setMissionContent(`
+  <span class="ej-kicker">EXERCISE • QUESTION ${exerciseIndex+1} OF 2</span>
+  <h1 class="ej-screen-title">Let’s practice!</h1>
+  <p class="ej-screen-copy">Conclua as duas questões. Depois, você poderá jogar a corrida dos dias da semana.</p>
+  <section class="ej-quiz-card"><p class="ej-question-number">QUESTION 0${exerciseIndex+1} / 02</p>
+  <h2 class="ej-question-title">${q.prompt}</h2>
+  <div class="ej-answer-list" id="exercise-answers">${q.options.map(x=>`<button class="ej-answer-option" type="button" data-exercise-answer="${x}">${x}</button>`).join("")}</div>
+  <p id="exercise-feedback" class="ej-answer-feedback" aria-live="polite"></p>
+  <div class="ej-button-row"><button id="exercise-next" class="ej-primary-button" type="button" hidden disabled>${exerciseIndex===1?"Go to game":"Continue"} <span aria-hidden="true">→</span></button></div></section>`);
+ document.querySelectorAll("[data-exercise-answer]").forEach(btn=>btn.addEventListener("click",()=>{
+  const opts=[...document.querySelectorAll("[data-exercise-answer]")];if(opts.some(x=>x.disabled))return;
+  opts.forEach(x=>{x.disabled=true;if(x.dataset.exerciseAnswer===q.answer)x.classList.add("is-correct")});
+  const ok=btn.dataset.exerciseAnswer===q.answer;if(ok){exerciseCorrect++;setArtie("Excellent! Você acertou!","artie_smiling_happy_clenched_fists.png")}else{btn.classList.add("is-wrong");setArtie("Quase! Observe a resposta correta e continue.","artie_sad.png")}
+  document.getElementById("exercise-feedback").textContent=(ok?"Correct! ":"Not quite. ")+q.explanation;
+  const next=document.getElementById("exercise-next");next.hidden=false;next.disabled=false;
+ }));
+ document.getElementById("exercise-next")?.addEventListener("click",()=>{if(exerciseIndex===0){exerciseIndex=1;renderExerciseQuestion()}else renderRaceIntro()});
 }
-
-function startGame() {
-    gameIndex = 0;
-    correctAnswers = 0;
-    answerLocked = false;
-    renderGameQuestion();
+function renderRaceIntro(){
+ setMissionProgress("GAME",3,3,58);setArtie("Ready, driver? Encontre na pista a palavra em inglês que corresponde ao dia em português!","artie_smiling_pointing_right.png");
+ setMissionContent(`
+ <span class="ej-kicker">FINAL CHALLENGE • DAY RACER</span><h1 class="ej-screen-title">Let’s race!</h1>
+ <p class="ej-screen-copy">Cada palavra correta vale um ponto. Alcance <strong>${missionSettings.missionScore??"—"}</strong> pontos para concluir a missão.</p>
+ <div class="ej-race" id="ej-race">
+  <div class="ej-race-sky"><i class="ej-cloud"></i><i class="ej-cloud"></i><i class="ej-cloud"></i></div><div class="ej-road"></div>
+  <div class="ej-race-hud"><div>Encontre:<strong id="race-target">—</strong></div><div>SCORE<strong id="race-score">0</strong></div></div>
+  <div class="ej-race-words" id="race-words"></div><div class="ej-car" id="race-car"></div>
+  <div class="ej-race-feedback" id="race-feedback">+1</div>
+  <div class="ej-race-controls"><button id="race-left" type="button" aria-label="Esquerda">←</button><button id="race-right" type="button" aria-label="Direita">→</button></div>
+  <div class="ej-race-overlay" id="race-overlay"><button class="ej-primary-button" id="race-start" type="button">▶ Start</button></div>
+ </div><p class="ej-race-help">Use ← →, A / D, os botões ou arraste o carro na tela.</p>`);
+ raceScore=0;raceX=50;raceTarget=pickDay();raceWords=[];updateRaceHud();
+ document.getElementById("race-start")?.addEventListener("click",startRace);
+ const root=document.getElementById("ej-race");
+ const move=x=>{raceX=Math.max(12,Math.min(88,x));const car=document.getElementById("race-car");if(car)car.style.left=raceX+"%"};
+ document.getElementById("race-left")?.addEventListener("pointerdown",e=>{e.preventDefault();if(raceRunning)move(raceX-9)});
+ document.getElementById("race-right")?.addEventListener("pointerdown",e=>{e.preventDefault();if(raceRunning)move(raceX+9)});
+ root?.addEventListener("pointerdown",e=>{if(!raceRunning||e.target.closest("button"))return;racePointer=e.pointerId;root.setPointerCapture(e.pointerId);move((e.clientX-root.getBoundingClientRect().left)/root.clientWidth*100)});
+ root?.addEventListener("pointermove",e=>{if(raceRunning&&racePointer===e.pointerId)move((e.clientX-root.getBoundingClientRect().left)/root.clientWidth*100)});
+ const release=e=>{if(racePointer===e.pointerId)racePointer=null};root?.addEventListener("pointerup",release);root?.addEventListener("pointercancel",release);
 }
-
-function renderGameQuestion() {
-    const question = gameQuestions[gameIndex];
-    const progress = 52 + Math.round((gameIndex / gameQuestions.length) * 42);
-
-    setMissionProgress("GAME", 3, 3, progress);
-    setArtie("You can do it! Escolha uma resposta. I’m cheering for you!", "artie_smiling_pointing_right.png");
-
-    const options = question.options.map(option => `
-        <button class="ej-answer-option" type="button" data-game-answer="${option}">${option}</button>
-    `).join("");
-
-    setMissionContent(`
-        <span class="ej-kicker">FINAL CHALLENGE • DAYS OF THE WEEK</span>
-        <h1 class="ej-screen-title">Play and learn!</h1>
-        <p class="ej-screen-copy">Responda às cinco perguntas. Você precisa acertar pelo menos quatro para concluir a missão.</p>
-        <section class="ej-quiz-card">
-            <p class="ej-question-number">QUESTION ${gameIndex + 1} / ${gameQuestions.length}</p>
-            <h2 class="ej-question-title">${question.prompt}</h2>
-            <div class="ej-answer-list" id="game-answers">${options}</div>
-            <p id="game-answer-feedback" class="ej-answer-feedback" aria-live="polite"></p>
-            <div class="ej-button-row">
-                <button id="next-game-question" class="ej-primary-button" type="button" hidden disabled>${gameIndex === gameQuestions.length - 1 ? "Finish mission" : "Continue"} <span aria-hidden="true">→</span></button>
-            </div>
-        </section>
-    `);
-
-    document.querySelectorAll("[data-game-answer]").forEach(button => {
-        button.addEventListener("click", () => chooseGameAnswer(button, question));
-    });
-
-    document.getElementById("next-game-question")?.addEventListener("click", () => {
-        if (gameIndex < gameQuestions.length - 1) {
-            gameIndex += 1;
-            answerLocked = false;
-            renderGameQuestion();
-        } else {
-            completeGame();
-        }
-    });
+function pickDay(){return days[Math.floor(Math.random()*days.length)]}
+function updateRaceHud(){const t=document.getElementById("race-target"),s=document.getElementById("race-score");if(t)t.textContent=raceTarget.pt;if(s)s.textContent=String(raceScore)}
+function startRace(){
+ if(missionSettings.missionScore===null||missionSettings.missionScore<=0){showMissionDialog({title:"Mission not configured",message:"Configure a quantidade mínima de pontos em mission_score na tabela missions para iniciar esta corrida.",buttonText:"Back",tone:"warning",onAction:renderRaceIntro});return}
+ raceRunning=true;raceLast=0;raceSpawn=0;document.getElementById("race-overlay").hidden=true;raceFrame=requestAnimationFrame(updateRace);
 }
-
-function chooseGameAnswer(button, question) {
-    if (answerLocked) return;
-    answerLocked = true;
-
-    const selected = button.dataset.gameAnswer;
-    const isCorrect = selected === question.answer;
-    const options = [...document.querySelectorAll("[data-game-answer]")];
-
-    options.forEach(option => {
-        option.disabled = true;
-        if (option.dataset.gameAnswer === question.answer) option.classList.add("is-correct");
-    });
-
-    const feedback = document.getElementById("game-answer-feedback");
-
-    if (isCorrect) {
-        correctAnswers += 1;
-        if (feedback) feedback.textContent = "Correct! " + question.explanation;
-        setArtie("Correct answer! Keep going!", "artie_smiling_happy_hand_clenched_fists.png");
-    } else {
-        button.classList.add("is-wrong");
-        if (feedback) feedback.textContent = "Not quite. " + question.explanation;
-        setArtie("Keep going! Uma resposta errada não apaga o que você já aprendeu.", "artie_sad.png");
-    }
-
-    const next = document.getElementById("next-game-question");
-    if (next) {
-        next.hidden = false;
-        next.disabled = false;
-    }
+function spawnRaceWord(){
+ const lane=[20,50,80][Math.floor(Math.random()*3)],day=pickDay(),el=document.createElement("div");
+ el.className="ej-race-word";el.textContent=day.en;el.style.left=lane+"%";document.getElementById("race-words")?.append(el);
+ raceWords.push({el,lane,day,y:-12,checked:false});
 }
-
-async function completeGame() {
-    const passed = correctAnswers >= 4;
-    setMissionProgress("RESULT", 3, 3, 100);
-    setArtie(
-        passed ? "You did it! Estou muito orgulhoso do seu esforço!" : "Good effort! Vamos revisar e aprender um pouco mais.",
-        passed ? "artie_smiling_happy_hand_clenched_fists.png" : "artie_sad.png"
-    );
-
-    let result = null;
-    let recordError = null;
-
-    try {
-        result = await recordMissionResult(MISSION_NAME, studentSession.username, passed ? "done" : "fail");
-    } catch (error) {
-        console.error("Erro ao registrar o resultado da missão:", error);
-        recordError = error;
-    }
-
-    if (result?.recorded && passed) {
-        missionSettings.alreadyAttempted = true;
-        missionSettings.completed = true;
-        setMissionXP(result.earnedPoints);
-    } else if (result?.recorded && !passed) {
-        missionSettings.alreadyAttempted = true;
-        missionSettings.failed = true;
-    } else if (result?.reason === "already-attempted") {
-        missionSettings.alreadyAttempted = true;
-    }
-
-    let message;
-    if (recordError) {
-        message = recordError.message + " Seu resultado foi: " + correctAnswers + " de 5.";
-    } else if (result?.reason === "mission-not-registered") {
-        message = "Você acertou " + correctAnswers + " de 5. A missão ainda não existe na tabela missions, então nenhum ponto foi registrado. Cadastre “Days of a Week” para ativar a pontuação.";
-    } else if (result?.reason === "score-not-configured") {
-        message = "Você acertou " + correctAnswers + " de 5, mas mission_score ainda não possui um valor válido. Configure a pontuação da missão para registrar a conclusão.";
-    } else if (result?.reason === "already-attempted") {
-        message = "Você acertou " + correctAnswers + " de 5. Esta missão já teve uma tentativa registrada para sua conta, então esta repetição não concede novos pontos.";
-    } else if (passed) {
-        message = "Você acertou " + correctAnswers + " de 5 e concluiu a missão! " + result.earnedPoints + " XP foram adicionados à sua pontuação.";
-    } else if (result?.recorded) {
-        message = "Você acertou " + correctAnswers + " de 5. Para concluir, é preciso acertar pelo menos 4. Sua tentativa foi registrada; revise a aula e continue aprendendo.";
-    } else {
-        message = "Você acertou " + correctAnswers + " de 5. Para concluir, é preciso acertar pelo menos 4. Revise a aula e tente novamente.";
-    }
-
-    const title = passed ? "Mission completed!" : "Keep practicing!";
-    showMissionDialog({
-        title,
-        message,
-        buttonText: "See results",
-        tone: passed ? "success" : "warning",
-        onAction: () => renderFinalScreen(passed, result, recordError)
-    });
+function updateRace(ts){
+ if(!raceRunning)return;const dt=Math.min(40,ts-(raceLast||ts));raceLast=ts;raceSpawn+=dt;
+ if(raceSpawn>1150){raceSpawn=0;spawnRaceWord()}
+ raceWords=raceWords.filter(w=>{
+  w.y+=dt*.055;w.el.style.top=w.y+"%";
+  if(!w.checked&&w.y>=77){w.checked=true;if(Math.abs(w.lane-raceX)<16){
+   if(w.day.en===raceTarget.en){raceScore++;updateRaceHud();const f=document.getElementById("race-feedback");if(f){f.textContent="+1";f.classList.remove("show");void f.offsetWidth;f.classList.add("show")}raceTarget=pickDay();updateRaceHud();if(raceScore>=Number(missionSettings.missionScore)){finishRace();}}
+   else{const f=document.getElementById("race-feedback");if(f){f.textContent="Try again!";f.classList.remove("show");void f.offsetWidth;f.classList.add("show")}}
+  }}
+  if(w.y>112){w.el.remove();return false}return true;
+ });
+ if(raceRunning)raceFrame=requestAnimationFrame(updateRace);
 }
+function onRaceKey(e){if(!raceRunning)return;const k=e.key.toLowerCase();if(["arrowleft","arrowright","a","d"].includes(k))e.preventDefault();if(k==="arrowleft"||k==="a")raceX=Math.max(12,raceX-3);if(k==="arrowright"||k==="d")raceX=Math.min(88,raceX+3);const c=document.getElementById("race-car");if(c)c.style.left=raceX+"%"}
+window.addEventListener("keydown",onRaceKey);
+function finishRace(){raceRunning=false;cancelAnimationFrame(raceFrame);window.removeEventListener("keydown",onRaceKey);setArtie("You did it! Parabéns pela conquista!","artie_smiling_happy_clenched_fists.png");completeGame(true)}
 
-function renderFinalScreen(passed, result, recordError) {
-    const points = result?.recorded && passed ? result.earnedPoints : 0;
-    setMissionContent(`
-        <span class="ej-kicker">MISSION 01 • RESULT</span>
-        <h1 class="ej-screen-title">${passed ? "Well done!" : "Almost there!"}</h1>
-        <p class="ej-screen-copy">${passed
-            ? "Você concluiu o desafio Days of the Week."
-            : "Você está aprendendo. Revise os dias da semana e pratique novamente."}</p>
-        <div class="ej-score-summary">
-            <div class="ej-summary-item"><strong>${correctAnswers}/5</strong><span>Correct answers</span></div>
-            <div class="ej-summary-item"><strong>${points} XP</strong><span>Points earned</span></div>
-        </div>
-        ${recordError ? '<div class="ej-info-strip ej-warning-strip">O resultado precisa ser conferido no banco de dados. Consulte a mensagem exibida antes.</div>' : ""}
-        <div class="ej-button-row">
-            <button id="review-days-lesson" class="ej-primary-button" type="button">Review lesson <span aria-hidden="true">↻</span></button>
-            <a class="ej-secondary-button" href="../index.html" target="_top">Back to EnglishJourney</a>
-        </div>
-    `);
-
-    document.getElementById("review-days-lesson")?.addEventListener("click", renderLesson);
+async function completeGame(passed) {
+ let result=null,error=null;
+ try{result=await recordMissionResult(MISSION_NAME,studentSession.username,passed?"done":"fail")}catch(e){error=e;console.error(e)}
+ if(result?.recorded&&passed){missionSettings.alreadyAttempted=true;missionSettings.completed=true;setMissionXP(result.earnedPoints)}
+ const message=error?"Não foi possível registrar o resultado: "+error.message:result?.reason==="already-attempted"?"Esta missão já teve uma tentativa registrada.": "Você alcançou "+raceScore+" pontos e concluiu a missão! Parabéns!";
+ showMissionDialog({title:passed?"Mission completed!":"Keep practicing!",message,buttonText:passed&&result?.recorded?"Next mission":"Review",tone:passed?"success":"warning",onAction:()=>{
+  if(passed&&result?.recorded){
+   setMissionContent('<h1 class="ej-screen-title">Congratulations!</h1><p class="ej-screen-copy">Missão concluída! Carregando a próxima etapa...</p>');
+   window.parent.postMessage({type:"ENGLISHJOURNEY_MISSION_COMPLETED",missionName:MISSION_NAME},window.location.origin);
+  }else renderLesson();
+ }});
 }
 
 mountMissionLayout();
