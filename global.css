@@ -109,6 +109,42 @@ body {
     filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); 
 }
 
+/* Container único dos controles do usuário, com fundo da classe selecionada. */
+.profile-container {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 9px 13px;
+    min-height: 108px;
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    border-radius: 18px;
+    background-color: rgba(12, 12, 20, 0.72);
+    background-image:
+        linear-gradient(rgba(0, 0, 0, 0.40), rgba(0, 0, 0, 0.40)),
+        var(--profile-class-image, linear-gradient(135deg, #34304c, #161526));
+    background-size: cover, cover;
+    background-position: center, center;
+    background-repeat: no-repeat;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+}
+
+.profile-container > button {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+}
+
+.notification-bell i {
+    color: #fff;
+    -webkit-text-stroke: 1px rgba(0, 0, 0, 0.85);
+    paint-order: stroke fill;
+}
+
 /* ================= FUNDOS ANIMADOS ================= */
 .background-anim {
     position: fixed;
