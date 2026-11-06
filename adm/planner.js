@@ -560,14 +560,16 @@ function setupPlannerMerge() {
                     .maybeSingle();
 
                 if (deleteError || !deletedSource) {
-                    const { error: rollbackError } = await supabase
+                    const { data: rollbackData, error: rollbackError } = await supabase
                         .from('planner')
                         .update({ activities: currentTarget.activities })
                         .eq('id', targetId)
                         .eq('activities', mergedActivities)
-                        .is('completed_at', null);
+                        .is('completed_at', null)
+                        .select('id')
+                        .maybeSingle();
 
-                    if (rollbackError) {
+                    if (rollbackError || !rollbackData) {
                         throw new Error('A aula de destino recebeu as atividades, mas não foi possível remover a aula de origem nem restaurar o texto anterior. Verifique as duas aulas antes de tentar novamente. Detalhe: ' + (deleteError || new Error('A aula de origem não foi removida.')).message);
                     }
                     throw new Error('A aula de origem não pôde ser removida. A aula de destino foi restaurada ao conteúdo anterior. ' + (deleteError ? deleteError.message : 'Atualize a lista e tente novamente.'));
