@@ -4,7 +4,6 @@ let taskRecords = new Map();
 const notifiedTaskIds = new Set();
 let notificationAudioContext = null;
 let pendingNotificationSound = false;
-let taskCheckInterval = null;
 
 export function initTasks() {
     const form = document.getElementById('task-form');
@@ -47,9 +46,8 @@ export function initTasks() {
     });
 
     document.addEventListener('pointerdown', primeNotificationAudio, { once: true });
+    // Carrega e verifica os prazos uma vez ao abrir a seção.
     loadTasks();
-    if (taskCheckInterval) clearInterval(taskCheckInterval);
-    taskCheckInterval = setInterval(checkTaskDeadlines, 30000);
 }
 
 function escapeTaskHtml(value) {
