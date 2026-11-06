@@ -31,10 +31,10 @@ const MINI_GAMES = [
   { file: "colors.html", name: "Colors", title: "Colors Challenge" },
   { file: "foods.html", name: "Catching Foods", title: "Catching Foods" },
   { file: "simonsays.html", name: "Simon Says", title: "Simon Says" },
-  { file: "whois.html", name: "Who Is?", title: "Who Is?" },
-  { file: "whWords.html", name: "WH-Words", title: "WH-Words Challenge" },
-  { file: "cognates.html", name: "Cognates", title: "Cognates Challenge" },
-  { file: "connectors.html", name: "Connectors", title: "Connectors Puzzle" },
+  { file: "whois.html", url: "../../otherLessons/whois.html", name: "Who Is?", title: "Who Is?" },
+  { file: "whWords.html", url: "../../otherLessons/whWords.html", name: "WH-Words", title: "WH-Words Challenge" },
+  { file: "cognates.html", url: "../../otherLessons/cognates.html", name: "Cognates", title: "Cognates Challenge" },
+  { file: "connectors.html", url: "../../otherLessons/connectors.html", name: "Connectors", title: "Connectors Puzzle" },
 ];
 
 const ROLES = {
@@ -1150,7 +1150,7 @@ async function sendAction(action, extra = {}) {
 function openMiniGame() {
   const game = MINI_GAMES.find((item) => item.file === assignedMiniGame) || MINI_GAMES[0];
   $("mini-game-title").textContent = game.title;
-  $("mini-game-frame").src = "../" + game.file;
+  $("mini-game-frame").src = game.url || "../" + game.file;
   openDialog("mini-game-dialog");
 }
 
