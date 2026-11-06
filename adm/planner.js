@@ -530,22 +530,32 @@ function setupPlannerMerge() {
                         : cleanSourceActivities;
                 }
 
-                const { data: updatedTarget, error: updateError } = await supabase
+                let updateTargetQuery = supabase
                     .from('planner')
                     .update({ activities: mergedActivities })
                     .eq('id', targetId)
-                    .is('completed_at', null)
+                    .is('completed_at', null);
+                updateTargetQuery = currentTarget.activities == null
+                    ? updateTargetQuery.is('activities', null)
+                    : updateTargetQuery.eq('activities', currentTarget.activities);
+
+                const { data: updatedTarget, error: updateError } = await updateTargetQuery
                     .select('*')
                     .maybeSingle();
 
                 if (updateError) throw updateError;
-                if (!updatedTarget) throw new Error('A aula de destino não pôde ser atualizada. Nenhum registro foi removido.');
+                if (!updatedTarget) throw new Error('As atividades da aula de destino foram alteradas durante o merge. Nenhuma aula foi removida. Reabra o merge e tente novamente.');
 
-                const { data: deletedSource, error: deleteError } = await supabase
+                let deleteSourceQuery = supabase
                     .from('planner')
                     .delete()
                     .eq('id', sourceId)
-                    .is('completed_at', null)
+                    .is('completed_at', null);
+                deleteSourceQuery = currentSource.activities == null
+                    ? deleteSourceQuery.is('activities', null)
+                    : deleteSourceQuery.eq('activities', currentSource.activities);
+
+                const { data: deletedSource, error: deleteError } = await deleteSourceQuery
                     .select('id')
                     .maybeSingle();
 
@@ -554,6 +564,7 @@ function setupPlannerMerge() {
                         .from('planner')
                         .update({ activities: currentTarget.activities })
                         .eq('id', targetId)
+                        .eq('activities', mergedActivities)
                         .is('completed_at', null);
 
                     if (rollbackError) {
