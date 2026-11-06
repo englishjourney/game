@@ -748,3 +748,5 @@ input, select, textarea, button { max-width: 100%; }
     .merge-modal-actions { flex-direction: column-reverse; }
     .merge-modal-actions button { width: 100%; min-height: 42px; }
 }
+
+.merge-change-target { width: 100%; margin-top: 12px; }
