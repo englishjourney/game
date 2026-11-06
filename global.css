@@ -542,6 +542,253 @@ body.high-school-theme #fundamental-stars {
     font-weight: 900;
 }
 
+/* Nova apresentação das missões: missão atual + mapa em modal independente. */
+.menu-btn i {
+    display: inline-block;
+    width: 1.35em;
+    margin-right: 0.45em;
+    text-align: center;
+}
+
+.mission-view-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 8px 0 22px;
+}
+
+.mission-view-heading {
+    color: var(--primary-color, #ffcc00);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 900;
+}
+
+.mission-view-subtitle {
+    margin-top: 4px;
+    opacity: 0.78;
+}
+
+.mission-map-trigger,
+.mission-return-current {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 10px 17px;
+    border: 2px solid var(--primary-color, #ffcc00);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.28);
+    color: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.mission-current-card {
+    max-width: 1050px;
+    margin: 0 auto 24px;
+    padding: clamp(16px, 3vw, 28px);
+    border: 2px solid rgba(255, 204, 0, 0.48);
+    border-radius: 18px;
+    background: rgba(0, 0, 0, 0.16);
+}
+
+.mission-current-card.is-replay {
+    border-color: rgba(59, 130, 246, 0.55);
+}
+
+.mission-current-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.mission-current-kicker {
+    font-size: 0.76rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    opacity: 0.75;
+}
+
+.mission-number-pill {
+    padding: 5px 10px;
+    border-radius: 99px;
+    background: var(--primary-color, #ffcc00);
+    color: #26213e;
+    font-size: 0.82rem;
+    font-weight: 900;
+}
+
+.mission-current-title {
+    margin: 12px 0 18px;
+    font-size: clamp(1.25rem, 2.5vw, 1.8rem);
+    color: inherit;
+}
+
+.mission-frame-container {
+    overflow: hidden;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.12);
+}
+
+.mission-frame-container iframe {
+    display: block;
+    width: 100%;
+    min-height: 560px;
+    border: 0;
+    background: #fff;
+}
+
+.mission-replay-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin: 0 0 14px;
+    padding: 11px 13px;
+    border-radius: 10px;
+    background: rgba(59, 130, 246, 0.12);
+    color: inherit;
+    font-size: 0.92rem;
+}
+
+.mission-return-current { margin-bottom: 16px; }
+
+.mission-empty-state,
+.mission-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 220px;
+    padding: 30px 16px;
+    text-align: center;
+}
+
+.mission-empty-state > i,
+.mission-loading > i {
+    font-size: 2.1rem;
+    color: var(--primary-color, #ffcc00);
+}
+
+.mission-link-empty { padding: 20px; text-align: center; }
+
+dialog.mission-map-dialog {
+    width: min(680px, 94vw);
+    max-width: 94vw;
+    max-height: 90vh;
+    margin: auto;
+    padding: clamp(14px, 3vw, 24px);
+    overflow: auto;
+    border: 2px solid var(--primary-color, #ffcc00);
+    border-radius: 18px;
+    background: #302b4c;
+    color: #fff;
+    box-shadow: 0 18px 55px rgba(0, 0, 0, 0.55);
+}
+
+dialog.mission-map-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.76);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+}
+
+.mission-map-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.mission-map-dialog-header h2 { font-size: 1.3rem; }
+.mission-map-dialog-header h2 i { margin-right: 7px; color: var(--primary-color, #ffcc00); }
+.mission-map-dialog-header p { margin-top: 5px; opacity: 0.78; font-size: 0.9rem; }
+
+.mission-map-close {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    background: rgba(0,0,0,.25);
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.mission-map-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 0;
+}
+
+.mission-map-container::before { display: none; }
+.mission-map-node,
+button.mission-map-node {
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr);
+    align-items: center;
+    gap: 13px;
+    width: 100%;
+    min-height: 72px;
+    padding: 9px 12px;
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 13px;
+    background: rgba(0,0,0,.16);
+    color: inherit;
+    text-align: left;
+    transform: none !important;
+}
+
+button.mission-map-node { cursor: pointer; }
+button.mission-map-node:hover { background: rgba(255,255,255,.12); }
+.mission-map-node .circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border: 2px solid rgba(255,255,255,.78);
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.2rem;
+}
+.mission-map-node.done .circle { background: #238b4b; }
+.mission-map-node.fail .circle { background: #b83c43; }
+.mission-map-node.active .circle { background: #d69e12; color: #201a2e; }
+.mission-map-node.locked { opacity: .52; cursor: not-allowed; }
+.mission-map-node.locked .circle { background: #687385; }
+.mission-map-node-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.mission-map-node-number { font-size: .76rem; opacity: .76; text-transform: uppercase; letter-spacing: .06em; }
+.mission-map-node-name { font-weight: 800; overflow-wrap: anywhere; }
+.mission-map-node-status { opacity: .72; font-size: .78rem; }
+
+.mission-map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255,255,255,.14);
+    font-size: .8rem;
+    opacity: .82;
+}
+.mission-map-legend i { margin-right: 4px; }
+.mission-map-legend .fa-lock { color: #b8c1cf; }
+
+@media (max-width: 600px) {
+    dialog.mission-map-dialog { width: 96vw; max-width: 96vw; max-height: 92vh; }
+    .mission-view-header { align-items: flex-start; }
+    .mission-map-trigger { padding: 9px 12px; }
+    .mission-frame-container iframe { min-height: 480px; height: 68vh; }
+}
+
 /* ================= CORREÇÕES GERAIS DE MODAL ================= */
 .close-btn, 
 .modal-close, 
