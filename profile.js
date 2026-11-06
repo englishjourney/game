@@ -179,19 +179,42 @@ export async function openProfile() {
         const upgradeBtn = document.getElementById('btn-upgrade-rank');
         if (upgradeBtn) {
             upgradeBtn.addEventListener('click', async () => {
+                upgradeBtn.disabled = true;
+                const currentStars = Math.max(0, Number.parseInt(String(userData.stars), 10) || 0);
+
                 try {
                     await runWithLoader(async () => {
-                        const { error: updateError } = await supabase
+                        let updateQuery = supabase
                             .from('users')
-                            .update({ rank: userRank })
+                            .update({
+                                rank: userRank,
+                                stars: String(currentStars + 2)
+                            })
                             .eq('username', session.username);
+
+                        // Só credita as estrelas se a patente ainda estiver desatualizada.
+                        // Isso evita duplicidade em cliques simultâneos ou abas diferentes.
+                        if (data.rank === null || data.rank === undefined) {
+                            updateQuery = updateQuery.is('rank', null);
+                        } else {
+                            updateQuery = updateQuery.eq('rank', data.rank);
+                        }
+
+                        const { data: updatedUser, error: updateError } = await updateQuery
+                            .select('username, stars')
+                            .maybeSingle();
+
                         if (updateError) throw updateError;
+                        if (!updatedUser) {
+                            throw new Error('Esta patente já foi atualizada. Reabra o perfil para conferir as estrelas.');
+                        }
                     });
-                    
-                    // Recarrega o perfil para esconder o botão e aplicar o feedback
-                    openProfile(); 
+
+                    alert('Patente atualizada! Você ganhou 2 estrelas.');
+                    openProfile();
                 } catch (err) {
-                    alert("Erro ao atualizar a patente.");
+                    upgradeBtn.disabled = false;
+                    alert(err.message || 'Erro ao atualizar a patente.');
                     console.error(err);
                 }
             });
