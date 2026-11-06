@@ -2,6 +2,9 @@ import { supabase } from '../supabaseClient.js';
 
 const plannerItemsById = new Map();
 let selectedPlannerItem = null;
+let mergeSourceItem = null;
+let mergeTargetItem = null;
+let mergeIsSaving = false;
 
 export function initPlanner() {
     setupCustomOptions();
@@ -9,6 +12,7 @@ export function initPlanner() {
     setupLastTeamToggle();
     loadPlanners();
     loadCompletedPlanners();
+    setupPlannerMerge();
     setupActivitiesEditor();
     const detailsEditButton = document.getElementById('btn-edit-planner-from-details');
     if (detailsEditButton) detailsEditButton.addEventListener('click', () => {
@@ -400,6 +404,258 @@ window.togglePlannerSection = (btn, title) => {
     localStorage.setItem(`planner_state_${title}`, isHidden);
 };
 
+
+function normalizePlannerClassValue(value) {
+    return String(value == null ? '' : value).trim().toLocaleLowerCase('pt-BR');
+}
+
+function renderMergePreviewCard(item, label) {
+    if (!item) {
+        return '<div class="merge-empty-card"><i class="fa-regular fa-square-plus"></i><p>Selecione uma aula para receber as atividades</p><button type="button" class="btn-primary" id="btn-open-merge-picker">Selecionar aula</button></div>';
+    }
+
+    return '<article class="merge-preview-card">' +
+        '<div class="merge-preview-card-label">' + escapePlannerHtml(label) + '</div>' +
+        '<h4>' + escapePlannerHtml(item.day || 'Aula') + ' — ' + escapePlannerHtml(item.date || 'Sem data') + '</h4>' +
+        '<p><strong>Horário:</strong> ' + escapePlannerHtml(item.time || 'Não informado') + '</p>' +
+        '<p><strong>Turma:</strong> ' + escapePlannerHtml(item.serie || '') + ' ' + escapePlannerHtml(item.team || '') + '</p>' +
+        '<p><strong>Duração:</strong> ' + escapePlannerHtml(item.duration || 'Não informada') + '</p>' +
+        '<div class="merge-preview-activities"><strong>Atividades:</strong>' +
+            (item.activities ? renderPlannerMarkdown(item.activities) : '<p class="merge-no-activities">Sem atividades cadastradas.</p>') +
+        '</div></article>';
+}
+
+function renderMergeCandidateCard(item) {
+    return '<article class="merge-option-card">' +
+        '<div class="merge-option-info">' +
+            '<strong>' + escapePlannerHtml(item.day || 'Aula') + ' — ' + escapePlannerHtml(item.date || 'Sem data') + '</strong>' +
+            '<span>' + escapePlannerHtml(item.time || 'Sem horário') + ' · ' + escapePlannerHtml(item.serie || '') + ' ' + escapePlannerHtml(item.team || '') + '</span>' +
+            '<div class="merge-option-activities">' + (item.activities ? renderPlannerMarkdown(item.activities) : '<em>Sem atividades cadastradas.</em>') + '</div>' +
+        '</div><button type="button" class="btn-primary" data-merge-select="' + escapePlannerHtml(item.id) + '">Selecionar</button>' +
+    '</article>';
+}
+
+function showPlannerMergeComparison() {
+    const comparison = document.getElementById('merge-comparison-view');
+    const picker = document.getElementById('merge-picker-view');
+    if (comparison) comparison.classList.remove('hidden');
+    if (picker) picker.classList.add('hidden');
+}
+
+function setupPlannerMerge() {
+    const modal = document.getElementById('planner-merge-modal');
+    if (!modal) return;
+
+    const closeButton = document.getElementById('btn-close-planner-merge');
+    const cancelButton = document.getElementById('btn-cancel-planner-merge');
+    const confirmButton = document.getElementById('btn-confirm-planner-merge');
+    const targetPreview = document.getElementById('merge-target-preview');
+
+    const closeModal = () => {
+        if (modal.open) modal.close();
+        mergeSourceItem = null;
+        mergeTargetItem = null;
+        mergeIsSaving = false;
+        if (confirmButton) {
+            confirmButton.disabled = true;
+            confirmButton.textContent = 'Unir aulas';
+        }
+    };
+
+    if (closeButton) closeButton.addEventListener('click', closeModal);
+    if (cancelButton) cancelButton.addEventListener('click', closeModal);
+
+    if (targetPreview) {
+        targetPreview.addEventListener('click', event => {
+            if (event.target.closest('#btn-open-merge-picker')) {
+                window.showPlannerMergePicker();
+            }
+        });
+    }
+
+    const backButton = document.getElementById('btn-back-merge-picker');
+    if (backButton) backButton.addEventListener('click', showPlannerMergeComparison);
+
+    if (confirmButton) {
+        confirmButton.addEventListener('click', async () => {
+            if (mergeIsSaving || !mergeSourceItem || !mergeTargetItem) return;
+
+            const confirmed = confirm(
+                'Unir as atividades da aula de origem às atividades da aula de destino?\\n\\n' +
+                'As atividades da aula de destino ficarão primeiro; uma linha separadora será adicionada e, abaixo dela, entrarão as atividades da aula de origem. ' +
+                'A aula de origem será removida após a atualização. Os demais dados da aula de destino serão preservados.'
+            );
+            if (!confirmed) return;
+
+            mergeIsSaving = true;
+            confirmButton.disabled = true;
+            confirmButton.textContent = 'Unindo...';
+
+            try {
+                const sourceId = String(mergeSourceItem.id);
+                const targetId = String(mergeTargetItem.id);
+                const { data: currentItems, error: fetchError } = await supabase
+                    .from('planner')
+                    .select('*')
+                    .in('id', [sourceId, targetId])
+                    .is('completed_at', null);
+
+                if (fetchError) throw fetchError;
+
+                const currentSource = (currentItems || []).find(item => String(item.id) === sourceId);
+                const currentTarget = (currentItems || []).find(item => String(item.id) === targetId);
+                if (!currentSource || !currentTarget) {
+                    throw new Error('Uma das aulas não está mais disponível entre os planejamentos ativos. Atualize a lista e tente novamente.');
+                }
+
+                const sourceClass = normalizePlannerClassValue(currentSource.serie) + '::' + normalizePlannerClassValue(currentSource.team);
+                const targetClass = normalizePlannerClassValue(currentTarget.serie) + '::' + normalizePlannerClassValue(currentTarget.team);
+                if (sourceClass !== targetClass) {
+                    throw new Error('As duas aulas precisam pertencer à mesma turma.');
+                }
+
+                const targetActivities = String(currentTarget.activities || '');
+                const sourceActivities = String(currentSource.activities || '');
+                const cleanTargetActivities = targetActivities.replace(/\s+$/, '');
+                const cleanSourceActivities = sourceActivities.trim();
+                let mergedActivities = cleanTargetActivities;
+
+                if (cleanSourceActivities) {
+                    mergedActivities = cleanTargetActivities
+                        ? cleanTargetActivities + '\n\n---\n\n' + cleanSourceActivities
+                        : cleanSourceActivities;
+                }
+
+                const { data: updatedTarget, error: updateError } = await supabase
+                    .from('planner')
+                    .update({ activities: mergedActivities })
+                    .eq('id', targetId)
+                    .is('completed_at', null)
+                    .select('*')
+                    .maybeSingle();
+
+                if (updateError) throw updateError;
+                if (!updatedTarget) throw new Error('A aula de destino não pôde ser atualizada. Nenhum registro foi removido.');
+
+                const { data: deletedSource, error: deleteError } = await supabase
+                    .from('planner')
+                    .delete()
+                    .eq('id', sourceId)
+                    .is('completed_at', null)
+                    .select('id')
+                    .maybeSingle();
+
+                if (deleteError || !deletedSource) {
+                    const { error: rollbackError } = await supabase
+                        .from('planner')
+                        .update({ activities: currentTarget.activities })
+                        .eq('id', targetId)
+                        .is('completed_at', null);
+
+                    if (rollbackError) {
+                        throw new Error('A aula de destino recebeu as atividades, mas não foi possível remover a aula de origem nem restaurar o texto anterior. Verifique as duas aulas antes de tentar novamente. Detalhe: ' + (deleteError || new Error('A aula de origem não foi removida.')).message);
+                    }
+                    throw new Error('A aula de origem não pôde ser removida. A aula de destino foi restaurada ao conteúdo anterior. ' + (deleteError ? deleteError.message : 'Atualize a lista e tente novamente.'));
+                }
+
+                plannerItemsById.delete(sourceId);
+                plannerItemsById.set(targetId, updatedTarget);
+                closeModal();
+                await loadPlanners();
+                alert('Merge concluído! As atividades foram unidas e a aula de origem foi removida.');
+            } catch (error) {
+                console.error('Erro ao unir aulas:', error);
+                alert('Não foi possível concluir o merge: ' + (error.message || 'erro inesperado'));
+            } finally {
+                mergeIsSaving = false;
+                if (confirmButton) {
+                    confirmButton.disabled = !mergeTargetItem;
+                    confirmButton.textContent = 'Unir aulas';
+                }
+            }
+        });
+    }
+}
+
+window.openPlannerMerge = async id => {
+    const modal = document.getElementById('planner-merge-modal');
+    if (!modal) return;
+
+    const { data, error } = await supabase
+        .from('planner')
+        .select('*')
+        .eq('id', id)
+        .is('completed_at', null)
+        .maybeSingle();
+
+    if (error || !data) {
+        alert('Não foi possível abrir o merge: esta aula não está mais nos planejamentos ativos.');
+        return;
+    }
+
+    mergeSourceItem = data;
+    mergeTargetItem = null;
+
+    document.getElementById('merge-source-preview').innerHTML = renderMergePreviewCard(mergeSourceItem, 'Aula de origem');
+    document.getElementById('merge-target-preview').innerHTML = renderMergePreviewCard(null, '');
+    document.getElementById('merge-picker-list').innerHTML = '';
+    document.getElementById('merge-comparison-view').classList.remove('hidden');
+    document.getElementById('merge-picker-view').classList.add('hidden');
+
+    const confirmButton = document.getElementById('btn-confirm-planner-merge');
+    confirmButton.disabled = true;
+    confirmButton.textContent = 'Unir aulas';
+
+    if (!modal.open) modal.showModal();
+};
+
+window.showPlannerMergePicker = async () => {
+    if (!mergeSourceItem) return;
+
+    const comparison = document.getElementById('merge-comparison-view');
+    const picker = document.getElementById('merge-picker-view');
+    const list = document.getElementById('merge-picker-list');
+    comparison.classList.add('hidden');
+    picker.classList.remove('hidden');
+    list.innerHTML = '<div class="empty-state">Carregando aulas da mesma turma...</div>';
+
+    const { data, error } = await supabase
+        .from('planner')
+        .select('*')
+        .is('completed_at', null)
+        .order('id', { ascending: false });
+
+    if (error) {
+        list.innerHTML = '<div class="empty-state">Erro ao carregar as aulas disponíveis.</div>';
+        console.error('Erro ao carregar opções de merge:', error);
+        return;
+    }
+
+    const sourceClass = normalizePlannerClassValue(mergeSourceItem.serie) + '::' + normalizePlannerClassValue(mergeSourceItem.team);
+    const candidates = (data || []).filter(item =>
+        String(item.id) !== String(mergeSourceItem.id) &&
+        normalizePlannerClassValue(item.serie) + '::' + normalizePlannerClassValue(item.team) === sourceClass
+    );
+
+    if (!candidates.length) {
+        list.innerHTML = '<div class="empty-state">Não há outras aulas planejadas e não concluídas para esta turma.</div>';
+        return;
+    }
+
+    list.innerHTML = candidates.map(renderMergeCandidateCard).join('');
+    list.querySelectorAll('[data-merge-select]').forEach(button => {
+        button.addEventListener('click', () => {
+            const selected = candidates.find(item => String(item.id) === String(button.dataset.mergeSelect));
+            if (!selected) return;
+
+            mergeTargetItem = selected;
+            document.getElementById('merge-target-preview').innerHTML = renderMergePreviewCard(mergeTargetItem, 'Aula de destino');
+            document.getElementById('btn-confirm-planner-merge').disabled = false;
+            showPlannerMergeComparison();
+        });
+    });
+};
+
 function renderPlannerCard(p, mode = 'active') {
     const cardClass = p.special == 4 ? 'card-adapted' :
         (p.special == 1 ? 'card-special-1' : (p.special == 2 ? 'card-special-2' :
@@ -414,7 +670,8 @@ function renderPlannerCard(p, mode = 'active') {
         : '<button class="btn-small btn-secondary" onclick=\'window.editPlanner(' + JSON.stringify(p).replace(/'/g, "&#39;") + ')\'>Editar</button>' +
           '<button class="btn-small btn-postpone" onclick="window.deferPlanner(\'' + p.id + '\')" title="Mover esta aula para a data e hora da próxima aula">Adiar</button>' +
           '<button class="btn-small btn-advance" onclick="window.advancePlanner(\'' + p.id + '\')" title="Trazer esta aula para a próxima data futura da turma">Adiantar</button>' +
-          '<button class="btn-small btn-complete" onclick="window.completePlanner(\'' + p.id + '\')" title="Mover esta aula para Aulas passadas">Concluída</button>';
+          '<button class="btn-small btn-complete" onclick="window.completePlanner(\'' + p.id + '\')" title="Mover esta aula para Aulas passadas">Concluída</button>' +
+          '<button class="btn-small btn-merge" onclick="window.openPlannerMerge(\'' + p.id + '\')" title="Unir esta aula a outra aula da mesma turma">Merge</button>';
 
     return '<div class="data-card ' + cardClass + ' ' + (mode === 'completed' ? 'completed-card' : '') + '"' +
         ' id="plan-card-' + p.id + '" data-plan-id="' + p.id + '" role="button" tabindex="0" aria-label="Ver detalhes da aula">' +
@@ -428,7 +685,7 @@ function renderPlannerCard(p, mode = 'active') {
             (p.activities ? '<div class="planner-card-activities"><strong>Atividades:</strong>' + renderPlannerMarkdown(p.activities) + '</div>' : '') +
             (p.skills ? '<p><strong>BNCC:</strong> ' + escapePlannerHtml(p.skills) + '</p>' : '') +
             (mode === 'completed' && p.completed_at ? '<p class="completed-at"><i class="fa-solid fa-circle-check"></i> Concluída em ' + new Date(p.completed_at).toLocaleString('pt-BR') + '</p>' : '') +
-        '</div><div class="data-card-actions">' + actions + '</div></div>';
+        '</div>' + (actions ? '<div class="data-card-actions">' + actions + '</div>' : '') + '</div>';
 }
 
 function setupPlannerCardInteractions(container) {
