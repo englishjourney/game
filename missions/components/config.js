@@ -70,8 +70,10 @@ function parseMissionScore(value) {
 export async function loadMissionSettings(missionName, username = "") {
     const { data, error } = await supabase
         .from("missions")
-        .select("mission_score, done, fail")
+        .select("id, mission_score, done, fail")
         .eq("mission_name", missionName)
+        .order("id", { ascending: true })
+        .limit(1)
         .maybeSingle();
 
     if (error) throw error;
@@ -138,7 +140,7 @@ export async function recordMissionResult(missionName, username, result) {
     const { error: recordError } = await supabase
         .from("missions")
         .update({ [result]: currentColumn.join(",") })
-        .eq("mission_name", missionName);
+        .eq("id", mission.id);
 
     if (recordError) throw recordError;
 
