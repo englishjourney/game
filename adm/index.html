@@ -186,6 +186,64 @@
         </main>
     </div>
 
+    <!-- MODAL: MERGE DE AULAS -->
+    <dialog id="planner-merge-modal" class="planner-merge-dialog">
+        <div class="merge-modal-header">
+            <div>
+                <h3>Merge de aulas</h3>
+                <p>Una as atividades de duas aulas da mesma turma.</p>
+            </div>
+            <button type="button" id="btn-close-planner-merge" class="btn-secondary" aria-label="Fechar">×</button>
+        </div>
+
+        <div id="merge-comparison-view">
+            <div class="merge-comparison-grid">
+                <section class="merge-side">
+                    <h4>Aula de origem</h4>
+                    <div id="merge-source-preview"></div>
+                </section>
+
+                <div class="merge-direction" aria-label="As atividades serão adicionadas à aula da direita">
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </div>
+
+                <section class="merge-side">
+                    <h4>Aula de destino</h4>
+                    <div id="merge-target-preview">
+                        <div class="merge-empty-card">
+                            <i class="fa-regular fa-square-plus"></i>
+                            <p>Selecione uma aula para receber as atividades</p>
+                            <button type="button" class="btn-primary" id="btn-open-merge-picker">Selecionar aula</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <p class="merge-explanation">
+                As atividades da aula de destino serão mantidas primeiro. Uma linha separadora será adicionada e, abaixo dela, entrarão as atividades da aula de origem.
+                Data, horário, turma, duração e os demais dados da aula de destino permanecerão intactos.
+            </p>
+
+            <div class="modal-actions merge-modal-actions">
+                <button type="button" class="btn-secondary" id="btn-cancel-planner-merge">Cancelar</button>
+                <button type="button" class="btn-primary" id="btn-confirm-planner-merge" disabled>Unir aulas</button>
+            </div>
+        </div>
+
+        <div id="merge-picker-view" class="hidden">
+            <div class="merge-picker-header">
+                <button type="button" class="btn-secondary" id="btn-back-merge-picker">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar
+                </button>
+                <div>
+                    <h4>Selecione a aula de destino</h4>
+                    <p>Somente aulas ativas da mesma turma aparecem aqui.</p>
+                </div>
+            </div>
+            <div id="merge-picker-list" class="merge-picker-list"></div>
+        </div>
+    </dialog>
+
     <!-- MODAL PLANNER -->
     <dialog id="planner-modal">
         <form id="planner-form">
