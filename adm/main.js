@@ -346,9 +346,8 @@ export function initReminders() {
 
     btnCancelForm.addEventListener('click', () => modalForm.classList.add('hidden'));
 
-    // Inicia a verificação contínua (a cada 10 segundos)
+    // Verifica os lembretes uma vez ao abrir o painel; sem polling em segundo plano.
     checkRemindersStatus();
-    setInterval(checkRemindersStatus, 10000);
 }
 
 // Abrir modal de formulário
