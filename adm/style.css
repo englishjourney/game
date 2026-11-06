@@ -559,3 +559,192 @@ input, select, textarea, button { max-width: 100%; }
     #btn-add-plan { right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); }
     .mobile-nav-heading { position: sticky; top: 0; background: var(--bg-card); z-index: 1; }
 }
+
+
+/* Merge de aulas: comparação lado a lado */
+.btn-merge {
+    background: #7c3aed;
+    color: #fff;
+    border: 1px solid #6d28d9;
+}
+.btn-merge:hover { background: #6d28d9; }
+.planner-merge-dialog {
+    width: min(96vw, 1040px);
+    max-width: 1040px;
+    max-height: 92vh;
+    padding: 22px;
+    overflow-y: auto;
+}
+.merge-modal-header,
+.merge-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.merge-modal-header h3 { color: var(--primary); margin-bottom: 5px; }
+.merge-modal-header p,
+.merge-picker-header p {
+    color: var(--text-muted);
+    font-size: .9rem;
+    line-height: 1.4;
+}
+.merge-modal-header > button {
+    flex: 0 0 auto;
+    font-size: 1.35rem;
+    padding: 5px 12px;
+}
+.merge-comparison-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr);
+    align-items: stretch;
+    gap: 14px;
+}
+.merge-side { min-width: 0; }
+.merge-side > h4 {
+    color: var(--primary);
+    margin: 0 0 9px;
+    font-size: .95rem;
+}
+.merge-preview-card,
+.merge-empty-card {
+    height: 100%;
+    min-height: 220px;
+    min-width: 0;
+    padding: 15px;
+    border-radius: 10px;
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    overflow-wrap: anywhere;
+}
+.merge-preview-card h4 {
+    color: var(--text-main);
+    font-size: 1rem;
+    line-height: 1.4;
+    margin-bottom: 12px;
+}
+.merge-preview-card > p {
+    color: var(--text-muted);
+    font-size: .86rem;
+    margin: 5px 0;
+}
+.merge-preview-card-label {
+    display: inline-flex;
+    margin-bottom: 10px;
+    padding: 4px 8px;
+    border-radius: 20px;
+    color: var(--primary);
+    background: rgba(56, 189, 248, .12);
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.merge-preview-activities {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    color: var(--text-main);
+    font-size: .87rem;
+    line-height: 1.5;
+}
+.merge-preview-activities > strong { display: block; margin-bottom: 7px; color: var(--primary); }
+.merge-preview-activities ul,
+.merge-preview-activities ol { padding-left: 22px; }
+.merge-preview-activities p { margin: 5px 0; }
+.merge-no-activities { color: var(--text-muted); font-style: italic; }
+.merge-empty-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+    color: var(--text-muted);
+}
+.merge-empty-card > i { font-size: 2rem; color: var(--primary); }
+.merge-empty-card p { max-width: 230px; line-height: 1.4; }
+.merge-direction {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    font-size: 2rem;
+}
+.merge-explanation {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: rgba(56, 189, 248, .07);
+    border: 1px solid rgba(56, 189, 248, .2);
+    color: var(--text-muted);
+    font-size: .85rem;
+    line-height: 1.5;
+}
+.merge-modal-actions { margin-top: 18px; }
+.merge-picker-header {
+    justify-content: flex-start;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+}
+.merge-picker-header > button { flex: 0 0 auto; }
+.merge-picker-header h4 { color: var(--primary); margin-bottom: 4px; }
+.merge-picker-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: min(58vh, 540px);
+    overflow-y: auto;
+    padding: 2px 3px 6px 0;
+}
+.merge-option-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    min-width: 0;
+    padding: 13px;
+    border-radius: 9px;
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+}
+.merge-option-info { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.merge-option-info > strong { display: block; color: var(--text-main); margin-bottom: 5px; }
+.merge-option-info > span { color: var(--text-muted); font-size: .83rem; }
+.merge-option-activities {
+    margin-top: 8px;
+    color: var(--text-muted);
+    font-size: .83rem;
+    line-height: 1.4;
+}
+.merge-option-card > button { flex: 0 0 auto; min-width: 100px; }
+#btn-confirm-planner-merge:disabled { opacity: .45; cursor: not-allowed; }
+
+@media (max-width: 760px) {
+    .planner-merge-dialog {
+        width: calc(100vw - 16px);
+        max-width: calc(100vw - 16px);
+        max-height: 94dvh;
+        padding: 14px;
+    }
+    .merge-comparison-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
+    .merge-direction {
+        min-height: 28px;
+        font-size: 1.65rem;
+    }
+    .merge-direction i { transform: rotate(90deg); }
+    .merge-preview-card, .merge-empty-card { min-height: 150px; padding: 12px; }
+    .merge-modal-header { align-items: flex-start; }
+    .merge-modal-header h3 { font-size: 1.15rem; }
+    .merge-modal-header p { font-size: .82rem; }
+    .merge-picker-header { align-items: flex-start; }
+    .merge-picker-header > button { padding: 9px 10px; }
+    .merge-option-card { align-items: stretch; flex-direction: column; gap: 10px; }
+    .merge-option-card > button { width: 100%; min-height: 40px; }
+    .merge-picker-list { max-height: 62dvh; }
+    .merge-modal-actions { flex-direction: column-reverse; }
+    .merge-modal-actions button { width: 100%; min-height: 42px; }
+}
