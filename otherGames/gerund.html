@@ -1137,6 +1137,7 @@
     }
 
     function hostRevealAnswers() {
+      if (questionRevealed) return;
       if (questionTimerInterval) clearInterval(questionTimerInterval);
       broadcastState('REVEAL_ANSWERS', { questionIndex: currentQuestionIndex });
     }
