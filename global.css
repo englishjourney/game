@@ -149,6 +149,42 @@ body {
     to { background-position: -250px 250px, -130px 230px; }
 }
 
+/* Estrelas flutuantes da versão Fundamental (fora do loader) */
+#fundamental-stars {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+}
+
+#fundamental-stars > span {
+    position: absolute;
+    display: block;
+    color: rgba(255, 239, 166, 0.78);
+    font-size: var(--star-size, 16px);
+    line-height: 1;
+    text-shadow: 0 0 8px rgba(255, 210, 85, 0.48);
+    animation: fundamentalStarFloat var(--float-duration, 7s) ease-in-out infinite;
+    animation-delay: var(--float-delay, 0s);
+    will-change: transform, opacity;
+}
+
+@keyframes fundamentalStarFloat {
+    0%, 100% {
+        transform: translate3d(0, 0, 0) rotate(0deg) scale(0.96);
+        opacity: 0.42;
+    }
+    50% {
+        transform: translate3d(0, -12px, 0) rotate(10deg) scale(1.08);
+        opacity: 0.9;
+    }
+}
+
+body.high-school-theme #fundamental-stars {
+    display: none;
+}
+
 @keyframes meteor {
     0% { transform: translate(0, 0) rotate(-45deg); opacity: 1; }
     20% { transform: translate(-100vw, 100vh) rotate(-45deg); opacity: 0; }
