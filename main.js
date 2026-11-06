@@ -231,7 +231,7 @@ function createFundamentalStars() {
         star.textContent = index % 4 === 0 ? '✧' : '✦';
         star.style.left = left + '%';
         star.style.top = top + '%';
-        star.style.setProperty('--star-size', size + 'px');
+        star.style.setProperty('--star-size', (size + 3) + 'px');
         star.style.setProperty('--float-duration', (6 + (index % 5) * 0.8) + 's');
         star.style.setProperty('--float-delay', (-0.45 * (index % 7)) + 's');
         container.appendChild(star);
