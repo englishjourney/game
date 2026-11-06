@@ -271,7 +271,7 @@
       <div class="mb-8">
         <i class="fa-solid fa-trophy text-6xl text-yellow-400 mb-2 animate-bounce"></i>
         <h1 class="text-4xl font-black text-white">PÓDIO FINAL</h1>
-        <p class="text-gray-300">Pontuações salvas com sucesso!</p>
+        <p id="podiumSubtitle" class="text-gray-300">Classificação da partida</p>
       </div>
 
       <div id="podiumContainer" class="flex justify-center items-end gap-3 sm:gap-6 mb-8 min-h-[220px]">
@@ -343,6 +343,8 @@
     let playerAnswersSubmitted = {};
     let questionTimerInterval = null;
     let timerSeconds = 20;
+    let hasSavedScore = false;
+    let gameOverHandled = false;
 
     // --- AVATARS LIST ---
     const AVATARS = [
@@ -357,113 +359,244 @@
     ];
     const PLACEHOLDER_AVATAR = "https://cdn-icons-png.flaticon.com/512/1492/1492545.png";
 
-    // --- GENERATE 150 QUESTIONS ---
+    // --- QUESTION BANK: 150 CURATED QUESTIONS ---
     function buildQuestionBank() {
       const q = [];
-      const verbPairs = [
-        { inf: "To accept", ger: "Accepting", ptInf: "Aceitar", ptGer: "Aceitando" },
-        { inf: "To agree", ger: "Agreeing", ptInf: "Concordar", ptGer: "Concordando" },
-        { inf: "To allow", ger: "Allowing", ptInf: "Permitir", ptGer: "Permitindo" },
-        { inf: "To ask", ger: "Asking", ptInf: "Perguntar", ptGer: "Perguntando" },
-        { inf: "To become", ger: "Becoming", ptInf: "Tornar-se", ptGer: "Tornando-se" },
-        { inf: "To begin", ger: "Beginning", ptInf: "Começar", ptGer: "Começando" },
-        { inf: "To call", ger: "Calling", ptInf: "Ligar/Chamar", ptGer: "Ligando/Chamando" },
-        { inf: "To choose", ger: "Choosing", ptInf: "Escolher", ptGer: "Escolhendo" },
-        { inf: "To come", ger: "Coming", ptInf: "Vir", ptGer: "Vindo" },
-        { inf: "To do", ger: "Doing", ptInf: "Fazer", ptGer: "Fazendo" },
-        { inf: "To feel", ger: "Feeling", ptInf: "Sentir", ptGer: "Sentindo" },
-        { inf: "To find", ger: "Finding", ptInf: "Encontrar", ptGer: "Encontrando" },
-        { inf: "To get", ger: "Getting", ptInf: "Obter/Conseguir", ptGer: "Obtendo" },
-        { inf: "To give", ger: "Giving", ptInf: "Dar", ptGer: "Dando" },
-        { inf: "To go", ger: "Going", ptInf: "Ir", ptGer: "Indo" },
-        { inf: "To have", ger: "Having", ptInf: "Ter", ptGer: "Tendo" },
-        { inf: "To know", ger: "Knowing", ptInf: "Saber/Conhecer", ptGer: "Sabendo" },
-        { inf: "To make", ger: "Making", ptInf: "Fazer/Criar", ptGer: "Fazendo/Criando" },
-        { inf: "To need", ger: "Needing", ptInf: "Precisar", ptGer: "Precisando" },
-        { inf: "To say", ger: "Saying", ptInf: "Dizer", ptGer: "Dizendo" },
-        { inf: "To see", ger: "Seeing", ptInf: "Ver", ptGer: "Vendo" },
-        { inf: "To take", ger: "Taking", ptInf: "Pegar/Levar", ptGer: "Pegando" },
-        { inf: "To think", ger: "Thinking", ptInf: "Pensar", ptGer: "Pensando" },
-        { inf: "To use", ger: "Using", ptInf: "Usar", ptGer: "Usando" },
-        { inf: "To want", ger: "Wanting", ptInf: "Querer", ptGer: "Querendo" },
 
-        { inf: "To be", ger: "Being", ptInf: "Ser/Estar", ptGer: "Sendo/Estando" },
-        { inf: "To breathe", ger: "Breathing", ptInf: "Respirar", ptGer: "Respirando" },
-        { inf: "To build", ger: "Building", ptInf: "Construir", ptGer: "Construindo" },
-        { inf: "To buy", ger: "Buying", ptInf: "Comprar", ptGer: "Comprando" },
-        { inf: "To cook", ger: "Cooking", ptInf: "Cozinhar", ptGer: "Cozinhando" },
-        { inf: "To dance", ger: "Dancing", ptInf: "Dançar", ptGer: "Dançando" },
-        { inf: "To drink", ger: "Drinking", ptInf: "Beber", ptGer: "Bebendo" },
-        { inf: "To eat", ger: "Eating", ptInf: "Comer", ptGer: "Comendo" },
-        { inf: "To fly", ger: "Flying", ptInf: "Voar", ptGer: "Voando" },
-        { inf: "To help", ger: "Helping", ptInf: "Ajudar", ptGer: "Ajudando" },
-        { inf: "To learn", ger: "Learning", ptInf: "Aprender", ptGer: "Aprendendo" },
-        { inf: "To listen", ger: "Listening", ptInf: "Ouvir", ptGer: "Ouvindo" },
-        { inf: "To live", ger: "Living", ptInf: "Viver/Morar", ptGer: "Vivendo" },
-        { inf: "To look", ger: "Looking", ptInf: "Olhar", ptGer: "Olhando" },
-        { inf: "To play", ger: "Playing", ptInf: "Jogar/Tocar", ptGer: "Jogando/Tocando" },
-        { inf: "To read", ger: "Reading", ptInf: "Ler", ptGer: "Lendo" },
-        { inf: "To run", ger: "Running", ptInf: "Correr", ptGer: "Correndo" },
-        { inf: "To sing", ger: "Singing", ptInf: "Cantar", ptGer: "Cantando" },
-        { inf: "To sleep", ger: "Sleeping", ptInf: "Dormir", ptGer: "Dormindo" },
-        { inf: "To speak", ger: "Speaking", ptInf: "Falar", ptGer: "Falando" },
-        { inf: "To study", ger: "Studying", ptInf: "Estudar", ptGer: "Estudando" },
-        { inf: "To swim", ger: "Swimming", ptInf: "Nadar", ptGer: "Nadando" },
-        { inf: "To walk", ger: "Walking", ptInf: "Caminhar", ptGer: "Caminhando" },
-        { inf: "To work", ger: "Working", ptInf: "Trabalhar", ptGer: "Trabalhando" },
-        { inf: "To write", ger: "Writing", ptInf: "Escrever", ptGer: "Escrevendo" }
+      function addQuestion(category, text, correctAnswer, distractors) {
+        const options = Array.from(new Set([correctAnswer].concat(distractors)));
+        if (options.length !== 4) {
+          throw new Error("Cada questão precisa ter exatamente quatro alternativas distintas: " + text);
+        }
+
+        // Rotate the correct option so students cannot rely on a fixed answer position.
+        const offset = q.length % options.length;
+        const orderedOptions = options.slice(offset).concat(options.slice(0, offset));
+        q.push({
+          category: category,
+          text: text,
+          options: orderedOptions,
+          correct: orderedOptions.indexOf(correctAnswer)
+        });
+      }
+
+      // Part 1: identify the form in a meaningful sentence (25 gerunds + 25 infinitives).
+      const gerundExamples = [
+        ["Reading", "Reading before bed helps me relax."],
+        ["Swimming", "Swimming is a great way to exercise."],
+        ["Learning", "Learning English takes regular practice."],
+        ["Cooking", "Cooking at home can save money."],
+        ["Walking", "Walking every day is good for your health."],
+        ["Playing", "Playing chess develops patience."],
+        ["Listening", "Listening carefully is important."],
+        ["Writing", "Writing in a journal helps me organize my ideas."],
+        ["Dancing", "Dancing makes her happy."],
+        ["Studying", "Studying regularly improves your results."],
+        ["Singing", "Singing is one of his favorite hobbies."],
+        ["Running", "Running in the park is relaxing."],
+        ["Drawing", "Drawing helps children express their ideas."],
+        ["Helping", "Helping other people is rewarding."],
+        ["Drinking", "Drinking enough water is important."],
+        ["Eating", "Eating breakfast gives me energy."],
+        ["Practicing", "Practicing every day makes a difference."],
+        ["Traveling", "Traveling teaches us about other cultures."],
+        ["Gardening", "Gardening can be a relaxing activity."],
+        ["Taking", "Taking photos is her favorite hobby."],
+        ["Making", "Making mistakes is part of learning."],
+        ["Speaking", "Speaking English every day builds confidence."],
+        ["Camping", "Camping near the lake is fun."],
+        ["Cycling", "Cycling is an enjoyable outdoor activity."],
+        ["Painting", "Painting helps him express his creativity."]
       ];
 
-      // Part 1: Classification (50 questions)
-      verbPairs.forEach((v, idx) => {
-        const isGerund = idx % 2 === 0;
-        const targetWord = isGerund ? v.ger : v.inf;
-        q.push({
-          category: "1. Classificação Gramatical",
-          text: `A palavra "${targetWord}" está classificada em qual forma verbal?`,
-          options: ["Gerúndio (Gerund)", "Infinitivo (Infinitive)", "Passado Simples", "Particípio Passado"],
-          correct: isGerund ? 0 : 1
-        });
+      const infinitiveExamples = [
+        ["to learn", "I want to learn Spanish."],
+        ["to leave", "She decided to leave early."],
+        ["to visit", "We hope to visit London one day."],
+        ["to finish", "He needs to finish his homework."],
+        ["to travel", "They plan to travel in July."],
+        ["to call", "I promised to call my mother."],
+        ["to help", "My friends agreed to help me."],
+        ["to answer", "She refused to answer the question."],
+        ["to carry", "He offered to carry the bags."],
+        ["to stay", "We chose to stay at home."],
+        ["to drink", "I would like to drink some water."],
+        ["to get", "The students expect to get good results."],
+        ["to drive", "He learned to drive last year."],
+        ["to solve", "They managed to solve the problem."],
+        ["to lock", "I forgot to lock the door."],
+        ["to become", "She wants to become a doctor."],
+        ["to practice", "We need to practice more."],
+        ["to wait", "He asked me to wait outside."],
+        ["to open", "The teacher told us to open our books."],
+        ["to see", "I am happy to see you."],
+        ["to read", "It is important to read the instructions."],
+        ["to study", "She came to the library to study."],
+        ["to buy", "They decided not to buy the car."],
+        ["to win", "He hopes to win the competition."],
+        ["to bring", "Remember to bring your notebook."]
+      ];
+
+      gerundExamples.forEach(function (item) {
+        addQuestion(
+          "1. Classificação Gramatical",
+          'Na frase "' + item[1] + '", a palavra "' + item[0] + '" está sendo usada como:',
+          "Gerúndio (forma -ing usada como substantivo)",
+          ["Infinitivo (to + verbo)", "Passado Simples", "Presente Contínuo"]
+        );
       });
 
-      // Part 2: Context Application (50 questions)
-      verbPairs.forEach((v, idx) => {
-        if (idx % 2 === 0) {
-          q.push({
-            category: "2. Aplicação em Frase",
-            text: `Qual forma completa corretamente: "She is ________ a new book right now." (${v.ptInf})`,
-            options: [v.inf, v.ger, v.inf.replace('To ', ''), `${v.ger}s`],
-            correct: 1
-          });
-        } else {
-          q.push({
-            category: "2. Aplicação em Frase",
-            text: `Qual forma completa corretamente: "I need ________ English every day." (${v.ptInf})`,
-            options: [v.ger, v.inf, v.ger.toLowerCase(), "Ed-form"],
-            correct: 1
-          });
-        }
+      infinitiveExamples.forEach(function (item) {
+        addQuestion(
+          "1. Classificação Gramatical",
+          'Na frase "' + item[1] + '", a expressão "' + item[0] + '" está na forma de:',
+          "Infinitivo (to + verbo)",
+          ["Gerúndio (forma -ing usada como substantivo)", "Passado Simples", "Presente Contínuo"]
+        );
       });
 
-      // Part 3: Conversion (50 questions)
-      verbPairs.forEach((v, idx) => {
-        if (idx % 2 === 0) {
-          q.push({
-            category: "3. Conversão de Forma",
-            text: `Qual é a conversão do Gerúndio "${v.ger}" para o Infinitivo?`,
-            options: [v.inf, `${v.ger}ed`, v.inf.replace('To ', ''), `For ${v.ger}`],
-            correct: 0
-          });
-        } else {
-          q.push({
-            category: "3. Conversão de Forma",
-            text: `Qual é a conversão do Infinitivo "${v.inf}" para o Gerúndio?`,
-            options: [`To ${v.ger}`, v.ger, `${v.inf}ing`, `Been ${v.ger}`],
-            correct: 1
-          });
-        }
+      // Part 2: complete sentences using common verb patterns and prepositions.
+      function thirdPerson(verb) {
+        const irregular = { have: "has", do: "does", go: "goes", be: "is" };
+        if (irregular[verb]) return irregular[verb];
+        if (/[^aeiou]y$/i.test(verb)) return verb.slice(0, -1) + "ies";
+        if (/(s|x|z|ch|sh|o)$/i.test(verb)) return verb + "es";
+        return verb + "s";
+      }
+
+      function addPatternQuestion(sentence, baseVerb, gerund, needsGerund) {
+        const infinitive = "to " + baseVerb;
+        const simplePresent = thirdPerson(baseVerb);
+        const answer = needsGerund ? gerund : infinitive;
+        const distractors = needsGerund
+          ? [infinitive, baseVerb, simplePresent]
+          : [gerund, baseVerb, simplePresent];
+
+        addQuestion(
+          "2. Aplicação em Frase",
+          'Complete corretamente: "' + sentence + '"',
+          answer,
+          distractors
+        );
+      }
+
+      const gerundPatterns = [
+        ["I enjoy ___ novels in my free time.", "read", "reading"],
+        ["She avoids ___ careless mistakes.", "make", "making"],
+        ["They finished ___ the classroom.", "clean", "cleaning"],
+        ["He suggested ___ a short break.", "take", "taking"],
+        ["We practice ___ English every day.", "speak", "speaking"],
+        ["Mia is interested in ___ Japanese.", "learn", "learning"],
+        ["Thank you for ___ me with the project.", "help", "helping"],
+        ["I am good at ___ portraits.", "draw", "drawing"],
+        ["Before ___ the test, read the instructions.", "start", "starting"],
+        ["After ___ lunch, we went outside.", "eat", "eating"],
+        ["She left without ___ goodbye.", "say", "saying"],
+        ["He kept ___ even when it was difficult.", "try", "trying"],
+        ["They discussed ___ to another city.", "move", "moving"],
+        ["Would you mind ___ the window?", "open", "opening"],
+        ["My brother misses ___ soccer with his friends.", "play", "playing"],
+        ["The teacher recommended ___ notes during the lesson.", "take", "taking"],
+        ["She admitted ___ the last cookie.", "eat", "eating"],
+        ["He denied ___ the message.", "send", "sending"],
+        ["We considered ___ a new project.", "start", "starting"],
+        ["I look forward to ___ you again.", "see", "seeing"],
+        ["She is tired of ___ for the bus.", "wait", "waiting"],
+        ["He apologized for ___ late.", "arrive", "arriving"],
+        ["The children are excited about ___ the museum.", "visit", "visiting"],
+        ["I cannot help ___ at that joke.", "laugh", "laughing"],
+        ["They gave up ___ for the lost keys.", "look", "looking"]
+      ];
+
+      const infinitivePatterns = [
+        ["I hope ___ my grandparents this weekend.", "visit", "visiting"],
+        ["She decided ___ early.", "leave", "leaving"],
+        ["We need ___ for the exam.", "study", "studying"],
+        ["He promised ___ me after class.", "call", "calling"],
+        ["They agreed ___ the project together.", "finish", "finishing"],
+        ["I want ___ a new language.", "learn", "learning"],
+        ["My sister plans ___ medicine at university.", "study", "studying"],
+        ["He refused ___ the question.", "answer", "answering"],
+        ["She offered ___ our bags.", "carry", "carrying"],
+        ["They managed ___ the problem.", "solve", "solving"],
+        ["I would like ___ some water.", "drink", "drinking"],
+        ["The students expect ___ good results.", "get", "getting"],
+        ["He forgot ___ the door before leaving.", "lock", "locking"],
+        ["She wants ___ a doctor.", "become", "becoming"],
+        ["We chose ___ at home last night.", "stay", "staying"],
+        ["The teacher asked us ___ quietly.", "work", "working"],
+        ["My parents encourage me ___ English every day.", "practice", "practicing"],
+        ["I told him ___ the truth.", "tell", "telling"],
+        ["She invited me ___ to her birthday party.", "come", "coming"],
+        ["We are ready ___ the game.", "start", "starting"],
+        ["He seems ___ tired today.", "be", "being"],
+        ["They decided ___ a new club.", "create", "creating"],
+        ["I cannot afford ___ a new phone.", "buy", "buying"],
+        ["She hopes ___ the competition.", "win", "winning"],
+        ["Remember ___ your notebook tomorrow.", "bring", "bringing"]
+      ];
+
+      gerundPatterns.forEach(function (item) {
+        addPatternQuestion(item[0], item[1], item[2], true);
+      });
+      infinitivePatterns.forEach(function (item) {
+        addPatternQuestion(item[0], item[1], item[2], false);
       });
 
+      // Part 3: spelling and conversion (25 base verbs in each direction).
+      const verbForms = [
+        ["accept", "accepting"],
+        ["agree", "agreeing"],
+        ["begin", "beginning"],
+        ["build", "building"],
+        ["buy", "buying"],
+        ["come", "coming"],
+        ["dance", "dancing"],
+        ["drive", "driving"],
+        ["eat", "eating"],
+        ["get", "getting"],
+        ["give", "giving"],
+        ["have", "having"],
+        ["help", "helping"],
+        ["lie", "lying"],
+        ["make", "making"],
+        ["plan", "planning"],
+        ["play", "playing"],
+        ["read", "reading"],
+        ["run", "running"],
+        ["see", "seeing"],
+        ["sit", "sitting"],
+        ["study", "studying"],
+        ["swim", "swimming"],
+        ["tie", "tying"],
+        ["write", "writing"]
+      ];
+
+      verbForms.forEach(function (item) {
+        const base = item[0];
+        const gerund = item[1];
+        addQuestion(
+          "3. Conversão de Forma",
+          'Qual é a forma em -ing do verbo "' + base + '"?',
+          gerund,
+          [base, "to " + base, base + "ed"]
+        );
+      });
+
+      verbForms.forEach(function (item) {
+        const base = item[0];
+        const gerund = item[1];
+        addQuestion(
+          "3. Conversão de Forma",
+          'Qual é o infinitivo correspondente ao gerúndio "' + gerund + '"?',
+          "to " + base,
+          [base, gerund, base + "ed"]
+        );
+      });
+
+      if (q.length !== 150) {
+        console.error("O banco de questões deveria conter 150 perguntas, mas contém " + q.length + ".");
+      }
       return q;
     }
 
@@ -548,15 +681,28 @@
       // Track player presences
       realtimeChannel.on('presence', { event: 'sync' }, () => {
         const state = realtimeChannel.presenceState();
+        const previousScores = new Map();
+
+        connectedPlayers.forEach(player => {
+          const key = getPlayerKey(player);
+          if (key && !player.isHost) previousScores.set(key, Number(player.score) || 0);
+        });
+
         connectedPlayers = [];
         Object.values(state).forEach(presences => {
-          presences.forEach(p => {
-            if (p.nickname) connectedPlayers.push(p);
+          presences.forEach(player => {
+            if (!player.nickname) return;
+            const key = getPlayerKey(player);
+            if (!player.isHost && previousScores.has(key)) {
+              player.score = previousScores.get(key);
+            } else {
+              player.score = Number(player.score) || 0;
+            }
+            connectedPlayers.push(player);
           });
         });
-        if (userRole === 'host') {
-          renderHostLobby();
-        }
+
+        if (userRole === 'host') renderHostLobby();
       });
 
       // Broadcast events (Game Commands)
@@ -642,6 +788,9 @@
       currentQuestionIndex = 0;
       currentUser.score = 0;
       currentUser.hasAnswered = false;
+      hasSavedScore = false;
+      gameOverHandled = false;
+      playerAnswersSubmitted = {};
       showScreen('screenRoleSelect');
     }
 
@@ -656,6 +805,10 @@
       }
 
       currentUser.dbUsername = usernameInput;
+      currentUser.score = 0;
+      currentUser.hasAnswered = false;
+      hasSavedScore = false;
+      gameOverHandled = false;
 
       // Secret Host check logic
       if (usernameInput.toLowerCase() === 'micael.svg') {
@@ -678,7 +831,7 @@
         try {
           const { data, error } = await supabaseClient
             .from('users')
-            .select('username, score')
+            .select('username')
             .eq('username', usernameInput)
             .single();
 
@@ -689,9 +842,6 @@
             return;
           }
 
-          if (data) {
-            currentUser.score = data.score || 0;
-          }
         } catch (err) {
           console.warn("Servidor auth check error:", err);
         }
@@ -728,7 +878,7 @@
           dbUsername: currentUser.dbUsername,
           nickname: currentUser.nickname,
           avatarUrl: currentUser.avatarUrl,
-          score: currentUser.score,
+          score: 0,
           isHost: false
         });
       } else if (isDemoMode) {
@@ -737,10 +887,34 @@
     }
 
     // --- HOST LOBBY LOGIC ---
+    function getPlayerKey(player) {
+      return String((player && (player.dbUsername || player.nickname)) || '').trim().toLowerCase();
+    }
+
+    function getConnectedPlayerRoster() {
+      const uniquePlayers = new Map();
+      connectedPlayers.filter(player => player && !player.isHost).forEach(player => {
+        const key = getPlayerKey(player);
+        if (!key) return;
+
+        const existing = uniquePlayers.get(key);
+        if (!existing) {
+          uniquePlayers.set(key, { ...player, score: Number(player.score) || 0 });
+        } else {
+          uniquePlayers.set(key, {
+            ...existing,
+            ...player,
+            score: Math.max(Number(existing.score) || 0, Number(player.score) || 0)
+          });
+        }
+      });
+      return Array.from(uniquePlayers.values());
+    }
+
     function renderHostLobby() {
       const container = document.getElementById('hostPlayerList');
       const startBtn = document.getElementById('btnStartGame');
-      const playersOnly = connectedPlayers.filter(p => !p.isHost);
+      const playersOnly = getConnectedPlayerRoster();
 
       document.getElementById('playerCount').innerText = playersOnly.length;
 
@@ -773,6 +947,9 @@
     }
 
     function hostStartGame() {
+      gameOverHandled = false;
+      playerAnswersSubmitted = {};
+      connectedPlayers = connectedPlayers.map(player => player.isHost ? player : { ...player, score: 0 });
       broadcastState('START_GAME', {});
     }
 
@@ -790,31 +967,77 @@
     }
 
     function handleBroadcastEvent(data) {
+      if (!data || !data.action) return;
+
       switch (data.action) {
         case 'START_GAME':
+          gameOverHandled = false;
           currentQuestionIndex = 0;
+          playerAnswersSubmitted = {};
+          if (userRole === 'player') {
+            currentUser.score = 0;
+            hasSavedScore = false;
+          } else {
+            connectedPlayers = connectedPlayers.map(player => player.isHost ? player : { ...player, score: 0 });
+          }
           showScreen('screenQuestion');
           renderQuestion(currentQuestionIndex);
           startQuestionTimer();
           break;
-        case 'SUBMIT_ANSWER':
-          playerAnswersSubmitted[data.nickname] = data.optionIndex;
-          if (userRole === 'host') {
-            const count = Object.keys(playerAnswersSubmitted).length;
-            document.getElementById('answersSubmitted').innerText = count;
+
+        case 'SUBMIT_ANSWER': {
+          const playerKey = String(data.dbUsername || data.nickname || '').trim().toLowerCase();
+          const optionIndex = Number(data.optionIndex);
+          if (
+            data.questionIndex === currentQuestionIndex &&
+            playerKey &&
+            Number.isInteger(optionIndex) &&
+            optionIndex >= 0 &&
+            optionIndex < QUESTIONS[currentQuestionIndex].options.length
+          ) {
+            playerAnswersSubmitted[playerKey] = optionIndex;
+            if (userRole === 'host') {
+              document.getElementById('answersSubmitted').innerText = Object.keys(playerAnswersSubmitted).length;
+            }
           }
           break;
+        }
+
         case 'REVEAL_ANSWERS':
-          showAnswerReveal(data.questionIndex);
+          if (data.questionIndex === currentQuestionIndex) showAnswerReveal(data.questionIndex);
           break;
+
+        case 'SCOREBOARD_UPDATE': {
+          const scores = new Map(
+            (Array.isArray(data.players) ? data.players : []).map(player => [
+              getPlayerKey(player),
+              Number(player.score) || 0
+            ])
+          );
+
+          connectedPlayers = connectedPlayers.map(player => {
+            const key = getPlayerKey(player);
+            return scores.has(key) ? { ...player, score: scores.get(key) } : player;
+          });
+
+          if (userRole === 'player' && scores.has(getPlayerKey(currentUser))) {
+            currentUser.score = scores.get(getPlayerKey(currentUser));
+          }
+          break;
+        }
+
         case 'NEXT_QUESTION':
           currentQuestionIndex = data.questionIndex;
           showScreen('screenQuestion');
           renderQuestion(currentQuestionIndex);
           startQuestionTimer();
           break;
+
         case 'GAME_OVER':
-          showFinalPodium(data.topPlayers);
+          if (gameOverHandled) break;
+          gameOverHandled = true;
+          if (userRole === 'player') updateDatabaseScores();
+          showFinalPodium(Array.isArray(data.topPlayers) ? data.topPlayers : []);
           break;
       }
     }
@@ -854,7 +1077,7 @@
 
       if (userRole === 'host') {
         document.getElementById('hostQuestionControls').classList.remove('hidden');
-        document.getElementById('totalPlayersInRoom').innerText = connectedPlayers.filter(p => !p.isHost).length;
+        document.getElementById('totalPlayersInRoom').innerText = getConnectedPlayerRoster().length;
         document.getElementById('answersSubmitted').innerText = '0';
       } else {
         document.getElementById('hostQuestionControls').classList.add('hidden');
@@ -888,7 +1111,9 @@
       });
 
       broadcastState('SUBMIT_ANSWER', {
+        dbUsername: currentUser.dbUsername,
         nickname: currentUser.nickname,
+        questionIndex: currentQuestionIndex,
         optionIndex: optionIndex
       });
     }
@@ -901,24 +1126,23 @@
     // --- REVEAL ANSWERS & SCORES ---
     function showAnswerReveal(qIndex) {
       const q = QUESTIONS[qIndex];
+      if (!q) return;
       showScreen('screenReveal');
 
-      document.getElementById('correctAnswerText').innerText = `Resposta Correta: ${q.options[q.correct]}`;
+      document.getElementById('correctAnswerText').innerText = 'Resposta Correta: ' + q.options[q.correct];
 
       if (userRole === 'player') {
-        const myAnswer = playerAnswersSubmitted[currentUser.nickname];
+        const myAnswer = playerAnswersSubmitted[getPlayerKey(currentUser)];
         const card = document.getElementById('playerFeedbackCard');
         card.classList.remove('hidden');
 
         if (myAnswer === q.correct) {
-          const earned = 10;
-          currentUser.score += earned;
           card.className = "p-6 rounded-2xl mb-6 text-2xl font-black bg-kahoot-green text-white animate-bounce";
-          card.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> CORRETO! +${earned} pts`;
+          card.innerHTML = '<i class="fa-solid fa-circle-check mr-2"></i> RESPOSTA CORRETA!';
           playSound('correct');
         } else {
           card.className = "p-6 rounded-2xl mb-6 text-2xl font-black bg-kahoot-red text-white";
-          card.innerHTML = `<i class="fa-solid fa-circle-xmark mr-2"></i> INCORRETO!`;
+          card.innerHTML = '<i class="fa-solid fa-circle-xmark mr-2"></i> INCORRETO!';
           playSound('wrong');
         }
       } else {
@@ -940,12 +1164,37 @@
         q.options.forEach((opt, idx) => {
           const isRight = idx === q.correct;
           const statCard = document.createElement('div');
-          statCard.className = `p-4 rounded-xl text-center border-2 ${isRight ? 'bg-green-500/30 border-green-400' : 'bg-black/30 border-white/10'}`;
-          statCard.innerHTML = `
-            <span class="block text-2xl font-black">${counts[idx]}</span>
-            <span class="text-xs truncate font-bold">${opt}</span>
-          `;
+          statCard.className = 'p-4 rounded-xl text-center border-2 ' +
+            (isRight ? 'bg-green-500/30 border-green-400' : 'bg-black/30 border-white/10');
+          statCard.innerHTML =
+            '<span class="block text-2xl font-black">' + counts[idx] + '</span>' +
+            '<span class="text-xs truncate font-bold"></span>';
+          statCard.querySelector('span:last-child').textContent = opt;
           statsGrid.appendChild(statCard);
+        });
+
+        // The host calculates points once, from the answers received for this question.
+        const roster = getConnectedPlayerRoster();
+        roster.forEach(player => {
+          const answer = playerAnswersSubmitted[getPlayerKey(player)];
+          const currentScore = Number(player.score) || 0;
+          player.score = currentScore + (answer === q.correct ? 10 : 0);
+        });
+
+        // Keep the roster in sync and send the same scores to every player.
+        const scoresByUser = new Map(roster.map(player => [getPlayerKey(player), player.score]));
+        connectedPlayers = connectedPlayers.map(player => {
+          const key = getPlayerKey(player);
+          return scoresByUser.has(key) ? { ...player, score: scoresByUser.get(key) } : player;
+        });
+
+        broadcastState('SCOREBOARD_UPDATE', {
+          players: roster.map(player => ({
+            dbUsername: player.dbUsername,
+            nickname: player.nickname,
+            avatarUrl: player.avatarUrl,
+            score: Number(player.score) || 0
+          }))
         });
       } else {
         document.getElementById('statsBreakdown').classList.add('hidden');
@@ -954,47 +1203,64 @@
     }
 
     function hostNextQuestion() {
+      if (userRole !== 'host' || gameOverHandled) return;
+
       currentQuestionIndex++;
       if (currentQuestionIndex < QUESTIONS.length) {
         broadcastState('NEXT_QUESTION', { questionIndex: currentQuestionIndex });
       } else {
-        const topPlayers = connectedPlayers
-          .filter(p => !p.isHost)
-          .sort((a, b) => (b.score || 0) - (a.score || 0));
+        const topPlayers = getConnectedPlayerRoster()
+          .sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
 
-        updateDatabaseScores();
-        broadcastState('GAME_OVER', { topPlayers });
+        broadcastState('GAME_OVER', { topPlayers: topPlayers });
       }
     }
 
     // --- DATABASE UPDATE ---
     async function updateDatabaseScores() {
-      if (await missionWasAlreadyAttempted(currentUser.dbUsername, 'English Verbs Quest')) { console.info('Missão já tentada; nenhum ponto novo será concedido.'); return; }
+      if (
+        userRole !== 'player' ||
+        !currentUser.dbUsername ||
+        !supabaseClient ||
+        isDemoMode ||
+        hasSavedScore
+      ) return;
 
-      if (!supabaseClient || isDemoMode) return;
-
-      if (userRole === 'player' && currentUser.dbUsername) {
-        try {
-          const { data } = await supabaseClient
-            .from('users')
-            .select('score')
-            .eq('username', currentUser.dbUsername)
-            .single();
-
-          const existingScore = data ? (data.score || 0) : 0;
-          const newTotalScore = existingScore + currentUser.score;
-
-          await supabaseClient
-            .from('users')
-            .update({ score: newTotalScore })
-            .eq('username', currentUser.dbUsername);
-
-          console.log(`Score updated for @${currentUser.dbUsername}: +${currentUser.score} pts`);
-          await recordMissionCompletion(currentUser.dbUsername, 'English Verbs Quest');
-
-        } catch (e) {
-          console.error("Error updating score in database:", e);
+      try {
+        const alreadyAttempted = await missionWasAlreadyAttempted(
+          currentUser.dbUsername,
+          'English Verbs Quest'
+        );
+        if (alreadyAttempted) {
+          hasSavedScore = true;
+          console.info('Missão já tentada; nenhum ponto novo será concedido.');
+          return;
         }
+
+        const { data, error } = await supabaseClient
+          .from('users')
+          .select('score')
+          .eq('username', currentUser.dbUsername)
+          .single();
+
+        if (error) throw error;
+        if (!data) throw new Error('Usuário não encontrado ao salvar a pontuação.');
+
+        const existingScore = Number(data.score) || 0;
+        const earnedScore = Number(currentUser.score) || 0;
+        const { error: updateError } = await supabaseClient
+          .from('users')
+          .update({ score: existingScore + earnedScore })
+          .eq('username', currentUser.dbUsername);
+
+        if (updateError) throw updateError;
+
+        // Mark the save before recording completion to avoid adding the same points twice.
+        hasSavedScore = true;
+        console.log('Score updated for @' + currentUser.dbUsername + ': +' + earnedScore + ' pts');
+        await recordMissionCompletion(currentUser.dbUsername, 'English Verbs Quest');
+      } catch (error) {
+        console.error('Erro ao salvar a pontuação da partida:', error);
       }
     }
 
@@ -1002,27 +1268,41 @@
     function showFinalPodium(topPlayers) {
       showScreen('screenPodium');
       playSound('fanfare');
-      confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+      }
 
-      const p1 = topPlayers[0] || { nickname: 'P1', score: 0, avatarUrl: PLACEHOLDER_AVATAR };
-      const p2 = topPlayers[1] || { nickname: 'P2', score: 0, avatarUrl: PLACEHOLDER_AVATAR };
-      const p3 = topPlayers[2] || { nickname: 'P3', score: 0, avatarUrl: PLACEHOLDER_AVATAR };
+      const players = Array.isArray(topPlayers) ? topPlayers : [];
+      const subtitle = document.getElementById('podiumSubtitle');
+      if (subtitle) {
+        subtitle.innerText = players.length
+          ? 'Pontuação obtida nesta partida'
+          : 'Nenhum jogador foi registrado nesta partida.';
+      }
 
-      document.getElementById('podium1Name').innerText = p1.nickname;
-      document.getElementById('podium1Score').innerText = `${p1.score || 0} pts`;
-      document.getElementById('podium1Img').src = p1.avatarUrl || PLACEHOLDER_AVATAR;
+      [1, 2, 3].forEach(function (place) {
+        const player = players[place - 1];
+        const podium = document.getElementById('podium' + place);
+        podium.classList.toggle('hidden', !player);
 
-      document.getElementById('podium2Name').innerText = p2.nickname;
-      document.getElementById('podium2Score').innerText = `${p2.score || 0} pts`;
-      document.getElementById('podium2Img').src = p2.avatarUrl || PLACEHOLDER_AVATAR;
+        if (!player) return;
 
-      document.getElementById('podium3Name').innerText = p3.nickname;
-      document.getElementById('podium3Score').innerText = `${p3.score || 0} pts`;
-      document.getElementById('podium3Img').src = p3.avatarUrl || PLACEHOLDER_AVATAR;
+        const name = player.nickname || player.dbUsername || 'Jogador';
+        const score = Number(player.score) || 0;
+        const avatar = player.avatarUrl || PLACEHOLDER_AVATAR;
+
+        document.getElementById('podium' + place + 'Name').innerText = name;
+        document.getElementById('podium' + place + 'Score').innerText = score + ' pts';
+
+        const image = document.getElementById('podium' + place + 'Img');
+        image.src = avatar;
+        image.onerror = function () { image.src = PLACEHOLDER_AVATAR; };
+      });
     }
-  
+
     // Bloqueia pontuação repetida após a primeira tentativa registrada (vitória ou derrota).
     async function missionWasAlreadyAttempted(username, missionName) {
+      if (!supabaseClient) return true;
       try {
         const { data, error } = await supabaseClient.from('missions').select('done, fail').eq('mission_name', missionName).maybeSingle();
         if (error) throw error;
