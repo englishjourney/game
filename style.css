@@ -1250,3 +1250,35 @@ dialog.profile-card-dialog::backdrop {
     47% { transform: translateY(-50%) translate(-3px, 0); }
     48% { transform: translateY(-50%) translate(0, 0); }
 }
+
+
+/* Compatibilidade do novo mapa de missões com as regras antigas do tema High School. */
+body.high-school-theme .mission-map-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 0;
+    min-height: 0;
+    overflow: visible;
+    background: transparent;
+    border-radius: 0;
+}
+body.high-school-theme .mission-map-container::before {
+    display: none;
+}
+body.high-school-theme .mission-map-node {
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr);
+    align-items: center;
+    gap: 13px;
+    width: 100%;
+    min-height: 72px;
+    margin: 0;
+    padding: 9px 12px;
+    transform: none !important;
+}
+body.high-school-theme button.mission-map-node {
+    cursor: pointer;
+    text-align: left;
+}
