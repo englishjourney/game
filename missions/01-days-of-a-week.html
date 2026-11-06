@@ -7,6 +7,7 @@
     <meta name="description" content="Learn the days of the week in English with Artie.">
     <title>Days of the Week | EnglishJourney</title>
     <link rel="stylesheet" href="./components/mission.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
 /* Estilos específicos desta missão.
    O visual compartilhado fica em components/mission.css. */
@@ -22,6 +23,11 @@
     letter-spacing: -.02em;
 }
 
+
+/* Estado de carregamento dos áudios dos flashcards. */
+.ej-audio-button:disabled { cursor: not-allowed; opacity: .72; }
+.ej-audio-button.is-loading { cursor: wait; opacity: 1; }
+.ej-audio-button .fa-circle-o-notch { font-size: .95rem; }
     </style>
 </head>
 <body>
@@ -218,8 +224,39 @@ function renderLesson() {
         </div>
     `);
 
-    document.querySelectorAll("[data-say]").forEach(button => {
-        button.addEventListener("click", () => playGoogleTTS(button.dataset.say));
+    const audioButtons = [...document.querySelectorAll("[data-say]")];
+    let audioLoading = false;
+
+    audioButtons.forEach(button => {
+        button.addEventListener("click", async () => {
+            if (audioLoading || button.disabled) return;
+
+            audioLoading = true;
+            audioButtons.forEach(audioButton => {
+                audioButton.disabled = true;
+                if (audioButton === button) {
+                    audioButton.classList.add("is-loading");
+                    audioButton.setAttribute("aria-busy", "true");
+                    audioButton.innerHTML = '<i class="fa fa-circle-o-notch fa-spin" aria-hidden="true"></i>';
+                }
+            });
+
+            try {
+                await playGoogleTTS(button.dataset.say);
+            } catch (error) {
+                console.error("Não foi possível reproduzir o áudio:", error);
+            } finally {
+                audioButtons.forEach(audioButton => {
+                    audioButton.disabled = false;
+                    if (audioButton === button) {
+                        audioButton.classList.remove("is-loading");
+                        audioButton.removeAttribute("aria-busy");
+                        audioButton.innerHTML = "🔊";
+                    }
+                });
+                audioLoading = false;
+            }
+        });
     });
 
     document.getElementById("start-mini-exercise")?.addEventListener("click", renderWarmup);
