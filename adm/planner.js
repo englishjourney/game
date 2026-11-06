@@ -481,7 +481,7 @@ function setupPlannerMerge() {
             if (mergeIsSaving || !mergeSourceItem || !mergeTargetItem) return;
 
             const confirmed = confirm(
-                'Unir as atividades da aula de origem às atividades da aula de destino?\\n\\n' +
+                'Unir as atividades da aula de origem às atividades da aula de destino?\n\n' +
                 'As atividades da aula de destino ficarão primeiro; uma linha separadora será adicionada e, abaixo dela, entrarão as atividades da aula de origem. ' +
                 'A aula de origem será removida após a atualização. Os demais dados da aula de destino serão preservados.'
             );
@@ -518,6 +518,9 @@ function setupPlannerMerge() {
                 const sourceActivities = String(currentSource.activities || '');
                 const cleanTargetActivities = targetActivities.replace(/\s+$/, '');
                 const cleanSourceActivities = sourceActivities.trim();
+                if (!cleanSourceActivities) {
+                    throw new Error('A aula de origem não possui atividades para adicionar. Nenhuma aula foi alterada.');
+                }
                 let mergedActivities = cleanTargetActivities;
 
                 if (cleanSourceActivities) {
