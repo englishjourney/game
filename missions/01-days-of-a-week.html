@@ -93,38 +93,7 @@ const days = [
     { en: "Sunday", pt: "domingo" }
 ];
 
-const gameQuestions = [
-    {
-        prompt: "What day comes before Friday?",
-        options: ["Thursday", "Saturday", "Monday"],
-        answer: "Thursday",
-        explanation: "Thursday comes right before Friday."
-    },
-    {
-        prompt: "How do you say “domingo” in English?",
-        options: ["Saturday", "Sunday", "Monday"],
-        answer: "Sunday",
-        explanation: "Sunday means domingo."
-    },
-    {
-        prompt: "Which day is between Monday and Wednesday?",
-        options: ["Tuesday", "Thursday", "Friday"],
-        answer: "Tuesday",
-        explanation: "Tuesday is between Monday and Wednesday."
-    },
-    {
-        prompt: "Which spelling is correct?",
-        options: ["Wensday", "Wednesday", "Wednsday"],
-        answer: "Wednesday",
-        explanation: "Wednesday is spelled W-E-D-N-E-S-D-A-Y."
-    },
-    {
-        prompt: "What day comes after Saturday?",
-        options: ["Friday", "Sunday", "Monday"],
-        answer: "Sunday",
-        explanation: "Sunday comes after Saturday."
-    }
-];
+
 
 let studentSession = null;
 let missionSettings = {
@@ -134,9 +103,6 @@ let missionSettings = {
     completed: false,
     failed: false
 };
-let gameIndex = 0;
-let correctAnswers = 0;
-let answerLocked = false;
 
 function renderLoginScreen() {
     setMissionProgress("LOGIN", 1, 3, 0);
@@ -363,7 +329,7 @@ function updateRace(ts){
  if(raceSpawn>1150){raceSpawn=0;spawnRaceWord()}
  raceWords=raceWords.filter(w=>{
   w.y+=dt*.055;w.el.style.top=w.y+"%";
-  if(!w.checked&&w.y>=77){w.checked=true;if(Math.abs(w.lane-raceX)<16){
+  if(!w.checked&&w.y>=53){w.checked=true;if(Math.abs(w.lane-raceX)<16){
    if(w.day.en===raceTarget.en){raceScore++;updateRaceHud();const f=document.getElementById("race-feedback");if(f){f.textContent="+1";f.classList.remove("show");void f.offsetWidth;f.classList.add("show")}raceTarget=pickDay();updateRaceHud();if(raceScore>=Number(missionSettings.missionScore)){finishRace();}}
    else{const f=document.getElementById("race-feedback");if(f){f.textContent="Try again!";f.classList.remove("show");void f.offsetWidth;f.classList.add("show")}}
   }}
@@ -380,12 +346,12 @@ async function completeGame(passed) {
  try{result=await recordMissionResult(MISSION_NAME,studentSession.username,passed?"done":"fail")}catch(e){error=e;console.error(e)}
  if(result?.recorded&&passed){missionSettings.alreadyAttempted=true;missionSettings.completed=true;setMissionXP(result.earnedPoints)}
  const message=error?"Não foi possível registrar o resultado: "+error.message:result?.reason==="already-attempted"?"Esta missão já teve uma tentativa registrada.": "Você alcançou "+raceScore+" pontos e concluiu a missão! Parabéns!";
- showMissionDialog({title:passed?"Mission completed!":"Keep practicing!",message,buttonText:passed&&result?.recorded?"Next mission":"Review",tone:passed?"success":"warning",onAction:()=>{
-  if(passed&&result?.recorded){
-   setMissionContent('<h1 class="ej-screen-title">Congratulations!</h1><p class="ej-screen-copy">Missão concluída! Carregando a próxima etapa...</p>');
-   window.parent.postMessage({type:"ENGLISHJOURNEY_MISSION_COMPLETED",missionName:MISSION_NAME},window.location.origin);
-  }else renderLesson();
- }});
+ if(passed&&result?.recorded){
+  setMissionContent('<span class="ej-kicker">MISSION COMPLETED</span><h1 class="ej-screen-title">Congratulations! 🎉</h1><p class="ej-screen-copy">Você alcançou a meta! A próxima missão será carregada agora.</p>');
+  window.setTimeout(()=>window.parent.postMessage({type:"ENGLISHJOURNEY_MISSION_COMPLETED",missionName:MISSION_NAME},window.location.origin),1600);
+ }else{
+  showMissionDialog({title:passed?"Mission completed!":"Keep practicing!",message,buttonText:"Review",tone:"warning",onAction:renderLesson});
+ }
 }
 
 mountMissionLayout();
