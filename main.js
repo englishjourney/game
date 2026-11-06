@@ -27,13 +27,37 @@ document.addEventListener("DOMContentLoaded", async () => {
         const btnAvatar = document.getElementById('btn-avatar');
         const profileContainer = document.querySelector('.profile-container');
 
-        // Garante que o Avatar e o Botão Sair fiquem lado a lado sem sobrepor
+        // Mantém os três controles agrupados no container de perfil.
         if (profileContainer) {
             profileContainer.style.display = 'flex';
             profileContainer.style.flexDirection = 'row';
             profileContainer.style.alignItems = 'center';
-            profileContainer.style.gap = '18px'; // Espaçamento entre o avatar e o sair
+            profileContainer.style.gap = '12px';
         }
+
+        const classBackgrounds = {
+            'Archer': 'bg/archer.png',
+            'Builder': 'bg/builder.png',
+            'Explorer': 'bg/explorer.png',
+            'Fairy': 'bg/fairy.png',
+            'Farmer': 'bg/farmer.png',
+            'Miner': 'bg/miner.png',
+            'Redstone Engineer': 'bg/redstoneengineer.png',
+            'Summoner': 'bg/summoner.png',
+            'Warrior': 'bg/warrior.png',
+            'Witch': 'bg/witch.png',
+            'Wizard': 'bg/wizard.png'
+        };
+
+        const applyProfileClassBackground = className => {
+            if (!profileContainer) return;
+            const imagePath = classBackgrounds[className];
+            if (imagePath) {
+                profileContainer.style.setProperty('--profile-class-image', 'url("' + imagePath + '")');
+            } else {
+                profileContainer.style.removeProperty('--profile-class-image');
+            }
+        };
 
         if (btnAvatar) {
             // Função para montar o visual do Avatar
@@ -86,13 +110,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (session.username) {
                 supabase
                     .from('users')
-                    .select('avatar_url')
+                    .select('avatar_url, class')
                     .eq('username', session.username)
                     .single()
                     .then(({ data, error }) => {
                         if (!error && data) {
-                            // Se achou uma imagem no banco, atualiza a interface imediatamente
+                            // Atualiza a foto e o fundo do container conforme a classe do usuário.
                             updateAvatarUI(data.avatar_url, session.name || session.username);
+                            applyProfileClassBackground(data.class);
                         }
                     })
                     .catch(err => console.error("Erro ao verificar o avatar no banco:", err));
