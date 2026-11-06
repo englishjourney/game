@@ -124,6 +124,11 @@ dialog::backdrop { background: rgba(0,0,0,0.7); }
 .minimize-btn:hover {
     background: rgba(255, 255, 255, 0.1);
 }
+
+/* Mantém o texto dos controles do planner principal em branco. */
+.planner-section-heading-actions .minimize-btn {
+    color: #fff;
+}
 /* Reminders Wrapper & Dropdown */
 .reminders-wrapper {
     position: relative;
