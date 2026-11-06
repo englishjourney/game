@@ -108,8 +108,10 @@ export async function recordMissionResult(missionName, username, result) {
 
     const { data: mission, error: missionError } = await supabase
         .from("missions")
-        .select("mission_score, done, fail")
+        .select("id, mission_score, done, fail")
         .eq("mission_name", missionName)
+        .order("id", { ascending: true })
+        .limit(1)
         .maybeSingle();
 
     if (missionError) throw missionError;
