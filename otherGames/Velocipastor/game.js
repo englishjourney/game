@@ -1,6 +1,11 @@
 import { supabase } from "../../supabaseClient.js";
 
 const ASSET = "./assets/";
+
+// Central collision bands: transparent margins around each GIF are ignored.
+const PLAYER_HITBOX = { left: 0.30, right: 0.70, top: 0.28, bottom: 0.84 };
+const NINJA_HITBOX = { left: 0.32, right: 0.68, top: 0.28, bottom: 0.84 };
+
 const STORY = [
   { image: "1.png", caption: "Após a trágica morte de seus pais..." },
   { image: "(2).jpeg", caption: "...o padre Doug Jones viaja para a China para encontrar paz espiritual." },
@@ -58,6 +63,7 @@ function showScreen(name) {
   Object.entries(screens).forEach(([key, element]) => {
     element.classList.toggle("hidden", key !== name);
   });
+  document.body.classList.toggle("game-active", name === "game");
   state.screen = name;
 }
 
@@ -153,6 +159,10 @@ window.addEventListener("keydown", (event) => {
   if (state.screen === "game" && !isTyping && event.code === "Space") {
     event.preventDefault();
     if (!event.repeat) jump();
+  }
+  if (state.screen === "game" && !isTyping && event.code === "Enter") {
+    event.preventDefault();
+    if (!event.repeat) attack();
   }
 });
 window.addEventListener("keyup", (event) => {
@@ -250,11 +260,38 @@ function attack() {
   setPlayerSprite("shouting");
 }
 
-function playerMetrics() {
+function getHitbox(element, proportions) {
+  const rect = element.getBoundingClientRect();
   return {
-    left: playfield.clientWidth * (window.matchMedia("(max-width: 720px)").matches ? 0.24 : 0.31),
-    width: player.getBoundingClientRect().width
+    left: rect.left + rect.width * proportions.left,
+    right: rect.left + rect.width * proportions.right,
+    top: rect.top + rect.height * proportions.top,
+    bottom: rect.top + rect.height * proportions.bottom
   };
+}
+
+function hitboxesTouch(first, second, tolerance = 2) {
+  return first.left <= second.right + tolerance
+    && first.right + tolerance >= second.left
+    && first.top <= second.bottom + tolerance
+    && first.bottom + tolerance >= second.top;
+}
+
+function horizontalHitboxesTouch(first, second, tolerance = 2) {
+  return first.left <= second.right + tolerance
+    && first.right + tolerance >= second.left;
+}
+
+function playerContactBox() {
+  return getHitbox(player, PLAYER_HITBOX);
+}
+
+function enemyContactX(enemy) {
+  const fieldRect = playfield.getBoundingClientRect();
+  const playerBox = playerContactBox();
+  const enemyWidth = enemy.element.getBoundingClientRect().width;
+  const enemyRightOffset = enemyWidth * NINJA_HITBOX.right;
+  return playerBox.left - fieldRect.left - enemyRightOffset;
 }
 
 function spawnEnemy() {
@@ -344,11 +381,12 @@ function retreatEnemy(enemy, now) {
 }
 
 function hitNearbyEnemies(now) {
-  const metrics = playerMetrics();
-  const stopX = metrics.left + metrics.width - 22;
+  const playerBox = playerContactBox();
   state.enemies.forEach((enemy) => {
     if (!enemy.alive || enemy.mode !== "fighting") return;
-    if (Math.abs(enemy.x - stopX) > 112) return;
+    const ninjaBox = getHitbox(enemy.element, NINJA_HITBOX);
+    if (!hitboxesTouch(playerBox, ninjaBox)) return;
+
     enemy.hp = Math.max(0, enemy.hp - state.damage);
     enemy.hitsSinceRetreat += 1;
     enemy.healthFill.style.width = (enemy.hp / 20 * 100) + "%";
@@ -399,12 +437,9 @@ function collectPickup(pickup) {
 }
 
 function updateEnemies(now, dt) {
-  const metrics = playerMetrics();
-  const stopX = metrics.left + metrics.width - 22;
-  const playerRight = metrics.left + metrics.width;
-
   state.enemies.forEach((enemy) => {
     if (!enemy.alive) return;
+    const stopX = enemyContactX(enemy);
 
     if (enemy.mode === "approaching") {
       enemy.x -= state.worldSpeed * 1.08 * dt;
@@ -416,7 +451,10 @@ function updateEnemies(now, dt) {
       }
     } else if (enemy.mode === "fighting") {
       enemy.x = stopX;
-      if (now >= enemy.nextHitAt) {
+      positionEntity(enemy);
+      const playerBox = playerContactBox();
+      const ninjaBox = getHitbox(enemy.element, NINJA_HITBOX);
+      if (hitboxesTouch(playerBox, ninjaBox) && now >= enemy.nextHitAt) {
         enemy.nextHitAt = now + 250;
         damagePlayer(2);
       }
@@ -431,13 +469,17 @@ function updateEnemies(now, dt) {
       }
     } else if (enemy.mode === "passing") {
       enemy.x -= state.worldSpeed * 1.72 * dt;
-      const overlapsPlayer = enemy.x < playerRight && enemy.x + 94 > metrics.left;
-      if (overlapsPlayer && !enemy.damageApplied) {
-        enemy.damageApplied = true;
-        if (now >= state.jumpUntil) {
-          damagePlayer(20, "A passing ninja hit you! -20 HP");
-        } else {
-          logMessage("You jumped over a passing ninja!");
+      positionEntity(enemy);
+      if (!enemy.damageApplied) {
+        const playerBox = playerContactBox();
+        const ninjaBox = getHitbox(enemy.element, NINJA_HITBOX);
+        if (horizontalHitboxesTouch(playerBox, ninjaBox)) {
+          enemy.damageApplied = true;
+          if (hitboxesTouch(playerBox, ninjaBox)) {
+            damagePlayer(20, "A passing ninja hit you! -20 HP");
+          } else if (now < state.jumpUntil) {
+            logMessage("You jumped over a passing ninja!");
+          }
         }
       }
     }
@@ -456,17 +498,16 @@ function updateEnemies(now, dt) {
 }
 
 function updatePickups(dt) {
-  const metrics = playerMetrics();
-  const playerRight = metrics.left + metrics.width;
+  const playerBox = playerContactBox();
   state.pickups.forEach((pickup) => {
     if (!pickup.alive) return;
     pickup.x -= state.worldSpeed * dt;
-    const overlaps = pickup.x < playerRight + 20 && pickup.x + 48 > metrics.left - 8;
-    if (overlaps) {
+    positionEntity(pickup);
+    const pickupBox = getHitbox(pickup.element, { left: 0, right: 1, top: 0, bottom: 1 });
+    if (hitboxesTouch(playerBox, pickupBox)) {
       collectPickup(pickup);
       return;
     }
-    positionEntity(pickup);
   });
   state.pickups = state.pickups.filter((pickup) => {
     if (!pickup.alive) return false;
