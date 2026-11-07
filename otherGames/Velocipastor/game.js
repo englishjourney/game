@@ -292,11 +292,45 @@ function updatePlayerAppearance(now) {
   setPlayerSprite(mode);
 }
 
-function movePlayer(direction, dt) {
-  if (!direction) return;
+function playerFreezeX() {
   const maxX = Math.max(8, playfield.clientWidth - player.offsetWidth - 8);
-  state.playerX = Math.max(8, Math.min(maxX, state.playerX + direction * PLAYER_MOVE_SPEED * dt));
+  const centerOfRightHalf = playfield.clientWidth * 0.75;
+  return Math.max(8, Math.min(maxX, centerOfRightHalf - player.offsetWidth / 2));
+}
+
+function movePlayer(direction, dt) {
+  if (!direction) return { scrollDirection: 0, scrollDuration: 0 };
+
+  const maxX = Math.max(8, playfield.clientWidth - player.offsetWidth - 8);
+
+  if (direction < 0) {
+    state.playerX = Math.max(8, state.playerX - PLAYER_MOVE_SPEED * dt);
+    player.style.left = Math.round(state.playerX) + "px";
+    return { scrollDirection: 0, scrollDuration: 0 };
+  }
+
+  const freezeX = playerFreezeX();
+
+  // First, the character runs across the ground to the center of the right half.
+  if (state.playerX < freezeX) {
+    const distanceToFreeze = freezeX - state.playerX;
+    const timeToFreeze = distanceToFreeze / PLAYER_MOVE_SPEED;
+    const playerMoveTime = Math.min(dt, timeToFreeze);
+
+    state.playerX = Math.min(freezeX, state.playerX + PLAYER_MOVE_SPEED * playerMoveTime);
+    player.style.left = Math.round(state.playerX) + "px";
+
+    // If the key stays held after reaching the anchor, the remaining frame scrolls the world.
+    const scrollDuration = Math.max(0, dt - playerMoveTime);
+    return {
+      scrollDirection: scrollDuration > 0 ? 1 : 0,
+      scrollDuration
+    };
+  }
+
+  state.playerX = Math.min(maxX, freezeX);
   player.style.left = Math.round(state.playerX) + "px";
+  return { scrollDirection: 1, scrollDuration: dt };
 }
 
 function scrollScenery(direction, dt) {
@@ -651,7 +685,8 @@ function hitNearbyEnemies(now) {
 }
 
 function spawnPickup() {
-  const type = Math.random() < 0.5 ? "holy" : "cross";
+  const roll = Math.random();
+  const type = roll < 0.34 ? "holy" : roll < 0.68 ? "cross" : "medkit";
   const airborne = Math.random() < 0.62;
   const id = state.nextId++;
   const element = document.createElement("div");
@@ -662,19 +697,33 @@ function spawnPickup() {
   const heightOffset = airborne ? 90 + Math.random() * 65 : 0;
   element.style.bottom = heightOffset + "px";
 
-  const image = document.createElement("img");
-  image.src = ASSET + (type === "holy" ? "holy_water.png" : "cross.png");
-  image.alt = type === "holy" ? "Holy water" : "Cross";
-  element.appendChild(image);
+  if (type === "medkit") {
+    const medkit = document.createElement("div");
+    medkit.className = "medkit-icon";
+    medkit.setAttribute("role", "img");
+    medkit.setAttribute("aria-label", "Medkit");
+    element.appendChild(medkit);
+  } else {
+    const image = document.createElement("img");
+    image.src = ASSET + (type === "holy" ? "holy_water.png" : "cross.png");
+    image.alt = type === "holy" ? "Holy water" : "Cross";
+    element.appendChild(image);
+  }
+
   entities.appendChild(element);
 
-  const spawnSide = state.facing < 0 ? "left" : "right";
+  const randomAhead = 170 + Math.random() * 105;
+  const scrollingAtAnchor = state.facing > 0 && state.playerX >= playerFreezeX() - 2;
+  const spawnX = scrollingAtAnchor
+    ? playfield.clientWidth + 70 + Math.random() * 100
+    : state.facing > 0
+      ? Math.min(playfield.clientWidth - 58, state.playerX + randomAhead)
+      : Math.max(8, state.playerX - randomAhead);
+
   const pickup = {
     id,
     type,
-    x: spawnSide === "right"
-      ? playfield.clientWidth + 70 + Math.random() * 100
-      : -100 - Math.random() * 100,
+    x: spawnX,
     heightOffset,
     alive: true,
     element
@@ -696,10 +745,16 @@ function collectPickup(pickup) {
     if (state.holyWaterCount >= HOLY_WATER_FOR_SPECIAL) {
       logMessage("Storm cloud charged! Special attack ready!");
     }
-  } else {
+  } else if (pickup.type === "cross") {
     state.attackSpeed += 1;
     state.score += 10;
     logMessage("Cross earned +1 attack speed +10pts");
+  } else {
+    const recovered = Math.min(10, 100 - state.hp);
+    state.hp = Math.min(100, state.hp + 10);
+    logMessage(recovered > 0
+      ? "Medkit restored +" + recovered + " HP"
+      : "Medkit collected — health is already full");
   }
   updateHud();
 }
@@ -777,11 +832,13 @@ function updateEnemies(now, dt) {
   });
 }
 
-function updatePickups(direction, dt) {
+function updatePickups(scrollDirection, scrollDuration) {
   const playerBox = playerContactBox();
   state.pickups.forEach((pickup) => {
     if (!pickup.alive) return;
-    if (direction) pickup.x -= direction * state.worldSpeed * dt;
+    if (scrollDirection) {
+      pickup.x -= scrollDirection * state.worldSpeed * scrollDuration;
+    }
     positionEntity(pickup);
     const pickupBox = getHitbox(pickup.element, { left: 0, right: 1, top: 0, bottom: 1 });
     if (hitboxesTouch(playerBox, pickupBox)) {
@@ -817,8 +874,8 @@ function gameLoop(now) {
     state.worldSpeed = Math.min(340, 205 + state.elapsedSeconds * 0.65);
 
     const direction = movementDirection();
-    movePlayer(direction, dt);
-    scrollScenery(direction, dt);
+    const movement = movePlayer(direction, dt);
+    scrollScenery(movement.scrollDirection, movement.scrollDuration);
     updatePlayerAppearance(now);
 
     if (now >= state.nextEnemyAt) {
@@ -832,7 +889,7 @@ function gameLoop(now) {
 
     updateEnemies(now, dt);
     if (state.gameOver) return;
-    updatePickups(direction, dt);
+    updatePickups(movement.scrollDirection, movement.scrollDuration);
 
     if (now < state.attackUntil && now >= state.nextPlayerAttackAt) {
       hitNearbyEnemies(now);
