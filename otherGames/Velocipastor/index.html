@@ -70,7 +70,7 @@
         <button id="start-game" class="pixel-button primary big" type="button">START GAME ▶</button>
         <button id="open-rank" class="pixel-button secondary big" type="button">RANK 🏆</button>
       </div>
-      <p class="small-note">Controls: SPACE / JUMP to leap over passing ninjas · ENTER / ATTACK to hit nearby enemies.</p>
+      <p class="small-note">Controls: LEFT / RIGHT to move · SPACE to jump · ENTER to attack. Moving while attacking is allowed.</p>
     </section>
 
     <section id="game-screen" class="screen game-panel hidden">
@@ -85,14 +85,18 @@
       </div>
 
       <div id="playfield" class="playfield">
-        <div class="sky-layer sky-far" aria-hidden="true"></div>
-        <div class="sky-layer sky-near" aria-hidden="true"></div>
+        <div id="sky-far" class="sky-layer sky-far" aria-hidden="true"></div>
+        <div id="sky-near" class="sky-layer sky-near" aria-hidden="true"></div>
         <div class="cloud cloud-one" aria-hidden="true"></div>
         <div class="cloud cloud-two" aria-hidden="true"></div>
         <div class="sun-pixel" aria-hidden="true"></div>
-        <div class="ground-layer" aria-hidden="true"><div class="ground-top"></div></div>
+        <div id="ground-layer" class="ground-layer" aria-hidden="true"><div id="ground-top" class="ground-top"></div></div>
         <div id="entities" class="entities"></div>
         <div id="player" class="player">
+          <div id="storm-cloud" class="storm-cloud" aria-label="Storm cloud charge">
+            <span id="cloud-charge" class="cloud-charge">0/10</span>
+            <span class="cloud-bolt" aria-hidden="true">⚡</span>
+          </div>
           <img id="player-sprite" src="./assets/velocipastor_standing.png" alt="Velocipastor">
         </div>
         <div class="level-label">ENDLESS ROAD <span>•</span> KEEP MOVING</div>
@@ -106,7 +110,8 @@
         </div>
         <div class="controls">
           <button id="jump-button" class="pixel-button secondary control-button" type="button">JUMP <small>SPACE</small></button>
-          <button id="attack-button" class="pixel-button attack control-button" type="button">ATTACK <small>ENTER / HIT NEARBY NINJAS</small></button>
+          <button id="attack-button" class="pixel-button attack control-button" type="button">ATTACK <small>ENTER / NEARBY</small></button>
+          <button id="special-attack-button" class="pixel-button special control-button hidden" type="button" disabled>STORM <small>LIGHTNING STRIKE</small></button>
         </div>
       </div>
 
@@ -132,7 +137,7 @@
           <div><p class="eyebrow">ARCADE HALL OF FAME</p><h2 id="rank-title">RANKING</h2></div>
           <button id="close-rank" class="close-button" type="button" aria-label="Close ranking">×</button>
         </div>
-        <p class="rank-note">Only positive scores appear. Tied scores are ordered by the longest survival time.</p>
+        <p class="rank-note">Only the highest score for each player appears. Tied scores are ordered by the longest survival time.</p>
         <div id="rank-status" class="rank-status">Loading leaderboard...</div>
         <ol id="rank-list" class="rank-list"></ol>
       </div>

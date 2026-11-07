@@ -60,7 +60,11 @@ const state = {
   nextPickupAt: 0,
   enemies: [],
   pickups: [],
-  nextId: 1
+  nextId: 1,
+  playerX: 0,
+  facing: 1,
+  sceneryOffset: 0,
+  holyWaterCount: 0
 };
 
 const player = $("player");
@@ -70,6 +74,19 @@ const entities = $("entities");
 const messageLog = $("message-log");
 const gameOverOverlay = $("game-over-overlay");
 const rankModal = $("rank-modal");
+const stormCloud = $("storm-cloud");
+const cloudCharge = $("cloud-charge");
+const specialAttackButton = $("special-attack-button");
+const groundLayer = $("ground-layer");
+const groundTop = $("ground-top");
+const skyFar = $("sky-far");
+const skyNear = $("sky-near");
+const heldDirections = new Set();
+
+const PLAYER_MOVE_SPEED = 255;
+const PASSING_NINJA_SPEED = 330;
+const SPECIAL_ATTACK_RADIUS = 310;
+const HOLY_WATER_FOR_SPECIAL = 10;
 
 try {
   const savedPlayerName = window.localStorage.getItem(PLAYER_NAME_STORAGE_KEY);
@@ -155,9 +172,11 @@ $("skip-opening").addEventListener("click", showHome);
 $("start-game").addEventListener("click", startGame);
 $("jump-button").addEventListener("click", jump);
 $("attack-button").addEventListener("click", attack);
+$("special-attack-button").addEventListener("click", specialAttack);
 $("play-again").addEventListener("click", startGame);
 $("back-home").addEventListener("click", () => {
   gameOverOverlay.classList.add("hidden");
+  heldDirections.clear();
   playfield.classList.remove("is-moving");
   showHome();
 });
@@ -171,6 +190,7 @@ rankModal.addEventListener("click", (event) => {
 window.addEventListener("keydown", (event) => {
   const target = event.target;
   const isTyping = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
+
   if (state.screen === "intro" && !isTyping) {
     if (event.key === "ArrowRight") {
       event.preventDefault();
@@ -180,17 +200,38 @@ window.addEventListener("keydown", (event) => {
       previousStory();
     }
   }
-  if (state.screen === "game" && !isTyping && event.code === "Space") {
+
+  if (state.screen !== "game" || isTyping) return;
+
+  if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+    event.preventDefault();
+    heldDirections.add(event.key);
+    state.facing = event.key === "ArrowLeft" ? -1 : 1;
+    updatePlayerFacing();
+  }
+
+  if (event.code === "Space") {
     event.preventDefault();
     if (!event.repeat) jump();
   }
-  if (state.screen === "game" && !isTyping && event.code === "Enter") {
+
+  if (event.code === "Enter") {
     event.preventDefault();
     if (!event.repeat) attack();
   }
 });
+
 window.addEventListener("keyup", (event) => {
+  if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+    heldDirections.delete(event.key);
+    if (state.screen === "game") updatePlayerAppearance(performance.now());
+  }
   if (event.code === "Space") event.preventDefault();
+});
+
+window.addEventListener("blur", () => {
+  heldDirections.clear();
+  if (state.screen === "game") updatePlayerAppearance(performance.now());
 });
 
 function formatTime(seconds) {
@@ -227,6 +268,64 @@ function setPlayerSprite(mode) {
   playerSprite.src = ASSET + file;
 }
 
+function updatePlayerFacing() {
+  player.classList.toggle("facing-left", state.facing < 0);
+}
+
+function movementDirection() {
+  const left = heldDirections.has("ArrowLeft");
+  const right = heldDirections.has("ArrowRight");
+  if (left && right) return state.facing;
+  if (left) return -1;
+  if (right) return 1;
+  return 0;
+}
+
+function updatePlayerAppearance(now) {
+  const direction = movementDirection();
+  if (direction) state.facing = direction;
+  updatePlayerFacing();
+
+  const mode = now < state.attackUntil
+    ? "shouting"
+    : direction !== 0 ? "running" : "standing";
+  setPlayerSprite(mode);
+}
+
+function movePlayer(direction, dt) {
+  if (!direction) return;
+  const maxX = Math.max(8, playfield.clientWidth - player.offsetWidth - 8);
+  state.playerX = Math.max(8, Math.min(maxX, state.playerX + direction * PLAYER_MOVE_SPEED * dt));
+  player.style.left = Math.round(state.playerX) + "px";
+}
+
+function scrollScenery(direction, dt) {
+  if (!direction) {
+    playfield.classList.remove("is-moving");
+    return;
+  }
+
+  playfield.classList.add("is-moving");
+  state.sceneryOffset -= direction * state.worldSpeed * dt;
+  const offset = state.sceneryOffset;
+
+  groundLayer.style.backgroundPositionX = offset + "px";
+  groundTop.style.backgroundPositionX = (offset * 1.05) + "px";
+  skyFar.style.backgroundPositionX = (offset * 0.28) + "px";
+  skyNear.style.backgroundPositionX = (offset * 0.58) + "px";
+}
+
+function updateStormCloud() {
+  const charge = Math.min(HOLY_WATER_FOR_SPECIAL, state.holyWaterCount);
+  const intensity = charge / HOLY_WATER_FOR_SPECIAL;
+
+  cloudCharge.textContent = charge + "/" + HOLY_WATER_FOR_SPECIAL;
+  stormCloud.style.setProperty("--cloud-brightness", (1 - intensity * 0.58).toFixed(2));
+  stormCloud.classList.toggle("charged", charge >= HOLY_WATER_FOR_SPECIAL);
+  specialAttackButton.classList.toggle("hidden", charge < HOLY_WATER_FOR_SPECIAL);
+  specialAttackButton.disabled = charge < HOLY_WATER_FOR_SPECIAL;
+}
+
 function startGame() {
   state.running = true;
   state.ready = false;
@@ -249,22 +348,34 @@ function startGame() {
   state.enemies = [];
   state.pickups = [];
   state.nextId = 1;
+  state.playerX = 0;
+  state.facing = 1;
+  state.sceneryOffset = 0;
+  state.holyWaterCount = 0;
+
+  heldDirections.clear();
   entities.innerHTML = "";
   messageLog.innerHTML = "";
   gameOverOverlay.classList.add("hidden");
   rankModal.classList.add("hidden");
   playfield.classList.remove("is-moving");
-  player.classList.remove("arrived", "jumping");
-  player.style.left = "7%";
-  setPlayerSprite("running");
+  player.classList.remove("arrived", "jumping", "facing-left");
+  player.style.left = "0px";
+  setPlayerSprite("standing");
+  updatePlayerFacing();
+  updateStormCloud();
+  stormCloud.classList.remove("discharging");
   $("attack-button").disabled = false;
   $("jump-button").disabled = false;
-  logMessage("The endless road begins. Stay sharp!");
+  logMessage("Use LEFT and RIGHT to move. The road waits for you.");
   updateHud();
   showScreen("game");
   void player.offsetWidth;
+  state.playerX = Math.round(playfield.clientWidth * 0.31);
+  player.style.left = state.playerX + "px";
   alignPlayerToGround();
-  player.classList.add("arrived");
+  updatePlayerAppearance(performance.now());
+
   cancelAnimationFrame(state.rafId);
   state.rafId = requestAnimationFrame(gameLoop);
 }
@@ -282,7 +393,7 @@ function attack() {
   const now = performance.now();
   state.attackUntil = Math.max(now, state.attackUntil) + 850;
   state.nextPlayerAttackAt = Math.min(state.nextPlayerAttackAt || now, now);
-  setPlayerSprite("shouting");
+  updatePlayerAppearance(now);
 }
 
 function getHitbox(element, proportions) {
@@ -366,31 +477,57 @@ function playerContactBox() {
   return getSpriteHitbox(playerSprite, PLAYER_SPRITE.hitbox);
 }
 
-function enemyContactX(enemy) {
-  const fieldRect = playfield.getBoundingClientRect();
-  const fieldInnerLeft = fieldRect.left + playfield.clientLeft;
-  const playerBox = playerContactBox();
-  const enemyRect = enemy.element.getBoundingClientRect();
-  const ninjaBox = getSpriteHitbox(enemy.image, NINJA_SPRITE.hitbox);
-  const ninjaFrontOffset = ninjaBox.left - enemyRect.left;
+function setEnemyFacing(enemy, direction) {
+  enemy.facing = direction;
+  enemy.image.classList.toggle("facing-right", direction > 0);
+}
 
-  // The ninja faces left, so its left-side hitbox meets the Velocipastor's nose-side hitbox.
-  return playerBox.right - fieldInnerLeft - ninjaFrontOffset;
+function getEnemyHitbox(enemy) {
+  const box = getSpriteHitbox(enemy.image, NINJA_SPRITE.hitbox);
+  if (enemy.facing < 0) return box;
+
+  const rect = enemy.image.getBoundingClientRect();
+  return {
+    left: rect.right - (box.right - rect.left),
+    right: rect.right - (box.left - rect.left),
+    top: box.top,
+    bottom: box.bottom
+  };
+}
+
+function enemyContactX(enemy) {
+  const playerBox = playerContactBox();
+  const playerCenter = (playerBox.left + playerBox.right) / 2;
+  const enemyRect = enemy.element.getBoundingClientRect();
+  const enemyCenter = enemyRect.left + enemyRect.width / 2;
+  const entitiesLeft = entities.getBoundingClientRect().left;
+
+  setEnemyFacing(enemy, enemyCenter > playerCenter ? -1 : 1);
+  const ninjaBox = getEnemyHitbox(enemy);
+  const leftOffset = ninjaBox.left - enemyRect.left;
+  const rightOffset = ninjaBox.right - enemyRect.left;
+
+  return enemyCenter > playerCenter
+    ? playerBox.right - entitiesLeft - leftOffset
+    : playerBox.left - entitiesLeft - rightOffset;
 }
 
 function spawnEnemy() {
   const aliveCount = state.enemies.filter((enemy) => enemy.alive).length;
   if (aliveCount >= 4) return;
+
   const id = state.nextId++;
-  const kind = Math.random() < 0.32 ? "runner" : "fighter";
+  const kind = Math.random() < 0.28 ? "runner" : "fighter";
+  const side = kind === "runner" ? "right" : (Math.random() < 0.5 ? "left" : "right");
   const element = document.createElement("div");
   element.className = "entity enemy";
+  if (kind === "runner") element.classList.add("passing-ninja");
   element.dataset.id = String(id);
 
   const image = document.createElement("img");
   image.className = "enemy-sprite";
   image.src = ASSET + "ninja_running.gif";
-  image.alt = kind === "runner" ? "Passing ninja" : "Ninja";
+  image.alt = kind === "runner" ? "Passing red ninja" : "Ninja";
   element.appendChild(image);
 
   const bar = document.createElement("div");
@@ -403,19 +540,27 @@ function spawnEnemy() {
   const enemy = {
     id,
     kind,
+    side,
+    facing: side === "right" ? -1 : 1,
     mode: kind === "runner" ? "passing" : "approaching",
-    x: playfield.clientWidth + 90 + Math.random() * 90,
+    x: side === "right"
+      ? playfield.clientWidth + 90 + Math.random() * 90
+      : -120 - Math.random() * 90,
     hp: 20,
     hitsSinceRetreat: 0,
     nextHitAt: 0,
     retreatStarted: 0,
     retreatUntil: 0,
+    retreatStartX: 0,
+    retreatDirection: 0,
     damageApplied: false,
     alive: true,
     element,
     image,
     healthFill: fill
   };
+
+  setEnemyFacing(enemy, enemy.facing);
   state.enemies.push(enemy);
   image.addEventListener("load", () => alignEnemyToGround(enemy));
   positionEntity(enemy);
@@ -459,18 +604,26 @@ function defeatEnemy(enemy) {
 }
 
 function retreatEnemy(enemy, now) {
+  const playerBox = playerContactBox();
+  const playerCenter = (playerBox.left + playerBox.right) / 2;
+  const enemyRect = enemy.element.getBoundingClientRect();
+  const enemyCenter = enemyRect.left + enemyRect.width / 2;
+
   enemy.mode = "retreating";
   enemy.retreatStarted = now;
   enemy.retreatUntil = now + 1000;
+  enemy.retreatStartX = enemy.x;
+  enemy.retreatDirection = enemyCenter < playerCenter ? -1 : 1;
   enemy.hitsSinceRetreat = 0;
   enemy.image.src = ASSET + "ninja_running.gif";
+  setEnemyFacing(enemy, enemy.retreatDirection);
 }
 
 function hitNearbyEnemies(now) {
   const playerBox = playerContactBox();
   state.enemies.forEach((enemy) => {
     if (!enemy.alive || enemy.mode !== "fighting") return;
-    const ninjaBox = getSpriteHitbox(enemy.image, NINJA_SPRITE.hitbox);
+    const ninjaBox = getEnemyHitbox(enemy);
     if (!hitboxesTouch(playerBox, ninjaBox)) return;
 
     enemy.hp = Math.max(0, enemy.hp - state.damage);
@@ -486,19 +639,27 @@ function hitNearbyEnemies(now) {
 
 function spawnPickup() {
   const type = Math.random() < 0.5 ? "holy" : "cross";
+  const airborne = Math.random() < 0.62;
   const id = state.nextId++;
   const element = document.createElement("div");
-  element.className = "entity pickup";
+  element.className = "entity pickup" + (airborne ? " airborne" : "");
   element.dataset.id = String(id);
+
+  // Airborne items sit 90-155px above the ground, within the jump arc.
+  const heightOffset = airborne ? 90 + Math.random() * 65 : 0;
+  element.style.bottom = heightOffset + "px";
+
   const image = document.createElement("img");
   image.src = ASSET + (type === "holy" ? "holy_water.png" : "cross.png");
   image.alt = type === "holy" ? "Holy water" : "Cross";
   element.appendChild(image);
   entities.appendChild(element);
+
   const pickup = {
     id,
     type,
     x: playfield.clientWidth + 70 + Math.random() * 100,
+    heightOffset,
     alive: true,
     element
   };
@@ -512,8 +673,13 @@ function collectPickup(pickup) {
   pickup.element.remove();
   if (pickup.type === "holy") {
     state.damage += 1;
+    state.holyWaterCount = Math.min(HOLY_WATER_FOR_SPECIAL, state.holyWaterCount + 1);
     state.score += 10;
     logMessage("Holy water earned +1 Attack damage + 10pts");
+    updateStormCloud();
+    if (state.holyWaterCount >= HOLY_WATER_FOR_SPECIAL) {
+      logMessage("Storm cloud charged! Special attack ready!");
+    }
   } else {
     state.attackSpeed += 1;
     state.score += 10;
@@ -525,40 +691,52 @@ function collectPickup(pickup) {
 function updateEnemies(now, dt) {
   state.enemies.forEach((enemy) => {
     if (!enemy.alive) return;
-    const stopX = enemyContactX(enemy);
 
     if (enemy.mode === "approaching") {
-      enemy.x -= state.worldSpeed * 1.08 * dt;
-      if (enemy.x <= stopX) {
-        enemy.x = stopX;
+      const targetX = enemyContactX(enemy);
+      const difference = targetX - enemy.x;
+      const step = state.worldSpeed * 1.12 * dt;
+
+      if (Math.abs(difference) <= step) {
+        enemy.x = targetX;
         enemy.mode = "fighting";
         enemy.nextHitAt = now + 250;
         enemy.image.src = ASSET + "ninja_fighting.gif";
+      } else {
+        enemy.x += Math.sign(difference) * step;
       }
     } else if (enemy.mode === "fighting") {
-      enemy.x = stopX;
-      positionEntity(enemy);
-      const playerBox = playerContactBox();
-      const ninjaBox = getSpriteHitbox(enemy.image, NINJA_SPRITE.hitbox);
-      if (hitboxesTouch(playerBox, ninjaBox) && now >= enemy.nextHitAt) {
-        enemy.nextHitAt = now + 250;
-        damagePlayer(2);
+      const targetX = enemyContactX(enemy);
+      const difference = targetX - enemy.x;
+
+      if (Math.abs(difference) > 42) {
+        enemy.mode = "approaching";
+        enemy.x += Math.sign(difference) * Math.min(Math.abs(difference), state.worldSpeed * 1.12 * dt);
+      } else {
+        enemy.x = targetX;
+        positionEntity(enemy);
+        const playerBox = playerContactBox();
+        const ninjaBox = getEnemyHitbox(enemy);
+        if (hitboxesTouch(playerBox, ninjaBox) && now >= enemy.nextHitAt) {
+          enemy.nextHitAt = now + 250;
+          damagePlayer(2);
+        }
       }
     } else if (enemy.mode === "retreating") {
       const progress = Math.min(1, (now - enemy.retreatStarted) / 1000);
-      enemy.x = stopX + 95 * progress;
+      enemy.x = enemy.retreatStartX + enemy.retreatDirection * 105 * progress;
       if (now >= enemy.retreatUntil) {
         enemy.mode = "approaching";
-        enemy.x = stopX + 115;
         enemy.nextHitAt = now + 250;
         enemy.image.src = ASSET + "ninja_running.gif";
       }
     } else if (enemy.mode === "passing") {
-      enemy.x -= state.worldSpeed * 1.72 * dt;
+      // The red runner crosses the level continuously and never switches to pursuit mode.
+      enemy.x -= PASSING_NINJA_SPEED * dt;
       positionEntity(enemy);
       if (!enemy.damageApplied) {
         const playerBox = playerContactBox();
-        const ninjaBox = getSpriteHitbox(enemy.image, NINJA_SPRITE.hitbox);
+        const ninjaBox = getEnemyHitbox(enemy);
         if (horizontalHitboxesTouch(playerBox, ninjaBox)) {
           enemy.damageApplied = true;
           if (hitboxesTouch(playerBox, ninjaBox)) {
@@ -575,7 +753,7 @@ function updateEnemies(now, dt) {
 
   state.enemies = state.enemies.filter((enemy) => {
     if (!enemy.alive && !enemy.element.isConnected) return false;
-    if (enemy.mode === "passing" && enemy.x < -120) {
+    if (enemy.mode === "passing" && enemy.x < -140) {
       enemy.element.remove();
       return false;
     }
@@ -583,11 +761,11 @@ function updateEnemies(now, dt) {
   });
 }
 
-function updatePickups(dt) {
+function updatePickups(direction, dt) {
   const playerBox = playerContactBox();
   state.pickups.forEach((pickup) => {
     if (!pickup.alive) return;
-    pickup.x -= state.worldSpeed * dt;
+    if (direction) pickup.x -= direction * state.worldSpeed * dt;
     positionEntity(pickup);
     const pickupBox = getHitbox(pickup.element, { left: 0, right: 1, top: 0, bottom: 1 });
     if (hitboxesTouch(playerBox, pickupBox)) {
@@ -614,37 +792,35 @@ function gameLoop(now) {
   if (!state.ready && now - state.warmupStarted >= 1100) {
     state.ready = true;
     state.startedAt = now;
-    state.nextEnemyAt = now + 1500;
-    state.nextPickupAt = now + 4000;
-    playfield.classList.add("is-moving");
+    state.nextEnemyAt = now + 1300;
+    state.nextPickupAt = now + 2200;
   }
 
   if (state.ready) {
     state.elapsedSeconds = Math.floor((now - state.startedAt) / 1000);
-    state.distance += state.worldSpeed * dt;
     state.worldSpeed = Math.min(340, 205 + state.elapsedSeconds * 0.65);
+
+    const direction = movementDirection();
+    movePlayer(direction, dt);
+    scrollScenery(direction, dt);
+    updatePlayerAppearance(now);
 
     if (now >= state.nextEnemyAt) {
       spawnEnemy();
-      state.nextEnemyAt = now + 1750 + Math.random() * 1550;
+      state.nextEnemyAt = now + 1850 + Math.random() * 1450;
     }
     if (now >= state.nextPickupAt) {
-      if (Math.random() < 0.72) spawnPickup();
-      state.nextPickupAt = now + 4800 + Math.random() * 4700;
+      if (Math.random() < 0.9) spawnPickup();
+      state.nextPickupAt = now + 2600 + Math.random() * 2200;
     }
 
     updateEnemies(now, dt);
     if (state.gameOver) return;
-    updatePickups(dt);
+    updatePickups(direction, dt);
 
-    if (now < state.attackUntil) {
-      setPlayerSprite("shouting");
-      if (now >= state.nextPlayerAttackAt) {
-        hitNearbyEnemies(now);
-        state.nextPlayerAttackAt = now + (1000 / state.attackSpeed);
-      }
-    } else {
-      setPlayerSprite("running");
+    if (now < state.attackUntil && now >= state.nextPlayerAttackAt) {
+      hitNearbyEnemies(now);
+      state.nextPlayerAttackAt = now + (1000 / state.attackSpeed);
     }
 
     if (now >= state.jumpUntil) player.classList.remove("jumping");
@@ -653,23 +829,62 @@ function gameLoop(now) {
   state.rafId = requestAnimationFrame(gameLoop);
 }
 
+function specialAttack() {
+  if (!state.running || !state.ready || state.gameOver
+    || state.holyWaterCount < HOLY_WATER_FOR_SPECIAL) return;
+
+  const playerBox = playerContactBox();
+  const playerX = (playerBox.left + playerBox.right) / 2;
+  const playerY = (playerBox.top + playerBox.bottom) / 2;
+
+  const targets = state.enemies.filter((enemy) => {
+    if (!enemy.alive) return false;
+    const box = getEnemyHitbox(enemy);
+    const enemyX = (box.left + box.right) / 2;
+    const enemyY = (box.top + box.bottom) / 2;
+    return Math.hypot(enemyX - playerX, enemyY - playerY) <= SPECIAL_ATTACK_RADIUS;
+  });
+
+  if (!targets.length) {
+    logMessage("No ninjas are close enough. Keep the storm charged!");
+    return;
+  }
+
+  state.holyWaterCount -= HOLY_WATER_FOR_SPECIAL;
+  updateStormCloud();
+  stormCloud.classList.add("discharging");
+  window.setTimeout(() => stormCloud.classList.remove("discharging"), 520);
+
+  targets.forEach((enemy) => {
+    enemy.element.classList.add("zapped");
+    defeatEnemy(enemy);
+  });
+
+  logMessage("LIGHTNING STRIKE! " + targets.length + " nearby ninja(s) defeated!");
+  updateHud();
+}
+
 async function saveScore() {
   if (state.score <= 0) {
     $("save-status").textContent = "Score 0 — zero-score runs do not appear in the ranking.";
     return;
   }
-  $("save-status").textContent = "Saving your score to the leaderboard...";
-  const { error } = await supabase.from("velocipastor_scores").insert({
-    player_name: state.playerName,
-    score: state.score,
-    duration_seconds: state.elapsedSeconds
+  $("save-status").textContent = "Checking your personal best...";
+  const { data: savedRecord, error } = await supabase.rpc("save_velocipastor_record", {
+    p_player_name: state.playerName,
+    p_score: state.score,
+    p_duration_seconds: state.elapsedSeconds
   });
+
   if (error) {
-    console.error("Velocipastor leaderboard save failed:", error);
-    $("save-status").textContent = "Could not save the score. The leaderboard database setup may still be pending.";
+    console.error("Velocipastor personal-best save failed:", error);
+    $("save-status").textContent = "Could not save the score. Please try again later.";
     return;
   }
-  $("save-status").textContent = "Score saved to the arcade ranking!";
+
+  $("save-status").textContent = savedRecord
+    ? "New personal record saved to the arcade ranking!"
+    : "Your previous personal best remains in the ranking.";
 }
 
 function finishGame() {
@@ -678,6 +893,7 @@ function finishGame() {
   state.running = false;
   state.elapsedSeconds = state.startedAt ? Math.floor((performance.now() - state.startedAt) / 1000) : 0;
   playfield.classList.remove("is-moving");
+  heldDirections.clear();
   player.classList.remove("jumping");
   $("game-over-name").textContent = state.playerName;
   $("final-score-number").textContent = state.score.toLocaleString("en-US");
