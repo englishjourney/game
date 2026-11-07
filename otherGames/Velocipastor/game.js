@@ -2,9 +2,21 @@ import { supabase } from "../../supabaseClient.js";
 
 const ASSET = "./assets/";
 
-// Central collision bands: transparent margins around each GIF are ignored.
-const PLAYER_HITBOX = { left: 0.30, right: 0.70, top: 0.28, bottom: 0.84 };
-const NINJA_HITBOX = { left: 0.32, right: 0.68, top: 0.28, bottom: 0.84 };
+// Sprite measurements are based on the original 512x341 GIF canvas.
+const SPRITE_SIZE = { width: 512, height: 341 };
+const GROUND_HEIGHT = 80;
+const ENTITY_LAYER_BOTTOM = 74;
+const PLAYER_NAME_STORAGE_KEY = "englishjourney_velocipastor_player_name";
+
+// Pixel rectangles focus collision on the visible body, not transparent margins or the tail.
+const PLAYER_SPRITE = {
+  footY: 320,
+  hitbox: { left: 270, right: 503, top: 70, bottom: 320 }
+};
+const NINJA_SPRITE = {
+  footY: 325,
+  hitbox: { left: 130, right: 405, top: 42, bottom: 325 }
+};
 
 const STORY = [
   { image: "1.png", caption: "Após a trágica morte de seus pais..." },
@@ -58,6 +70,13 @@ const entities = $("entities");
 const messageLog = $("message-log");
 const gameOverOverlay = $("game-over-overlay");
 const rankModal = $("rank-modal");
+
+try {
+  const savedPlayerName = window.localStorage.getItem(PLAYER_NAME_STORAGE_KEY);
+  if (savedPlayerName) $("player-name").value = savedPlayerName.slice(0, 24);
+} catch (error) {
+  console.warn("Could not restore the saved Velocipastor player name:", error);
+}
 
 function showScreen(name) {
   Object.entries(screens).forEach(([key, element]) => {
@@ -119,6 +138,11 @@ $("name-form").addEventListener("submit", (event) => {
     return;
   }
   state.playerName = name.slice(0, 24);
+  try {
+    window.localStorage.setItem(PLAYER_NAME_STORAGE_KEY, state.playerName);
+  } catch (error) {
+    console.warn("Could not save the Velocipastor player name:", error);
+  }
   state.storyIndex = 0;
   showScreen("intro");
   renderStory();
@@ -239,6 +263,7 @@ function startGame() {
   updateHud();
   showScreen("game");
   void player.offsetWidth;
+  alignPlayerToGround();
   player.classList.add("arrived");
   cancelAnimationFrame(state.rafId);
   state.rafId = requestAnimationFrame(gameLoop);
@@ -270,6 +295,61 @@ function getHitbox(element, proportions) {
   };
 }
 
+function getImageContentMetrics(image) {
+  const rect = image.getBoundingClientRect();
+  if (!rect.width || !rect.height) return null;
+
+  const naturalWidth = image.naturalWidth || SPRITE_SIZE.width;
+  const naturalHeight = image.naturalHeight || SPRITE_SIZE.height;
+  const scale = Math.min(rect.width / naturalWidth, rect.height / naturalHeight);
+  const width = naturalWidth * scale;
+  const height = naturalHeight * scale;
+
+  // The sprite images use object-fit: contain and object-position: center bottom.
+  return {
+    left: rect.left + (rect.width - width) / 2,
+    top: rect.top + rect.height - height,
+    width,
+    height
+  };
+}
+
+function getSpriteHitbox(image, bounds) {
+  const metrics = getImageContentMetrics(image);
+  if (!metrics) return image.getBoundingClientRect();
+
+  return {
+    left: metrics.left + (bounds.left / SPRITE_SIZE.width) * metrics.width,
+    right: metrics.left + (bounds.right / SPRITE_SIZE.width) * metrics.width,
+    top: metrics.top + (bounds.top / SPRITE_SIZE.height) * metrics.height,
+    bottom: metrics.top + (bounds.bottom / SPRITE_SIZE.height) * metrics.height
+  };
+}
+
+function getFootGap(container, image, footY) {
+  const containerRect = container.getBoundingClientRect();
+  const metrics = getImageContentMetrics(image);
+  if (!metrics) return null;
+
+  const footScreenY = metrics.top + (footY / SPRITE_SIZE.height) * metrics.height;
+  return containerRect.bottom - footScreenY;
+}
+
+function alignPlayerToGround() {
+  const footGap = getFootGap(player, playerSprite, PLAYER_SPRITE.footY);
+  if (footGap === null) return;
+  player.style.bottom = (GROUND_HEIGHT - footGap) + "px";
+}
+
+function alignEnemyToGround(enemy) {
+  const footGap = getFootGap(enemy.element, enemy.image, NINJA_SPRITE.footY);
+  if (footGap === null) return;
+  enemy.element.style.bottom = (GROUND_HEIGHT - ENTITY_LAYER_BOTTOM - footGap) + "px";
+}
+
+playerSprite.addEventListener("load", alignPlayerToGround);
+window.addEventListener("resize", alignPlayerToGround);
+
 function hitboxesTouch(first, second, tolerance = 2) {
   return first.left <= second.right + tolerance
     && first.right + tolerance >= second.left
@@ -283,15 +363,19 @@ function horizontalHitboxesTouch(first, second, tolerance = 2) {
 }
 
 function playerContactBox() {
-  return getHitbox(player, PLAYER_HITBOX);
+  return getSpriteHitbox(playerSprite, PLAYER_SPRITE.hitbox);
 }
 
 function enemyContactX(enemy) {
   const fieldRect = playfield.getBoundingClientRect();
+  const fieldInnerLeft = fieldRect.left + playfield.clientLeft;
   const playerBox = playerContactBox();
-  const enemyWidth = enemy.element.getBoundingClientRect().width;
-  const enemyRightOffset = enemyWidth * NINJA_HITBOX.right;
-  return playerBox.left - fieldRect.left - enemyRightOffset;
+  const enemyRect = enemy.element.getBoundingClientRect();
+  const ninjaBox = getSpriteHitbox(enemy.image, NINJA_SPRITE.hitbox);
+  const ninjaFrontOffset = ninjaBox.left - enemyRect.left;
+
+  // The ninja faces left, so its left-side hitbox meets the Velocipastor's nose-side hitbox.
+  return playerBox.right - fieldInnerLeft - ninjaFrontOffset;
 }
 
 function spawnEnemy() {
@@ -333,7 +417,9 @@ function spawnEnemy() {
     healthFill: fill
   };
   state.enemies.push(enemy);
+  image.addEventListener("load", () => alignEnemyToGround(enemy));
   positionEntity(enemy);
+  alignEnemyToGround(enemy);
 }
 
 function positionEntity(entity) {
@@ -384,7 +470,7 @@ function hitNearbyEnemies(now) {
   const playerBox = playerContactBox();
   state.enemies.forEach((enemy) => {
     if (!enemy.alive || enemy.mode !== "fighting") return;
-    const ninjaBox = getHitbox(enemy.element, NINJA_HITBOX);
+    const ninjaBox = getSpriteHitbox(enemy.image, NINJA_SPRITE.hitbox);
     if (!hitboxesTouch(playerBox, ninjaBox)) return;
 
     enemy.hp = Math.max(0, enemy.hp - state.damage);
@@ -453,7 +539,7 @@ function updateEnemies(now, dt) {
       enemy.x = stopX;
       positionEntity(enemy);
       const playerBox = playerContactBox();
-      const ninjaBox = getHitbox(enemy.element, NINJA_HITBOX);
+      const ninjaBox = getSpriteHitbox(enemy.image, NINJA_SPRITE.hitbox);
       if (hitboxesTouch(playerBox, ninjaBox) && now >= enemy.nextHitAt) {
         enemy.nextHitAt = now + 250;
         damagePlayer(2);
@@ -472,7 +558,7 @@ function updateEnemies(now, dt) {
       positionEntity(enemy);
       if (!enemy.damageApplied) {
         const playerBox = playerContactBox();
-        const ninjaBox = getHitbox(enemy.element, NINJA_HITBOX);
+        const ninjaBox = getSpriteHitbox(enemy.image, NINJA_SPRITE.hitbox);
         if (horizontalHitboxesTouch(playerBox, ninjaBox)) {
           enemy.damageApplied = true;
           if (hitboxesTouch(playerBox, ninjaBox)) {
