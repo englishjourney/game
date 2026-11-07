@@ -359,6 +359,10 @@ function startGame() {
   gameOverOverlay.classList.add("hidden");
   rankModal.classList.add("hidden");
   playfield.classList.remove("is-moving");
+  groundLayer.style.backgroundPositionX = "0px";
+  groundTop.style.backgroundPositionX = "0px";
+  skyFar.style.backgroundPositionX = "0px";
+  skyNear.style.backgroundPositionX = "0px";
   player.classList.remove("arrived", "jumping", "facing-left");
   player.style.left = "0px";
   setPlayerSprite("standing");
@@ -655,10 +659,13 @@ function spawnPickup() {
   element.appendChild(image);
   entities.appendChild(element);
 
+  const spawnSide = state.facing < 0 ? "left" : "right";
   const pickup = {
     id,
     type,
-    x: playfield.clientWidth + 70 + Math.random() * 100,
+    x: spawnSide === "right"
+      ? playfield.clientWidth + 70 + Math.random() * 100
+      : -100 - Math.random() * 100,
     heightOffset,
     alive: true,
     element
