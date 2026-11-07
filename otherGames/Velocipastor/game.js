@@ -1,0 +1,603 @@
+import { supabase } from "../../supabaseClient.js";
+
+const ASSET = "./assets/";
+const STORY = [
+  { image: "1.png", caption: "Após a trágica morte de seus pais..." },
+  { image: "(2).jpeg", caption: "...o padre Doug Jones viaja para a China para encontrar paz espiritual." },
+  { image: "(3).jpeg", caption: "Durante a viagem, ele encontra uma mulher sendo atacada por ninjas malignos..." },
+  { image: "(4).jpeg", caption: "...e a mulher, quase morrendo, entrega um artefato para o homem, e lhe fere acidentalmente, depois morre." },
+  { image: "(5).jpeg", caption: "O artefato era um dente de Velociraptor mágico, que o transforma em um Velocipastor." },
+  { image: "(6).jpeg", caption: "Os ninjas ficam assustados, e até tentam lutar contra ele..." },
+  { image: "(7).jpeg", caption: "...mas acabam fugindo. E apesar da relutância, ele se tornou o Velocipastor, lutando contra o crime." }
+];
+
+const $ = (id) => document.getElementById(id);
+const screens = {
+  name: $("name-screen"),
+  intro: $("intro-screen"),
+  home: $("home-screen"),
+  game: $("game-screen")
+};
+const state = {
+  screen: "name",
+  playerName: "",
+  storyIndex: 0,
+  running: false,
+  ready: false,
+  gameOver: false,
+  rafId: 0,
+  lastFrame: 0,
+  warmupStarted: 0,
+  startedAt: 0,
+  elapsedSeconds: 0,
+  score: 0,
+  hp: 100,
+  damage: 2,
+  attackSpeed: 4,
+  attackUntil: 0,
+  nextPlayerAttackAt: 0,
+  jumpUntil: 0,
+  distance: 0,
+  worldSpeed: 205,
+  nextEnemyAt: 0,
+  nextPickupAt: 0,
+  enemies: [],
+  pickups: [],
+  nextId: 1
+};
+
+const player = $("player");
+const playerSprite = $("player-sprite");
+const playfield = $("playfield");
+const entities = $("entities");
+const messageLog = $("message-log");
+const gameOverOverlay = $("game-over-overlay");
+const rankModal = $("rank-modal");
+
+function showScreen(name) {
+  Object.entries(screens).forEach(([key, element]) => {
+    element.classList.toggle("hidden", key !== name);
+  });
+  state.screen = name;
+}
+
+function renderStory() {
+  const scene = STORY[state.storyIndex];
+  const image = $("story-image");
+  const fallback = $("story-image-fallback");
+  $("story-counter").textContent = "SCENE " + (state.storyIndex + 1) + " / " + STORY.length;
+  $("story-caption").textContent = scene.caption;
+  $("story-progress-fill").style.width = (((state.storyIndex + 1) / STORY.length) * 100) + "%";
+  $("story-dots").textContent = STORY.map((_item, index) => index === state.storyIndex ? "●" : "○").join(" ");
+  $("story-prev").disabled = state.storyIndex === 0;
+  $("story-next").textContent = state.storyIndex === STORY.length - 1 ? "CONTINUE ▶" : "AVANÇAR ▶";
+  fallback.classList.add("hidden");
+  image.classList.remove("hidden");
+  image.style.display = "block";
+  image.alt = "Opening scene " + (state.storyIndex + 1);
+  image.src = ASSET + scene.image;
+}
+
+$("story-image").addEventListener("error", () => {
+  $("story-image").classList.add("hidden");
+  $("story-image-fallback").classList.remove("hidden");
+  $("story-image-fallback").textContent = "IMAGE FILE MISSING\n" + STORY[state.storyIndex].image;
+});
+
+function nextStory() {
+  if (state.storyIndex < STORY.length - 1) {
+    state.storyIndex += 1;
+    renderStory();
+  } else {
+    showHome();
+  }
+}
+
+function previousStory() {
+  if (state.storyIndex > 0) {
+    state.storyIndex -= 1;
+    renderStory();
+  }
+}
+
+function showHome() {
+  $("home-player-name").textContent = state.playerName.toUpperCase();
+  showScreen("home");
+}
+
+$("name-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = $("player-name").value.trim().replace(/\s+/g, " ");
+  if (!name) {
+    $("player-name").focus();
+    return;
+  }
+  state.playerName = name.slice(0, 24);
+  state.storyIndex = 0;
+  showScreen("intro");
+  renderStory();
+});
+
+$("story-prev").addEventListener("click", previousStory);
+$("story-next").addEventListener("click", nextStory);
+$("skip-opening").addEventListener("click", showHome);
+
+$("start-game").addEventListener("click", startGame);
+$("jump-button").addEventListener("click", jump);
+$("attack-button").addEventListener("click", attack);
+$("play-again").addEventListener("click", startGame);
+$("back-home").addEventListener("click", () => {
+  gameOverOverlay.classList.add("hidden");
+  playfield.classList.remove("is-moving");
+  showHome();
+});
+$("open-rank").addEventListener("click", openRanking);
+$("game-over-rank").addEventListener("click", openRanking);
+$("close-rank").addEventListener("click", () => rankModal.classList.add("hidden"));
+rankModal.addEventListener("click", (event) => {
+  if (event.target === rankModal) rankModal.classList.add("hidden");
+});
+
+window.addEventListener("keydown", (event) => {
+  const target = event.target;
+  const isTyping = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
+  if (state.screen === "intro" && !isTyping) {
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      nextStory();
+    } else if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      previousStory();
+    }
+  }
+  if (state.screen === "game" && !isTyping && event.code === "Space") {
+    event.preventDefault();
+    if (!event.repeat) jump();
+  }
+});
+window.addEventListener("keyup", (event) => {
+  if (event.code === "Space") event.preventDefault();
+});
+
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60).toString().padStart(2, "0");
+  const secs = Math.floor(seconds % 60).toString().padStart(2, "0");
+  return mins + ":" + secs;
+}
+
+function updateHud() {
+  $("hp-number").textContent = Math.max(0, Math.ceil(state.hp)) + " / 100";
+  $("player-health-fill").style.width = Math.max(0, state.hp) + "%";
+  $("player-health-fill").style.background = state.hp <= 30 ? "#ef5b52" : state.hp <= 60 ? "#ffc94f" : "#67d36c";
+  $("damage-number").textContent = state.damage;
+  $("speed-number").textContent = state.attackSpeed;
+  $("score-number").textContent = state.score.toLocaleString("en-US");
+  $("time-number").textContent = formatTime(state.elapsedSeconds);
+}
+
+function logMessage(message) {
+  const item = document.createElement("li");
+  item.textContent = message;
+  messageLog.prepend(item);
+  while (messageLog.children.length > 4) {
+    messageLog.removeChild(messageLog.lastElementChild);
+  }
+}
+
+function setPlayerSprite(mode) {
+  if (playerSprite.dataset.mode === mode) return;
+  playerSprite.dataset.mode = mode;
+  const file = mode === "shouting" ? "velocipastor_shouting.gif"
+    : mode === "running" ? "velocipastor_running.gif"
+    : "velocipastor_standing.png";
+  playerSprite.src = ASSET + file;
+}
+
+function startGame() {
+  state.running = true;
+  state.ready = false;
+  state.gameOver = false;
+  state.lastFrame = 0;
+  state.warmupStarted = performance.now();
+  state.startedAt = 0;
+  state.elapsedSeconds = 0;
+  state.score = 0;
+  state.hp = 100;
+  state.damage = 2;
+  state.attackSpeed = 4;
+  state.attackUntil = 0;
+  state.nextPlayerAttackAt = 0;
+  state.jumpUntil = 0;
+  state.distance = 0;
+  state.worldSpeed = 205;
+  state.nextEnemyAt = 0;
+  state.nextPickupAt = 0;
+  state.enemies = [];
+  state.pickups = [];
+  state.nextId = 1;
+  entities.innerHTML = "";
+  messageLog.innerHTML = "";
+  gameOverOverlay.classList.add("hidden");
+  rankModal.classList.add("hidden");
+  playfield.classList.remove("is-moving");
+  player.classList.remove("arrived", "jumping");
+  player.style.left = "7%";
+  setPlayerSprite("running");
+  $("attack-button").disabled = false;
+  $("jump-button").disabled = false;
+  logMessage("The endless road begins. Stay sharp!");
+  updateHud();
+  showScreen("game");
+  void player.offsetWidth;
+  player.classList.add("arrived");
+  cancelAnimationFrame(state.rafId);
+  state.rafId = requestAnimationFrame(gameLoop);
+}
+
+function jump() {
+  if (!state.running || !state.ready || state.gameOver) return;
+  const now = performance.now();
+  if (now < state.jumpUntil) return;
+  state.jumpUntil = now + 780;
+  player.classList.add("jumping");
+}
+
+function attack() {
+  if (!state.running || !state.ready || state.gameOver) return;
+  const now = performance.now();
+  state.attackUntil = Math.max(now, state.attackUntil) + 850;
+  state.nextPlayerAttackAt = Math.min(state.nextPlayerAttackAt || now, now);
+  setPlayerSprite("shouting");
+}
+
+function playerMetrics() {
+  return {
+    left: playfield.clientWidth * (window.matchMedia("(max-width: 720px)").matches ? 0.24 : 0.31),
+    width: player.getBoundingClientRect().width
+  };
+}
+
+function spawnEnemy() {
+  const aliveCount = state.enemies.filter((enemy) => enemy.alive).length;
+  if (aliveCount >= 4) return;
+  const id = state.nextId++;
+  const kind = Math.random() < 0.32 ? "runner" : "fighter";
+  const element = document.createElement("div");
+  element.className = "entity enemy";
+  element.dataset.id = String(id);
+
+  const image = document.createElement("img");
+  image.className = "enemy-sprite";
+  image.src = ASSET + "ninja_running.gif";
+  image.alt = kind === "runner" ? "Passing ninja" : "Ninja";
+  element.appendChild(image);
+
+  const bar = document.createElement("div");
+  bar.className = "enemy-health";
+  const fill = document.createElement("span");
+  bar.appendChild(fill);
+  element.appendChild(bar);
+  entities.appendChild(element);
+
+  const enemy = {
+    id,
+    kind,
+    mode: kind === "runner" ? "passing" : "approaching",
+    x: playfield.clientWidth + 90 + Math.random() * 90,
+    hp: 20,
+    hitsSinceRetreat: 0,
+    nextHitAt: 0,
+    retreatStarted: 0,
+    retreatUntil: 0,
+    damageApplied: false,
+    alive: true,
+    element,
+    image,
+    healthFill: fill
+  };
+  state.enemies.push(enemy);
+  positionEntity(enemy);
+}
+
+function positionEntity(entity) {
+  entity.element.style.left = Math.round(entity.x) + "px";
+}
+
+function damagePlayer(amount, message) {
+  if (state.gameOver) return;
+  state.hp = Math.max(0, state.hp - amount);
+  if (message) logMessage(message);
+  updateHud();
+  if (state.hp <= 0) finishGame();
+}
+
+function defeatEnemy(enemy) {
+  if (!enemy.alive) return;
+  enemy.alive = false;
+  state.score += 100;
+  $("score-number").textContent = state.score.toLocaleString("en-US");
+  logMessage("Ninja was defeated +100pts");
+  enemy.element.classList.add("dusting");
+
+  const fieldRect = playfield.getBoundingClientRect();
+  const x = enemy.x + 44;
+  const y = fieldRect.height - 82;
+  for (let i = 0; i < 13; i++) {
+    const particle = document.createElement("span");
+    particle.className = "dust-particle";
+    particle.style.left = (x + (Math.random() * 28 - 14)) + "px";
+    particle.style.top = (y + (Math.random() * 28 - 14)) + "px";
+    particle.style.setProperty("--dx", (Math.random() * 110 - 55) + "px");
+    particle.style.setProperty("--dy", (-25 - Math.random() * 80) + "px");
+    entities.appendChild(particle);
+    window.setTimeout(() => particle.remove(), 850);
+  }
+  window.setTimeout(() => enemy.element.remove(), 500);
+}
+
+function retreatEnemy(enemy, now) {
+  enemy.mode = "retreating";
+  enemy.retreatStarted = now;
+  enemy.retreatUntil = now + 1000;
+  enemy.hitsSinceRetreat = 0;
+  enemy.image.src = ASSET + "ninja_running.gif";
+}
+
+function hitNearbyEnemies(now) {
+  const metrics = playerMetrics();
+  const stopX = metrics.left + metrics.width - 22;
+  state.enemies.forEach((enemy) => {
+    if (!enemy.alive || enemy.mode !== "fighting") return;
+    if (Math.abs(enemy.x - stopX) > 112) return;
+    enemy.hp = Math.max(0, enemy.hp - state.damage);
+    enemy.hitsSinceRetreat += 1;
+    enemy.healthFill.style.width = (enemy.hp / 20 * 100) + "%";
+    if (enemy.hp <= 0) {
+      defeatEnemy(enemy);
+    } else if (enemy.hitsSinceRetreat >= 2) {
+      retreatEnemy(enemy, now);
+    }
+  });
+}
+
+function spawnPickup() {
+  const type = Math.random() < 0.5 ? "holy" : "cross";
+  const id = state.nextId++;
+  const element = document.createElement("div");
+  element.className = "entity pickup";
+  element.dataset.id = String(id);
+  const image = document.createElement("img");
+  image.src = ASSET + (type === "holy" ? "holy_water.png" : "cross.png");
+  image.alt = type === "holy" ? "Holy water" : "Cross";
+  element.appendChild(image);
+  entities.appendChild(element);
+  const pickup = {
+    id,
+    type,
+    x: playfield.clientWidth + 70 + Math.random() * 100,
+    alive: true,
+    element
+  };
+  state.pickups.push(pickup);
+  positionEntity(pickup);
+}
+
+function collectPickup(pickup) {
+  if (!pickup.alive) return;
+  pickup.alive = false;
+  pickup.element.remove();
+  if (pickup.type === "holy") {
+    state.damage += 1;
+    state.score += 10;
+    logMessage("Holy water earned +1 Attack damage + 10pts");
+  } else {
+    state.attackSpeed += 1;
+    state.score += 10;
+    logMessage("Cross earned +1 attack speed +10pts");
+  }
+  updateHud();
+}
+
+function updateEnemies(now, dt) {
+  const metrics = playerMetrics();
+  const stopX = metrics.left + metrics.width - 22;
+  const playerRight = metrics.left + metrics.width;
+
+  state.enemies.forEach((enemy) => {
+    if (!enemy.alive) return;
+
+    if (enemy.mode === "approaching") {
+      enemy.x -= state.worldSpeed * 1.08 * dt;
+      if (enemy.x <= stopX) {
+        enemy.x = stopX;
+        enemy.mode = "fighting";
+        enemy.nextHitAt = now + 250;
+        enemy.image.src = ASSET + "ninja_fighting.gif";
+      }
+    } else if (enemy.mode === "fighting") {
+      enemy.x = stopX;
+      if (now >= enemy.nextHitAt) {
+        enemy.nextHitAt = now + 250;
+        damagePlayer(2);
+      }
+    } else if (enemy.mode === "retreating") {
+      const progress = Math.min(1, (now - enemy.retreatStarted) / 1000);
+      enemy.x = stopX + 95 * progress;
+      if (now >= enemy.retreatUntil) {
+        enemy.mode = "approaching";
+        enemy.x = stopX + 115;
+        enemy.nextHitAt = now + 250;
+        enemy.image.src = ASSET + "ninja_running.gif";
+      }
+    } else if (enemy.mode === "passing") {
+      enemy.x -= state.worldSpeed * 1.72 * dt;
+      const overlapsPlayer = enemy.x < playerRight && enemy.x + 94 > metrics.left;
+      if (overlapsPlayer && !enemy.damageApplied) {
+        enemy.damageApplied = true;
+        if (now >= state.jumpUntil) {
+          damagePlayer(20, "A passing ninja hit you! -20 HP");
+        } else {
+          logMessage("You jumped over a passing ninja!");
+        }
+      }
+    }
+
+    positionEntity(enemy);
+  });
+
+  state.enemies = state.enemies.filter((enemy) => {
+    if (!enemy.alive && !enemy.element.isConnected) return false;
+    if (enemy.mode === "passing" && enemy.x < -120) {
+      enemy.element.remove();
+      return false;
+    }
+    return enemy.alive || enemy.element.isConnected;
+  });
+}
+
+function updatePickups(dt) {
+  const metrics = playerMetrics();
+  const playerRight = metrics.left + metrics.width;
+  state.pickups.forEach((pickup) => {
+    if (!pickup.alive) return;
+    pickup.x -= state.worldSpeed * dt;
+    const overlaps = pickup.x < playerRight + 20 && pickup.x + 48 > metrics.left - 8;
+    if (overlaps) {
+      collectPickup(pickup);
+      return;
+    }
+    positionEntity(pickup);
+  });
+  state.pickups = state.pickups.filter((pickup) => {
+    if (!pickup.alive) return false;
+    if (pickup.x <= -70) {
+      pickup.element.remove();
+      return false;
+    }
+    return true;
+  });
+}
+
+function gameLoop(now) {
+  if (!state.running || state.gameOver) return;
+  if (!state.lastFrame) state.lastFrame = now;
+  const dt = Math.min(0.05, Math.max(0, (now - state.lastFrame) / 1000));
+  state.lastFrame = now;
+
+  if (!state.ready && now - state.warmupStarted >= 1100) {
+    state.ready = true;
+    state.startedAt = now;
+    state.nextEnemyAt = now + 1500;
+    state.nextPickupAt = now + 4000;
+    playfield.classList.add("is-moving");
+  }
+
+  if (state.ready) {
+    state.elapsedSeconds = Math.floor((now - state.startedAt) / 1000);
+    state.distance += state.worldSpeed * dt;
+    state.worldSpeed = Math.min(340, 205 + state.elapsedSeconds * 0.65);
+
+    if (now >= state.nextEnemyAt) {
+      spawnEnemy();
+      state.nextEnemyAt = now + 1750 + Math.random() * 1550;
+    }
+    if (now >= state.nextPickupAt) {
+      if (Math.random() < 0.72) spawnPickup();
+      state.nextPickupAt = now + 4800 + Math.random() * 4700;
+    }
+
+    updateEnemies(now, dt);
+    if (state.gameOver) return;
+    updatePickups(dt);
+
+    if (now < state.attackUntil) {
+      setPlayerSprite("shouting");
+      if (now >= state.nextPlayerAttackAt) {
+        hitNearbyEnemies(now);
+        state.nextPlayerAttackAt = now + (1000 / state.attackSpeed);
+      }
+    } else {
+      setPlayerSprite("running");
+    }
+
+    if (now >= state.jumpUntil) player.classList.remove("jumping");
+    updateHud();
+  }
+  state.rafId = requestAnimationFrame(gameLoop);
+}
+
+async function saveScore() {
+  if (state.score <= 0) {
+    $("save-status").textContent = "Score 0 — zero-score runs do not appear in the ranking.";
+    return;
+  }
+  $("save-status").textContent = "Saving your score to the leaderboard...";
+  const { error } = await supabase.from("velocipastor_scores").insert({
+    player_name: state.playerName,
+    score: state.score,
+    duration_seconds: state.elapsedSeconds
+  });
+  if (error) {
+    console.error("Velocipastor leaderboard save failed:", error);
+    $("save-status").textContent = "Could not save the score. The leaderboard database setup may still be pending.";
+    return;
+  }
+  $("save-status").textContent = "Score saved to the arcade ranking!";
+}
+
+function finishGame() {
+  if (state.gameOver) return;
+  state.gameOver = true;
+  state.running = false;
+  state.elapsedSeconds = state.startedAt ? Math.floor((performance.now() - state.startedAt) / 1000) : 0;
+  playfield.classList.remove("is-moving");
+  player.classList.remove("jumping");
+  $("game-over-name").textContent = state.playerName;
+  $("final-score-number").textContent = state.score.toLocaleString("en-US");
+  gameOverOverlay.classList.remove("hidden");
+  updateHud();
+  saveScore();
+}
+
+async function openRanking() {
+  rankModal.classList.remove("hidden");
+  $("rank-status").textContent = "Loading leaderboard...";
+  $("rank-list").innerHTML = "";
+  const { data, error } = await supabase
+    .from("velocipastor_scores")
+    .select("player_name, score, duration_seconds, created_at")
+    .gt("score", 0)
+    .order("score", { ascending: false })
+    .order("duration_seconds", { ascending: false })
+    .order("created_at", { ascending: true })
+    .limit(50);
+
+  if (error) {
+    console.error("Velocipastor leaderboard load failed:", error);
+    $("rank-status").textContent = "Ranking indisponível. A tabela do placar precisa ser criada no Supabase.";
+    return;
+  }
+  if (!data || data.length === 0) {
+    $("rank-status").textContent = "No scores yet. Be the first to enter the hall of fame!";
+    return;
+  }
+  $("rank-status").textContent = "TOP " + data.length + " PLAYERS";
+  data.forEach((entry) => {
+    const item = document.createElement("li");
+    const playerName = document.createElement("span");
+    playerName.className = "rank-player";
+    playerName.textContent = entry.player_name;
+    const meta = document.createElement("span");
+    meta.className = "rank-meta";
+    meta.textContent = "SURVIVED " + formatTime(entry.duration_seconds);
+    const score = document.createElement("strong");
+    score.className = "rank-score";
+    score.textContent = Number(entry.score).toLocaleString("en-US") + " pts";
+    const details = document.createElement("div");
+    details.append(playerName, meta);
+    item.append(details, score);
+    $("rank-list").appendChild(item);
+  });
+}
+
+showScreen("name");

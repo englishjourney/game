@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#75c9f2">
+  <title>Velocipastor | EnglishJourney</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="pixel-sky" aria-hidden="true"></div>
+  <main class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="./index.html" aria-label="Velocipastor home">
+        <span class="brand-mark">V!</span>
+        <span><strong>VELOCIPASTOR</strong><small>AN ENDLESS PIXEL RUN</small></span>
+      </a>
+      <span class="header-tag">ENGLISHJOURNEY ARCADE</span>
+    </header>
+
+    <section id="name-screen" class="screen panel name-panel">
+      <p class="eyebrow">PLAYER REGISTRATION</p>
+      <h1>Who is the<br><span>Velocipastor?</span></h1>
+      <p class="intro-copy">Choose a name for the leaderboard. It does not need to match your EnglishJourney username.</p>
+      <form id="name-form" class="name-form">
+        <label for="player-name">PLAYER NAME</label>
+        <input id="player-name" name="playerName" maxlength="24" autocomplete="nickname" placeholder="Your arcade name..." required>
+        <button class="pixel-button primary" type="submit">CONTINUE <span>▶</span></button>
+      </form>
+      <p class="small-note">Your score belongs only to this arcade game. It does not add EnglishJourney mission points.</p>
+    </section>
+
+    <section id="intro-screen" class="screen panel intro-panel hidden" aria-label="Opening story">
+      <div class="section-topline">
+        <div><p class="eyebrow">THE ORIGIN STORY</p><h1>THE VELOCIPASTOR</h1></div>
+        <button id="skip-opening" class="pixel-button subtle" type="button">PULAR ABERTURA »</button>
+      </div>
+      <div class="story-progress"><span id="story-progress-fill"></span></div>
+      <div class="story-counter"><span id="story-counter">SCENE 1 / 7</span><span>← / → TO NAVIGATE</span></div>
+      <figure class="story-frame">
+        <div class="story-art-wrap">
+          <img id="story-image" src="./assets/1.png" alt="Opening scene 1">
+          <div id="story-image-fallback" class="image-fallback hidden">STORY IMAGE<br>NOT FOUND</div>
+        </div>
+        <figcaption id="story-caption">Após a trágica morte de seus pais...</figcaption>
+      </figure>
+      <div class="story-controls">
+        <button id="story-prev" class="pixel-button secondary" type="button" disabled>◀ VOLTAR</button>
+        <span class="pixel-dots" id="story-dots" aria-hidden="true">● ○ ○ ○ ○ ○ ○</span>
+        <button id="story-next" class="pixel-button primary" type="button">AVANÇAR ▶</button>
+      </div>
+    </section>
+
+    <section id="home-screen" class="screen panel home-panel hidden">
+      <div class="home-art">
+        <div class="home-sun"></div>
+        <div class="home-mountain mountain-back"></div>
+        <div class="home-mountain mountain-front"></div>
+        <div class="home-ground"></div>
+        <img src="./assets/velocipastor_standing.png" alt="Velocipastor standing" class="home-character" onerror="this.style.display='none'">
+      </div>
+      <p class="eyebrow">THE NIGHT IS YOUNG. THE NINJAS ARE NOT SAFE.</p>
+      <h1>VELOCIPASTOR</h1>
+      <p class="home-subtitle">Run forever. Fight nearby ninjas. Collect holy upgrades. Survive.</p>
+      <p class="welcome-player">PLAYER: <strong id="home-player-name">PLAYER</strong></p>
+      <div class="home-actions">
+        <button id="start-game" class="pixel-button primary big" type="button">START GAME ▶</button>
+        <button id="open-rank" class="pixel-button secondary big" type="button">RANK 🏆</button>
+      </div>
+      <p class="small-note">Controls: SPACE / JUMP to leap over passing ninjas · ATTACK to hit nearby enemies.</p>
+    </section>
+
+    <section id="game-screen" class="screen game-panel hidden">
+      <div class="hud">
+        <div class="hud-health">
+          <div class="hud-label"><span>VELOCIPASTOR HP</span><strong id="hp-number">100 / 100</strong></div>
+          <div class="health-track"><div id="player-health-fill" class="health-fill"></div></div>
+        </div>
+        <div class="hud-stat"><span>ATTACK DAMAGE</span><strong id="damage-number">2</strong></div>
+        <div class="hud-stat"><span>ATTACK SPEED</span><strong><span id="speed-number">4</span><small>/ SEC</small></strong></div>
+        <div class="hud-score"><span>SCORE</span><strong id="score-number">0</strong><small id="time-number">00:00</small></div>
+      </div>
+
+      <div id="playfield" class="playfield">
+        <div class="sky-layer sky-far" aria-hidden="true"></div>
+        <div class="sky-layer sky-near" aria-hidden="true"></div>
+        <div class="cloud cloud-one" aria-hidden="true"></div>
+        <div class="cloud cloud-two" aria-hidden="true"></div>
+        <div class="sun-pixel" aria-hidden="true"></div>
+        <div class="ground-layer" aria-hidden="true"><div class="ground-top"></div></div>
+        <div id="entities" class="entities"></div>
+        <div id="player" class="player">
+          <img id="player-sprite" src="./assets/velocipastor_standing.png" alt="Velocipastor">
+        </div>
+        <div class="level-label">ENDLESS ROAD <span>•</span> KEEP MOVING</div>
+        <div class="field-vignette" aria-hidden="true"></div>
+      </div>
+
+      <div class="game-bottom">
+        <div class="message-panel">
+          <div class="message-heading"><span class="message-led"></span> GAME MESSAGES</div>
+          <ul id="message-log" aria-live="polite"><li>Ready. The road goes on forever...</li></ul>
+        </div>
+        <div class="controls">
+          <button id="jump-button" class="pixel-button secondary control-button" type="button">JUMP <small>SPACE</small></button>
+          <button id="attack-button" class="pixel-button attack control-button" type="button">ATTACK <small>HIT NEARBY NINJAS</small></button>
+        </div>
+      </div>
+
+      <div id="game-over-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
+        <div class="overlay-card game-over-card">
+          <p class="eyebrow">RUN COMPLETE</p>
+          <h2 id="game-over-title">GAME OVER</h2>
+          <p class="game-over-player">PLAYER: <strong id="game-over-name"></strong></p>
+          <div class="final-score"><span>FINAL SCORE</span><strong id="final-score-number">0</strong></div>
+          <p id="save-status" class="save-status">Saving score...</p>
+          <div class="overlay-actions">
+            <button id="play-again" class="pixel-button primary" type="button">PLAY AGAIN ▶</button>
+            <button id="game-over-rank" class="pixel-button secondary" type="button">RANK 🏆</button>
+            <button id="back-home" class="pixel-button subtle" type="button">HOME</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="rank-modal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="rank-title">
+      <div class="overlay-card rank-card">
+        <div class="rank-header">
+          <div><p class="eyebrow">ARCADE HALL OF FAME</p><h2 id="rank-title">RANKING</h2></div>
+          <button id="close-rank" class="close-button" type="button" aria-label="Close ranking">×</button>
+        </div>
+        <p class="rank-note">Only positive scores appear. Tied scores are ordered by the longest survival time.</p>
+        <div id="rank-status" class="rank-status">Loading leaderboard...</div>
+        <ol id="rank-list" class="rank-list"></ol>
+      </div>
+    </div>
+
+    <footer class="site-footer"><span>ENGLISHJOURNEY ARCADE</span><span>PIXEL ART • ENDLESS MODE</span></footer>
+  </main>
+  <script type="module" src="./game.js"></script>
+</body>
+</html>
