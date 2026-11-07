@@ -845,6 +845,28 @@ function gameLoop(now) {
   state.rafId = requestAnimationFrame(gameLoop);
 }
 
+function showLightningStrike(enemy) {
+  const fieldRect = playfield.getBoundingClientRect();
+  const cloudRect = stormCloud.getBoundingClientRect();
+  const targetBox = getEnemyHitbox(enemy);
+
+  const startX = cloudRect.left + cloudRect.width / 2 - fieldRect.left;
+  const startY = cloudRect.bottom - fieldRect.top - 3;
+  const endX = (targetBox.left + targetBox.right) / 2 - fieldRect.left;
+  const endY = (targetBox.top + targetBox.bottom) / 2 - fieldRect.top;
+  const dx = endX - startX;
+  const dy = endY - startY;
+
+  const bolt = document.createElement("span");
+  bolt.className = "storm-strike";
+  bolt.style.left = startX + "px";
+  bolt.style.top = startY + "px";
+  bolt.style.width = Math.max(24, Math.hypot(dx, dy)) + "px";
+  bolt.style.setProperty("--bolt-angle", Math.atan2(dy, dx) + "rad");
+  playfield.appendChild(bolt);
+  window.setTimeout(() => bolt.remove(), 480);
+}
+
 function specialAttack() {
   if (!state.running || !state.ready || state.gameOver
     || state.holyWaterCount < HOLY_WATER_FOR_SPECIAL) return;
@@ -872,6 +894,7 @@ function specialAttack() {
   window.setTimeout(() => stormCloud.classList.remove("discharging"), 520);
 
   targets.forEach((enemy) => {
+    showLightningStrike(enemy);
     enemy.element.classList.add("zapped");
     defeatEnemy(enemy);
   });

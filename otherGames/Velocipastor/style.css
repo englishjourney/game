@@ -114,6 +114,8 @@ h1,h2 { font-family:var(--pixel); line-height:1.55; margin:0; }
 .storm-cloud.charged { animation:cloud-charge-pulse 1.1s ease-in-out infinite alternate; box-shadow:0 0 12px #a5edff,0 0 24px rgba(113,215,255,.8); }
 .storm-cloud.charged .cloud-bolt { opacity:.78; animation:cloud-electricity .3s steps(2,end) infinite alternate; }
 .storm-cloud.discharging .cloud-bolt { opacity:1; animation:cloud-discharge .5s steps(2,end); }
+.storm-strike { position:absolute; z-index:12; height:10px; transform-origin:left center; transform:rotate(var(--bolt-angle)); background:linear-gradient(90deg,rgba(255,255,255,.92),#e4fbff 55%,#8beaff); clip-path:polygon(0 38%,29% 38%,37% 0,52% 62%,68% 28%,100% 55%,100% 91%,71% 67%,54% 100%,40% 50%,32% 76%,0 65%); filter:drop-shadow(0 0 5px #84e9ff) drop-shadow(0 0 10px #fff); pointer-events:none; animation:storm-strike-flash .46s steps(3,end) forwards; }
+@keyframes storm-strike-flash { 0% { opacity:0; transform:rotate(var(--bolt-angle)) scaleX(.12); } 18% { opacity:1; transform:rotate(var(--bolt-angle)) scaleX(1); } 100% { opacity:0; transform:rotate(var(--bolt-angle)) scaleX(1); } }
 @keyframes cloud-charge-pulse { to { box-shadow:0 0 18px #adf1ff,0 0 34px rgba(113,215,255,.95); } }
 @keyframes cloud-electricity { to { transform:translateX(-50%) translateY(-4px) scale(1.08); } }
 @keyframes cloud-discharge { 0%,100% { opacity:0; } 15%,75% { opacity:1; } }
