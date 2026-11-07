@@ -478,7 +478,16 @@ function horizontalHitboxesTouch(first, second, tolerance = 2) {
 }
 
 function playerContactBox() {
-  return getSpriteHitbox(playerSprite, PLAYER_SPRITE.hitbox);
+  const box = getSpriteHitbox(playerSprite, PLAYER_SPRITE.hitbox);
+  if (state.facing >= 0) return box;
+
+  const rect = playerSprite.getBoundingClientRect();
+  return {
+    left: rect.right - (box.right - rect.left),
+    right: rect.right - (box.left - rect.left),
+    top: box.top,
+    bottom: box.bottom
+  };
 }
 
 function setEnemyFacing(enemy, direction) {
