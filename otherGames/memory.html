@@ -356,30 +356,7 @@
             [firstCard, secondCard] = [null, null];
         }
 
-        async function finishGame() {
-            gameScreen.classList.add('hidden');
-            resultScreen.classList.remove('hidden');
-
-            const rewardText = document.getElementById('reward-text');
-            rewardText.textContent = "Processando sua recompensa...";
-            rewardText.className = "correct-msg";
-            if (await missionWasAlreadyAttempted(currentUser.username, 'Memory game - Animals')) { rewardText.textContent = 'Você já participou desta missão. Jogar novamente não concede pontos.'; rewardText.className = 'incorrect-msg'; return; }
-            
-            try {
-                let currentScore = parseInt(currentUser.score, 10);
-                if (isNaN(currentScore)) currentScore = 0;
-                
-                const newScore = currentScore + 50; // +50 pontos adicionados
-
-                const { error } = await supabase
-                    .from('users')
-                    .update({ score: newScore })
-                    .eq('id', currentUser.id);
-
-                if (error) {
-                    console.error(error);
-                    rewardText.textContent = "Você ganhou o jogo, mas houve um erro ao salvar a pontuação.";
-                    rewardText.className = "incorrect-msg"        function finishGame() {
+        function finishGame() {
             gameScreen.classList.add('hidden');
             resultScreen.classList.remove('hidden');
 
