@@ -105,7 +105,7 @@ h1,h2 { font-family:var(--pixel); line-height:1.55; margin:0; }
 .player.jumping { transition:none; transform:translateY(var(--jump-offset, 0px)); }
 .player img { position:relative; z-index:2; width:100%; height:100%; object-fit:contain; object-position:center bottom; image-rendering:pixelated; filter:drop-shadow(3px 4px 0 rgba(0,0,0,.3)); transition:transform .08s linear; }
 .player.facing-left #player-sprite { transform:scaleX(-1); }
-.storm-cloud { --cloud-brightness:1; position:absolute; z-index:4; left:50%; bottom:clamp(58px,6vw,76px); width:82px; height:34px; transform:translateX(-50%); border-radius:30px; background:#f8fbff; filter:brightness(var(--cloud-brightness)); box-shadow:0 4px 0 rgba(41,52,70,.18),0 0 12px rgba(255,255,255,.32); transition:filter .25s ease,background .25s ease; }
+.storm-cloud { --cloud-brightness:1; position:absolute; z-index:4; left:50%; bottom:calc(100% - 8px); width:82px; height:34px; transform:translateX(-50%); border-radius:30px; background:#f8fbff; filter:brightness(var(--cloud-brightness)); box-shadow:0 4px 0 rgba(41,52,70,.18),0 0 12px rgba(255,255,255,.32); transition:filter .25s ease,background .25s ease; }
 .storm-cloud::before,.storm-cloud::after { content:""; position:absolute; bottom:9px; border-radius:50%; background:inherit; }
 .storm-cloud::before { left:12px; width:35px; height:35px; }
 .storm-cloud::after { right:10px; width:42px; height:42px; }
@@ -826,5 +826,48 @@ body.game-active .controls {
     width: 36px;
     height: 36px;
     font-size: 18px;
+  }
+}
+
+
+/* Light projectiles visually mark every attack pulse, independently of the sprite. */
+.attack-light-particle {
+  position: absolute;
+  z-index: 14;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(circle, #ffffff 0 18%, #e7fcff 34%, #77e2ff 68%, rgba(73,190,255,.15) 100%);
+  box-shadow: 0 0 4px 2px rgba(255,255,255,.9), 0 0 10px 4px rgba(112,224,255,.86), 0 0 18px rgba(68,181,255,.65);
+  animation: attack-light-flight .44s cubic-bezier(.18,.7,.25,1) var(--flight-delay, 0ms) both;
+}
+
+.attack-light-particle::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1px solid rgba(230,251,255,.7);
+  box-shadow: 0 0 6px rgba(160,238,255,.7);
+}
+
+@keyframes attack-light-flight {
+  0% {
+    opacity: 0;
+    transform: translate3d(0,0,0) scale(.2);
+  }
+  12% {
+    opacity: 1;
+    transform: translate3d(0,0,0) scale(1);
+  }
+  84% {
+    opacity: 1;
+    transform: translate3d(var(--flight-x),var(--flight-y),0) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--flight-x),var(--flight-y),0) scale(.25);
   }
 }

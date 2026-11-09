@@ -347,12 +347,16 @@ function logMessage(message) {
   }
 }
 
-function setPlayerSprite(mode) {
-  if (playerSprite.dataset.mode === mode) return;
+function setPlayerSprite(mode, restart = false) {
+  if (playerSprite.dataset.mode === mode && !restart) return;
   playerSprite.dataset.mode = mode;
   const file = mode === "shouting" ? "velocipastor_shouting.gif"
     : mode === "running" ? "velocipastor_running.gif"
     : "velocipastor_standing.png";
+
+  // Removing the source before reapplying it restarts the GIF even when the
+  // same attack animation is already active.
+  if (restart && mode === "shouting") playerSprite.removeAttribute("src");
   playerSprite.src = ASSET + file;
 }
 
@@ -394,15 +398,17 @@ function resetMobileJoystick() {
   if (state.screen === "game") updatePlayerAppearance(performance.now());
 }
 
-function updatePlayerAppearance(now) {
+function updatePlayerAppearance(now, restartAttackAnimation = false) {
   const direction = movementDirection();
   if (direction) state.facing = direction;
   updatePlayerFacing();
 
-  const mode = now < state.attackUntil
-    ? "shouting"
-    : direction !== 0 ? "running" : "standing";
-  setPlayerSprite(mode);
+  // Movement has visual priority. Attacks are shown independently as light
+  // projectiles, so running remains visible while the player attacks.
+  const mode = direction !== 0
+    ? "running"
+    : now < state.attackUntil ? "shouting" : "standing";
+  setPlayerSprite(mode, restartAttackAnimation && mode === "shouting");
 }
 
 function playerFreezeX() {
@@ -582,7 +588,10 @@ function attack() {
   const now = performance.now();
   state.attackUntil = Math.max(now, state.attackUntil) + 850;
   state.nextPlayerAttackAt = Math.min(state.nextPlayerAttackAt || now, now);
-  updatePlayerAppearance(now);
+
+  // Every stationary attack input restarts the shouting GIF. While moving,
+  // the running GIF stays visible and the light projectiles show the attack.
+  updatePlayerAppearance(now, true);
 }
 
 function getHitbox(element, proportions) {
@@ -815,6 +824,64 @@ function retreatEnemy(enemy, now) {
   enemy.hitsSinceRetreat = 0;
   enemy.image.src = ASSET + "ninja_running.gif";
   setEnemyFacing(enemy, enemy.retreatDirection);
+}
+
+function showAttackParticles(enemy) {
+  const fieldRect = playfield.getBoundingClientRect();
+  const playerBox = playerContactBox();
+  const targetBox = getEnemyHitbox(enemy);
+  const playerCenterX = (playerBox.left + playerBox.right) / 2;
+  const targetCenterX = (targetBox.left + targetBox.right) / 2;
+
+  // Particles leave the side of the player that faces the selected ninja.
+  const startX = (targetCenterX < playerCenterX ? playerBox.left + 9 : playerBox.right - 9) - fieldRect.left;
+  const startY = playerBox.top + playerBox.height * 0.38 - fieldRect.top;
+  const endX = targetCenterX - fieldRect.left;
+  const endY = (targetBox.top + targetBox.bottom) / 2 - fieldRect.top;
+  const flightX = endX - startX;
+  const flightY = endY - startY;
+  const particleCount = 5;
+
+  for (let index = 0; index < particleCount; index += 1) {
+    const spread = (index - (particleCount - 1) / 2) * 4;
+    const particle = document.createElement("span");
+    particle.className = "attack-light-particle";
+    particle.style.left = startX + "px";
+    particle.style.top = (startY + spread) + "px";
+    particle.style.setProperty("--flight-x", flightX + "px");
+    particle.style.setProperty("--flight-y", (flightY - spread) + "px");
+    particle.style.setProperty("--flight-delay", (index * 28) + "ms");
+    playfield.appendChild(particle);
+    window.setTimeout(() => particle.remove(), 620);
+  }
+}
+
+function launchAttackParticles() {
+  const fieldRect = playfield.getBoundingClientRect();
+  const playerBox = playerContactBox();
+  const playerCenterX = (playerBox.left + playerBox.right) / 2;
+  const playerCenterY = (playerBox.top + playerBox.bottom) / 2;
+  const maxRange = Math.max(360, Math.min(620, playfield.clientWidth * 0.9));
+
+  const targets = state.enemies
+    .filter((enemy) => enemy.alive && enemy.element.isConnected)
+    .map((enemy) => {
+      const box = getEnemyHitbox(enemy);
+      const x = (box.left + box.right) / 2;
+      const y = (box.top + box.bottom) / 2;
+      return { enemy, x, y, distance: Math.hypot(x - playerCenterX, y - playerCenterY) };
+    })
+    .filter((target) => {
+      const onScreen = target.x >= fieldRect.left - 30
+        && target.x <= fieldRect.right + 30
+        && target.y >= fieldRect.top - 30
+        && target.y <= fieldRect.bottom + 30;
+      return onScreen && target.distance <= maxRange;
+    })
+    .sort((first, second) => first.distance - second.distance)
+    .slice(0, 3);
+
+  targets.forEach((target) => showAttackParticles(target.enemy));
 }
 
 function hitNearbyEnemies(now) {
@@ -1061,6 +1128,7 @@ function gameLoop(now) {
     updatePickups(movement.scrollDirection, movement.scrollDuration);
 
     if (now < state.attackUntil && now >= state.nextPlayerAttackAt) {
+      launchAttackParticles();
       hitNearbyEnemies(now);
       state.nextPlayerAttackAt = now + (1000 / state.attackSpeed);
     }
