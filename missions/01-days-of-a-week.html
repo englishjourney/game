@@ -373,7 +373,7 @@ async function completeGame(passed) {
  if(result?.recorded&&passed){missionSettings.alreadyAttempted=true;missionSettings.completed=true;missionSettings.failed=false;setMissionReward(true,false)}
  const message=error?"Não foi possível registrar o resultado: "+error.message:result?.reason==="already-attempted"?"Esta missão já foi tentada. A recompensa de estrela é única.":result?.reason==="user-ambiguous"?"Encontramos mais de um cadastro com este usuário. Peça ao professor para corrigir o cadastro.":"Você alcançou "+raceScore+" pontos e concluiu a missão! Sua conta recebeu +1 estrela.";
  if(passed&&result?.recorded){
-  setMissionContent('<span class="ej-kicker">MISSION COMPLETED</span><h1 class="ej-screen-title">Congratulations! 🎉</h1><p class="ej-screen-copy">Você alcançou a meta! A próxima missão será carregada agora.</p>');
+  setMissionContent('<span class="ej-kicker">MISSION COMPLETED</span><h1 class="ej-screen-title">Congratulations! 🎉</h1><p class="ej-screen-copy">Você alcançou a meta e recebeu +1 estrela na sua conta! A próxima missão será carregada agora.</p>');
   window.setTimeout(()=>window.parent.postMessage({type:"ENGLISHJOURNEY_MISSION_COMPLETED",missionName:MISSION_NAME},window.location.origin),1600);
  }else{
   showMissionDialog({title:passed?"Mission completed!":"Keep practicing!",message,buttonText:"Review",tone:"warning",onAction:renderLesson});
