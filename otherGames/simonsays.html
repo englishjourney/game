@@ -263,7 +263,6 @@
     
     <div class="stats-box">
       <p><span>Pontuação Final:</span> <strong id="final-score">0</strong></p>
-      <p><span>Seu Score Total:</span> <strong id="total-score">0</strong></p>
     </div>
 
     <div id="sync-msg" class="msg-feedback" style="margin-bottom: 15px;"></div>
@@ -315,7 +314,6 @@
       gifOverlay: document.getElementById('gif-overlay'),
       feedback: document.getElementById('game-feedback'),
       finalScore: document.getElementById('final-score'),
-      totalScore: document.getElementById('total-score'),
       syncMsg: document.getElementById('sync-msg')
     };
 
@@ -360,7 +358,7 @@
       try {
         const { data: user, error } = await supabase
           .from('users')
-          .select('*')
+          .select('username')
           .eq('username', username)
           .maybeSingle();
 
@@ -509,60 +507,11 @@
       }, 1200);
     }
 
-    // 5. FINALIZANDO JOGO & SINCRONIZAÇÃO
-    async function endGame() {
-      if (await missionWasAlreadyAttempted(currentUser.username, 'Symon Says')) { showMsg(ui.syncMsg, 'Você já participou desta missão. Jogar novamente não concede pontos.', 'text-error'); return; }
-
+    // 5. FINALIZAÇÃO — SCORE APENAS DA PARTIDA
+    function endGame() {
       switchScreen(screens.result);
       ui.finalScore.textContent = score;
-      ui.totalScore.textContent = "...";
-      showMsg(ui.syncMsg, "Salvando seus dados no servidor...", "text-info");
-
-      const newTotalScore = (currentUser.score || 0) + score;
-
-      try {
-        // 1. Atualiza pontuação do usuário
-        const { error: userError } = await supabase
-          .from('users')
-          .update({ score: newTotalScore })
-          .eq('username', currentUser.username);
-        
-        if (userError) throw userError;
-        ui.totalScore.textContent = newTotalScore;
-        currentUser.score = newTotalScore; // Atualiza dado local
-
-        // 2. Registra na missão "Symon Says" na tabela "missions"
-        const { data: mission, error: missionFetchError } = await supabase
-          .from('missions')
-          .select('*')
-          .eq('mission_name', 'Symon Says')
-          .maybeSingle();
-
-        if (missionFetchError) console.warn('Erro ao buscar a missão:', missionFetchError);
-
-        if (mission) {
-          let doneUsers = mission.done 
-            ? mission.done.split(',').map(name => name.trim()).filter(Boolean) 
-            : [];
-
-          if (!doneUsers.includes(currentUser.username)) {
-            doneUsers.push(currentUser.username);
-            
-            const { error: missionUpdateError } = await supabase
-              .from('missions')
-              .update({ done: doneUsers.join(', ') })
-              .eq('id', mission.id);
-
-            if (missionUpdateError) console.warn('Erro ao atualizar missão:', missionUpdateError);
-          }
-        }
-
-        showMsg(ui.syncMsg, "✅ Progresso salvo com sucesso!", "text-success");
-
-      } catch (err) {
-        console.error('Erro de Supabase:', err);
-        showMsg(ui.syncMsg, "⚠️ Não foi possível salvar o seu progresso.", "text-error");
-      }
+      showMsg(ui.syncMsg, "Pontuação apenas desta partida. Não há registro em missions nem alteração no score da conta.", "text-info");
     }
 
     function restartGame() {
@@ -583,23 +532,6 @@
       element.className = `msg-feedback ${classColor}`;
     }
   
-        // Anti-farming: uma missão só pode gerar pontos na primeira tentativa registrada.
-        async function missionWasAlreadyAttempted(username, missionName) {
-            try {
-                const { data, error } = await supabase
-                    .from('missions')
-                    .select('done, fail')
-                    .eq('mission_name', missionName)
-                    .maybeSingle();
-                if (error) throw error;
-                if (!data) return false;
-                const hasUser = value => String(value || '').split(',').map(name => name.trim().toLowerCase()).filter(Boolean).includes(String(username || '').trim().toLowerCase());
-                return hasUser(data.done) || hasUser(data.fail);
-            } catch (error) {
-                console.error('Não foi possível verificar o histórico da missão; pontuação bloqueada por segurança:', error);
-                return true;
-            }
-        }
 </script>
 </body>
 </html>
