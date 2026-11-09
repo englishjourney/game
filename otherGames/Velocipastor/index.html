@@ -70,7 +70,7 @@
         <button id="start-game" class="pixel-button primary big" type="button">START GAME ▶</button>
         <button id="open-rank" class="pixel-button secondary big" type="button">RANK 🏆</button>
       </div>
-      <p class="small-note">Controls: LEFT / RIGHT to move · SPACE to jump · ENTER to attack. Moving while attacking is allowed.</p>
+      <p class="small-note">Controls: LEFT / RIGHT or joystick to move · SPACE / A to jump · ENTER / B to attack.</p>
     </section>
 
     <section id="game-screen" class="screen game-panel hidden">
@@ -101,6 +101,18 @@
         </div>
         <div class="level-label">ENDLESS ROAD <span>•</span> KEEP MOVING</div>
         <div class="field-vignette" aria-hidden="true"></div>
+        <div class="mobile-touch-controls" aria-label="Mobile game controls">
+          <div id="mobile-joystick" class="mobile-joystick" role="group" aria-label="Move left or right">
+            <span class="joystick-arrow joystick-arrow-left" aria-hidden="true">‹</span>
+            <span class="joystick-arrow joystick-arrow-right" aria-hidden="true">›</span>
+            <span id="mobile-joystick-knob" class="mobile-joystick-knob" aria-hidden="true"></span>
+          </div>
+          <div class="mobile-action-buttons">
+            <button class="mobile-action-button mobile-action-attack" type="button" data-touch-action="attack" aria-label="Attack (B)"><span>B</span></button>
+            <button class="mobile-action-button mobile-action-jump" type="button" data-touch-action="jump" aria-label="Jump (A)"><span>A</span></button>
+            <button id="mobile-special-attack-button" class="mobile-action-button mobile-action-special hidden" type="button" data-touch-action="special" aria-label="Storm lightning attack"><span>⚡</span></button>
+          </div>
+        </div>
       </div>
 
       <div class="game-bottom">

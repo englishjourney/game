@@ -86,6 +86,11 @@ const groundTop = $("ground-top");
 const skyFar = $("sky-far");
 const skyNear = $("sky-near");
 const heldDirections = new Set();
+const mobileJoystick = $("mobile-joystick");
+const mobileJoystickKnob = $("mobile-joystick-knob");
+const mobileSpecialAttackButton = $("mobile-special-attack-button");
+let mobileJoystickDirection = 0;
+let mobileJoystickPointerId = null;
 
 const PLAYER_MOVE_SPEED = 255;
 const PASSING_NINJA_SPEED = 330;
@@ -188,10 +193,72 @@ jumpButton.addEventListener("pointerdown", (event) => {
 });
 $("attack-button").addEventListener("click", attack);
 $("special-attack-button").addEventListener("click", specialAttack);
+
+document.querySelectorAll("[data-touch-action]").forEach((button) => {
+  const action = button.dataset.touchAction;
+
+  button.addEventListener("pointerdown", (event) => {
+    if (state.screen !== "game" || !state.running || state.gameOver) return;
+    event.preventDefault();
+    try {
+      button.setPointerCapture(event.pointerId);
+    } catch (_error) {
+      // Pointer capture is optional; the action still works without it.
+    }
+
+    if (action === "jump") {
+      state.jumpHeld = true;
+      jump();
+    } else if (action === "attack") {
+      attack();
+    } else if (action === "special") {
+      specialAttack();
+    }
+  });
+
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach((eventName) => {
+    button.addEventListener(eventName, () => {
+      if (action === "jump") state.jumpHeld = false;
+    });
+  });
+
+  // detail === 0 covers keyboard and assistive-technology activation.
+  button.addEventListener("click", (event) => {
+    if (event.detail !== 0) return;
+    if (action === "jump") jump();
+    else if (action === "attack") attack();
+    else if (action === "special") specialAttack();
+  });
+});
+
+mobileJoystick.addEventListener("pointerdown", (event) => {
+  if (state.screen !== "game" || !state.running || state.gameOver) return;
+  event.preventDefault();
+  mobileJoystickPointerId = event.pointerId;
+  try {
+    mobileJoystick.setPointerCapture(event.pointerId);
+  } catch (_error) {
+    // Pointer capture is optional; pointer movement remains supported.
+  }
+  updateMobileJoystick(event);
+});
+
+mobileJoystick.addEventListener("pointermove", (event) => {
+  if (event.pointerId !== mobileJoystickPointerId) return;
+  event.preventDefault();
+  updateMobileJoystick(event);
+});
+
+["pointerup", "pointercancel", "lostpointercapture"].forEach((eventName) => {
+  mobileJoystick.addEventListener(eventName, () => {
+    if (mobileJoystickPointerId !== null) resetMobileJoystick();
+  });
+});
 $("play-again").addEventListener("click", startGame);
 $("back-home").addEventListener("click", () => {
   gameOverOverlay.classList.add("hidden");
   heldDirections.clear();
+  resetMobileJoystick();
   playfield.classList.remove("is-moving");
   showHome();
 });
@@ -250,6 +317,7 @@ window.addEventListener("keyup", (event) => {
 
 window.addEventListener("blur", () => {
   heldDirections.clear();
+  resetMobileJoystick();
   state.jumpHeld = false;
   if (state.screen === "game") updatePlayerAppearance(performance.now());
 });
@@ -293,12 +361,37 @@ function updatePlayerFacing() {
 }
 
 function movementDirection() {
-  const left = heldDirections.has("ArrowLeft");
-  const right = heldDirections.has("ArrowRight");
+  const left = heldDirections.has("ArrowLeft") || mobileJoystickDirection < 0;
+  const right = heldDirections.has("ArrowRight") || mobileJoystickDirection > 0;
   if (left && right) return state.facing;
   if (left) return -1;
   if (right) return 1;
   return 0;
+}
+
+function updateMobileJoystick(event) {
+  const rect = mobileJoystick.getBoundingClientRect();
+  const knobWidth = mobileJoystickKnob.getBoundingClientRect().width || 44;
+  const maxTravel = Math.max(8, (rect.width - knobWidth) / 2 - 7);
+  const centerX = rect.left + rect.width / 2;
+  const deltaX = Math.max(-maxTravel, Math.min(maxTravel, event.clientX - centerX));
+  const deadzone = Math.max(7, maxTravel * 0.2);
+
+  mobileJoystickKnob.style.transform = "translateX(" + deltaX.toFixed(1) + "px)";
+  mobileJoystickDirection = deltaX < -deadzone ? -1 : deltaX > deadzone ? 1 : 0;
+  mobileJoystick.classList.toggle("is-left", mobileJoystickDirection < 0);
+  mobileJoystick.classList.toggle("is-right", mobileJoystickDirection > 0);
+
+  if (mobileJoystickDirection) state.facing = mobileJoystickDirection;
+  updatePlayerAppearance(performance.now());
+}
+
+function resetMobileJoystick() {
+  mobileJoystickPointerId = null;
+  mobileJoystickDirection = 0;
+  mobileJoystickKnob.style.transform = "translateX(0px)";
+  mobileJoystick.classList.remove("is-left", "is-right");
+  if (state.screen === "game") updatePlayerAppearance(performance.now());
 }
 
 function updatePlayerAppearance(now) {
@@ -380,6 +473,7 @@ function updateStormCloud() {
   stormCloud.classList.toggle("charged", charge >= HOLY_WATER_FOR_SPECIAL);
   specialAttackButton.classList.toggle("hidden", charge < HOLY_WATER_FOR_SPECIAL);
   specialAttackButton.disabled = charge < HOLY_WATER_FOR_SPECIAL;
+  mobileSpecialAttackButton.classList.toggle("hidden", charge < HOLY_WATER_FOR_SPECIAL);
 }
 
 function startGame() {
@@ -414,6 +508,7 @@ function startGame() {
   state.holyWaterCount = 0;
 
   heldDirections.clear();
+  resetMobileJoystick();
   entities.innerHTML = "";
   messageLog.innerHTML = "";
   gameOverOverlay.classList.add("hidden");
@@ -1063,6 +1158,7 @@ function finishGame() {
   state.elapsedSeconds = state.startedAt ? Math.floor((performance.now() - state.startedAt) / 1000) : 0;
   playfield.classList.remove("is-moving");
   heldDirections.clear();
+  resetMobileJoystick();
   state.jumpHeld = false;
   state.jumpActive = false;
   state.jumpVelocity = 0;
