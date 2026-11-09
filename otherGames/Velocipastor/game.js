@@ -844,17 +844,31 @@ function retreatEnemy(enemy, now) {
   setEnemyFacing(enemy, enemy.retreatDirection);
 }
 
-function showAttackParticles(enemy, fieldRect, playerBox) {
-  const targetBox = getEnemyHitbox(enemy);
-  const targetCenterX = (targetBox.left + targetBox.right) / 2;
-  const targetCenterY = (targetBox.top + targetBox.bottom) / 2;
-  const playerCenterX = (playerBox.left + playerBox.right) / 2;
+function getRenderedSpriteRect(image) {
+  const visualRect = getImageContentMetrics(image);
+  if (visualRect && visualRect.width > 0 && visualRect.height > 0) return visualRect;
+  return image.getBoundingClientRect();
+}
 
-  // Fire from the side of the torso that faces this specific ninja.
-  const startX = (targetCenterX < playerCenterX ? playerBox.left + 12 : playerBox.right - 12) - fieldRect.left;
-  const startY = playerBox.top + playerBox.height * 0.38 - fieldRect.top;
-  const endX = Math.max(8, Math.min(fieldRect.width - 8, targetCenterX - fieldRect.left));
-  const endY = Math.max(18, Math.min(fieldRect.height - 18, targetCenterY - fieldRect.top));
+function showAttackParticles(enemy, fieldRect, playerVisualRect) {
+  const ninjaVisualRect = getRenderedSpriteRect(enemy.image);
+  const playerCenterX = playerVisualRect.left + playerVisualRect.width / 2;
+  const ninjaCenterX = ninjaVisualRect.left + ninjaVisualRect.width / 2;
+  const ninjaCenterY = ninjaVisualRect.top + ninjaVisualRect.height * 0.46;
+
+  // Start on the visible torso edge that faces the selected ninja.
+  const sourceX = ninjaCenterX < playerCenterX
+    ? playerVisualRect.left + playerVisualRect.width * 0.14
+    : playerVisualRect.left + playerVisualRect.width * 0.86;
+  const sourceY = playerVisualRect.top + playerVisualRect.height * 0.48;
+
+  // Absolute children are positioned from the playfield's inner border edge.
+  const fieldOriginX = fieldRect.left + playfield.clientLeft;
+  const fieldOriginY = fieldRect.top + playfield.clientTop;
+  const startX = sourceX - fieldOriginX;
+  const startY = sourceY - fieldOriginY;
+  const endX = ninjaCenterX - fieldOriginX;
+  const endY = ninjaCenterY - fieldOriginY;
   const flightX = endX - startX;
   const flightY = endY - startY;
   const angle = Math.atan2(flightY, flightX) * (180 / Math.PI);
@@ -900,29 +914,30 @@ function showAttackParticles(enemy, fieldRect, playerBox) {
 
 function launchAttackParticles() {
   const fieldRect = playfield.getBoundingClientRect();
-  const playerBox = playerContactBox();
-  const playerCenterX = (playerBox.left + playerBox.right) / 2;
-  const playerCenterY = (playerBox.top + playerBox.bottom) / 2;
+  const playerVisualRect = getRenderedSpriteRect(playerSprite);
+  const playerCenterX = playerVisualRect.left + playerVisualRect.width / 2;
+  const playerCenterY = playerVisualRect.top + playerVisualRect.height / 2;
 
-  // Target living ninjas currently visible in the arena, nearest first.
+  // Use the rendered sprite rectangles rather than collision boxes: collision
+  // geometry can extend above the visible artwork, especially in portrait mode.
   const targets = state.enemies
-    .filter((enemy) => enemy.alive && enemy.element.isConnected)
+    .filter((enemy) => enemy.alive && enemy.element.isConnected && enemy.image.complete)
     .map((enemy) => {
-      const box = getEnemyHitbox(enemy);
-      const x = (box.left + box.right) / 2;
-      const y = (box.top + box.bottom) / 2;
+      const visualRect = getRenderedSpriteRect(enemy.image);
+      const x = visualRect.left + visualRect.width / 2;
+      const y = visualRect.top + visualRect.height * 0.46;
       return { enemy, x, y, distance: Math.hypot(x - playerCenterX, y - playerCenterY) };
     })
     .filter((target) =>
-      target.x >= fieldRect.left
-      && target.x <= fieldRect.right
-      && target.y >= fieldRect.top
-      && target.y <= fieldRect.bottom
+      target.x >= fieldRect.left + playfield.clientLeft
+      && target.x <= fieldRect.right - playfield.clientRight
+      && target.y >= fieldRect.top + playfield.clientTop
+      && target.y <= fieldRect.bottom - playfield.clientBottom
     )
     .sort((first, second) => first.distance - second.distance)
     .slice(0, 3);
 
-  targets.forEach((target) => showAttackParticles(target.enemy, fieldRect, playerBox));
+  targets.forEach((target) => showAttackParticles(target.enemy, fieldRect, playerVisualRect));
 }
 
 function hitNearbyEnemies(now) {
