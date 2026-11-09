@@ -102,7 +102,7 @@ h1,h2 { font-family:var(--pixel); line-height:1.55; margin:0; }
 /* Scenery is shifted by keyboard input in game.js; it never scrolls on its own. */
 .entities { position:absolute; z-index:5; inset:0 0 74px; pointer-events:none; }
 .player { position:absolute; z-index:7; bottom:75px; left:31%; width:clamp(84px,10vw,116px); height:clamp(125px,17vw,175px); display:flex; align-items:flex-end; justify-content:center; transition:transform .17s ease-out; }
-.player.jumping { transition:none; transform:translateY(calc(-1 * var(--jump-offset, 0px))); }
+.player.jumping { transition:none; transform:translateY(var(--jump-offset, 0px)); }
 .player img { position:relative; z-index:2; width:100%; height:100%; object-fit:contain; object-position:center bottom; image-rendering:pixelated; filter:drop-shadow(3px 4px 0 rgba(0,0,0,.3)); transition:transform .08s linear; }
 .player.facing-left #player-sprite { transform:scaleX(-1); }
 .storm-cloud { --cloud-brightness:1; position:absolute; z-index:4; left:50%; bottom:clamp(58px,6vw,76px); width:82px; height:34px; transform:translateX(-50%); border-radius:30px; background:#f8fbff; filter:brightness(var(--cloud-brightness)); box-shadow:0 4px 0 rgba(41,52,70,.18),0 0 12px rgba(255,255,255,.32); transition:filter .25s ease,background .25s ease; }

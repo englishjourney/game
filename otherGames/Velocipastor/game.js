@@ -174,7 +174,18 @@ $("story-next").addEventListener("click", nextStory);
 $("skip-opening").addEventListener("click", showHome);
 
 $("start-game").addEventListener("click", startGame);
-$("jump-button").addEventListener("click", jump);
+const jumpButton = $("jump-button");
+jumpButton.addEventListener("click", jump);
+jumpButton.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  state.jumpHeld = true;
+  jump();
+});
+["pointerup", "pointercancel", "lostpointercapture"].forEach((eventName) => {
+  jumpButton.addEventListener(eventName, () => {
+    state.jumpHeld = false;
+  });
+});
 $("attack-button").addEventListener("click", attack);
 $("special-attack-button").addEventListener("click", specialAttack);
 $("play-again").addEventListener("click", startGame);
@@ -468,7 +479,7 @@ function updateJump(dt) {
     return;
   }
 
-  player.style.setProperty("--jump-offset", Math.max(0, state.jumpOffset).toFixed(1) + "px");
+  player.style.setProperty("--jump-offset", (-Math.max(0, state.jumpOffset)).toFixed(1) + "px");
 }
 
 function attack() {
@@ -788,7 +799,7 @@ function showPickupNotice(pickup, message) {
     fieldRect.width - 112,
     itemRect.left + itemRect.width / 2 - fieldRect.left
   )) + "px";
-  notice.style.top = Math.max(12, itemRect.top - fieldRect.top - 8) + "px";
+  notice.style.top = Math.max(42, itemRect.top - fieldRect.top - 8) + "px";
 
   playfield.appendChild(notice);
   window.setTimeout(() => notice.remove(), 1700);
