@@ -522,73 +522,13 @@
                 title.style.color = "#4CAF50";
                 message.innerText = `Excelente trabalho, ${currentUser}! Capturou as comidas certas.`;
                 
-                await saveProgressToSupabase(true);
-                loading.innerText = "Progresso salvo com sucesso!";
+                loading.innerText = "Pontuação desta partida apenas. Não é salva no score da conta.";
             } else {
                 title.innerText = "Game Over";
                 title.style.color = "#f44336";
                 message.innerText = `Poxa, ${currentUser}. Você comeu muitos objetos e perdeu suas vidas.`;
                 
-                await saveProgressToSupabase(false);
-                loading.innerText = "Progresso registrado!";
-            }
-        }
-
-        async function saveProgressToSupabase(isWin) {
-            if (await missionWasAlreadyAttempted(currentUser, 'Catching foods')) { alert('Você já participou desta missão. Jogar novamente não concede pontos.'); return; }
-
-            try {
-                // Se venceu, adiciona 50 pontos ao usuário
-                if (isWin) {
-                    const { data: userData, error: userError } = await supabaseClient
-                        .from('users')
-                        .select('score')
-                        .eq('username', currentUser)
-                        .single();
-
-                    if (userError) throw userError;
-
-                    let currentScore = parseInt(userData.score, 10);
-                    if (isNaN(currentScore)) currentScore = 0;
-                    const newScore = currentScore + 50;
-
-                    await supabaseClient
-                        .from('users')
-                        .update({ score: newScore })
-                        .eq('username', currentUser);
-                }
-
-                // Define se vai atualizar a coluna 'done' (vitória) ou 'fail' (derrota)
-                const targetColumn = isWin ? 'done' : 'fail';
-
-                const { data: missionData, error: missionError } = await supabaseClient
-                    .from('missions')
-                    .select('*')
-                    .eq('mission_name', 'Catching foods')
-                    .single();
-
-                if (missionError && missionError.code !== 'PGRST116') {
-                    throw missionError; 
-                }
-
-                if (missionData) {
-                    let listStr = missionData[targetColumn] || '';
-                    const usersArray = listStr ? listStr.split(',').map(u => u.trim()).filter(Boolean) : [];
-                    
-                    if (!usersArray.includes(currentUser)) {
-                        usersArray.push(currentUser);
-                        let updatedStr = usersArray.join(', ');
-                        
-                        await supabaseClient
-                            .from('missions')
-                            .update({ [targetColumn]: updatedStr })
-                            .eq('id', missionData.id);
-                    }
-                }
-                console.log("Banco de dados atualizado com sucesso!");
-            } catch (error) {
-                console.error("Erro ao salvar no banco:", error);
-                document.getElementById('loading-text').innerText = "Erro ao salvar no banco de dados. Verifique a configuração.";
+                loading.innerText = "Partida encerrada. Nenhum progresso foi salvo na conta.";
             }
         }
 
@@ -634,23 +574,6 @@
         });
 
     
-        // Anti-farming: uma missão só pode gerar pontos na primeira tentativa registrada.
-        async function missionWasAlreadyAttempted(username, missionName) {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('missions')
-                    .select('done, fail')
-                    .eq('mission_name', missionName)
-                    .maybeSingle();
-                if (error) throw error;
-                if (!data) return false;
-                const hasUser = value => String(value || '').split(',').map(name => name.trim().toLowerCase()).filter(Boolean).includes(String(username || '').trim().toLowerCase());
-                return hasUser(data.done) || hasUser(data.fail);
-            } catch (error) {
-                console.error('Não foi possível verificar o histórico da missão; pontuação bloqueada por segurança:', error);
-                return true;
-            }
-        }
 </script>
 </body>
 </html>
