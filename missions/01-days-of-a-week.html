@@ -369,9 +369,35 @@ function finishRace(){raceRunning=false;raceSteer=0;cancelAnimationFrame(raceFra
 
 async function completeGame(passed) {
  let result=null,error=null;
- try{result=await recordMissionResult(MISSION_NAME,studentSession.username,passed?"done":"fail")}catch(e){error=e;console.error(e)}
- if(result?.recorded&&passed){missionSettings.alreadyAttempted=true;missionSettings.completed=true;missionSettings.failed=false;setMissionReward(true,false)}
- const message=error?"Não foi possível registrar o resultado: "+error.message:result?.reason==="already-attempted"?"Esta missão já foi tentada. A recompensa de estrela é única.":result?.reason==="user-ambiguous"?"Encontramos mais de um cadastro com este usuário. Peça ao professor para corrigir o cadastro.":"Você alcançou "+raceScore+" pontos e concluiu a missão! Sua conta recebeu +1 estrela.";
+ try {
+  result=await recordMissionResult(MISSION_NAME,studentSession.username,passed?"done":"fail");
+ } catch(e) {
+  error=e;
+  console.error(e);
+ }
+
+ if(result?.recorded){
+  missionSettings.alreadyAttempted=true;
+  missionSettings.completed=Boolean(passed);
+  missionSettings.failed=!passed;
+  setMissionReward(Boolean(passed),!passed);
+ }
+
+ let message;
+ if(error) {
+  message="Não foi possível registrar o resultado: "+error.message;
+ } else if(result?.reason==="already-attempted") {
+  message="Esta missão já foi tentada. A recompensa de uma estrela só pode ser recebida uma vez.";
+ } else if(result?.reason==="user-ambiguous") {
+  message="Encontramos mais de um cadastro com este usuário. Peça ao professor para corrigir o cadastro.";
+ } else if(result?.reason==="mission-not-registered") {
+  message="Esta missão ainda não foi cadastrada no banco de dados. A conclusão não foi registrada.";
+ } else if(passed&&result?.recorded) {
+  message="Você alcançou "+raceScore+" pontos e recebeu +1 estrela na sua conta.";
+ } else {
+  message="Tentativa registrada, mas a meta não foi concluída. Nenhuma estrela foi adicionada.";
+ }
+
  if(passed&&result?.recorded){
   setMissionContent('<span class="ej-kicker">MISSION COMPLETED</span><h1 class="ej-screen-title">Congratulations! 🎉</h1><p class="ej-screen-copy">Você alcançou a meta e recebeu +1 estrela na sua conta! A próxima missão será carregada agora.</p>');
   window.setTimeout(()=>window.parent.postMessage({type:"ENGLISHJOURNEY_MISSION_COMPLETED",missionName:MISSION_NAME},window.location.origin),1600);
