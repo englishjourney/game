@@ -589,9 +589,10 @@ function attack() {
   state.attackUntil = Math.max(now, state.attackUntil) + 850;
   state.nextPlayerAttackAt = Math.min(state.nextPlayerAttackAt || now, now);
 
-  // Every stationary attack input restarts the shouting GIF. While moving,
-  // the running GIF stays visible and the light projectiles show the attack.
+  // One immediate projectile burst per attack input. Damage timing remains
+  // independent in the game loop, while movement keeps visual priority.
   updatePlayerAppearance(now, true);
+  launchAttackParticles();
 }
 
 function getHitbox(element, proportions) {
@@ -826,33 +827,57 @@ function retreatEnemy(enemy, now) {
   setEnemyFacing(enemy, enemy.retreatDirection);
 }
 
-function showAttackParticles(enemy) {
-  const fieldRect = playfield.getBoundingClientRect();
-  const playerBox = playerContactBox();
+function showAttackParticles(enemy, fieldRect, playerBox) {
   const targetBox = getEnemyHitbox(enemy);
-  const playerCenterX = (playerBox.left + playerBox.right) / 2;
   const targetCenterX = (targetBox.left + targetBox.right) / 2;
+  const targetCenterY = (targetBox.top + targetBox.bottom) / 2;
+  const playerCenterX = (playerBox.left + playerBox.right) / 2;
 
-  // Particles leave the side of the player that faces the selected ninja.
-  const startX = (targetCenterX < playerCenterX ? playerBox.left + 9 : playerBox.right - 9) - fieldRect.left;
+  // Fire from the side of the torso that faces this specific ninja.
+  const startX = (targetCenterX < playerCenterX ? playerBox.left + 12 : playerBox.right - 12) - fieldRect.left;
   const startY = playerBox.top + playerBox.height * 0.38 - fieldRect.top;
-  const endX = targetCenterX - fieldRect.left;
-  const endY = (targetBox.top + targetBox.bottom) / 2 - fieldRect.top;
+  const endX = Math.max(8, Math.min(fieldRect.width - 8, targetCenterX - fieldRect.left));
+  const endY = Math.max(18, Math.min(fieldRect.height - 18, targetCenterY - fieldRect.top));
   const flightX = endX - startX;
   const flightY = endY - startY;
-  const particleCount = 5;
+  const angle = Math.atan2(flightY, flightX) * (180 / Math.PI);
+  const particleCount = 7;
 
   for (let index = 0; index < particleCount; index += 1) {
-    const spread = (index - (particleCount - 1) / 2) * 4;
+    const spread = (index - (particleCount - 1) / 2) * 3.2;
     const particle = document.createElement("span");
     particle.className = "attack-light-particle";
     particle.style.left = startX + "px";
     particle.style.top = (startY + spread) + "px";
-    particle.style.setProperty("--flight-x", flightX + "px");
-    particle.style.setProperty("--flight-y", (flightY - spread) + "px");
-    particle.style.setProperty("--flight-delay", (index * 28) + "ms");
+    particle.style.setProperty("--particle-angle", angle + "deg");
     playfield.appendChild(particle);
-    window.setTimeout(() => particle.remove(), 620);
+
+    const radians = angle * Math.PI / 180;
+    const travelX = flightX - Math.sin(radians) * spread * 2;
+    const travelY = flightY + Math.cos(radians) * spread * 2;
+    const animation = particle.animate([
+      { transform: "translate3d(0,0,0) scale(.25)", opacity: 0 },
+      {
+        transform: "translate3d(" + (travelX * 0.12).toFixed(1) + "px," + (travelY * 0.12).toFixed(1) + "px,0) scale(1.35)",
+        opacity: 1,
+        offset: 0.14
+      },
+      {
+        transform: "translate3d(" + travelX.toFixed(1) + "px," + travelY.toFixed(1) + "px,0) scale(.72)",
+        opacity: 0.96
+      },
+      {
+        transform: "translate3d(" + travelX.toFixed(1) + "px," + travelY.toFixed(1) + "px,0) scale(.18)",
+        opacity: 0
+      }
+    ], {
+      duration: 390 + index * 18,
+      delay: index * 22,
+      easing: "cubic-bezier(.16,.72,.32,1)",
+      fill: "forwards"
+    });
+
+    animation.onfinish = () => particle.remove();
   }
 }
 
@@ -861,8 +886,8 @@ function launchAttackParticles() {
   const playerBox = playerContactBox();
   const playerCenterX = (playerBox.left + playerBox.right) / 2;
   const playerCenterY = (playerBox.top + playerBox.bottom) / 2;
-  const maxRange = Math.max(360, Math.min(620, playfield.clientWidth * 0.9));
 
+  // Target living ninjas currently visible in the arena, nearest first.
   const targets = state.enemies
     .filter((enemy) => enemy.alive && enemy.element.isConnected)
     .map((enemy) => {
@@ -871,17 +896,16 @@ function launchAttackParticles() {
       const y = (box.top + box.bottom) / 2;
       return { enemy, x, y, distance: Math.hypot(x - playerCenterX, y - playerCenterY) };
     })
-    .filter((target) => {
-      const onScreen = target.x >= fieldRect.left - 30
-        && target.x <= fieldRect.right + 30
-        && target.y >= fieldRect.top - 30
-        && target.y <= fieldRect.bottom + 30;
-      return onScreen && target.distance <= maxRange;
-    })
+    .filter((target) =>
+      target.x >= fieldRect.left
+      && target.x <= fieldRect.right
+      && target.y >= fieldRect.top
+      && target.y <= fieldRect.bottom
+    )
     .sort((first, second) => first.distance - second.distance)
     .slice(0, 3);
 
-  targets.forEach((target) => showAttackParticles(target.enemy));
+  targets.forEach((target) => showAttackParticles(target.enemy, fieldRect, playerBox));
 }
 
 function hitNearbyEnemies(now) {
@@ -1128,7 +1152,6 @@ function gameLoop(now) {
     updatePickups(movement.scrollDirection, movement.scrollDuration);
 
     if (now < state.attackUntil && now >= state.nextPlayerAttackAt) {
-      launchAttackParticles();
       hitNearbyEnemies(now);
       state.nextPlayerAttackAt = now + (1000 / state.attackSpeed);
     }

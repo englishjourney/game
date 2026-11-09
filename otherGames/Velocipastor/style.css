@@ -830,44 +830,32 @@ body.game-active .controls {
 }
 
 
-/* Light projectiles visually mark every attack pulse, independently of the sprite. */
+/* Attack projectiles are individually animated toward each visible ninja by game.js. */
 .attack-light-particle {
   position: absolute;
-  z-index: 14;
-  width: 7px;
-  height: 7px;
+  z-index: 18;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
   border-radius: 50%;
-  opacity: 0;
+  opacity: 1;
   pointer-events: none;
-  background: radial-gradient(circle, #ffffff 0 18%, #e7fcff 34%, #77e2ff 68%, rgba(73,190,255,.15) 100%);
-  box-shadow: 0 0 4px 2px rgba(255,255,255,.9), 0 0 10px 4px rgba(112,224,255,.86), 0 0 18px rgba(68,181,255,.65);
-  animation: attack-light-flight .44s cubic-bezier(.18,.7,.25,1) var(--flight-delay, 0ms) both;
+  background: radial-gradient(circle, #ffffff 0 20%, #e9fdff 38%, #85eaff 70%, rgba(73,190,255,.2) 100%);
+  box-shadow: 0 0 5px 2px rgba(255,255,255,.98), 0 0 12px 5px rgba(112,224,255,.95), 0 0 22px rgba(68,181,255,.78);
+  will-change: transform, opacity;
 }
 
 .attack-light-particle::after {
   content: "";
   position: absolute;
-  inset: -3px;
+  left: -4px;
+  top: 3px;
+  width: 19px;
+  height: 4px;
   border-radius: 50%;
-  border: 1px solid rgba(230,251,255,.7);
-  box-shadow: 0 0 6px rgba(160,238,255,.7);
-}
-
-@keyframes attack-light-flight {
-  0% {
-    opacity: 0;
-    transform: translate3d(0,0,0) scale(.2);
-  }
-  12% {
-    opacity: 1;
-    transform: translate3d(0,0,0) scale(1);
-  }
-  84% {
-    opacity: 1;
-    transform: translate3d(var(--flight-x),var(--flight-y),0) scale(1.05);
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(var(--flight-x),var(--flight-y),0) scale(.25);
-  }
+  background: linear-gradient(90deg, rgba(255,255,255,.85), rgba(112,224,255,.55), transparent);
+  box-shadow: 0 0 7px rgba(130,225,255,.8);
+  transform: rotate(var(--particle-angle, 0deg));
+  transform-origin: right center;
+  pointer-events: none;
 }
