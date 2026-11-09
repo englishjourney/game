@@ -53,7 +53,11 @@ const state = {
   attackSpeed: 4,
   attackUntil: 0,
   nextPlayerAttackAt: 0,
-  jumpUntil: 0,
+  jumpActive: false,
+  jumpVelocity: 0,
+  jumpOffset: 0,
+  jumpHoldElapsed: 0,
+  jumpHeld: false,
   distance: 0,
   worldSpeed: 205,
   nextEnemyAt: 0,
@@ -212,6 +216,7 @@ window.addEventListener("keydown", (event) => {
 
   if (event.code === "Space") {
     event.preventDefault();
+    state.jumpHeld = true;
     if (!event.repeat) jump();
   }
 
@@ -226,11 +231,15 @@ window.addEventListener("keyup", (event) => {
     heldDirections.delete(event.key);
     if (state.screen === "game") updatePlayerAppearance(performance.now());
   }
-  if (event.code === "Space") event.preventDefault();
+  if (event.code === "Space") {
+    event.preventDefault();
+    state.jumpHeld = false;
+  }
 });
 
 window.addEventListener("blur", () => {
   heldDirections.clear();
+  state.jumpHeld = false;
   if (state.screen === "game") updatePlayerAppearance(performance.now());
 });
 
@@ -303,21 +312,23 @@ function movePlayer(direction, dt) {
 
   const maxX = Math.max(8, playfield.clientWidth - player.offsetWidth - 8);
 
+  const moveSpeed = PLAYER_MOVE_SPEED * (state.jumpActive && state.jumpHeld ? 1.15 : 1);
+
   if (direction < 0) {
-    state.playerX = Math.max(8, state.playerX - PLAYER_MOVE_SPEED * dt);
+    state.playerX = Math.max(8, state.playerX - moveSpeed * dt);
     player.style.left = Math.round(state.playerX) + "px";
     return { scrollDirection: 0, scrollDuration: 0 };
   }
 
   const freezeX = playerFreezeX();
 
-  // First, the character runs across the ground to the center of the right half.
+  // Holding the jump key with a direction adds a small amount of horizontal travel.
   if (state.playerX < freezeX) {
     const distanceToFreeze = freezeX - state.playerX;
-    const timeToFreeze = distanceToFreeze / PLAYER_MOVE_SPEED;
+    const timeToFreeze = distanceToFreeze / moveSpeed;
     const playerMoveTime = Math.min(dt, timeToFreeze);
 
-    state.playerX = Math.min(freezeX, state.playerX + PLAYER_MOVE_SPEED * playerMoveTime);
+    state.playerX = Math.min(freezeX, state.playerX + moveSpeed * playerMoveTime);
     player.style.left = Math.round(state.playerX) + "px";
 
     // If the key stays held after reaching the anchor, the remaining frame scrolls the world.
@@ -374,7 +385,11 @@ function startGame() {
   state.attackSpeed = 4;
   state.attackUntil = 0;
   state.nextPlayerAttackAt = 0;
-  state.jumpUntil = 0;
+  state.jumpActive = false;
+  state.jumpVelocity = 0;
+  state.jumpOffset = 0;
+  state.jumpHoldElapsed = 0;
+  state.jumpHeld = false;
   state.distance = 0;
   state.worldSpeed = 205;
   state.nextEnemyAt = 0;
@@ -419,11 +434,41 @@ function startGame() {
 }
 
 function jump() {
-  if (!state.running || !state.ready || state.gameOver) return;
-  const now = performance.now();
-  if (now < state.jumpUntil) return;
-  state.jumpUntil = now + 780;
+  if (!state.running || !state.ready || state.gameOver || state.jumpActive) return;
+
+  state.jumpActive = true;
+  state.jumpVelocity = 560;
+  state.jumpOffset = 0;
+  state.jumpHoldElapsed = 0;
+  player.style.setProperty("--jump-offset", "0px");
   player.classList.add("jumping");
+}
+
+function updateJump(dt) {
+  if (!state.jumpActive) return;
+
+  // Holding Space adds a small upward impulse only at the beginning of the jump.
+  if (state.jumpHeld && state.jumpVelocity > 0 && state.jumpHoldElapsed < 0.16) {
+    const holdStep = Math.min(dt, 0.16 - state.jumpHoldElapsed);
+    state.jumpVelocity += 700 * holdStep;
+    state.jumpHoldElapsed += holdStep;
+  }
+
+  // Integrating velocity and gravity creates a real take-off, apex and landing arc.
+  state.jumpVelocity -= 1950 * dt;
+  state.jumpOffset += state.jumpVelocity * dt;
+
+  if (state.jumpOffset <= 0 && state.jumpVelocity < 0) {
+    state.jumpOffset = 0;
+    state.jumpActive = false;
+    state.jumpVelocity = 0;
+    state.jumpHoldElapsed = 0;
+    player.classList.remove("jumping");
+    player.style.setProperty("--jump-offset", "0px");
+    return;
+  }
+
+  player.style.setProperty("--jump-offset", Math.max(0, state.jumpOffset).toFixed(1) + "px");
 }
 
 function attack() {
@@ -732,15 +777,32 @@ function spawnPickup() {
   positionEntity(pickup);
 }
 
+function showPickupNotice(pickup, message) {
+  const itemRect = pickup.element.getBoundingClientRect();
+  const fieldRect = playfield.getBoundingClientRect();
+  const notice = document.createElement("div");
+
+  notice.className = "pickup-notice pickup-notice-" + pickup.type;
+  notice.textContent = message;
+  notice.style.left = Math.max(112, Math.min(
+    fieldRect.width - 112,
+    itemRect.left + itemRect.width / 2 - fieldRect.left
+  )) + "px";
+  notice.style.top = Math.max(12, itemRect.top - fieldRect.top - 8) + "px";
+
+  playfield.appendChild(notice);
+  window.setTimeout(() => notice.remove(), 1700);
+}
+
 function collectPickup(pickup) {
   if (!pickup.alive) return;
   pickup.alive = false;
-  pickup.element.remove();
+
   if (pickup.type === "holy") {
     state.damage += 1;
     state.holyWaterCount = Math.min(HOLY_WATER_FOR_SPECIAL, state.holyWaterCount + 1);
     state.score += 10;
-    logMessage("Holy water earned +1 Attack damage + 10pts");
+    showPickupNotice(pickup, "+1 DAMAGE");
     updateStormCloud();
     if (state.holyWaterCount >= HOLY_WATER_FOR_SPECIAL) {
       logMessage("Storm cloud charged! Special attack ready!");
@@ -748,14 +810,14 @@ function collectPickup(pickup) {
   } else if (pickup.type === "cross") {
     state.attackSpeed += 1;
     state.score += 10;
-    logMessage("Cross earned +1 attack speed +10pts");
+    showPickupNotice(pickup, "+1 ATTACK SPEED");
   } else {
     const recovered = Math.min(10, 100 - state.hp);
     state.hp = Math.min(100, state.hp + 10);
-    logMessage(recovered > 0
-      ? "Medkit restored +" + recovered + " HP"
-      : "Medkit collected — health is already full");
+    showPickupNotice(pickup, recovered > 0 ? "+" + recovered + " HP" : "HP FULL");
   }
+
+  pickup.element.remove();
   updateHud();
 }
 
@@ -812,7 +874,7 @@ function updateEnemies(now, dt) {
           enemy.damageApplied = true;
           if (hitboxesTouch(playerBox, ninjaBox)) {
             damagePlayer(20, "A passing ninja hit you! -20 HP");
-          } else if (now < state.jumpUntil) {
+          } else if (state.jumpActive) {
             logMessage("You jumped over a passing ninja!");
           }
         }
@@ -887,6 +949,7 @@ function gameLoop(now) {
       state.nextPickupAt = now + 2600 + Math.random() * 2200;
     }
 
+    updateJump(dt);
     updateEnemies(now, dt);
     if (state.gameOver) return;
     updatePickups(movement.scrollDirection, movement.scrollDuration);
@@ -896,7 +959,6 @@ function gameLoop(now) {
       state.nextPlayerAttackAt = now + (1000 / state.attackSpeed);
     }
 
-    if (now >= state.jumpUntil) player.classList.remove("jumping");
     updateHud();
   }
   state.rafId = requestAnimationFrame(gameLoop);
@@ -990,6 +1052,11 @@ function finishGame() {
   state.elapsedSeconds = state.startedAt ? Math.floor((performance.now() - state.startedAt) / 1000) : 0;
   playfield.classList.remove("is-moving");
   heldDirections.clear();
+  state.jumpHeld = false;
+  state.jumpActive = false;
+  state.jumpVelocity = 0;
+  state.jumpOffset = 0;
+  player.style.setProperty("--jump-offset", "0px");
   player.classList.remove("jumping");
   $("game-over-name").textContent = state.playerName;
   $("final-score-number").textContent = state.score.toLocaleString("en-US");
