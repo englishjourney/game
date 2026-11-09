@@ -7,7 +7,7 @@ export function renderMissionHeader() {
             </a>
             <div class="ej-header-info">
                 <span class="ej-mission-number">MISSION 01</span>
-                <span class="ej-xp-pill" id="mission-xp">⭐ XP: —</span>
+                <span class="ej-xp-pill" id="mission-reward">⭐ +1 estrela ao concluir</span>
                 <span class="ej-user-pill" id="mission-user">Verificando login...</span>
             </div>
         </header>
