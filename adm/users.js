@@ -8,20 +8,24 @@ export function initUsers() {
     const resultsContainer = document.getElementById('users-search-results');
     
     searchInput.addEventListener('input', (e) => {
-        const q = e.target.value.toLowerCase();
+        const q = e.target.value.trim().toLocaleLowerCase('pt-BR');
         resultsContainer.innerHTML = '';
         if (q.length < 2) { resultsContainer.classList.add('hidden'); return; }
-        
+
         let found = false;
         document.querySelectorAll('.users-table tbody tr').forEach(row => {
-            if (row.innerText.toLowerCase().includes(q)) {
+            const teamSection = row.closest('.team-section');
+            const gradeHeader = teamSection?.querySelector('.team-header > span')?.innerText || '';
+            const grade = gradeHeader.replace(/^Turma:\\s*/i, '').trim();
+            const searchableText = `${row.innerText} ${grade}`.toLocaleLowerCase('pt-BR');
+
+            if (searchableText.includes(q)) {
                 found = true;
                 const name = row.cells[0].innerText;
                 const div = document.createElement('div');
                 div.className = 'search-item';
-                div.innerText = name;
+                div.innerText = grade ? `${name} — Turma ${grade}` : name;
                 div.onclick = () => {
-                    const teamSection = row.closest('.team-section');
                     const teamContent = teamSection && teamSection.querySelector('.team-content');
                     const minimizeButton = teamSection && teamSection.querySelector('.team-header .minimize-btn');
                     if (teamContent) teamContent.classList.remove('hidden');
