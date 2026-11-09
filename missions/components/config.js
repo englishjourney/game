@@ -66,7 +66,7 @@ function parseMissionScore(value) {
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
 }
 
-// Busca a pontuação da linha cujo mission_name corresponde exatamente à missão.
+// Busca o limite de pontuação do jogo e o histórico de conclusão/tentativa.
 export async function loadMissionSettings(missionName, username = "") {
     const { data, error } = await supabase
         .from("missions")
@@ -99,83 +99,24 @@ export async function loadMissionSettings(missionName, username = "") {
     };
 }
 
-// Registra somente em uma linha já existente. Esta função nunca cria uma missão.
+// O banco registra o resultado e concede a estrela na mesma transação.
+// A função SQL bloqueia a linha da missão, impedindo recompensas duplicadas
+// mesmo quando o aluno envia duas conclusões quase simultaneamente.
 export async function recordMissionResult(missionName, username, result) {
     if (result !== "done" && result !== "fail") {
         throw new Error("Resultado de missão inválido.");
     }
 
-    const { data: mission, error: missionError } = await supabase
-        .from("missions")
-        .select("mission_score, done, fail")
-        .eq("mission_name", missionName)
-        .limit(1)
-        .maybeSingle();
+    const { data, error } = await supabase.rpc("record_mission_result", {
+        p_mission_name: String(missionName || "").trim(),
+        p_username: String(username || "").trim(),
+        p_result: result
+    });
 
-    if (missionError) throw missionError;
-
-    if (!mission) {
-        return { recorded: false, reason: "mission-not-registered", earnedPoints: 0 };
+    if (error) {
+        console.error("Erro ao registrar o resultado da missão:", error);
+        throw new Error("Não foi possível registrar o resultado da missão. Tente novamente.");
     }
 
-    if (
-        usernameIsInList(mission.done, username) ||
-        usernameIsInList(mission.fail, username)
-    ) {
-        return { recorded: false, reason: "already-attempted", earnedPoints: 0 };
-    }
-
-    const points = parseMissionScore(mission.mission_score);
-    if (result === "done" && points === null) {
-        return { recorded: false, reason: "score-not-configured", earnedPoints: 0 };
-    }
-
-    const currentColumn = String(mission[result] || "")
-        .split(",")
-        .map(item => item.trim())
-        .filter(Boolean);
-
-    currentColumn.push(String(username).trim());
-
-    const { error: recordError } = await supabase
-        .from("missions")
-        .update({ [result]: currentColumn.join(",") })
-        .eq("mission_name", missionName);
-
-    if (recordError) throw recordError;
-
-    if (result === "fail") {
-        return { recorded: true, earnedPoints: 0 };
-    }
-
-    // Mantém o mesmo modelo usado pelos jogos atuais: users.score é atualizado
-    // após a primeira conclusão registrada em missions.done.
-    const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("score")
-        .eq("username", username)
-        .maybeSingle();
-
-    if (userError) {
-        throw new Error("A missão foi registrada, mas não foi possível consultar a pontuação do aluno.");
-    }
-
-    if (!userData) {
-        throw new Error("A missão foi registrada, mas o usuário não foi encontrado para receber os pontos.");
-    }
-
-    const currentScore = Number(userData.score || 0);
-    const safeCurrentScore = Number.isFinite(currentScore) ? currentScore : 0;
-    const newScore = safeCurrentScore + points;
-
-    const { error: scoreError } = await supabase
-        .from("users")
-        .update({ score: String(newScore) })
-        .eq("username", username);
-
-    if (scoreError) {
-        throw new Error("A missão foi registrada, mas houve um erro ao atualizar os pontos do aluno.");
-    }
-
-    return { recorded: true, earnedPoints: points, newScore };
+    return data || { recorded: false, reason: "empty-response", earnedStars: 0 };
 }
