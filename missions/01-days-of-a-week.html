@@ -177,7 +177,7 @@ async function startMission(session) {
         };
     }
 
-    setMissionXP(missionSettings.missionScore);
+    setMissionReward(missionSettings.completed, missionSettings.failed);
     renderLesson();
 }
 
