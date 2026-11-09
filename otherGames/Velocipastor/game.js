@@ -1251,27 +1251,8 @@ function specialAttack() {
   updateHud();
 }
 
-async function saveScore() {
-  if (state.score <= 0) {
-    $("save-status").textContent = "Score 0 — zero-score runs do not appear in the ranking.";
-    return;
-  }
-  $("save-status").textContent = "Checking your personal best...";
-  const { data: savedRecord, error } = await supabase.rpc("save_velocipastor_record", {
-    p_player_name: state.playerName,
-    p_score: state.score,
-    p_duration_seconds: state.elapsedSeconds
-  });
-
-  if (error) {
-    console.error("Velocipastor personal-best save failed:", error);
-    $("save-status").textContent = "Could not save the score. Please try again later.";
-    return;
-  }
-
-  $("save-status").textContent = savedRecord
-    ? "New personal record saved to the arcade ranking!"
-    : "Your previous personal best remains in the ranking.";
+function saveScore() {
+  $("save-status").textContent = "Score local desta partida. Não é salvo na conta nem enviado ao ranking.";
 }
 
 function finishGame() {
