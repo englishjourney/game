@@ -29,6 +29,7 @@ Cada etapa combina um campo de vocabulário com um objetivo gramatical. A trilha
 - A recompensa é única por aluno e por missão. Uma conclusão ou tentativa já registrada em `done` ou `fail` não gera outra estrela.
 - A coluna `mission_score` define apenas a meta de pontuação dentro do jogo da missão; ela não é somada a `users.score`.
 - As missões devem registrar o resultado usando `recordMissionResult()` de `components/config.js`, que chama a função transacional `record_mission_result` no Supabase.
+- A função transacional impede recompensas duplicadas por reenvio ou chamadas simultâneas. O fluxo atual, porém, ainda usa a sessão legada armazenada no navegador; para impedir também chamadas manuais forjadas, a conclusão deverá ser validada por autenticação Supabase/Edge Function no servidor.
 
 ## Organização dos documentos
 
