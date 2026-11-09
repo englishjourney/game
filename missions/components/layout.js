@@ -34,7 +34,7 @@ export function setMissionUser(session) {
     if (user) user.textContent = session?.name || session?.username || "Student";
 }
 
-export function setMissionReward(completed = false, failed = false) {
+export function setMissionReward(completed = false, failed = false, available = true) {
     const reward = document.getElementById("mission-reward");
     if (!reward) return;
 
@@ -42,7 +42,9 @@ export function setMissionReward(completed = false, failed = false) {
         ? "⭐ Recompensa recebida"
         : failed
             ? "⭐ Sem recompensa"
-            : "⭐ +1 estrela ao concluir";
+            : available
+                ? "⭐ +1 estrela ao concluir"
+                : "⭐ Recompensa indisponível";
 }
 
 export function setMissionProgress(label, current, total, percent) {
