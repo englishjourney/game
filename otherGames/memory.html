@@ -223,7 +223,7 @@
             try {
                 const { data, error } = await supabase
                     .from('users')
-                    .select('*')
+                    .select('username')
                     .eq('username', username)
                     .single();
 
@@ -356,37 +356,6 @@
             [firstCard, secondCard] = [null, null];
         }
 
-        // Função para atualizar a lista separada por vírgula na tabela missions
-        async function updateMissionRecord(columnName, username) {
-            try {
-                let { data: mission, error } = await supabase
-                    .from('missions')
-                    .select('*')
-                    .eq('mission_name', 'Memory game - Animals')
-                    .single();
-
-                if (error || !mission) {
-                    console.error("ERRO: Missão 'Memory game - Animals' não encontrada no banco de dados:", error);
-                    return;
-                }
-
-                let listStr = mission[columnName] || '';
-                let listArray = listStr ? listStr.split(',').map(s => s.trim()).filter(Boolean) : [];
-
-                if (!listArray.includes(username)) {
-                    listArray.push(username);
-                    let updatedStr = listArray.join(', ');
-
-                    await supabase
-                        .from('missions')
-                        .update({ [columnName]: updatedStr })
-                        .eq('id', mission.id);
-                }
-            } catch (err) {
-                console.error("Erro ao atualizar tabela missions:", err);
-            }
-        }
-
         async function finishGame() {
             gameScreen.classList.add('hidden');
             resultScreen.classList.remove('hidden');
@@ -410,37 +379,15 @@
                 if (error) {
                     console.error(error);
                     rewardText.textContent = "Você ganhou o jogo, mas houve um erro ao salvar a pontuação.";
-                    rewardText.className = "incorrect-msg";
-                } else {
-                    rewardText.innerHTML = `Parabéns! Excelente memória.<br><b>+50 Pontos adicionados à sua conta!</b>`;
-                    
-                    // Salva o usuário na coluna 'done' da tabela missions
-                    await updateMissionRecord('done', currentUser.username);
-                }
-            } catch (err) {
-                console.error(err);
-                rewardText.textContent = "Erro ao tentar atualizar a pontuação no servidor.";
-                rewardText.className = "incorrect-msg";
-            }
+                    rewardText.className = "incorrect-msg"        function finishGame() {
+            gameScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+
+            const rewardText = document.getElementById('reward-text');
+            rewardText.textContent = "Parabéns! Excelente memória. Você encontrou todos os pares. A pontuação vale apenas para esta partida e não será salva na conta.";
+            rewardText.className = "correct-msg";
         }
-    
-        // Anti-farming: uma missão só pode gerar pontos na primeira tentativa registrada.
-        async function missionWasAlreadyAttempted(username, missionName) {
-            try {
-                const { data, error } = await supabase
-                    .from('missions')
-                    .select('done, fail')
-                    .eq('mission_name', missionName)
-                    .maybeSingle();
-                if (error) throw error;
-                if (!data) return false;
-                const hasUser = value => String(value || '').split(',').map(name => name.trim().toLowerCase()).filter(Boolean).includes(String(username || '').trim().toLowerCase());
-                return hasUser(data.done) || hasUser(data.fail);
-            } catch (error) {
-                console.error('Não foi possível verificar o histórico da missão; pontuação bloqueada por segurança:', error);
-                return true;
-            }
-        }
+
 </script>
 </body>
 </html>
