@@ -202,7 +202,6 @@
         
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const MISSION_NAME = "Colors battle royale";
         let username = "";
         let currentLevel = 0;
         let animationId;
@@ -225,104 +224,7 @@
 
         const allColors = ["red", "green", "blue", "white", "yellow", "brown", "gray", "black", "orange", "purple"];
 
-        // --- DATABASE FUNCTIONS ---
-
-        async function updateMissionRecord(user, targetColumn) {
-            try {
-                let { data: rows, error: fetchError } = await supabaseClient
-                    .from('missions')
-                    .select('*')
-                    .eq('mission_name', MISSION_NAME);
-
-                if (fetchError) {
-                    console.error("Erro ao buscar missão:", fetchError);
-                    return;
-                }
-
-                let currentRecord = rows && rows.length > 0 ? rows[0] : null;
-
-                let columnStr = currentRecord ? (currentRecord[targetColumn] || "") : "";
-                let columnArray = columnStr.split(',').map(s => s.trim()).filter(s => s !== "");
-
-                if (targetColumn === 'done') {
-                    if (!columnArray.includes(user)) {
-                        columnArray.push(user);
-                    }
-                } else {
-                    columnArray.push(user);
-                }
-
-                let newValuesString = columnArray.join(',');
-
-                if (currentRecord) {
-                    let updatePayload = {};
-                    updatePayload[targetColumn] = newValuesString;
-
-                    const { error: updateError } = await supabaseClient
-                        .from('missions')
-                        .update(updatePayload)
-                        .eq('mission_name', MISSION_NAME);
-
-                    if (updateError) {
-                        console.error(`Erro ao atualizar a coluna ${targetColumn}:`, updateError);
-                    } else {
-                        console.log(`Sucesso ao atualizar ${targetColumn} para ${user}`);
-                    }
-                } else {
-                    let insertPayload = {
-                        mission_name: MISSION_NAME,
-                        done: targetColumn === 'done' ? newValuesString : "",
-                        fail: targetColumn === 'fail' ? newValuesString : ""
-                    };
-
-                    const { error: insertError } = await supabaseClient
-                        .from('missions')
-                        .insert(insertPayload);
-
-                    if (insertError) {
-                        console.error(`Erro ao inserir nova linha na missão:`, insertError);
-                    } else {
-                        console.log(`Sucesso ao criar registro e salvar ${targetColumn} para ${user}`);
-                    }
-                }
-
-            } catch (err) {
-                console.error("Erro crítico na função updateMissionRecord:", err);
-            }
-        }
-
-        async function registerFail(user) {
-            await updateMissionRecord(user, 'fail');
-        }
-
-        async function registerWin(user) {
-            if (await missionWasAlreadyAttempted(user, MISSION_NAME)) { alert('Você já participou desta missão. Jogar novamente não concede pontos.'); return; }
-
-            await updateMissionRecord(user, 'done');
-
-            try {
-                const { data: userData, error: userError } = await supabaseClient
-                    .from('users')
-                    .select('score')
-                    .eq('username', user)
-                    .single();
-
-                if (!userError && userData) {
-                    let currentScoreStr = userData.score || "0";
-                    let currentScore = Number(currentScoreStr);
-                    if (isNaN(currentScore)) currentScore = 0;
-                    
-                    let newScore = currentScore + 12;
-                    
-                    await supabaseClient
-                        .from('users')
-                        .update({ score: String(newScore) })
-                        .eq('username', user);
-                }
-            } catch (err) {
-                console.error("Erro ao atualizar o score do usuário:", err);
-            }
-        }
+        // A pontuação deste jogo é apenas local e não gera recompensas no EnglishJourney.
 
         // --- GAME LOGIC ---
 
@@ -405,14 +307,12 @@
             gameActive = false;
             cancelAnimationFrame(animationId);
             switchScreen('game-over-screen');
-            registerFail(username);
         }
 
         function triggerWin() {
             gameActive = false;
             cancelAnimationFrame(animationId);
             switchScreen('win-screen');
-            registerWin(username);
         }
 
         function gameLoop(timestamp) {
