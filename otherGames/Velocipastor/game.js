@@ -86,6 +86,7 @@ const groundTop = $("ground-top");
 const skyFar = $("sky-far");
 const skyNear = $("sky-near");
 const heldDirections = new Set();
+const jumpInputSources = new Set();
 const mobileJoystick = $("mobile-joystick");
 const mobileJoystickKnob = $("mobile-joystick-knob");
 const mobileSpecialAttackButton = $("mobile-special-attack-button");
@@ -183,12 +184,12 @@ const jumpButton = $("jump-button");
 jumpButton.addEventListener("click", jump);
 jumpButton.addEventListener("pointerdown", (event) => {
   event.preventDefault();
-  state.jumpHeld = true;
+  setJumpInput("desktop:" + event.pointerId, true);
   jump();
 });
 ["pointerup", "pointercancel", "lostpointercapture"].forEach((eventName) => {
-  jumpButton.addEventListener(eventName, () => {
-    state.jumpHeld = false;
+  jumpButton.addEventListener(eventName, (event) => {
+    setJumpInput("desktop:" + event.pointerId, false);
   });
 });
 $("attack-button").addEventListener("click", attack);
@@ -207,7 +208,7 @@ document.querySelectorAll("[data-touch-action]").forEach((button) => {
     }
 
     if (action === "jump") {
-      state.jumpHeld = true;
+      setJumpInput("touch:" + event.pointerId, true);
       jump();
     } else if (action === "attack") {
       attack();
@@ -217,8 +218,8 @@ document.querySelectorAll("[data-touch-action]").forEach((button) => {
   });
 
   ["pointerup", "pointercancel", "lostpointercapture"].forEach((eventName) => {
-    button.addEventListener(eventName, () => {
-      if (action === "jump") state.jumpHeld = false;
+    button.addEventListener(eventName, (event) => {
+      if (action === "jump") setJumpInput("touch:" + event.pointerId, false);
     });
   });
 
@@ -294,13 +295,18 @@ window.addEventListener("keydown", (event) => {
 
   if (event.code === "Space") {
     event.preventDefault();
-    state.jumpHeld = true;
+    setJumpInput("keyboard", true);
     if (!event.repeat) jump();
   }
 
   if (event.code === "Enter") {
     event.preventDefault();
     if (!event.repeat) attack();
+  }
+
+  if (event.code === "ShiftLeft" || event.code === "ShiftRight" || event.key === "Shift") {
+    event.preventDefault();
+    if (!event.repeat) specialAttack();
   }
 });
 
@@ -311,14 +317,14 @@ window.addEventListener("keyup", (event) => {
   }
   if (event.code === "Space") {
     event.preventDefault();
-    state.jumpHeld = false;
+    setJumpInput("keyboard", false);
   }
 });
 
 window.addEventListener("blur", () => {
   heldDirections.clear();
   resetMobileJoystick();
-  state.jumpHeld = false;
+  clearJumpInputs();
   if (state.screen === "game") updatePlayerAppearance(performance.now());
 });
 
@@ -500,7 +506,7 @@ function startGame() {
   state.jumpVelocity = 0;
   state.jumpOffset = 0;
   state.jumpHoldElapsed = 0;
-  state.jumpHeld = false;
+  clearJumpInputs();
   state.distance = 0;
   state.worldSpeed = 205;
   state.nextEnemyAt = 0;
@@ -543,6 +549,17 @@ function startGame() {
 
   cancelAnimationFrame(state.rafId);
   state.rafId = requestAnimationFrame(gameLoop);
+}
+
+function setJumpInput(source, isHeld) {
+  if (isHeld) jumpInputSources.add(source);
+  else jumpInputSources.delete(source);
+  state.jumpHeld = jumpInputSources.size > 0;
+}
+
+function clearJumpInputs() {
+  jumpInputSources.clear();
+  state.jumpHeld = false;
 }
 
 function jump() {
@@ -1250,7 +1267,7 @@ function finishGame() {
   playfield.classList.remove("is-moving");
   heldDirections.clear();
   resetMobileJoystick();
-  state.jumpHeld = false;
+  clearJumpInputs();
   state.jumpActive = false;
   state.jumpVelocity = 0;
   state.jumpOffset = 0;
