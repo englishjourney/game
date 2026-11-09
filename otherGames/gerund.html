@@ -343,7 +343,6 @@
     let playerAnswersSubmitted = {};
     let questionTimerInterval = null;
     let timerSeconds = 20;
-    let hasSavedScore = false;
     let gameOverHandled = false;
     let questionRevealed = false;
 
@@ -789,7 +788,6 @@
       currentQuestionIndex = 0;
       currentUser.score = 0;
       currentUser.hasAnswered = false;
-      hasSavedScore = false;
       gameOverHandled = false;
       playerAnswersSubmitted = {};
       showScreen('screenRoleSelect');
@@ -982,8 +980,7 @@
           playerAnswersSubmitted = {};
           if (userRole === 'player') {
             currentUser.score = 0;
-            hasSavedScore = false;
-          } else {
+               } else {
             connectedPlayers = connectedPlayers.map(player => player.isHost ? player : { ...player, score: 0 });
           }
           showScreen('screenQuestion');
@@ -1051,7 +1048,6 @@
               getPlayerKey(player) === getPlayerKey(currentUser)
             );
             if (myFinalResult) currentUser.score = Number(myFinalResult.score) || 0;
-            updateDatabaseScores();
           }
           showFinalPodium(finalPlayers);
           break;
@@ -1235,53 +1231,7 @@
       }
     }
 
-    // --- DATABASE UPDATE ---
-    async function updateDatabaseScores() {
-      if (
-        userRole !== 'player' ||
-        !currentUser.dbUsername ||
-        !supabaseClient ||
-        isDemoMode ||
-        hasSavedScore
-      ) return;
-
-      try {
-        const alreadyAttempted = await missionWasAlreadyAttempted(
-          currentUser.dbUsername,
-          'English Verbs Quest'
-        );
-        if (alreadyAttempted) {
-          hasSavedScore = true;
-          console.info('Missão já tentada; nenhum ponto novo será concedido.');
-          return;
-        }
-
-        const { data, error } = await supabaseClient
-          .from('users')
-          .select('score')
-          .eq('username', currentUser.dbUsername)
-          .single();
-
-        if (error) throw error;
-        if (!data) throw new Error('Usuário não encontrado ao salvar a pontuação.');
-
-        const existingScore = Number(data.score) || 0;
-        const earnedScore = Number(currentUser.score) || 0;
-        const { error: updateError } = await supabaseClient
-          .from('users')
-          .update({ score: existingScore + earnedScore })
-          .eq('username', currentUser.dbUsername);
-
-        if (updateError) throw updateError;
-
-        // Mark the save before recording completion to avoid adding the same points twice.
-        hasSavedScore = true;
-        console.log('Score updated for @' + currentUser.dbUsername + ': +' + earnedScore + ' pts');
-        await recordMissionCompletion(currentUser.dbUsername, 'English Verbs Quest');
-      } catch (error) {
-        console.error('Erro ao salvar a pontuação da partida:', error);
-      }
-    }
+    // A pontuação e o pódio são locais à partida; este jogo não registra missão nem altera users.score.
 
     // --- FINAL PODIUM RENDER ---
     function showFinalPodium(topPlayers) {
@@ -1319,35 +1269,6 @@
       });
     }
 
-    // Bloqueia pontuação repetida após a primeira tentativa registrada (vitória ou derrota).
-    async function missionWasAlreadyAttempted(username, missionName) {
-      if (!supabaseClient) return true;
-      try {
-        const { data, error } = await supabaseClient.from('missions').select('done, fail').eq('mission_name', missionName).maybeSingle();
-        if (error) throw error;
-        if (!data) return false;
-        const hasUser = value => String(value || '').split(',').map(v => v.trim().toLowerCase()).filter(Boolean).includes(String(username || '').trim().toLowerCase());
-        return hasUser(data.done) || hasUser(data.fail);
-      } catch (error) {
-        console.error('Não foi possível verificar o histórico da missão; pontuação bloqueada por segurança:', error);
-        return true;
-      }
-    }
-    async function recordMissionCompletion(username, missionName) {
-      try {
-        const { data, error } = await supabaseClient.from('missions').select('id, done, fail').eq('mission_name', missionName).maybeSingle();
-        if (error) throw error;
-        const users = String(data?.done || '').split(',').map(v => v.trim()).filter(Boolean);
-        if (!users.some(v => v.toLowerCase() === String(username).trim().toLowerCase())) users.push(username);
-        if (data) {
-          const { error: updateError } = await supabaseClient.from('missions').update({ done: users.join(', ') }).eq('id', data.id);
-          if (updateError) throw updateError;
-        } else {
-          const { error: insertError } = await supabaseClient.from('missions').insert({ mission_name: missionName, done: users.join(', '), fail: '' });
-          if (insertError) throw insertError;
-        }
-      } catch (error) { console.error('Erro ao registrar conclusão da missão:', error); }
-    }
 </script>
 </body>
 </html>
