@@ -34,12 +34,15 @@ export function setMissionUser(session) {
     if (user) user.textContent = session?.name || session?.username || "Student";
 }
 
-export function setMissionXP(points) {
-    const xp = document.getElementById("mission-xp");
-    if (!xp) return;
-    xp.textContent = points === null || points === undefined
-        ? "⭐ XP: —"
-        : `⭐ +${points} XP`;
+export function setMissionReward(completed = false, failed = false) {
+    const reward = document.getElementById("mission-reward");
+    if (!reward) return;
+
+    reward.textContent = completed
+        ? "⭐ Recompensa recebida"
+        : failed
+            ? "⭐ Sem recompensa"
+            : "⭐ +1 estrela ao concluir";
 }
 
 export function setMissionProgress(label, current, total, percent) {
