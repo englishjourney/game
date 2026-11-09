@@ -24,13 +24,13 @@
     <section id="name-screen" class="screen panel name-panel">
       <p class="eyebrow">PLAYER REGISTRATION</p>
       <h1>Who is the<br><span>Velocipastor?</span></h1>
-      <p class="intro-copy">Choose a name for the leaderboard. It does not need to match your EnglishJourney username.</p>
+      <p class="intro-copy">Choose a display name for this game session.</p>
       <form id="name-form" class="name-form">
         <label for="player-name">PLAYER NAME</label>
         <input id="player-name" name="playerName" maxlength="24" autocomplete="nickname" placeholder="Your arcade name..." required>
         <button class="pixel-button primary" type="submit">CONTINUE <span>▶</span></button>
       </form>
-      <p class="small-note">Your score belongs only to this arcade game. It does not add EnglishJourney mission points.</p>
+      <p class="small-note">Your score is local to this session. It is not saved to your account or added to EnglishJourney points.</p>
     </section>
 
     <section id="intro-screen" class="screen panel intro-panel hidden" aria-label="Opening story">
@@ -133,7 +133,7 @@
           <h2 id="game-over-title">GAME OVER</h2>
           <p class="game-over-player">PLAYER: <strong id="game-over-name"></strong></p>
           <div class="final-score"><span>FINAL SCORE</span><strong id="final-score-number">0</strong></div>
-          <p id="save-status" class="save-status">Saving score...</p>
+          <p id="save-status" class="save-status">Score is local only.</p>
           <div class="overlay-actions">
             <button id="play-again" class="pixel-button primary" type="button">PLAY AGAIN ▶</button>
             <button id="game-over-rank" class="pixel-button secondary" type="button">RANK 🏆</button>
@@ -149,7 +149,7 @@
           <div><p class="eyebrow">ARCADE HALL OF FAME</p><h2 id="rank-title">RANKING</h2></div>
           <button id="close-rank" class="close-button" type="button" aria-label="Close ranking">×</button>
         </div>
-        <p class="rank-note">Only the highest score for each player appears. Tied scores are ordered by the longest survival time.</p>
+        <p class="rank-note">Historical arcade records only. New game scores are no longer saved.</p>
         <div id="rank-status" class="rank-status">Loading leaderboard...</div>
         <ol id="rank-list" class="rank-list"></ol>
       </div>
