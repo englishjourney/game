@@ -370,7 +370,7 @@ function finishRace(){raceRunning=false;raceSteer=0;cancelAnimationFrame(raceFra
 async function completeGame(passed) {
  let result=null,error=null;
  try{result=await recordMissionResult(MISSION_NAME,studentSession.username,passed?"done":"fail")}catch(e){error=e;console.error(e)}
- if(result?.recorded&&passed){missionSettings.alreadyAttempted=true;missionSettings.completed=true;setMissionXP(result.earnedPoints)}
+ if(result?.recorded&&passed){missionSettings.alreadyAttempted=true;missionSettings.completed=true;missionSettings.failed=false;setMissionReward(true,false)}
  const message=error?"Não foi possível registrar o resultado: "+error.message:result?.reason==="already-attempted"?"Esta missão já teve uma tentativa registrada.": "Você alcançou "+raceScore+" pontos e concluiu a missão! Parabéns!";
  if(passed&&result?.recorded){
   setMissionContent('<span class="ej-kicker">MISSION COMPLETED</span><h1 class="ej-screen-title">Congratulations! 🎉</h1><p class="ej-screen-copy">Você alcançou a meta! A próxima missão será carregada agora.</p>');
