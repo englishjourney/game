@@ -515,3 +515,316 @@ body.game-active .controls {
     font-size: 22px;
   }
 }
+
+
+/* Mobile layout refinement: keep the playfield in landscape proportions. */
+@media (max-width: 720px) and (orientation: portrait) {
+  body.game-active .game-panel {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 6px;
+    padding: max(5px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) max(5px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
+  }
+
+  body.game-active .hud {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) repeat(3, minmax(0, .72fr));
+    gap: 4px;
+    padding: 0;
+    align-items: stretch;
+  }
+
+  body.game-active .hud-health,
+  body.game-active .hud-stat,
+  body.game-active .hud-score {
+    grid-column: auto;
+    min-width: 0;
+    min-height: 38px;
+    padding: 4px 5px;
+    border-width: 1px;
+  }
+
+  body.game-active .hud-label {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 4px;
+    font: 5px/1.2 var(--pixel);
+  }
+
+  body.game-active .hud-label strong {
+    font: 700 8px/1 var(--ui);
+  }
+
+  body.game-active .health-track {
+    height: 5px;
+    margin-top: 4px;
+    border-width: 1px;
+  }
+
+  body.game-active .hud-stat span,
+  body.game-active .hud-score span {
+    font: 5px/1.15 var(--pixel);
+  }
+
+  body.game-active .hud-stat strong {
+    margin-top: 3px;
+    font: 14px/1 var(--ui);
+  }
+
+  body.game-active .hud-stat strong small {
+    font: 9px/1 var(--ui);
+  }
+
+  body.game-active .hud-score {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: space-between;
+    gap: 2px 4px;
+  }
+
+  body.game-active .hud-score span,
+  body.game-active .hud-score strong,
+  body.game-active .hud-score small {
+    display: inline;
+  }
+
+  body.game-active .hud-score strong {
+    font: 15px/1 var(--ui);
+  }
+
+  body.game-active .hud-score small {
+    font: 10px/1 var(--ui);
+  }
+
+  body.game-active .playfield {
+    grid-row: 2;
+    align-self: center;
+    justify-self: center;
+    flex: none;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+  }
+
+  body.game-active .player {
+    width: clamp(62px, 18vw, 78px);
+    height: clamp(96px, 31vw, 122px);
+  }
+
+  body.game-active .entity.enemy {
+    width: 72px;
+    height: 109px;
+  }
+
+  body.game-active .game-bottom {
+    grid-row: 3;
+    display: block;
+    min-width: 0;
+  }
+
+  body.game-active .message-panel {
+    min-height: 35px;
+    padding: 4px 7px;
+    border-width: 1px;
+  }
+
+  body.game-active .message-heading {
+    font-size: 5px;
+    line-height: 1.1;
+  }
+
+  body.game-active #message-log {
+    max-height: 16px;
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1.1;
+  }
+
+  body.game-active .mobile-joystick {
+    left: max(8px, env(safe-area-inset-left));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: 84px;
+    height: 58px;
+    padding: 0 10px;
+    border-width: 1px;
+  }
+
+  body.game-active .joystick-arrow {
+    font-size: 26px;
+  }
+
+  body.game-active .mobile-joystick-knob {
+    width: 32px;
+    height: 32px;
+    margin: -16px 0 0 -16px;
+    border-width: 1px;
+  }
+
+  body.game-active .mobile-action-buttons {
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    gap: 7px;
+  }
+
+  body.game-active .mobile-action-button {
+    width: 48px;
+    height: 48px;
+    border-width: 1px;
+    font-size: 19px;
+  }
+
+  body.game-active .mobile-action-special {
+    width: 38px;
+    height: 38px;
+    font-size: 19px;
+  }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  body.game-active .game-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: max(4px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
+  }
+
+  body.game-active .hud {
+    display: grid;
+    grid-template-columns: minmax(135px, 1.35fr) repeat(3, minmax(58px, .68fr));
+    gap: 5px;
+    padding: 0;
+  }
+
+  body.game-active .hud-health,
+  body.game-active .hud-stat,
+  body.game-active .hud-score {
+    min-width: 0;
+    min-height: 32px;
+    padding: 3px 5px;
+    border-width: 1px;
+  }
+
+  body.game-active .hud-label {
+    gap: 3px;
+    font: 5px/1.15 var(--pixel);
+  }
+
+  body.game-active .hud-label strong {
+    font: 700 8px/1 var(--ui);
+  }
+
+  body.game-active .health-track {
+    height: 5px;
+    margin-top: 3px;
+    border-width: 1px;
+  }
+
+  body.game-active .hud-stat span,
+  body.game-active .hud-score span {
+    font: 5px/1.1 var(--pixel);
+  }
+
+  body.game-active .hud-stat strong {
+    margin-top: 2px;
+    font: 13px/1 var(--ui);
+  }
+
+  body.game-active .hud-stat strong small {
+    font: 8px/1 var(--ui);
+  }
+
+  body.game-active .hud-score {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 3px;
+  }
+
+  body.game-active .hud-score span,
+  body.game-active .hud-score strong,
+  body.game-active .hud-score small {
+    display: inline;
+  }
+
+  body.game-active .hud-score strong {
+    font: 13px/1 var(--ui);
+  }
+
+  body.game-active .hud-score small {
+    font: 9px/1 var(--ui);
+  }
+
+  body.game-active .playfield {
+    flex: 1 1 auto;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: auto;
+  }
+
+  body.game-active .game-bottom {
+    flex: 0 0 auto;
+    display: block;
+  }
+
+  body.game-active .message-panel {
+    min-height: 30px;
+    padding: 3px 6px;
+    border-width: 1px;
+  }
+
+  body.game-active .message-heading {
+    font-size: 5px;
+    line-height: 1;
+  }
+
+  body.game-active #message-log {
+    max-height: 13px;
+    margin-top: 2px;
+    font-size: 11px;
+    line-height: 1.05;
+  }
+
+  body.game-active .mobile-joystick {
+    left: max(8px, env(safe-area-inset-left));
+    bottom: max(7px, env(safe-area-inset-bottom));
+    width: 78px;
+    height: 54px;
+    padding: 0 9px;
+    border-width: 1px;
+  }
+
+  body.game-active .joystick-arrow {
+    font-size: 24px;
+  }
+
+  body.game-active .mobile-joystick-knob {
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    border-width: 1px;
+  }
+
+  body.game-active .mobile-action-buttons {
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(7px, env(safe-area-inset-bottom));
+    gap: 7px;
+  }
+
+  body.game-active .mobile-action-button {
+    width: 46px;
+    height: 46px;
+    border-width: 1px;
+    font-size: 18px;
+  }
+
+  body.game-active .mobile-action-special {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+}
