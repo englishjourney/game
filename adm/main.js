@@ -364,6 +364,7 @@ let reminderStatusInterval = null;
 let reminderAudioContext = null;
 let pendingReminderSound = false;
 let notificationCheckInProgress = false;
+let reminderBubbleTimeout = null;
 
 export function initReminders() {
     const btnReminders = document.getElementById('btn-reminders');
@@ -580,6 +581,7 @@ async function playReminderNotificationSound() {
 function renderExpiredNotification(notification) {
     const bubble = document.getElementById('reminder-chat-bubble');
     if (!bubble) return;
+    if (reminderBubbleTimeout) clearTimeout(reminderBubbleTimeout);
     bubble.replaceChildren();
     if (!notification) {
         bubble.classList.add('hidden');
@@ -636,6 +638,12 @@ function renderExpiredNotification(notification) {
 
     actions.append(snoozeButton, deleteButton);
     bubble.append(heading, title, meta, actions);
+
+    // O balão fica visível por apenas 2 segundos; a bolinha continua indicando pendências.
+    reminderBubbleTimeout = setTimeout(() => {
+        bubble.classList.add('hidden');
+        reminderBubbleTimeout = null;
+    }, 2000);
 }
 
 async function checkRemindersStatus(options = {}) {
