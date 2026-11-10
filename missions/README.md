@@ -28,12 +28,13 @@ Cada etapa combina um campo de vocabulário com um objetivo gramatical. A trilha
 - Uma primeira conclusão válida de missão concede **+2 estrelas** em `users.stars`.
 - A recompensa é única por aluno e por missão. Uma conclusão ou tentativa já registrada em `done` ou `fail` não gera outra estrela.
 - A coluna `mission_score` define apenas a meta de pontuação dentro do jogo da missão; ela não é somada a `users.score`.
+- Na missão 02, o jogo da memória contém 24 cartas (12 números e 12 meses), concede 10 pontos por par e exige encontrar os 12 pares; o resultado final é 120 pontos e a meta cadastrada é 100.
 - As missões devem registrar o resultado usando `recordMissionResult()` de `components/config.js`, que chama a função transacional `record_mission_result` no Supabase.
 - A função transacional impede recompensas duplicadas por reenvio ou chamadas simultâneas. O fluxo atual, porém, ainda usa a sessão legada armazenada no navegador; para impedir também chamadas manuais forjadas, a conclusão deverá ser validada por autenticação Supabase/Edge Function no servidor.
 
 ## Organização dos documentos
 
-- Um documento por missão, com numeração no início do nome: `01-introductions-classroom`, `02-numbers-dates-routine` e assim por diante.
+- Um documento por missão, com numeração no início do nome: `01-days-of-a-week`, `02-months-of-the-year` e assim por diante.
 - Cada documento deve informar objetivo, vocabulário-alvo, explicação gramatical curta, exemplos contextualizados e atividade de aplicação.
 - A dificuldade deve crescer de forma gradual: reconhecer e compreender, praticar com apoio e, por fim, aplicar em contexto.
 - Os jogos de `otherGames/` ficam separados da trilha curricular e servem como atividades de diversão.
