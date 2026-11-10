@@ -225,7 +225,7 @@ async function loadTodayPlans() {
                 };
                 const specialLabel = specialLabels[Number(item.special)] || item.tag || '';
                 const activities = item.activities
-                    ? escapeDashboardHtml(item.activities).replace(/\\r?\\n/g, '<br>')
+                    ? escapeDashboardHtml(item.activities).replace(/\r?\n/g, '<br>')
                     : 'Atividades não informadas';
                 return '<article class="today-plan-item">' +
                     '<span class="today-plan-time">' + escapeDashboardHtml(item.time || '—') + '</span>' +
@@ -499,22 +499,6 @@ export async function loadRemindersSection() {
 }
 
 // Funções globais para escutar os cliques dentro da lista HTML
-window.deleteReminder = async function(id) {
-    if (!confirm('Deseja realmente excluir este lembrete?')) return;
-    try {
-        const { error } = await supabase.from('reminders').delete().eq('id', id);
-        if (error) throw error;
-        await loadRemindersSection();
-        checkRemindersStatus();
-    } catch (err) {
-        console.error('Erro ao excluir:', err);
-    }
-};
-
-window.editReminder = function(id, text, date, time) {
-    openReminderFormModal({ id, remindMeTo: decodeURIComponent(text), date, time });
-};
-
 // Exclui um lembrete e atualiza imediatamente o indicador e o aviso discreto.
 window.deleteReminder = async function(id) {
     if (!confirm('Deseja realmente excluir este lembrete?')) return;
