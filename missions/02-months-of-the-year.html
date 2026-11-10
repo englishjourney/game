@@ -514,8 +514,10 @@ function renderMemoryIntro() {
     setMissionProgress("GAME", 3, 3, 82);
     setArtie("The final challenge! Encontre os doze pares: cada número precisa combinar com o mês correspondente.", "artie_smiling_pointing_right.png");
 
-    const scoreTarget = Number(missionSettings.missionScore) || REQUIRED_SCORE;
-    const startDisabled = !missionSettings.registered || scoreTarget <= 0;
+    const configuredScoreTarget = Number(missionSettings.missionScore);
+    const hasScoreTarget = missionSettings.registered && Number.isFinite(configuredScoreTarget) && configuredScoreTarget > 0;
+    const scoreTarget = hasScoreTarget ? configuredScoreTarget : REQUIRED_SCORE;
+    const startDisabled = !hasScoreTarget;
 
     setMissionContent(
         '<span class="ej-kicker">FINAL CHALLENGE • MEMORY GAME</span>' +
@@ -593,12 +595,12 @@ function renderMemoryGame() {
         '<p class="ej-screen-copy">Combine cada número com o mês correto. As cartas correspondentes permanecerão abertas.</p>' +
         '<div class="ej-memory-hud">' +
             '<div class="ej-memory-stat"><span>Matches</span><strong id="memory-matches">0 / 12</strong></div>' +
-            '<div class="ej-memory-stat"><span>Score</span><strong id="memory-score">0 / ' + REQUIRED_SCORE + '</strong></div>' +
+            '<div class="ej-memory-stat"><span>Score</span><strong id="memory-score">0 / ' + (Number(missionSettings.missionScore) || REQUIRED_SCORE) + '</strong></div>' +
             '<div class="ej-memory-stat"><span>Moves</span><strong id="memory-moves">0</strong></div>' +
         '</div>' +
         '<p class="ej-memory-status" id="memory-status" role="status" aria-live="polite">Vire duas cartas para começar.</p>' +
         '<div class="ej-memory-board" id="memory-board">' + cards + '</div>' +
-        '<div class="ej-memory-legend"><span><i></i> Par encontrado</span><span><i></i> Cartas ainda disponíveis</span></div>' +
+        '<div class="ej-memory-legend"><span><i></i> Cartas ainda disponíveis</span><span><i></i> Par encontrado</span></div>' +
         '<div class="ej-memory-finished" id="memory-finished" hidden>All pairs found! Excelente trabalho!</div>'
     );
 
@@ -697,12 +699,13 @@ function updateMemoryHud() {
     const movesElement = document.getElementById("memory-moves");
 
     if (matchElement) matchElement.textContent = matchedPairs + " / 12";
-    if (scoreElement) scoreElement.textContent = memoryScore + " / " + REQUIRED_SCORE;
+    if (scoreElement) scoreElement.textContent = memoryScore + " / " + (Number(missionSettings.missionScore) || REQUIRED_SCORE);
     if (movesElement) movesElement.textContent = String(memoryMoves);
 }
 
 async function finishMemoryGame() {
-    if (memoryScore < REQUIRED_SCORE || matchedPairs !== months.length) return;
+    const scoreTarget = Number(missionSettings.missionScore);
+    if (!Number.isFinite(scoreTarget) || scoreTarget <= 0 || memoryScore < scoreTarget || matchedPairs !== months.length) return;
 
     setMissionProgress("COMPLETED", 3, 3, 100);
     setArtie("You did it! Você encontrou os doze pares e concluiu a missão. Parabéns!", "artie_smiling_happy_clenched_fists.png");
