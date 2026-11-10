@@ -2,13 +2,13 @@ import { renderMissionHeader } from "./header.js";
 import { renderMissionBody } from "./body.js";
 import { renderMissionFooter } from "./footer.js";
 
-export function mountMissionLayout() {
+export function mountMissionLayout({ missionNumber = "01" } = {}) {
     const root = document.getElementById("mission-app");
     if (!root) throw new Error("O elemento #mission-app não foi encontrado.");
 
     root.innerHTML = `
         <div class="ej-mission-shell">
-            ${renderMissionHeader()}
+            ${renderMissionHeader(missionNumber)}
             ${renderMissionBody()}
             ${renderMissionFooter()}
         </div>
