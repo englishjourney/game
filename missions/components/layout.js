@@ -39,11 +39,11 @@ export function setMissionReward(completed = false, failed = false, available = 
     if (!reward) return;
 
     reward.textContent = completed
-        ? "⭐ Recompensa recebida"
+        ? "⭐ +2 estrelas recebidas"
         : failed
             ? "⭐ Sem recompensa"
             : available
-                ? "⭐ +1 estrela ao concluir"
+                ? "⭐ +2 estrelas ao concluir"
                 : "⭐ Recompensa indisponível";
 }
 
