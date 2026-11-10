@@ -25,7 +25,7 @@ Cada etapa combina um campo de vocabulário com um objetivo gramatical. A trilha
 
 - Apenas as missões desta trilha podem registrar resultados na tabela `missions`.
 - Os jogos de `otherGames/` são recreativos: podem manter pontuação local durante a partida, mas não registram missões nem alteram `users.score`.
-- Uma primeira conclusão válida de missão concede **+1 estrela** em `users.stars`.
+- Uma primeira conclusão válida de missão concede **+2 estrelas** em `users.stars`.
 - A recompensa é única por aluno e por missão. Uma conclusão ou tentativa já registrada em `done` ou `fail` não gera outra estrela.
 - A coluna `mission_score` define apenas a meta de pontuação dentro do jogo da missão; ela não é somada a `users.score`.
 - As missões devem registrar o resultado usando `recordMissionResult()` de `components/config.js`, que chama a função transacional `record_mission_result` no Supabase.
