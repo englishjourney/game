@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#58cc02">
+    <meta name="description" content="Learn the months of the year in English with Artie.">
+    <title>Months of the Year | EnglishJourney</title>
+    <link rel="stylesheet" href="./components/mission.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+/* Mission 02: mantém o sistema visual compartilhado e acrescenta apenas os elementos próprios do jogo. */
+.ej-mission-content .ej-months-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: stretch;
+}
+.ej-mission-content .ej-month-card {
+    min-height: 124px;
+}
+.ej-month-number {
+    color: #8b9aae;
+    font-size: .72rem;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.ej-memory-intro {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 20px 0;
+}
+.ej-memory-rule {
+    padding: 13px 12px;
+    border: 1px solid #e4eaf1;
+    border-radius: 15px;
+    background: #fbfdff;
+    text-align: center;
+}
+.ej-memory-rule strong {
+    display: block;
+    color: #243044;
+    font-size: 1.15rem;
+    font-weight: 900;
+}
+.ej-memory-rule span {
+    color: #718096;
+    font-size: .75rem;
+    font-weight: 800;
+}
+.ej-memory-hud {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+    margin: 18px 0 14px;
+}
+.ej-memory-stat {
+    padding: 10px 12px;
+    border: 1px solid #e4eaf1;
+    border-radius: 14px;
+    background: #f8fbff;
+    text-align: center;
+}
+.ej-memory-stat span {
+    display: block;
+    color: #718096;
+    font-size: .68rem;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.ej-memory-stat strong {
+    display: block;
+    margin-top: 2px;
+    color: #243044;
+    font-size: 1.22rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+}
+.ej-memory-status {
+    min-height: 25px;
+    margin: 9px 0 13px;
+    color: #64748b;
+    font-size: .85rem;
+    font-weight: 800;
+    text-align: center;
+}
+.ej-memory-board {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 9px;
+}
+.ej-memory-card {
+    position: relative;
+    min-width: 0;
+    min-height: 88px;
+    aspect-ratio: 1 / .92;
+    display: grid;
+    place-items: center;
+    padding: 5px;
+    border: 2px solid #dce8f1;
+    border-bottom-width: 5px;
+    border-radius: 15px;
+    background: linear-gradient(145deg, #43b9f1, #168fd1);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 3px 0 rgba(36,48,68,.04);
+    transition: transform .16s ease, background .16s ease, border-color .16s ease;
+}
+.ej-memory-card:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.04);
+}
+.ej-memory-card-back {
+    display: grid;
+    place-items: center;
+    width: 35px;
+    height: 35px;
+    border: 2px solid rgba(255,255,255,.72);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1.55rem;
+    font-weight: 900;
+}
+.ej-memory-card-front {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    min-height: 61px;
+    padding: 4px 2px;
+    border-radius: 10px;
+    background: #fff;
+    color: #243044;
+    font-size: .83rem;
+    font-weight: 1000;
+    line-height: 1.12;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+.ej-memory-card.is-number .ej-memory-card-front {
+    color: #1689c6;
+    font-size: 1.75rem;
+}
+.ej-memory-card.is-month .ej-memory-card-front {
+    font-size: clamp(.66rem, 1.05vw, .86rem);
+}
+.ej-memory-card.is-flipped {
+    border-color: #a9d98d;
+    border-bottom-color: #83c45d;
+    background: #efffe5;
+}
+.ej-memory-card.is-matched {
+    border-color: #58cc02;
+    border-bottom-color: #399b00;
+    background: #e9fbdc;
+    cursor: default;
+    opacity: .88;
+}
+.ej-memory-card:disabled { cursor: default; }
+.ej-memory-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin: 13px 0 0;
+    color: #718096;
+    font-size: .74rem;
+    font-weight: 800;
+}
+.ej-memory-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.ej-memory-legend i { width: 10px; height: 10px; border-radius: 3px; background: #168fd1; }
+.ej-memory-legend span:last-child i { background: #58cc02; }
+.ej-memory-finished {
+    margin-top: 18px;
+    padding: 15px;
+    border: 1px solid #bfe7a5;
+    border-radius: 15px;
+    background: #f4ffed;
+    color: #397a1e;
+    font-weight: 800;
+    text-align: center;
+}
+.ej-memory-finished[hidden] { display: none; }
+@media (max-width: 850px) {
+    .ej-memory-board { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 650px) {
+    .ej-mission-content .ej-months-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ej-memory-intro { gap: 7px; }
+    .ej-memory-rule { padding: 10px 7px; }
+    .ej-memory-rule strong { font-size: 1rem; }
+    .ej-memory-rule span { font-size: .68rem; }
+    .ej-memory-board { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+    .ej-memory-card { min-height: 74px; border-radius: 12px; }
+    .ej-memory-card-front { min-height: 52px; }
+    .ej-memory-card.is-month .ej-memory-card-front { font-size: .74rem; }
+}
+@media (max-width: 370px) {
+    .ej-memory-board { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .ej-memory-hud { gap: 5px; }
+    .ej-memory-stat { padding: 8px 5px; }
+    .ej-memory-stat strong { font-size: 1.05rem; }
+}
+    </style>
+</head>
+<body>
+    <div id="mission-app"></div>
+    <script type="module">
+import {
+    getCachedMissionSession,
+    loginMissionUser,
+    loadMissionSettings,
+    recordMissionResult
+} from "./components/config.js";
+import {
+    mountMissionLayout,
+    setMissionUser,
+    setMissionReward,
+    setMissionProgress,
+    setArtie,
+    setMissionContent,
+    showMissionDialog
+} from "./components/layout.js";
+import { playGoogleTTS } from "./components/tts.js";
+
+const MISSION_NAME = "Months of the Year";
+const MISSION_NUMBER = "02";
+const REQUIRED_SCORE = 100;
+const POINTS_PER_MATCH = 10;
+
+const months = [
+    { number: 1, en: "January", pt: "janeiro" },
+    { number: 2, en: "February", pt: "fevereiro" },
+    { number: 3, en: "March", pt: "março" },
+    { number: 4, en: "April", pt: "abril" },
+    { number: 5, en: "May", pt: "maio" },
+    { number: 6, en: "June", pt: "junho" },
+    { number: 7, en: "July", pt: "julho" },
+    { number: 8, en: "August", pt: "agosto" },
+    { number: 9, en: "September", pt: "setembro" },
+    { number: 10, en: "October", pt: "outubro" },
+    { number: 11, en: "November", pt: "novembro" },
+    { number: 12, en: "December", pt: "dezembro" }
+];
+
+const exerciseStages = [
+    {
+        title: "EXERCISE 1 • MONTH ORDER",
+        description: "Identifique a ordem dos meses do ano.",
+        questions: [
+            { prompt: "Which month comes after March?", options: ["April", "June", "February"], answer: "April", explanation: "April is the fourth month. It comes after March." },
+            { prompt: "Which month comes before August?", options: ["September", "July", "October"], answer: "July", explanation: "July comes right before August." },
+            { prompt: "What is the first month of the year?", options: ["December", "January", "March"], answer: "January", explanation: "January is month number 1." }
+        ]
+    },
+    {
+        title: "EXERCISE 2 • MONTH NUMBERS",
+        description: "Agora relacione cada mês ao número correto.",
+        questions: [
+            { prompt: "Which number is October?", options: ["8", "10", "12"], answer: "10", explanation: "October is the tenth month of the year." },
+            { prompt: "What is the sixth month?", options: ["June", "July", "May"], answer: "June", explanation: "June is month number 6." },
+            { prompt: "Which month is number 12?", options: ["November", "January", "December"], answer: "December", explanation: "December is the twelfth and last month." }
+        ]
+    }
+];
+
+let studentSession = null;
+let missionSettings = {
+    registered: false,
+    missionScore: null,
+    alreadyAttempted: false,
+    completed: false,
+    failed: false
+};
+let exerciseStageIndex = 0;
+let exerciseQuestionIndex = 0;
+let memoryDeck = [];
+let firstCard = null;
+let secondCard = null;
+let matchedPairs = 0;
+let memoryScore = 0;
+let memoryMoves = 0;
+let memoryLocked = false;
+let memoryFinished = false;
+let mismatchTimer = null;
+let scoreTimer = null;
+
+function renderLoginScreen() {
+    setMissionProgress("LOGIN", 1, 3, 0);
+    setArtie("Hi! Entre com seu usuário do EnglishJourney. Se você já fez login no site, eu reconheceria sua sessão automaticamente.", "artie_waving_ClosedEyes_smiling.png");
+
+    setMissionContent(
+        '<span class="ej-kicker">WELCOME TO ENGLISHJOURNEY</span>' +
+        '<h1 class="ej-screen-title">Let’s learn English!</h1>' +
+        '<p class="ej-screen-copy">Entre com o mesmo usuário e senha que você utiliza no EnglishJourney para começar a missão <strong>Months of the Year</strong>.</p>' +
+        '<form id="mission-login-form" class="ej-login-form">' +
+            '<label>Username<input id="mission-login-username" name="username" type="text" autocomplete="username" required></label>' +
+            '<label>Password<input id="mission-login-password" name="password" type="password" autocomplete="current-password" required></label>' +
+            '<p id="mission-login-feedback" class="ej-login-feedback" role="alert"></p>' +
+            '<button class="ej-primary-button" type="submit">Start mission <span aria-hidden="true">→</span></button>' +
+        '</form>'
+    );
+
+    const form = document.getElementById("mission-login-form");
+    form?.addEventListener("submit", async function(event) {
+        event.preventDefault();
+        const button = form.querySelector('button[type="submit"]');
+        const feedback = document.getElementById("mission-login-feedback");
+        const username = document.getElementById("mission-login-username")?.value;
+        const password = document.getElementById("mission-login-password")?.value;
+
+        if (button) {
+            button.disabled = true;
+            button.textContent = "Signing in...";
+        }
+        if (feedback) feedback.textContent = "";
+
+        const result = await loginMissionUser(username, password);
+        if (!result.session) {
+            if (feedback) feedback.textContent = result.error || "Não foi possível entrar.";
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = 'Start mission <span aria-hidden="true">→</span>';
+            }
+            return;
+        }
+        await startMission(result.session);
+    });
+}
+
+async function startMission(session) {
+    studentSession = session;
+    setMissionUser(session);
+    setArtie("Great! Vamos aprender os meses do ano em inglês. Ouça, repita e observe a ordem de January a December.", "artie_smiling_holding_chin.png");
+
+    try {
+        missionSettings = await loadMissionSettings(MISSION_NAME, session.username);
+    } catch (error) {
+        console.error("Não foi possível carregar a configuração da missão:", error);
+        missionSettings = {
+            registered: false,
+            missionScore: null,
+            alreadyAttempted: false,
+            completed: false,
+            failed: false
+        };
+    }
+
+    setMissionReward(
+        missionSettings.completed,
+        missionSettings.failed,
+        missionSettings.registered && Number(missionSettings.missionScore) > 0
+    );
+    renderLesson();
+}
+
+function renderLesson() {
+    setMissionProgress("LESSON", 1, 3, 18);
+    setArtie("Listen to each month and repeat it out loud. Os meses são escritos com letra maiúscula em inglês!", "artie_smiling_holding_chin.png");
+
+    const notice = !missionSettings.registered
+        ? '<div class="ej-info-strip ej-warning-strip"><span aria-hidden="true">ℹ️</span><span>Esta missão ainda não foi cadastrada na tabela <strong>missions</strong>. Você pode estudar, mas a conclusão só será registrada depois que “Months of the Year” for adicionada ao banco de dados.</span></div>'
+        : missionSettings.alreadyAttempted
+            ? '<div class="ej-info-strip ej-warning-strip"><span aria-hidden="true">🔁</span><span>Você já tentou ou concluiu esta missão. Pode revisar o conteúdo e jogar novamente, mas a recompensa de duas estrelas só pode ser recebida uma vez.</span></div>'
+            : "";
+
+    const cards = months.map(function(month) {
+        return '<article class="ej-day-card ej-month-card">' +
+            '<span class="ej-month-number">MONTH ' + month.number + '</span>' +
+            '<span class="ej-day-name">' + month.en + '</span>' +
+            '<span class="ej-day-translation">' + month.pt + '</span>' +
+            '<button class="ej-audio-button" type="button" data-say="' + month.en + '" aria-label="Ouvir ' + month.en + '">🔊</button>' +
+        '</article>';
+    }).join("");
+
+    setMissionContent(
+        '<span class="ej-kicker">VOCABULARY • 02</span>' +
+        '<h1 class="ej-screen-title">Months of the Year</h1>' +
+        '<p class="ej-screen-copy">There are twelve months in a year. Em inglês, o nome de cada mês começa com letra maiúscula. Ouça a pronúncia e acompanhe os números de 1 a 12.</p>' +
+        notice +
+        '<div class="ej-days-grid ej-months-grid">' + cards + '</div>' +
+        '<div class="ej-info-strip"><span aria-hidden="true">💡</span><span><strong>Remember:</strong> “month” significa mês e “months of the year” significa meses do ano. January é o primeiro mês; December é o décimo segundo.</span></div>' +
+        '<div class="ej-button-row"><button id="start-exercises" class="ej-primary-button" type="button">I’m ready! <span aria-hidden="true">→</span></button></div>'
+    );
+
+    const audioButtons = Array.from(document.querySelectorAll("[data-say]"));
+    let audioLoading = false;
+    audioButtons.forEach(function(button) {
+        button.addEventListener("click", async function() {
+            if (audioLoading || button.disabled) return;
+            audioLoading = true;
+            audioButtons.forEach(function(audioButton) {
+                audioButton.disabled = true;
+                if (audioButton === button) {
+                    audioButton.classList.add("is-loading");
+                    audioButton.setAttribute("aria-busy", "true");
+                    audioButton.innerHTML = '<i class="fa fa-circle-o-notch fa-spin" aria-hidden="true"></i>';
+                }
+            });
+
+            try {
+                await playGoogleTTS(button.dataset.say);
+            } catch (error) {
+                console.error("Não foi possível reproduzir o áudio:", error);
+            } finally {
+                audioButtons.forEach(function(audioButton) {
+                    audioButton.disabled = false;
+                    if (audioButton === button) {
+                        audioButton.classList.remove("is-loading");
+                        audioButton.removeAttribute("aria-busy");
+                        audioButton.innerHTML = "🔊";
+                    }
+                });
+                audioLoading = false;
+            }
+        });
+    });
+
+    document.getElementById("start-exercises")?.addEventListener("click", function() {
+        exerciseStageIndex = 0;
+        exerciseQuestionIndex = 0;
+        renderExerciseQuestion();
+    });
+}
+
+function renderExerciseQuestion() {
+    const stage = exerciseStages[exerciseStageIndex];
+    const question = stage.questions[exerciseQuestionIndex];
+    const progress = exerciseStageIndex === 0
+        ? 30 + exerciseQuestionIndex * 8
+        : 57 + exerciseQuestionIndex * 8;
+
+    setMissionProgress(stage.title, 2, 3, progress);
+    setArtie(
+        exerciseQuestionIndex === 0
+            ? "Vamos praticar! Leia com atenção e escolha a resposta correta."
+            : "Muito bem! Continue, você está quase chegando ao jogo da memória.",
+        "artie_standing_smiling.png"
+    );
+
+    const options = question.options.map(function(option) {
+        return '<button class="ej-answer-option" type="button" data-exercise-answer="' + option + '">' + option + '</button>';
+    }).join("");
+
+    setMissionContent(
+        '<span class="ej-kicker">' + stage.title + '</span>' +
+        '<h1 class="ej-screen-title">' + (exerciseStageIndex === 0 ? "Let’s practice!" : "Numbers and months!") + '</h1>' +
+        '<p class="ej-screen-copy">' + stage.description + ' Responda às três questões para avançar.</p>' +
+        '<section class="ej-quiz-card">' +
+            '<p class="ej-question-number">QUESTION 0' + (exerciseQuestionIndex + 1) + ' / 03</p>' +
+            '<h2 class="ej-question-title">' + question.prompt + '</h2>' +
+            '<div class="ej-answer-list" id="exercise-answers">' + options + '</div>' +
+            '<p id="exercise-feedback" class="ej-answer-feedback" aria-live="polite"></p>' +
+            '<div class="ej-button-row"><button id="exercise-next" class="ej-primary-button" type="button" hidden disabled>' +
+                (exerciseQuestionIndex === 2
+                    ? (exerciseStageIndex === 0 ? "Next exercise" : "Go to memory game")
+                    : "Continue") +
+                ' <span aria-hidden="true">→</span></button></div>' +
+        '</section>'
+    );
+
+    document.querySelectorAll("[data-exercise-answer]").forEach(function(button) {
+        button.addEventListener("click", function() {
+            const allOptions = Array.from(document.querySelectorAll("[data-exercise-answer]"));
+            if (allOptions.some(function(option) { return option.disabled; })) return;
+
+            allOptions.forEach(function(option) {
+                option.disabled = true;
+                if (option.dataset.exerciseAnswer === question.answer) {
+                    option.classList.add("is-correct");
+                }
+            });
+
+            const correct = button.dataset.exerciseAnswer === question.answer;
+            if (!correct) button.classList.add("is-wrong");
+
+            setArtie(
+                correct ? "Excellent! Você acertou!" : "Quase! Observe a resposta correta e continue.",
+                correct ? "artie_smiling_happy_clenched_fists.png" : "artie_sad.png"
+            );
+
+            const feedback = document.getElementById("exercise-feedback");
+            if (feedback) {
+                feedback.textContent = (correct ? "Correct! " : "Not quite. ") + question.explanation;
+            }
+
+            const next = document.getElementById("exercise-next");
+            if (next) {
+                next.hidden = false;
+                next.disabled = false;
+            }
+        });
+    });
+
+    document.getElementById("exercise-next")?.addEventListener("click", function() {
+        if (exerciseQuestionIndex < stage.questions.length - 1) {
+            exerciseQuestionIndex += 1;
+            renderExerciseQuestion();
+            return;
+        }
+
+        if (exerciseStageIndex === 0) {
+            exerciseStageIndex = 1;
+            exerciseQuestionIndex = 0;
+            renderExerciseQuestion();
+            return;
+        }
+
+        renderMemoryIntro();
+    });
+}
+
+function renderMemoryIntro() {
+    setMissionProgress("GAME", 3, 3, 82);
+    setArtie("The final challenge! Encontre os doze pares: cada número precisa combinar com o mês correspondente.", "artie_smiling_pointing_right.png");
+
+    const scoreTarget = Number(missionSettings.missionScore) || REQUIRED_SCORE;
+    const startDisabled = !missionSettings.registered || scoreTarget <= 0;
+
+    setMissionContent(
+        '<span class="ej-kicker">FINAL CHALLENGE • MEMORY GAME</span>' +
+        '<h1 class="ej-screen-title">Months Memory Match</h1>' +
+        '<p class="ej-screen-copy">O tabuleiro tem <strong>24 cartas</strong>: 12 mostram os números de 1 a 12 e 12 mostram os meses em inglês. Vire duas cartas por vez. Para formar um par, o número e o mês precisam corresponder.</p>' +
+        '<div class="ej-memory-intro">' +
+            '<div class="ej-memory-rule"><strong>24</strong><span>CARDS</span></div>' +
+            '<div class="ej-memory-rule"><strong>12</strong><span>PAIRS</span></div>' +
+            '<div class="ej-memory-rule"><strong>+10</strong><span>POINTS / PAIR</span></div>' +
+        '</div>' +
+        '<div class="ej-info-strip"><span aria-hidden="true">🎯</span><span>Você precisa encontrar todos os 12 pares. Cada par correto vale 10 pontos: o resultado final será <strong>120 pontos</strong>, acima da meta de <strong>' + scoreTarget + '</strong>.</span></div>' +
+        (startDisabled
+            ? '<div class="ej-info-strip ej-warning-strip"><span aria-hidden="true">ℹ️</span><span>A missão não está cadastrada corretamente no banco de dados. O jogo ficará indisponível até que sua meta seja configurada.</span></div>'
+            : '') +
+        '<div class="ej-button-row"><button id="start-memory-game" class="ej-primary-button" type="button" ' + (startDisabled ? "disabled" : "") + '>Start memory game <span aria-hidden="true">→</span></button></div>'
+    );
+
+    document.getElementById("start-memory-game")?.addEventListener("click", renderMemoryGame);
+}
+
+function shuffleArray(items) {
+    const shuffled = items.slice();
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+        const randomIndex = Math.floor(Math.random() * (index + 1));
+        const temporary = shuffled[index];
+        shuffled[index] = shuffled[randomIndex];
+        shuffled[randomIndex] = temporary;
+    }
+    return shuffled;
+}
+
+function renderMemoryGame() {
+    if (mismatchTimer) window.clearTimeout(mismatchTimer);
+    if (scoreTimer) window.clearTimeout(scoreTimer);
+
+    firstCard = null;
+    secondCard = null;
+    matchedPairs = 0;
+    memoryScore = 0;
+    memoryMoves = 0;
+    memoryLocked = false;
+    memoryFinished = false;
+
+    const deck = [];
+    months.forEach(function(month) {
+        deck.push({
+            id: "number-" + month.number,
+            pairId: month.number,
+            kind: "number",
+            value: String(month.number),
+            month: month.en
+        });
+        deck.push({
+            id: "month-" + month.number,
+            pairId: month.number,
+            kind: "month",
+            value: month.en,
+            month: month.en
+        });
+    });
+    memoryDeck = shuffleArray(deck);
+
+    setMissionProgress("GAME", 3, 3, 85);
+    setArtie("Observe as cartas com atenção. Um número só combina com o mês que ocupa a mesma posição no calendário!", "artie_smiling_holding_chin.png");
+
+    const cards = memoryDeck.map(function(card) {
+        return '<button class="ej-memory-card" type="button" data-card-id="' + card.id + '" aria-label="Carta fechada">' +
+            '<span class="ej-memory-card-back" aria-hidden="true">?</span>' +
+        '</button>';
+    }).join("");
+
+    setMissionContent(
+        '<span class="ej-kicker">MEMORY GAME • 24 CARDS</span>' +
+        '<h1 class="ej-screen-title">Find the matching pairs!</h1>' +
+        '<p class="ej-screen-copy">Combine cada número com o mês correto. As cartas correspondentes permanecerão abertas.</p>' +
+        '<div class="ej-memory-hud">' +
+            '<div class="ej-memory-stat"><span>Matches</span><strong id="memory-matches">0 / 12</strong></div>' +
+            '<div class="ej-memory-stat"><span>Score</span><strong id="memory-score">0 / ' + REQUIRED_SCORE + '</strong></div>' +
+            '<div class="ej-memory-stat"><span>Moves</span><strong id="memory-moves">0</strong></div>' +
+        '</div>' +
+        '<p class="ej-memory-status" id="memory-status" role="status" aria-live="polite">Vire duas cartas para começar.</p>' +
+        '<div class="ej-memory-board" id="memory-board">' + cards + '</div>' +
+        '<div class="ej-memory-legend"><span><i></i> Par encontrado</span><span><i></i> Cartas ainda disponíveis</span></div>' +
+        '<div class="ej-memory-finished" id="memory-finished" hidden>All pairs found! Excelente trabalho!</div>'
+    );
+
+    document.querySelectorAll("[data-card-id]").forEach(function(button) {
+        button.addEventListener("click", function() {
+            onMemoryCardClick(button);
+        });
+    });
+    updateMemoryHud();
+}
+
+function getCardById(id) {
+    return memoryDeck.find(function(card) { return card.id === id; });
+}
+
+function revealCard(button, card) {
+    button.classList.add("is-flipped", card.kind === "number" ? "is-number" : "is-month");
+    button.setAttribute("aria-label", card.kind === "number" ? "Number " + card.value : card.value);
+    button.innerHTML = '<span class="ej-memory-card-front">' + card.value + '</span>';
+}
+
+function concealCard(button) {
+    button.classList.remove("is-flipped", "is-number", "is-month");
+    button.setAttribute("aria-label", "Carta fechada");
+    button.innerHTML = '<span class="ej-memory-card-back" aria-hidden="true">?</span>';
+}
+
+function onMemoryCardClick(button) {
+    if (memoryLocked || memoryFinished || button.disabled || button.classList.contains("is-flipped")) return;
+
+    const card = getCardById(button.dataset.cardId);
+    if (!card) return;
+
+    revealCard(button, card);
+
+    if (!firstCard) {
+        firstCard = { button: button, card: card };
+        const status = document.getElementById("memory-status");
+        if (status) status.textContent = "Agora escolha a segunda carta.";
+        return;
+    }
+
+    secondCard = { button: button, card: card };
+    memoryMoves += 1;
+
+    const isMatch = firstCard.card.pairId === secondCard.card.pairId &&
+        firstCard.card.kind !== secondCard.card.kind;
+
+    if (isMatch) {
+        firstCard.button.classList.add("is-matched");
+        secondCard.button.classList.add("is-matched");
+        firstCard.button.disabled = true;
+        secondCard.button.disabled = true;
+
+        matchedPairs += 1;
+        memoryScore += POINTS_PER_MATCH;
+        updateMemoryHud();
+
+        const status = document.getElementById("memory-status");
+        if (status) status.textContent = "Match! " + firstCard.card.month + " — " + firstCard.card.pairId + ".";
+        setArtie("Match! " + firstCard.card.month + " corresponde ao número " + firstCard.card.pairId + ".", "artie_smiling_happy_clenched_fists.png");
+
+        firstCard = null;
+        secondCard = null;
+
+        if (matchedPairs === months.length) {
+            memoryFinished = true;
+            const statusDone = document.getElementById("memory-status");
+            if (statusDone) statusDone.textContent = "You found all 12 pairs!";
+            const finished = document.getElementById("memory-finished");
+            if (finished) finished.hidden = false;
+            scoreTimer = window.setTimeout(finishMemoryGame, 650);
+        }
+        return;
+    }
+
+    memoryLocked = true;
+    const mismatchStatus = document.getElementById("memory-status");
+    if (mismatchStatus) mismatchStatus.textContent = "Not a match. Observe as cartas e tente novamente!";
+    mismatchTimer = window.setTimeout(function() {
+        if (firstCard) concealCard(firstCard.button);
+        if (secondCard) concealCard(secondCard.button);
+        firstCard = null;
+        secondCard = null;
+        memoryLocked = false;
+        const status = document.getElementById("memory-status");
+        if (status) status.textContent = "Tente outro par.";
+    }, 850);
+
+    updateMemoryHud();
+}
+
+function updateMemoryHud() {
+    const matchElement = document.getElementById("memory-matches");
+    const scoreElement = document.getElementById("memory-score");
+    const movesElement = document.getElementById("memory-moves");
+
+    if (matchElement) matchElement.textContent = matchedPairs + " / 12";
+    if (scoreElement) scoreElement.textContent = memoryScore + " / " + REQUIRED_SCORE;
+    if (movesElement) movesElement.textContent = String(memoryMoves);
+}
+
+async function finishMemoryGame() {
+    if (memoryScore < REQUIRED_SCORE || matchedPairs !== months.length) return;
+
+    setMissionProgress("COMPLETED", 3, 3, 100);
+    setArtie("You did it! Você encontrou os doze pares e concluiu a missão. Parabéns!", "artie_smiling_happy_clenched_fists.png");
+
+    await completeMission();
+}
+
+async function completeMission() {
+    let result = null;
+    let error = null;
+
+    try {
+        result = await recordMissionResult(MISSION_NAME, studentSession.username, "done");
+    } catch (caughtError) {
+        error = caughtError;
+        console.error("Erro ao registrar a conclusão da missão:", caughtError);
+    }
+
+    if (result && result.recorded) {
+        missionSettings.alreadyAttempted = true;
+        missionSettings.completed = true;
+        missionSettings.failed = false;
+        setMissionReward(true, false);
+    }
+
+    if (result && result.recorded) {
+        setMissionContent(
+            '<span class="ej-kicker">MISSION COMPLETED</span>' +
+            '<h1 class="ej-screen-title">Congratulations! 🎉</h1>' +
+            '<p class="ej-screen-copy">Você encontrou todos os pares, alcançou ' + memoryScore + ' pontos e recebeu <strong>+2 estrelas</strong> na sua conta!</p>' +
+            '<div class="ej-score-summary">' +
+                '<div class="ej-summary-item"><strong>' + matchedPairs + ' / 12</strong><span>Matches</span></div>' +
+                '<div class="ej-summary-item"><strong>' + memoryScore + '</strong><span>Score</span></div>' +
+                '<div class="ej-summary-item"><strong>' + memoryMoves + '</strong><span>Moves</span></div>' +
+            '</div>'
+        );
+        window.setTimeout(function() {
+            window.parent.postMessage({
+                type: "ENGLISHJOURNEY_MISSION_COMPLETED",
+                missionName: MISSION_NAME
+            }, window.location.origin);
+        }, 1600);
+        return;
+    }
+
+    let message = "Não foi possível registrar o resultado. Tente novamente.";
+    if (error) {
+        message = error.message || message;
+    } else if (result && result.reason === "already-attempted") {
+        message = "Você já tentou ou concluiu esta missão. A recompensa de duas estrelas só pode ser recebida uma vez.";
+    } else if (result && result.reason === "user-ambiguous") {
+        message = "Encontramos mais de um cadastro com este usuário. Peça ao professor para corrigir o cadastro.";
+    } else if (result && result.reason === "mission-not-registered") {
+        message = "Esta missão ainda não foi cadastrada no banco de dados. A conclusão não foi registrada.";
+    } else if (result && result.reason === "score-not-configured") {
+        message = "A meta de pontuação da missão não está configurada corretamente.";
+    } else if (result && result.recorded === false) {
+        message = "Não foi possível registrar a conclusão (" + (result.reason || "erro desconhecido") + ").";
+    }
+
+    showMissionDialog({
+        title: "You found all pairs!",
+        message: message + " Você pode revisar o conteúdo.",
+        buttonText: "Review",
+        tone: "warning",
+        onAction: renderLesson
+    });
+}
+
+mountMissionLayout({ missionNumber: MISSION_NUMBER });
+
+const cachedSession = getCachedMissionSession();
+if (cachedSession) {
+    startMission(cachedSession);
+} else {
+    renderLoginScreen();
+}
+    </script>
+</body>
+</html>
