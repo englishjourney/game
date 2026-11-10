@@ -222,6 +222,7 @@ import {
     showMissionDialog
 } from "./components/layout.js";
 import { playGoogleTTS } from "./components/tts.js";
+import { playAnswerSound } from "./components/feedback.js";
 
 const MISSION_NAME = "Months of the Year";
 const MISSION_NUMBER = "02";
@@ -481,6 +482,7 @@ function renderExerciseQuestion() {
             });
 
             const correct = button.dataset.exerciseAnswer === question.answer;
+            playAnswerSound(correct);
             if (!correct) button.classList.add("is-wrong");
 
             answeredQuestions = Math.min(answeredQuestions + 1, TOTAL_QUIZ_QUESTIONS);
@@ -662,6 +664,7 @@ function onMemoryCardClick(button) {
         firstCard.card.kind !== secondCard.card.kind;
 
     if (isMatch) {
+        playAnswerSound(true);
         firstCard.button.classList.add("is-matched");
         secondCard.button.classList.add("is-matched");
         firstCard.button.disabled = true;
@@ -689,6 +692,7 @@ function onMemoryCardClick(button) {
         return;
     }
 
+    playAnswerSound(false);
     memoryLocked = true;
     const mismatchStatus = document.getElementById("memory-status");
     if (mismatchStatus) mismatchStatus.textContent = "Not a match. Observe as cartas e tente novamente!";
