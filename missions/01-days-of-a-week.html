@@ -189,14 +189,14 @@ function renderLesson() {
         ? `
             <div class="ej-info-strip ej-warning-strip">
                 <span aria-hidden="true">ℹ️</span>
-                <span>Esta missão ainda não foi cadastrada na tabela <strong>missions</strong>. Você pode testar a aula, mas a conclusão e a estrela só serão registradas depois que a linha “Days of a Week” for adicionada.</span>
+                <span>Esta missão ainda não foi cadastrada na tabela <strong>missions</strong>. Você pode testar a aula, mas a conclusão e as 2 estrelas só serão registradas depois que a linha “Days of a Week” for adicionada.</span>
             </div>
         `
         : missionSettings.alreadyAttempted
             ? `
                 <div class="ej-info-strip ej-warning-strip">
                     <span aria-hidden="true">🔁</span>
-                    <span>Você já tentou ou concluiu esta missão. Pode revisar o conteúdo, mas a recompensa de uma estrela só pode ser recebida uma vez.</span>
+                    <span>Você já tentou ou concluiu esta missão. Pode revisar o conteúdo, mas a recompensa de duas estrelas só pode ser recebida uma vez.</span>
                 </div>
             `
             : "";
@@ -387,19 +387,19 @@ async function completeGame(passed) {
  if(error) {
   message="Não foi possível registrar o resultado: "+error.message;
  } else if(result?.reason==="already-attempted") {
-  message="Esta missão já foi tentada. A recompensa de uma estrela só pode ser recebida uma vez.";
+  message="Esta missão já foi tentada. A recompensa de duas estrelas só pode ser recebida uma vez.";
  } else if(result?.reason==="user-ambiguous") {
   message="Encontramos mais de um cadastro com este usuário. Peça ao professor para corrigir o cadastro.";
  } else if(result?.reason==="mission-not-registered") {
   message="Esta missão ainda não foi cadastrada no banco de dados. A conclusão não foi registrada.";
  } else if(passed&&result?.recorded) {
-  message="Você alcançou "+raceScore+" pontos e recebeu +1 estrela na sua conta.";
+  message="Você alcançou "+raceScore+" pontos e recebeu +2 estrelas na sua conta.";
  } else {
   message="Tentativa registrada, mas a meta não foi concluída. Nenhuma estrela foi adicionada.";
  }
 
  if(passed&&result?.recorded){
-  setMissionContent('<span class="ej-kicker">MISSION COMPLETED</span><h1 class="ej-screen-title">Congratulations! 🎉</h1><p class="ej-screen-copy">Você alcançou a meta e recebeu +1 estrela na sua conta! A próxima missão será carregada agora.</p>');
+  setMissionContent('<span class="ej-kicker">MISSION COMPLETED</span><h1 class="ej-screen-title">Congratulations! 🎉</h1><p class="ej-screen-copy">Você alcançou a meta e recebeu +2 estrelas na sua conta! A próxima missão será carregada agora.</p>');
   window.setTimeout(()=>window.parent.postMessage({type:"ENGLISHJOURNEY_MISSION_COMPLETED",missionName:MISSION_NAME},window.location.origin),1600);
  }else{
   showMissionDialog({title:passed?"Mission completed!":"Keep practicing!",message,buttonText:"Review",tone:"warning",onAction:renderLesson});
