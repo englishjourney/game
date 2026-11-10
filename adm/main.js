@@ -155,8 +155,101 @@ async function setupDashboard() {
         });
     }
 
-    // Garante o carregamento dos horários do Supabase no Dashboard
-    await loadSchedule();
+    // Carrega em paralelo as aulas do dia e os horários semanais.
+    await Promise.all([loadTodayPlans(), loadSchedule()]);
+}
+
+function escapeDashboardHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, character => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    })[character]);
+}
+
+async function loadTodayPlans() {
+    const container = document.getElementById('today-plans-container');
+    if (!container) return;
+
+    const today = new Date();
+    const pad = value => String(value).padStart(2, '0');
+    const todayKey = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
+    const dateLabel = today.toLocaleDateString('pt-BR', {
+        weekday: 'long',
+        day: '2-digit',
+        month: 'long'
+    });
+
+    container.innerHTML = '<div class="today-plans-panel"><div class="today-plans-loading">Carregando aulas de hoje...</div></div>';
+
+    try {
+        const { data, error } = await supabase
+            .from('planner')
+            .select('date, time, serie, team, special, tag')
+            .is('completed_at', null);
+
+        if (error) throw error;
+
+        const plansForToday = (data || []).filter(item => {
+            const rawDate = String(item.date || '').trim();
+            const parts = rawDate.split(/[/-]/);
+            if (parts.length !== 3) return false;
+
+            const [year, month, day] = parts[0].length === 4
+                ? parts
+                : [parts[2], parts[1], parts[0]];
+
+            const parsedDate = new Date(Number(year), Number(month) - 1, Number(day));
+            if (
+                Number.isNaN(parsedDate.getTime()) ||
+                parsedDate.getFullYear() !== Number(year) ||
+                parsedDate.getMonth() !== Number(month) - 1 ||
+                parsedDate.getDate() !== Number(day)
+            ) return false;
+
+            return year + '-' + pad(month) + '-' + pad(day) === todayKey;
+        }).sort((a, b) => String(a.time || '99:99').localeCompare(String(b.time || '99:99')));
+
+        const plansHtml = plansForToday.length
+            ? plansForToday.map(item => {
+                const turma = item.serie && item.team
+                    ? 'Turma ' + item.serie + item.team
+                    : (item.serie ? 'Série ' + item.serie : (item.team ? 'Turma ' + item.team : 'Sem turma'));
+                const specialLabels = {
+                    1: 'Aula especial',
+                    2: 'Folga',
+                    3: 'Prova',
+                    4: 'Aula adaptada'
+                };
+                const description = specialLabels[Number(item.special)] || item.tag || 'Aula planejada';
+                return '<article class="today-plan-item">' +
+                    '<span class="today-plan-time">' + escapeDashboardHtml(item.time || '—') + '</span>' +
+                    '<div class="today-plan-details">' +
+                        '<strong>' + escapeDashboardHtml(turma) + '</strong>' +
+                        '<span>' + escapeDashboardHtml(description) + '</span>' +
+                    '</div>' +
+                '</article>';
+            }).join('')
+            : '<p class="today-plans-empty">Sem aulas para hoje</p>';
+
+        container.innerHTML =
+            '<section class="today-plans-panel">' +
+                '<div class="today-plans-header">' +
+                    '<h3><i class="fa-regular fa-calendar-check" aria-hidden="true"></i> Aulas planejadas para hoje</h3>' +
+                    '<span>' + escapeDashboardHtml(dateLabel) + '</span>' +
+                '</div>' +
+                '<div class="today-plans-list">' + plansHtml + '</div>' +
+            '</section>';
+    } catch (error) {
+        console.error('Erro ao carregar as aulas de hoje:', error);
+        container.innerHTML =
+            '<section class="today-plans-panel">' +
+                '<div class="today-plans-header"><h3><i class="fa-regular fa-calendar-check" aria-hidden="true"></i> Aulas planejadas para hoje</h3></div>' +
+                '<p class="today-plans-empty">Não foi possível carregar as aulas de hoje.</p>' +
+            '</section>';
+    }
 }
 
 async function loadSchedule() {
