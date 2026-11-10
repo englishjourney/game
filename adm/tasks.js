@@ -1,9 +1,6 @@
 import { supabase } from '../supabaseClient.js';
 
 let taskRecords = new Map();
-const notifiedTaskIds = new Set();
-let notificationAudioContext = null;
-let pendingNotificationSound = false;
 
 export function initTasks() {
     const form = document.getElementById('task-form');
@@ -33,9 +30,9 @@ export function initTasks() {
             : await supabase.from('tasks').insert([taskData]);
         if (result.error) { alert('Erro ao salvar o trabalho: ' + result.error.message); return; }
 
-        if (id) notifiedTaskIds.delete(String(id));
         document.getElementById('task-modal').close();
         await loadTasks();
+        await window.refreshAdminNotifications?.();
     });
 
     list.addEventListener('click', event => {
@@ -45,7 +42,6 @@ export function initTasks() {
         if (deleteButton) window.deleteTask(deleteButton.dataset.taskDelete);
     });
 
-    document.addEventListener('pointerdown', primeNotificationAudio, { once: true });
     // Carrega e verifica os prazos uma vez ao abrir a seção.
     loadTasks();
 }
@@ -110,85 +106,6 @@ async function loadTasks() {
     checkTaskDeadlines(data);
 }
 
-async function checkTaskDeadlines(existingTasks = null) {
-    const result = existingTasks
-        ? { data: existingTasks, error: null }
-        : await supabase.from('tasks').select('id, title, serie, team, deadline');
-    if (result.error || !result.data) return;
-    const newlyExpired = result.data.filter(task =>
-        new Date(task.deadline).getTime() <= Date.now() && !notifiedTaskIds.has(String(task.id))
-    );
-    newlyExpired.forEach(task => {
-        notifiedTaskIds.add(String(task.id));
-        showTaskToast(task);
-    });
-    if (newlyExpired.length) playTaskNotificationSound();
-}
-
-function showTaskToast(task) {
-    const container = document.getElementById('reminder-toast-container');
-    if (!container) return;
-    const toast = document.createElement('div');
-    toast.className = 'reminder-toast task-toast';
-    const heading = document.createElement('strong');
-    heading.textContent = '⏰ Prazo de trabalho expirado:';
-    const message = document.createElement('div');
-    message.style.marginTop = '4px';
-    const group = [task.serie ? 'Série ' + task.serie : '', task.team ? 'Turma ' + task.team : ''].filter(Boolean).join(' · ');
-    message.textContent = task.title + (group ? ' — ' + group : '');
-    toast.append(heading, message);
-    container.appendChild(toast);
-    updateTaskToastStack(container);
-    setTimeout(() => { toast.remove(); updateTaskToastStack(container); }, 7000);
-}
-
-function updateTaskToastStack(container) {
-    const count = container.children.length;
-    container.dataset.notificationCount = String(count);
-    container.classList.toggle('has-stack', count > 2);
-}
-
-function primeNotificationAudio() {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
-    try {
-        if (!notificationAudioContext) notificationAudioContext = new AudioContextClass();
-        if (notificationAudioContext.state === 'suspended') {
-            notificationAudioContext.resume().then(() => {
-                if (pendingNotificationSound) {
-                    pendingNotificationSound = false;
-                    playTaskNotificationSound();
-                }
-            }).catch(() => {});
-        }
-    } catch (error) { console.warn('Áudio de notificação indisponível:', error); }
-}
-
-async function playTaskNotificationSound() {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
-    try {
-        if (!notificationAudioContext) notificationAudioContext = new AudioContextClass();
-        if (notificationAudioContext.state === 'suspended') await notificationAudioContext.resume();
-        const context = notificationAudioContext;
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(740, context.currentTime);
-        oscillator.frequency.setValueAtTime(940, context.currentTime + 0.16);
-        gain.gain.setValueAtTime(0.0001, context.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.12, context.currentTime + 0.025);
-        gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.42);
-        oscillator.connect(gain);
-        gain.connect(context.destination);
-        oscillator.start();
-        oscillator.stop(context.currentTime + 0.44);
-    } catch (error) {
-        pendingNotificationSound = true;
-        console.info('O navegador bloqueou o áudio até uma interação do usuário.');
-    }
-}
-
 window.editTask = id => {
     const task = taskRecords.get(String(id));
     if (task) openTaskForm(task);
@@ -200,6 +117,6 @@ window.deleteTask = async id => {
     if (!confirm('Excluir o trabalho "' + task.title + '"? Esta ação não pode ser desfeita.')) return;
     const { error } = await supabase.from('tasks').delete().eq('id', id);
     if (error) { alert('Erro ao excluir o trabalho: ' + error.message); return; }
-    notifiedTaskIds.delete(String(id));
     await loadTasks();
+    await window.refreshAdminNotifications?.();
 };
