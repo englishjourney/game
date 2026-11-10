@@ -83,6 +83,7 @@ import {
     showMissionDialog
 } from "./components/layout.js";
 import { playGoogleTTS } from "./components/tts.js";
+import { playAnswerSound } from "./components/feedback.js";
 
 const MISSION_NAME = "Days of a Week";
 
@@ -287,7 +288,7 @@ function renderExerciseQuestion(){
  document.querySelectorAll("[data-exercise-answer]").forEach(btn=>btn.addEventListener("click",()=>{
   const opts=[...document.querySelectorAll("[data-exercise-answer]")];if(opts.some(x=>x.disabled))return;
   opts.forEach(x=>{x.disabled=true;if(x.dataset.exerciseAnswer===q.answer)x.classList.add("is-correct")});
-  const ok=btn.dataset.exerciseAnswer===q.answer;if(ok){exerciseCorrect++;setArtie("Excellent! Você acertou!","artie_smiling_happy_clenched_fists.png")}else{btn.classList.add("is-wrong");setArtie("Quase! Observe a resposta correta e continue.","artie_sad.png")}
+  const ok=btn.dataset.exerciseAnswer===q.answer;playAnswerSound(ok);if(ok){exerciseCorrect++;setArtie("Excellent! Você acertou!","artie_smiling_happy_clenched_fists.png")}else{btn.classList.add("is-wrong");setArtie("Quase! Observe a resposta correta e continue.","artie_sad.png")}
   document.getElementById("exercise-feedback").textContent=(ok?"Correct! ":"Not quite. ")+q.explanation;
   const next=document.getElementById("exercise-next");next.hidden=false;next.disabled=false;
  }));
@@ -355,8 +356,8 @@ function updateRace(ts){
   w.el.style.top=w.y+"%";w.el.style.left=w.x+"%";
   w.el.style.setProperty("--word-scale",String(.32+depth*.68));
   if(!w.checked&&w.y>=68){w.checked=true;if(Math.abs(w.x-raceX)<14){
-   if(w.day.en===raceTarget.en){raceScore++;updateRaceHud();const f=document.getElementById("race-feedback");if(f){f.textContent="+1";f.classList.remove("show");void f.offsetWidth;f.classList.add("show")}raceTarget=pickDay();updateRaceHud();if(raceScore>=Number(missionSettings.missionScore)){finishRace();}}
-   else{const f=document.getElementById("race-feedback");if(f){f.textContent="Try again!";f.classList.remove("show");void f.offsetWidth;f.classList.add("show")}}
+   if(w.day.en===raceTarget.en){playAnswerSound(true);raceScore++;updateRaceHud();const f=document.getElementById("race-feedback");if(f){f.textContent="+1";f.classList.remove("show");void f.offsetWidth;f.classList.add("show")}raceTarget=pickDay();updateRaceHud();if(raceScore>=Number(missionSettings.missionScore)){finishRace();}}
+   else{playAnswerSound(false);const f=document.getElementById("race-feedback");if(f){f.textContent="Try again!";f.classList.remove("show");void f.offsetWidth;f.classList.add("show")}}
   }}
   if(w.y>112){w.el.remove();return false}return true;
  });
