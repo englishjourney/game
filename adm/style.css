@@ -834,3 +834,67 @@ input, select, textarea, button { max-width: 100%; }
         max-width: min(225px, calc(100vw - 88px));
     }
 }
+
+
+/* Filtros por turma na visualização de trabalhos */
+.tasks-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px;
+}
+.tasks-filter-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font: inherit;
+    font-size: .86rem;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+.tasks-filter-button:hover {
+    border-color: var(--primary);
+    color: var(--text-main);
+}
+.tasks-filter-button.active {
+    border-color: var(--primary);
+    background: rgba(56, 189, 248, .13);
+    color: var(--primary);
+    font-weight: 700;
+}
+.tasks-filter-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 10px;
+    background: rgba(148, 163, 184, .15);
+    color: inherit;
+    font-size: .72rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+.tasks-filter-button.active .tasks-filter-count {
+    background: rgba(56, 189, 248, .2);
+}
+@media (max-width: 760px) {
+    .tasks-filters {
+        gap: 6px;
+        margin-bottom: 14px;
+    }
+    .tasks-filter-button {
+        min-height: 36px;
+        padding: 8px 10px;
+        font-size: .82rem;
+    }
+}
