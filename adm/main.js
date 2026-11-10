@@ -187,7 +187,7 @@ async function loadTodayPlans() {
     try {
         const { data, error } = await supabase
             .from('planner')
-            .select('date, time, serie, team, special, tag')
+            .select('date, time, serie, team, activities, special, tag')
             .is('completed_at', null);
 
         if (error) throw error;
@@ -223,12 +223,16 @@ async function loadTodayPlans() {
                     3: 'Prova',
                     4: 'Aula adaptada'
                 };
-                const description = specialLabels[Number(item.special)] || item.tag || 'Aula planejada';
+                const specialLabel = specialLabels[Number(item.special)] || item.tag || '';
+                const activities = item.activities
+                    ? escapeDashboardHtml(item.activities).replace(/\\r?\\n/g, '<br>')
+                    : 'Atividades não informadas';
                 return '<article class="today-plan-item">' +
                     '<span class="today-plan-time">' + escapeDashboardHtml(item.time || '—') + '</span>' +
                     '<div class="today-plan-details">' +
                         '<strong>' + escapeDashboardHtml(turma) + '</strong>' +
-                        '<span>' + escapeDashboardHtml(description) + '</span>' +
+                        (specialLabel ? '<span class="today-plan-type">' + escapeDashboardHtml(specialLabel) + '</span>' : '') +
+                        '<div class="today-plan-activities"><small>Atividades</small><p>' + activities + '</p></div>' +
                     '</div>' +
                 '</article>';
             }).join('')
@@ -355,92 +359,93 @@ async function loadSchedule() {
         container.innerHTML = '<div style="color: #ef4444; padding: 20px; text-align: center;">Erro ao carregar os horários. Verifique a conexão com o Supabase e a tabela "schedule".</div>';
     }
 }
-// Conjunto para evitar disparar o toast repetidamente na mesma sessão
-const notifiedReminderIds = new Set();
+// Um único aviso discreto junto ao sino; a verificação periódica ocorre a cada 30 minutos.
+let reminderStatusInterval = null;
+let reminderAudioContext = null;
+let pendingReminderSound = false;
+let notificationCheckInProgress = false;
 
 export function initReminders() {
     const btnReminders = document.getElementById('btn-reminders');
     const dropdown = document.getElementById('reminders-dropdown');
     const btnNew = document.getElementById('btn-dropdown-new-reminder');
     const btnSee = document.getElementById('btn-dropdown-see-reminders');
-
     const modalForm = document.getElementById('modal-reminder-form');
-    
     const btnSaveForm = document.getElementById('btn-save-reminder-form');
     const btnCancelForm = document.getElementById('btn-cancel-reminder-form');
 
-    if (!btnReminders) return;
+    if (!btnReminders || !dropdown) return;
 
-    // Toggle Dropdown
-    btnReminders.addEventListener('click', (e) => {
-        e.stopPropagation();
+    btnReminders.addEventListener('click', event => {
+        event.stopPropagation();
         dropdown.classList.toggle('hidden');
     });
 
-    // Fechar dropdown ao clicar fora
-    document.addEventListener('click', (e) => {
-        if (!dropdown.contains(e.target) && e.target !== btnReminders) {
+    document.addEventListener('click', event => {
+        if (!dropdown.contains(event.target) && !btnReminders.contains(event.target)) {
             dropdown.classList.add('hidden');
         }
     });
 
-    // Botão +New no Dropdown
-    btnNew.addEventListener('click', () => {
-        dropdown.classList.add('hidden');
-        openReminderFormModal();
-    });
-
-    // Botão See my reminders no Dropdown (abre a guia do menu)
-    btnSee.addEventListener('click', () => {
-        dropdown.classList.add('hidden');
-        const remindersNavBtn = document.querySelector('[data-target="reminders-section"]');
-        if (remindersNavBtn) remindersNavBtn.click();
-    });
-
-    // Botão para adicionar lembrete dentro da seção de lembretes
-    const btnAddReminderFromSection = document.getElementById('btn-add-reminder-from-section');
-    if (btnAddReminderFromSection) {
-        btnAddReminderFromSection.addEventListener('click', () => {
+    if (btnNew) {
+        btnNew.addEventListener('click', () => {
+            dropdown.classList.add('hidden');
             openReminderFormModal();
         });
     }
 
-    // Salvar Lembrete (Inserção / Edição)
-    btnSaveForm.addEventListener('click', async () => {
-        const id = document.getElementById('reminder-edit-id').value;
-        const remindMeTo = document.getElementById('reminder-text').value.trim();
-        const date = document.getElementById('reminder-date').value;
-        const time = document.getElementById('reminder-time').value;
+    if (btnSee) {
+        btnSee.addEventListener('click', () => {
+            dropdown.classList.add('hidden');
+            const remindersNavBtn = document.querySelector('[data-target="reminders-section"]');
+            if (remindersNavBtn) remindersNavBtn.click();
+        });
+    }
 
-        if (!remindMeTo || !date || !time) {
-            alert('Por favor, preencha todos os campos do lembrete.');
-            return;
-        }
+    const btnAddReminderFromSection = document.getElementById('btn-add-reminder-from-section');
+    if (btnAddReminderFromSection) btnAddReminderFromSection.addEventListener('click', () => openReminderFormModal());
 
-        try {
-            if (id) {
-                // Atualizar / Adiar
-                const { error } = await supabase.from('reminders').update({ remindMeTo, date, time }).eq('id', id);
-                if (error) throw error;
-            } else {
-                // Criar Novo
-                const { error } = await supabase.from('reminders').insert([{ remindMeTo, date, time }]);
-                if (error) throw error;
+    if (btnSaveForm) {
+        btnSaveForm.addEventListener('click', async () => {
+            const id = document.getElementById('reminder-edit-id').value;
+            const remindMeTo = document.getElementById('reminder-text').value.trim();
+            const date = document.getElementById('reminder-date').value;
+            const time = document.getElementById('reminder-time').value;
+
+            if (!remindMeTo || !date || !time) {
+                alert('Por favor, preencha todos os campos do lembrete.');
+                return;
             }
 
-            modalForm.classList.add('hidden');
-            await checkRemindersStatus();
-            await loadRemindersSection();
-        } catch (err) {
-            console.error('Erro ao salvar lembrete:', err);
-            alert('Erro ao salvar o lembrete.');
-        }
-    });
+            try {
+                if (id) {
+                    const { error } = await supabase.from('reminders').update({ remindMeTo, date, time }).eq('id', id);
+                    if (error) throw error;
+                } else {
+                    const { error } = await supabase.from('reminders').insert([{ remindMeTo, date, time }]);
+                    if (error) throw error;
+                }
+                modalForm.classList.add('hidden');
+                await checkRemindersStatus();
+                await loadRemindersSection();
+            } catch (err) {
+                console.error('Erro ao salvar lembrete:', err);
+                alert('Erro ao salvar o lembrete.');
+            }
+        });
+    }
 
-    btnCancelForm.addEventListener('click', () => modalForm.classList.add('hidden'));
+    if (btnCancelForm) btnCancelForm.addEventListener('click', () => modalForm.classList.add('hidden'));
 
-    // Verifica os lembretes uma vez ao abrir o painel; sem polling em segundo plano.
+    // O navegador exige interação prévia para liberar áudio em algumas situações.
+    document.addEventListener('pointerdown', primeReminderAudio, { once: true });
     checkRemindersStatus();
+
+    if (!reminderStatusInterval) {
+        reminderStatusInterval = setInterval(() => {
+            checkRemindersStatus({ playSound: true });
+        }, 30 * 60 * 1000);
+    }
 }
 
 // Abrir modal de formulário
@@ -510,66 +515,194 @@ window.editReminder = function(id, text, date, time) {
     openReminderFormModal({ id, remindMeTo: decodeURIComponent(text), date, time });
 };
 
-// Checa expiração, dispara os toasts e gerencia a bolinha indicadora
-async function checkRemindersStatus() {
+// Exclui um lembrete e atualiza imediatamente o indicador e o aviso discreto.
+window.deleteReminder = async function(id) {
+    if (!confirm('Deseja realmente excluir este lembrete?')) return;
     try {
-        const { data: reminders, error } = await supabase.from('reminders').select('*');
-        if (error || !reminders) return;
-
-        const now = new Date();
-        let hasExpired = false;
-
-        reminders.forEach(r => {
-            const reminderDate = new Date(`${r.date}T${r.time}`);
-
-            // Se o horário do lembrete já passou ou é o momento exato
-            if (reminderDate <= now) {
-                hasExpired = true;
-
-                // Dispara o toast no canto inferior esquerdo se ainda não foi avisado nesta sessão
-                if (!notifiedReminderIds.has(r.id)) {
-                    notifiedReminderIds.add(r.id);
-                    triggerToastNotification(r.remindMeTo);
-                }
-            }
-        });
-
-        // Alterna a exibição da bolinha verde/vermelha
-        const badge = document.getElementById('reminders-badge');
-        if (badge) {
-            if (hasExpired) {
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
+        const { error } = await supabase.from('reminders').delete().eq('id', id);
+        if (error) throw error;
+        await loadRemindersSection();
+        await checkRemindersStatus();
     } catch (err) {
-        console.error('Erro na checagem de lembretes:', err);
+        console.error('Erro ao excluir:', err);
+    }
+};
+
+window.editReminder = function(id, text, date, time) {
+    openReminderFormModal({ id, remindMeTo: decodeURIComponent(text), date, time });
+};
+
+function parseReminderTimestamp(dateValue, timeValue) {
+    const parts = String(dateValue || '').trim().split(/[/-]/);
+    if (parts.length !== 3) return NaN;
+    const [year, month, day] = parts[0].length === 4 ? parts : [parts[2], parts[1], parts[0]];
+    const [hours, minutes] = String(timeValue || '00:00').split(':');
+    const timestamp = new Date(Number(year), Number(month) - 1, Number(day), Number(hours || 0), Number(minutes || 0));
+    if (Number.isNaN(timestamp.getTime()) || timestamp.getFullYear() !== Number(year) ||
+        timestamp.getMonth() !== Number(month) - 1 || timestamp.getDate() !== Number(day)) return NaN;
+    return timestamp.getTime();
+}
+
+function primeReminderAudio() {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    try {
+        if (!reminderAudioContext) reminderAudioContext = new AudioContextClass();
+        if (reminderAudioContext.state === 'suspended') {
+            reminderAudioContext.resume().then(() => {
+                if (pendingReminderSound) {
+                    pendingReminderSound = false;
+                    playReminderNotificationSound();
+                }
+            }).catch(() => {});
+        } else if (pendingReminderSound) {
+            pendingReminderSound = false;
+            playReminderNotificationSound();
+        }
+    } catch (error) {
+        console.warn('Áudio de notificação indisponível:', error);
     }
 }
 
-// Janela temporária no canto inferior esquerdo (some em 5s)
-function triggerToastNotification(text) {
-    const container = document.getElementById('reminder-toast-container');
-    if (!container) return;
+async function playReminderNotificationSound() {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    try {
+        if (!reminderAudioContext) reminderAudioContext = new AudioContextClass();
+        if (reminderAudioContext.state === 'suspended') await reminderAudioContext.resume();
+        if (reminderAudioContext.state !== 'running') {
+            pendingReminderSound = true;
+            return;
+        }
+        const context = reminderAudioContext;
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(740, context.currentTime);
+        oscillator.frequency.setValueAtTime(940, context.currentTime + 0.16);
+        gain.gain.setValueAtTime(0.0001, context.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.09, context.currentTime + 0.025);
+        gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.42);
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.start();
+        oscillator.stop(context.currentTime + 0.44);
+    } catch (error) {
+        pendingReminderSound = true;
+        console.info('O navegador bloqueou o áudio até uma interação do usuário.');
+    }
+}
 
-    const toast = document.createElement('div');
-    toast.className = 'reminder-toast';
+function renderExpiredNotification(notification) {
+    const bubble = document.getElementById('reminder-chat-bubble');
+    if (!bubble) return;
+    bubble.replaceChildren();
+    if (!notification) {
+        bubble.classList.add('hidden');
+        return;
+    }
+    bubble.classList.remove('hidden');
+
+    const heading = document.createElement('span');
+    heading.className = 'reminder-chat-label';
+    heading.textContent = notification.type === 'task' ? 'Prazo expirado' : 'Lembrete expirado';
+
     const title = document.createElement('strong');
-    title.textContent = '🔔 Lembrete:';
-    const message = document.createElement('div');
-    message.style.marginTop = '4px';
-    message.textContent = text;
-    toast.append(title, message);
-    container.appendChild(toast);
-    updateToastStack(container);
-    setTimeout(() => { toast.remove(); updateToastStack(container); }, 5000);
+    title.className = 'reminder-chat-title';
+    title.textContent = notification.title;
+
+    const meta = document.createElement('small');
+    meta.className = 'reminder-chat-meta';
+    meta.textContent = 'Vencido em ' + new Date(notification.timestamp).toLocaleString('pt-BR', {
+        dateStyle: 'short', timeStyle: 'short'
+    });
+
+    const actions = document.createElement('div');
+    actions.className = 'reminder-chat-actions';
+
+    const snoozeButton = document.createElement('button');
+    snoozeButton.type = 'button';
+    snoozeButton.className = 'reminder-chat-snooze';
+    snoozeButton.textContent = 'Adiar';
+    snoozeButton.addEventListener('click', () => {
+        bubble.classList.add('hidden');
+        if (notification.type === 'task') {
+            if (typeof window.editTask === 'function') window.editTask(String(notification.id));
+        } else {
+            openReminderFormModal({
+                id: notification.id,
+                remindMeTo: notification.title,
+                date: notification.date,
+                time: notification.time
+            });
+        }
+    });
+
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'reminder-chat-delete';
+    deleteButton.textContent = 'Excluir';
+    deleteButton.addEventListener('click', async () => {
+        if (notification.type === 'task') {
+            if (typeof window.deleteTask === 'function') await window.deleteTask(String(notification.id));
+            await checkRemindersStatus();
+        } else {
+            await window.deleteReminder(notification.id);
+        }
+    });
+
+    actions.append(snoozeButton, deleteButton);
+    bubble.append(heading, title, meta, actions);
 }
 
+async function checkRemindersStatus(options = {}) {
+    if (notificationCheckInProgress) return;
+    notificationCheckInProgress = true;
+    try {
+        const now = Date.now();
+        const [remindersResult, tasksResult] = await Promise.all([
+            supabase.from('reminders').select('id, remindMeTo, date, time'),
+            supabase.from('tasks').select('id, title, serie, team, deadline')
+        ]);
+        if (remindersResult.error) throw remindersResult.error;
+        if (tasksResult.error) console.warn('Não foi possível consultar os prazos dos trabalhos:', tasksResult.error);
 
-function updateToastStack(container) {
-    if (!container) return;
-    const count = container.children.length;
-    container.dataset.notificationCount = String(count);
-    container.classList.toggle('has-stack', count > 2);
+        const expired = [];
+        (remindersResult.data || []).forEach(reminder => {
+            const timestamp = parseReminderTimestamp(reminder.date, reminder.time);
+            if (Number.isFinite(timestamp) && timestamp <= now) {
+                expired.push({
+                    type: 'reminder', id: reminder.id,
+                    title: reminder.remindMeTo || 'Lembrete sem título',
+                    date: reminder.date, time: reminder.time, timestamp
+                });
+            }
+        });
+        (tasksResult.data || []).forEach(task => {
+            const timestamp = new Date(task.deadline).getTime();
+            if (Number.isFinite(timestamp) && timestamp <= now) {
+                expired.push({
+                    type: 'task', id: task.id,
+                    title: task.title || 'Trabalho sem título',
+                    timestamp
+                });
+            }
+        });
+
+        // A notificação mais antiga é a que está vencida há mais tempo.
+        expired.sort((a, b) => a.timestamp - b.timestamp);
+        const oldestExpired = expired[0] || null;
+        const badge = document.getElementById('reminders-badge');
+        if (badge) badge.classList.toggle('hidden', !oldestExpired);
+        renderExpiredNotification(oldestExpired);
+
+        if (oldestExpired && options.playSound) await playReminderNotificationSound();
+    } catch (err) {
+        console.error('Erro ao verificar notificações expiradas:', err);
+    } finally {
+        notificationCheckInProgress = false;
+    }
 }
+
+window.refreshAdminNotifications = () => checkRemindersStatus();
+
