@@ -1140,7 +1140,7 @@ window.deletePlanner = async id => {
         : 'este planejamento';
     const dateLabel = item ? ' de ' + (item.date || 'data não informada') : '';
 
-    if (!confirm('Excluir definitivamente o planejamento' + dateLabel + (classLabel ? ' (' + classLabel + ')' : '') + '?\\n\\nEle não será movido para Aulas passadas. Esta ação não pode ser desfeita.')) return;
+    if (!confirm('Excluir definitivamente o planejamento' + dateLabel + (classLabel ? ' (' + classLabel + ')' : '') + '?\n\nEle não será movido para Aulas passadas. Esta ação não pode ser desfeita.')) return;
 
     const { error } = await supabase
         .from('planner')
