@@ -32,6 +32,13 @@ Cada etapa combina um campo de vocabulário com um objetivo gramatical. A trilha
 - As missões devem registrar o resultado usando `recordMissionResult()` de `components/config.js`, que chama a função transacional `record_mission_result` no Supabase.
 - A função transacional impede recompensas duplicadas por reenvio ou chamadas simultâneas. O fluxo atual, porém, ainda usa a sessão legada armazenada no navegador; para impedir também chamadas manuais forjadas, a conclusão deverá ser validada por autenticação Supabase/Edge Function no servidor.
 
+## Padrão de efeitos sonoros de resposta
+
+- Toda questão, quiz ou desafio avaliativo de uma missão deve reproduzir um efeito sonoro ao responder.
+- A função compartilhada fica em `components/feedback.js`: importe `playAnswerSound` e chame `playAnswerSound(true)` quando a resposta for correta e `playAnswerSound(false)` quando for incorreta.
+- A mesma regra vale para jogos dentro das missões, como combinações, memória e desafios de pontuação: reproduza o efeito somente quando o resultado da tentativa for confirmado.
+- O som é sintetizado localmente com Web Audio, sem depender de arquivos externos. A implementação deve ser reutilizada pelas próximas missões, sem criar efeitos isolados em cada página.
+
 ## Organização dos documentos
 
 - Um documento por missão, com numeração no início do nome: `01-days-of-a-week`, `02-months-of-the-year` e assim por diante.
