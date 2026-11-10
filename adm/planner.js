@@ -688,6 +688,7 @@ function renderPlannerCard(p, mode = 'active') {
           '<button class="btn-small btn-postpone" onclick="window.deferPlanner(\'' + p.id + '\')" title="Mover esta aula para a data e hora da próxima aula">Adiar</button>' +
           '<button class="btn-small btn-advance" onclick="window.advancePlanner(\'' + p.id + '\')" title="Trazer esta aula para a próxima data futura da turma">Adiantar</button>' +
           '<button class="btn-small btn-complete" onclick="window.completePlanner(\'' + p.id + '\')" title="Mover esta aula para Aulas passadas">Concluída</button>' +
+          '<button class="btn-small btn-danger" onclick="window.deletePlanner(\'' + p.id + '\')" title="Excluir definitivamente este planejamento">Excluir</button>' +
           '<button class="btn-small btn-merge" onclick="window.openPlannerMerge(\'' + p.id + '\')" title="Unir esta aula a outra aula da mesma turma">Merge</button>';
 
     return '<div class="data-card ' + cardClass + ' ' + (mode === 'completed' ? 'completed-card' : '') + '"' +
@@ -1130,6 +1131,30 @@ window.deleteCompletedPlanner = async id => {
 
     plannerItemsById.delete(String(id));
     await loadCompletedPlanners();
+};
+
+window.deletePlanner = async id => {
+    const item = plannerItemsById.get(String(id));
+    const classLabel = item
+        ? [item.serie ? item.serie + 'ª série' : '', item.team ? 'turma ' + item.team : ''].filter(Boolean).join(' ')
+        : 'este planejamento';
+    const dateLabel = item ? ' de ' + (item.date || 'data não informada') : '';
+
+    if (!confirm('Excluir definitivamente o planejamento' + dateLabel + (classLabel ? ' (' + classLabel + ')' : '') + '?\\n\\nEle não será movido para Aulas passadas. Esta ação não pode ser desfeita.')) return;
+
+    const { error } = await supabase
+        .from('planner')
+        .delete()
+        .eq('id', id)
+        .is('completed_at', null);
+
+    if (error) {
+        alert('Erro ao excluir o planejamento: ' + error.message);
+        return;
+    }
+
+    plannerItemsById.delete(String(id));
+    await loadPlanners();
 };
 
 
