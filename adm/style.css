@@ -750,3 +750,91 @@ input, select, textarea, button { max-width: 100%; }
 }
 
 .merge-change-target { width: 100%; margin-top: 12px; }
+
+
+/* Resumo das aulas planejadas para o dia atual no Dashboard */
+.today-plans-panel {
+    margin: 0 0 18px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-card);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .12);
+}
+.today-plans-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 11px;
+}
+.today-plans-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0;
+    color: var(--primary);
+    font-size: 1rem;
+}
+.today-plans-header h3 i { font-size: .95rem; }
+.today-plans-header > span {
+    color: var(--text-muted);
+    font-size: .8rem;
+    text-transform: capitalize;
+}
+.today-plans-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+    gap: 8px;
+}
+.today-plan-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-dark);
+}
+.today-plan-time {
+    flex: 0 0 auto;
+    min-width: 54px;
+    padding: 5px 7px;
+    border-radius: 6px;
+    background: rgba(56, 189, 248, .13);
+    color: var(--primary);
+    font-size: .82rem;
+    font-weight: 800;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+.today-plan-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+.today-plan-details strong {
+    color: var(--text-main);
+    font-size: .88rem;
+}
+.today-plan-details span {
+    overflow-wrap: anywhere;
+    color: var(--text-muted);
+    font-size: .77rem;
+}
+.today-plans-empty,
+.today-plans-loading {
+    margin: 0;
+    padding: 9px 2px 3px;
+    color: var(--text-muted);
+    font-size: .88rem;
+    text-align: center;
+}
+@media (max-width: 760px) {
+    .today-plans-panel { padding: 12px; margin-bottom: 15px; }
+    .today-plans-header { align-items: flex-start; }
+    .today-plans-list { grid-template-columns: minmax(0, 1fr); }
+}
