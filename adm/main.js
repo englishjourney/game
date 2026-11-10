@@ -629,7 +629,6 @@ function renderExpiredNotification(notification) {
     deleteButton.addEventListener('click', async () => {
         if (notification.type === 'task') {
             if (typeof window.deleteTask === 'function') await window.deleteTask(String(notification.id));
-            await checkRemindersStatus();
         } else {
             await window.deleteReminder(notification.id);
         }
