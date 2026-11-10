@@ -272,8 +272,14 @@ let missionSettings = {
     completed: false,
     failed: false
 };
+const TOTAL_QUIZ_QUESTIONS = exerciseStages.reduce(function(total, stage) {
+    return total + stage.questions.length;
+}, 0);
+const TOTAL_PROGRESS_STEPS = TOTAL_QUIZ_QUESTIONS + 1;
+
 let exerciseStageIndex = 0;
 let exerciseQuestionIndex = 0;
+let answeredQuestions = 0;
 let memoryDeck = [];
 let firstCard = null;
 let secondCard = null;
@@ -285,8 +291,13 @@ let memoryFinished = false;
 let mismatchTimer = null;
 let scoreTimer = null;
 
+function updateQuestionProgress(label) {
+    const percentage = Math.round((answeredQuestions / TOTAL_PROGRESS_STEPS) * 100);
+    setMissionProgress(label, answeredQuestions, TOTAL_PROGRESS_STEPS, percentage);
+}
+
 function renderLoginScreen() {
-    setMissionProgress("LOGIN", 1, 3, 0);
+    setMissionProgress("LOGIN", 0, TOTAL_PROGRESS_STEPS, 0);
     setArtie("Hi! Entre com seu usuário do EnglishJourney. Se você já fez login no site, eu reconheceria sua sessão automaticamente.", "artie_waving_ClosedEyes_smiling.png");
 
     setMissionContent(
@@ -355,7 +366,7 @@ async function startMission(session) {
 }
 
 function renderLesson() {
-    setMissionProgress("LESSON", 1, 3, 18);
+    setMissionProgress("LESSON", 0, TOTAL_PROGRESS_STEPS, 0);
     setArtie("Listen to each month and repeat it out loud. Os meses são escritos com letra maiúscula em inglês!", "artie_smiling_holding_chin.png");
 
     const notice = !missionSettings.registered
@@ -419,6 +430,7 @@ function renderLesson() {
     document.getElementById("start-exercises")?.addEventListener("click", function() {
         exerciseStageIndex = 0;
         exerciseQuestionIndex = 0;
+        answeredQuestions = 0;
         renderExerciseQuestion();
     });
 }
@@ -426,11 +438,8 @@ function renderLesson() {
 function renderExerciseQuestion() {
     const stage = exerciseStages[exerciseStageIndex];
     const question = stage.questions[exerciseQuestionIndex];
-    const progress = exerciseStageIndex === 0
-        ? 30 + exerciseQuestionIndex * 8
-        : 57 + exerciseQuestionIndex * 8;
 
-    setMissionProgress(stage.title, 2, 3, progress);
+    updateQuestionProgress(stage.title);
     setArtie(
         exerciseQuestionIndex === 0
             ? "Vamos praticar! Leia com atenção e escolha a resposta correta."
@@ -474,6 +483,9 @@ function renderExerciseQuestion() {
             const correct = button.dataset.exerciseAnswer === question.answer;
             if (!correct) button.classList.add("is-wrong");
 
+            answeredQuestions = Math.min(answeredQuestions + 1, TOTAL_QUIZ_QUESTIONS);
+            updateQuestionProgress(stage.title);
+
             setArtie(
                 correct ? "Excellent! Você acertou!" : "Quase! Observe a resposta correta e continue.",
                 correct ? "artie_smiling_happy_clenched_fists.png" : "artie_sad.png"
@@ -511,7 +523,7 @@ function renderExerciseQuestion() {
 }
 
 function renderMemoryIntro() {
-    setMissionProgress("GAME", 3, 3, 82);
+    updateQuestionProgress("GAME");
     setArtie("The final challenge! Encontre os doze pares: cada número precisa combinar com o mês correspondente.", "artie_smiling_pointing_right.png");
 
     const configuredScoreTarget = Number(missionSettings.missionScore);
@@ -580,7 +592,7 @@ function renderMemoryGame() {
     });
     memoryDeck = shuffleArray(deck);
 
-    setMissionProgress("GAME", 3, 3, 85);
+    updateQuestionProgress("GAME");
     setArtie("Observe as cartas com atenção. Um número só combina com o mês que ocupa a mesma posição no calendário!", "artie_smiling_holding_chin.png");
 
     const cards = memoryDeck.map(function(card) {
@@ -707,7 +719,7 @@ async function finishMemoryGame() {
     const scoreTarget = Number(missionSettings.missionScore);
     if (!Number.isFinite(scoreTarget) || scoreTarget <= 0 || memoryScore < scoreTarget || matchedPairs !== months.length) return;
 
-    setMissionProgress("COMPLETED", 3, 3, 100);
+    setMissionProgress("COMPLETED", TOTAL_PROGRESS_STEPS, TOTAL_PROGRESS_STEPS, 100);
     setArtie("You did it! Você encontrou os doze pares e concluiu a missão. Parabéns!", "artie_smiling_happy_clenched_fists.png");
 
     await completeMission();
