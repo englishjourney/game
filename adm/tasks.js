@@ -1,6 +1,7 @@
 import { supabase } from '../supabaseClient.js';
 
 let taskRecords = new Map();
+let selectedTaskFilter = 'all';
 
 export function initTasks() {
     const form = document.getElementById('task-form');
@@ -40,6 +41,16 @@ export function initTasks() {
         const deleteButton = event.target.closest('[data-task-delete]');
         if (editButton) window.editTask(editButton.dataset.taskEdit);
         if (deleteButton) window.deleteTask(deleteButton.dataset.taskDelete);
+    });
+
+    const filters = document.getElementById('tasks-filters');
+    filters?.addEventListener('click', event => {
+        const filterButton = event.target.closest('[data-task-filter]');
+        if (!filterButton) return;
+        selectedTaskFilter = filterButton.dataset.taskFilter || 'all';
+        const currentTasks = Array.from(taskRecords.values());
+        renderTaskFilters(currentTasks);
+        renderTaskCards(currentTasks);
     });
 
     // Carrega e verifica os prazos uma vez ao abrir a seção.
@@ -82,17 +93,105 @@ async function loadTasks() {
     container.innerHTML = '<p class="task-empty-state">Carregando trabalhos...</p>';
     const { data, error } = await supabase.from('tasks').select('*').order('deadline', { ascending: true });
     if (error) {
+        const filters = document.getElementById('tasks-filters');
+        if (filters) filters.innerHTML = '';
         container.innerHTML = '<p class="task-empty-state">Erro ao carregar trabalhos: ' + escapeTaskHtml(error.message) + '</p>';
         return;
     }
-    taskRecords = new Map((data || []).map(task => [String(task.id), task]));
-    if (!data || !data.length) {
+
+    const tasks = data || [];
+    taskRecords = new Map(tasks.map(task => [String(task.id), task]));
+    renderTaskFilters(tasks);
+    renderTaskCards(tasks);
+}
+
+function buildTaskFilterOptions(tasks) {
+    const options = new Map();
+
+    tasks.forEach(task => {
+        const serie = String(task.serie || '').trim();
+        const team = String(task.team || '').trim();
+
+        if (serie && team) {
+            const key = 'class|' + serie + '|' + team;
+            options.set(key, { key, label: serie + 'º ' + team });
+        } else if (serie) {
+            const key = 'serie|' + serie;
+            options.set(key, { key, label: serie + 'º ano · todas as turmas' });
+        } else if (team) {
+            const key = 'team|' + team;
+            options.set(key, { key, label: 'Turma ' + team + ' · todas as séries' });
+        }
+    });
+
+    return Array.from(options.values()).sort((a, b) =>
+        a.label.localeCompare(b.label, 'pt-BR', { numeric: true })
+    );
+}
+
+function getTasksForFilter(tasks, filterKey) {
+    if (!filterKey || filterKey === 'all') return tasks;
+
+    const [type, serie, team] = filterKey.split('|');
+    return tasks.filter(task => {
+        const taskSerie = String(task.serie || '').trim();
+        const taskTeam = String(task.team || '').trim();
+
+        if (type === 'class') {
+            return (!taskSerie || taskSerie === serie) && (!taskTeam || taskTeam === team);
+        }
+        if (type === 'serie') return !taskSerie || taskSerie === serie;
+        if (type === 'team') return !taskTeam || taskTeam === team;
+        return true;
+    });
+}
+
+function renderTaskFilters(tasks) {
+    const container = document.getElementById('tasks-filters');
+    if (!container) return;
+
+    const options = buildTaskFilterOptions(tasks);
+    if (selectedTaskFilter !== 'all' && !options.some(option => option.key === selectedTaskFilter)) {
+        selectedTaskFilter = 'all';
+    }
+
+    const allOptions = [{
+        key: 'all',
+        label: 'Todas',
+        count: tasks.length
+    }, ...options.map(option => ({
+        ...option,
+        count: getTasksForFilter(tasks, option.key).length
+    }))];
+
+    container.innerHTML = allOptions.map(option =>
+        '<button type="button" class="tasks-filter-button' +
+        (selectedTaskFilter === option.key ? ' active' : '') +
+        '" data-task-filter="' + escapeTaskHtml(option.key) +
+        '" aria-pressed="' + (selectedTaskFilter === option.key ? 'true' : 'false') + '">' +
+        '<span>' + escapeTaskHtml(option.label) + '</span>' +
+        '<span class="tasks-filter-count">' + option.count + '</span>' +
+        '</button>'
+    ).join('');
+}
+
+function renderTaskCards(tasks) {
+    const container = document.getElementById('tasks-list');
+    if (!container) return;
+
+    if (!tasks.length) {
         container.innerHTML = '<p class="task-empty-state">Nenhum trabalho pendente cadastrado.</p>';
         return;
     }
 
+    const visibleTasks = getTasksForFilter(tasks, selectedTaskFilter);
+    if (!visibleTasks.length) {
+        container.innerHTML = '<p class="task-empty-state">Nenhum trabalho encontrado para este filtro.</p>';
+        return;
+    }
+
     const now = Date.now();
-    container.innerHTML = data.map(task => {
+    container.innerHTML = visibleTasks.map(task => {
         const expired = new Date(task.deadline).getTime() <= now;
         const target = [task.serie ? 'Série ' + task.serie : '', task.team ? 'Turma ' + task.team : ''].filter(Boolean).join(' · ') || 'Todas as turmas';
         const description = task.description ? '<p class="task-description">' + escapeTaskHtml(task.description).replace(/\r?\n/g, '<br>') + '</p>' : '';
