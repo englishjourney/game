@@ -103,7 +103,6 @@ async function loadTasks() {
             '<div class="data-card-actions"><button type="button" class="btn-small btn-secondary" data-task-edit="' + escapeTaskHtml(task.id) + '">Editar</button>' +
             '<button type="button" class="btn-small btn-danger" data-task-delete="' + escapeTaskHtml(task.id) + '">Excluir</button></div></article>';
     }).join('');
-    checkTaskDeadlines(data);
 }
 
 window.editTask = id => {
