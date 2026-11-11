@@ -158,6 +158,12 @@ export function initNotifications() {
         return String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
     }
 
+    addEvent(
+        'system:security-questions-2026',
+        'Ação necessária: configure perguntas de segurança',
+        'Para recuperar sua conta caso esqueça a senha, entre no EnglishJourney e escolha pelo menos duas perguntas de segurança. Depois, crie respostas que você consiga lembrar.',
+        'security'
+    );
     persist();
     // A sincronização ocorre somente quando o usuário abre o sino de notificações.
     // Não há consultas automáticas ao retornar à aba.
