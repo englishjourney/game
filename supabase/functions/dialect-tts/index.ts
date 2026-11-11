@@ -2,6 +2,17 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2.119.0/cors";
 import { IsomorphicCommunicate } from "./vendor/isomorphic-communicate.ts";
 import { generateSecMsGec } from "./vendor/sec-ms-gec-v2.ts";
 
+const SEC_MS_GEC_TEST_VECTOR =
+  "492D7694A183A45E-56E821F95D4579C5B7C7E33DC7303FF379EC36D510213555BBBB9EB17EF15876";
+const SEC_MS_GEC_TEST_TIMESTAMP = Date.UTC(2026, 9, 13, 10, 40, 0) / 1000;
+const SEC_MS_GEC_TEST_OK =
+  generateSecMsGec("6A5AA1D4EAFF4E9FB37E23D68491D6F4", SEC_MS_GEC_TEST_TIMESTAMP) ===
+  SEC_MS_GEC_TEST_VECTOR;
+if (!SEC_MS_GEC_TEST_OK) {
+  console.error("Sec-MS-GEC v2 test vector mismatch. The Edge TTS handshake would be rejected.");
+}
+
+
 const CORS_HEADERS = {
   ...corsHeaders,
   "Content-Type": "application/json; charset=utf-8",
@@ -128,6 +139,10 @@ Deno.serve(async (request: Request) => {
 
   if (!isAllowedAppKey(request)) {
     return json({ error: "Chave de aplicação inválida." }, 401);
+  }
+
+  if (!SEC_MS_GEC_TEST_OK) {
+    return json({ error: "Falha na verificação interna do token Sec-MS-GEC v2. Consulte os logs da função." }, 500);
   }
 
   if (isRateLimited(getClientKey(request))) {
