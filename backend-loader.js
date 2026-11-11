@@ -290,6 +290,11 @@
         return false;
       }
 
+      if (isSupabase && parsed.pathname.startsWith("/functions/v1/dialect-tts")) {
+        // Dialect Duel has its own compact speaker spinner while audio is generated.
+        return false;
+      }
+
       if (isSupabase && parsed.pathname === "/rest/v1/reminders" && method === "GET") {
         // The admin panel checks reminder expiration in the background every 10 seconds.
         // These silent status checks must not cover the entire page with the global loader.
