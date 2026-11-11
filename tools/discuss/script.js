@@ -1,19 +1,20 @@
 import { getSession, clearSession } from "../../auth.js";
 import { supabase } from "../../supabaseClient.js";
 
-const PAGE_SIZE = 20;
-const LIKE_INTERVAL_MS = 5 * 60 * 60 * 1000;
-
 const elements = {
   authRequired: document.getElementById("auth-required"),
   authTitle: document.getElementById("auth-title"),
   authMessage: document.getElementById("auth-message"),
-  authLink: document.getElementById("auth-link"),
   renewSession: document.getElementById("renew-session"),
   forumContent: document.getElementById("forum-content"),
   currentUserAvatar: document.getElementById("current-user-avatar"),
   currentUserName: document.getElementById("current-user-name"),
   currentUserHandle: document.getElementById("current-user-handle"),
+  openPostDialog: document.getElementById("open-post-dialog"),
+  postDialog: document.getElementById("post-dialog"),
+  postDialogTitle: document.getElementById("post-dialog-title"),
+  closePostDialog: document.getElementById("close-post-dialog"),
+  cancelPost: document.getElementById("cancel-post"),
   postForm: document.getElementById("post-form"),
   postTitle: document.getElementById("post-title"),
   postContent: document.getElementById("post-content"),
@@ -30,6 +31,7 @@ const elements = {
   refreshFeed: document.getElementById("refresh-feed"),
   feedList: document.getElementById("feed-list"),
   loadMore: document.getElementById("load-more"),
+  backToTop: document.getElementById("back-to-top"),
   toast: document.getElementById("toast"),
 };
 
@@ -38,6 +40,7 @@ let posts = [];
 let nextOffset = 0;
 let hasMore = false;
 let toastTimer = null;
+let editingPostId = null;
 
 function readSession() {
   try {
@@ -58,7 +61,8 @@ function showAuthNotice({ title, message, needsRenew = false }) {
 
 function showToast(message, type = "default") {
   elements.toast.textContent = message;
-  elements.toast.className = "toast visible" + (type === "error" ? " error" : type === "success" ? " success" : "");
+  elements.toast.className = "toast visible" +
+    (type === "error" ? " error" : type === "success" ? " success" : "");
   window.clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => {
     elements.toast.className = "toast";
@@ -87,8 +91,8 @@ function createAvatar(name, avatarUrl, sizeClass = "avatar-small") {
   const avatar = document.createElement("div");
   avatar.className = "avatar " + sizeClass;
   avatar.textContent = initials(name);
-
   const safeUrl = safeHttpUrl(avatarUrl);
+
   if (safeUrl) {
     const image = document.createElement("img");
     image.src = safeUrl;
@@ -103,9 +107,7 @@ function createAvatar(name, avatarUrl, sizeClass = "avatar-small") {
 
 function setCurrentUser() {
   const displayName = session.name || session.username || "Estudante";
-  elements.currentUserAvatar.replaceWith(
-    createAvatar(displayName, session.avatar_url, "avatar-large")
-  );
+  elements.currentUserAvatar.replaceWith(createAvatar(displayName, session.avatar_url, "avatar-large"));
   elements.currentUserAvatar = document.querySelector(".current-user .avatar");
   elements.currentUserName.textContent = displayName;
   elements.currentUserHandle.textContent = "@" + session.username;
@@ -113,10 +115,7 @@ function setCurrentUser() {
 
 async function invokeForum(payload) {
   const { data, error } = await supabase.functions.invoke("discuss", {
-    body: {
-      ...payload,
-      sessionToken: session?.tcsSessionToken || "",
-    },
+    body: { ...payload, sessionToken: session?.tcsSessionToken || "" },
   });
 
   if (error) {
@@ -126,13 +125,11 @@ async function invokeForum(payload) {
       try {
         const details = await response.clone().json();
         if (details?.error) message = details.error;
-      } catch {
-        // Mantém a mensagem original quando a resposta não é JSON.
-      }
+      } catch (_) {}
     }
-    const requestError = new Error(message);
-    requestError.status = response?.status || 0;
-    throw requestError;
+    const wrapped = new Error(message);
+    wrapped.status = response?.status || 0;
+    throw wrapped;
   }
 
   if (data?.error) throw new Error(data.error);
@@ -163,7 +160,6 @@ function appendLink(container, value) {
   } else {
     container.appendChild(document.createTextNode(address));
   }
-
   if (trailing) container.appendChild(document.createTextNode(trailing));
 }
 
@@ -214,10 +210,64 @@ function formatDate(dateValue) {
   }).format(date);
 }
 
-function simulatedLikes(createdAt) {
-  const createdTime = new Date(createdAt).getTime();
-  if (!Number.isFinite(createdTime)) return 0;
-  return Math.max(0, Math.floor((Date.now() - createdTime) / LIKE_INTERVAL_MS));
+function isOwner(post) {
+  return String(post.author_username || "").toLowerCase() === String(session?.username || "").toLowerCase();
+}
+
+function closeOpenPostMenus(except = null) {
+  document.querySelectorAll(".post-menu-panel").forEach((menu) => {
+    if (menu !== except) menu.classList.add("hidden");
+  });
+  document.querySelectorAll(".post-menu-button").forEach((button) => {
+    const belongsToOpen = except && button.parentElement?.querySelector(".post-menu-panel") === except;
+    if (!belongsToOpen) button.setAttribute("aria-expanded", "false");
+  });
+}
+
+function createOwnerMenu(post) {
+  const wrap = document.createElement("div");
+  wrap.className = "post-menu-wrap";
+
+  const trigger = document.createElement("button");
+  trigger.className = "post-menu-button";
+  trigger.type = "button";
+  trigger.title = "Opções da publicação";
+  trigger.setAttribute("aria-label", "Opções da publicação");
+  trigger.setAttribute("aria-expanded", "false");
+  trigger.innerHTML = '<i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i>';
+
+  const panel = document.createElement("div");
+  panel.className = "post-menu-panel hidden";
+
+  const edit = document.createElement("button");
+  edit.type = "button";
+  edit.innerHTML = '<i class="fa-solid fa-pen" aria-hidden="true"></i> Editar';
+  edit.addEventListener("click", () => {
+    panel.classList.add("hidden");
+    trigger.setAttribute("aria-expanded", "false");
+    openEditor(post);
+  });
+
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "delete-post-option";
+  remove.innerHTML = '<i class="fa-solid fa-trash" aria-hidden="true"></i> Excluir';
+  remove.addEventListener("click", async () => {
+    panel.classList.add("hidden");
+    trigger.setAttribute("aria-expanded", "false");
+    await removePost(post);
+  });
+
+  panel.append(edit, remove);
+  trigger.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const opening = panel.classList.contains("hidden");
+    closeOpenPostMenus(panel);
+    panel.classList.toggle("hidden", !opening);
+    trigger.setAttribute("aria-expanded", String(opening));
+  });
+  wrap.append(trigger, panel);
+  return wrap;
 }
 
 function createPostCard(post) {
@@ -226,7 +276,7 @@ function createPostCard(post) {
   card.setAttribute("aria-label", "Publicação: " + post.title);
 
   const header = document.createElement("div");
-  header.className = "post-author";
+  header.className = "post-header";
   header.appendChild(createAvatar(post.author_name || post.author_username, post.avatar_url));
 
   const authorMeta = document.createElement("div");
@@ -245,12 +295,13 @@ function createPostCard(post) {
   time.dateTime = post.created_at;
   time.textContent = formatDate(post.created_at);
   header.appendChild(time);
+
+  if (isOwner(post)) header.appendChild(createOwnerMenu(post));
   card.appendChild(header);
 
   const title = document.createElement("h3");
   title.textContent = post.title || "Publicação sem título";
   card.appendChild(title);
-
   card.appendChild(createFormattedContent(post.content));
 
   const imageUrl = safeHttpUrl(post.image_url);
@@ -275,18 +326,10 @@ function createPostCard(post) {
 
   const actions = document.createElement("div");
   actions.className = "post-actions";
-
-  const likes = document.createElement("span");
-  likes.className = "post-action likes";
-  likes.innerHTML = '<i class="fa-solid fa-heart" aria-hidden="true"></i><span class="like-count"></span><span>curtidas simuladas</span>';
-  likes.dataset.createdAt = post.created_at;
-  likes.querySelector(".like-count").textContent = String(simulatedLikes(post.created_at));
-
   const comments = document.createElement("span");
-  comments.className = "post-action comments";
+  comments.className = "comments-disabled";
   comments.innerHTML = '<i class="fa-solid fa-comment-slash" aria-hidden="true"></i><span>Comentários desativados</span>';
-
-  actions.append(likes, comments);
+  actions.appendChild(comments);
   card.appendChild(actions);
   return card;
 }
@@ -297,26 +340,18 @@ function renderPosts() {
   if (!posts.length) {
     const empty = document.createElement("div");
     empty.className = "empty-state";
-    const icon = document.createElement("i");
-    icon.className = "fa-regular fa-comments";
-    icon.setAttribute("aria-hidden", "true");
+    empty.innerHTML = '<i class="fa-regular fa-comments" aria-hidden="true"></i>';
     const title = document.createElement("h3");
     title.textContent = "Ainda não há publicações";
     const message = document.createElement("p");
     message.textContent = "Seja a primeira pessoa a compartilhar um trabalho com a comunidade.";
-    empty.append(icon, title, message);
+    empty.append(title, message);
     elements.feedList.appendChild(empty);
   } else {
     posts.forEach((post) => elements.feedList.appendChild(createPostCard(post)));
   }
 
   elements.loadMore.classList.toggle("hidden", !hasMore);
-}
-
-function updateLikeCounters() {
-  document.querySelectorAll(".post-action.likes").forEach((likes) => {
-    likes.querySelector(".like-count").textContent = String(simulatedLikes(likes.dataset.createdAt));
-  });
 }
 
 async function loadPosts(reset = false) {
@@ -334,7 +369,6 @@ async function loadPosts(reset = false) {
 
   elements.refreshFeed.disabled = true;
   elements.loadMore.disabled = true;
-
   try {
     const result = await invokeForum({ action: "list_posts", offset: nextOffset });
     const received = Array.isArray(result?.posts) ? result.posts : [];
@@ -353,11 +387,10 @@ async function loadPosts(reset = false) {
     } else {
       showToast(error.message || "Não foi possível carregar as publicações.", "error");
       if (reset) {
-        elements.feedList.replaceChildren();
         const empty = document.createElement("div");
         empty.className = "empty-state";
         empty.textContent = "Não foi possível carregar o fórum. Tente atualizar a página.";
-        elements.feedList.appendChild(empty);
+        elements.feedList.replaceChildren(empty);
       }
     }
   } finally {
@@ -421,6 +454,53 @@ function updateImagePreview() {
   elements.imagePreviewWrap.classList.remove("hidden");
 }
 
+function resetEditor() {
+  editingPostId = null;
+  elements.postForm.reset();
+  toggleImageFields(false);
+  elements.postPreview.classList.add("hidden");
+  elements.previewToggle.setAttribute("aria-expanded", "false");
+  elements.previewToggle.innerHTML = '<i class="fa-regular fa-eye" aria-hidden="true"></i> Pré-visualizar texto <i class="fa-solid fa-chevron-down preview-chevron" aria-hidden="true"></i>';
+  elements.postDialogTitle.textContent = "Nova publicação";
+  elements.submitPost.innerHTML = '<i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Publicar';
+  elements.submitPost.disabled = false;
+  updatePreview();
+}
+
+function openEditor(post = null) {
+  resetEditor();
+  editingPostId = post ? Number(post.id) : null;
+  if (post) {
+    elements.postDialogTitle.textContent = "Editar publicação";
+    elements.postTitle.value = post.title || "";
+    elements.postContent.value = post.content || "";
+    if (post.image_url) {
+      toggleImageFields(true);
+      elements.imageUrl.value = post.image_url;
+      updateImagePreview();
+    }
+    elements.submitPost.innerHTML = '<i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Salvar alterações';
+  }
+  updatePreview();
+  elements.postDialog.showModal();
+  elements.postTitle.focus();
+}
+
+async function removePost(post) {
+  if (!isOwner(post)) return;
+  const confirmed = window.confirm("Tem certeza de que deseja excluir esta publicação? Esta ação não poderá ser desfeita.");
+  if (!confirmed) return;
+
+  try {
+    await invokeForum({ action: "delete_post", postId: post.id });
+    showToast("Publicação excluída.", "success");
+    await loadPosts(true);
+  } catch (error) {
+    console.error("Erro ao excluir publicação:", error);
+    showToast(error.message || "Não foi possível excluir a publicação.", "error");
+  }
+}
+
 async function submitPost(event) {
   event.preventDefault();
   if (!session?.tcsSessionToken) {
@@ -446,27 +526,25 @@ async function submitPost(event) {
     return;
   }
 
+  const editing = editingPostId !== null;
   elements.submitPost.disabled = true;
-  elements.submitPost.innerHTML = '<span class="spinner"></span> Publicando...';
+  elements.submitPost.innerHTML = '<span class="spinner"></span> ' + (editing ? "Salvando..." : "Publicando...");
 
   try {
-    await invokeForum({
-      action: "create_post",
-      title,
-      content,
-      imageUrl,
-    });
-    elements.postForm.reset();
-    toggleImageFields(false);
-    elements.postPreview.classList.add("hidden");
-    elements.previewToggle.setAttribute("aria-expanded", "false");
-    elements.previewToggle.innerHTML = '<i class="fa-regular fa-eye" aria-hidden="true"></i> Pré-visualizar texto <i class="fa-solid fa-chevron-down preview-chevron" aria-hidden="true"></i>';
-    updatePreview();
-    showToast("Publicação enviada com sucesso!", "success");
+    if (editing) {
+      await invokeForum({ action: "update_post", postId: editingPostId, title, content, imageUrl });
+    } else {
+      await invokeForum({ action: "create_post", title, content, imageUrl });
+    }
+
+    closeOpenPostMenus();
+    elements.postDialog.close();
+    resetEditor();
+    showToast(editing ? "Publicação atualizada com sucesso!" : "Publicação enviada com sucesso!", "success");
     await loadPosts(true);
     document.querySelector(".feed-toolbar")?.scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (error) {
-    console.error("Erro ao publicar:", error);
+    console.error("Erro ao salvar publicação:", error);
     if (error.status === 401 || /sessão|entre novamente|expirou/i.test(error.message)) {
       showAuthNotice({
         title: "Sua sessão precisa ser renovada",
@@ -474,11 +552,13 @@ async function submitPost(event) {
         needsRenew: true,
       });
     } else {
-      showToast(error.message || "Não foi possível publicar. Tente novamente.", "error");
+      showToast(error.message || "Não foi possível salvar a publicação. Tente novamente.", "error");
     }
   } finally {
     elements.submitPost.disabled = false;
-    elements.submitPost.innerHTML = '<i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Publicar';
+    elements.submitPost.innerHTML = editing
+      ? '<i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Salvar alterações'
+      : '<i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Publicar';
   }
 }
 
@@ -512,6 +592,10 @@ function initialize() {
   elements.imageUrl.disabled = true;
   updatePreview();
 
+  elements.openPostDialog.addEventListener("click", () => openEditor());
+  elements.closePostDialog.addEventListener("click", () => elements.postDialog.close());
+  elements.cancelPost.addEventListener("click", () => elements.postDialog.close());
+  elements.postDialog.addEventListener("close", resetEditor);
   elements.postForm.addEventListener("submit", submitPost);
   elements.postContent.addEventListener("input", updatePreview);
   elements.imageToggle.addEventListener("click", () => toggleImageFields());
@@ -532,8 +616,17 @@ function initialize() {
 
   elements.refreshFeed.addEventListener("click", () => loadPosts(true));
   elements.loadMore.addEventListener("click", () => loadPosts(false));
+  elements.backToTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+
+  window.addEventListener("scroll", () => {
+    elements.backToTop.classList.toggle("hidden", window.scrollY < 350);
+  }, { passive: true });
+
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".post-menu-wrap")) closeOpenPostMenus();
+  });
+
   loadPosts(true);
-  window.setInterval(updateLikeCounters, 60 * 1000);
 }
 
 initialize();
