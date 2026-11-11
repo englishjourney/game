@@ -1,6 +1,7 @@
 import { supabase } from '../supabaseClient.js';
 
 const plannerItemsById = new Map();
+let allActivePlannerItems = [];
 let selectedPlannerItem = null;
 let mergeSourceItem = null;
 let mergeTargetItem = null;
@@ -172,40 +173,11 @@ export function initPlanner() {
         }
     });
 
-    // Pesquisa no Planner
+    // Pesquisa no Planner: filtra diretamente os cartões exibidos.
     const searchInput = document.getElementById('planner-search');
-    const resultsContainer = document.getElementById('planner-search-results');
-    
     if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            const q = e.target.value.toLowerCase();
-            resultsContainer.innerHTML = '';
-            if (q.length < 2) { resultsContainer.classList.add('hidden'); return; }
-            
-            let found = false;
-            document.querySelectorAll('#planner-list .data-card').forEach(card => {
-                if (card.innerText.toLowerCase().includes(q)) {
-                    found = true;
-                    const info = card.querySelector('.data-card-info').innerText.split('\n')[0];
-                    const div = document.createElement('div');
-                    div.className = 'search-item';
-                    div.innerText = info.substring(0, 50) + '...';
-                    div.onclick = () => {
-                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        card.style.outline = '4px solid var(--primary)';
-                        setTimeout(() => card.style.outline = 'none', 2000);
-                        resultsContainer.classList.add('hidden');
-                    };
-                    resultsContainer.appendChild(div);
-                }
-            });
-            resultsContainer.classList.toggle('hidden', !found);
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('#planner-search') && !e.target.closest('#planner-search-results')) {
-                resultsContainer.classList.add('hidden');
-            }
+        searchInput.addEventListener('input', () => {
+            renderPlannerList();
         });
     }
 
@@ -721,6 +693,96 @@ function setupPlannerCardInteractions(container) {
     });
 }
 
+function normalizePlannerSearchValue(value) {
+    return String(value == null ? '' : value)
+        .normalize('NFD')
+        .replace(/[\\u0300-\\u036f]/g, '')
+        .toLocaleLowerCase('pt-BR')
+        .trim();
+}
+
+function renderPlannerList() {
+    const container = document.getElementById('planner-list');
+    if (!container) return;
+
+    const searchInput = document.getElementById('planner-search');
+    const query = normalizePlannerSearchValue(searchInput ? searchInput.value : '');
+
+    const filteredData = allActivePlannerItems.filter(item => {
+        if (!query) return true;
+
+        const specialLabels = {
+            1: 'especial',
+            2: 'folga',
+            3: 'prova',
+            4: 'adaptado'
+        };
+
+        const searchableText = [
+            item.day,
+            item.date,
+            item.time,
+            item.duration,
+            item.serie,
+            item.team,
+            item.activities,
+            item.skills,
+            item.tag,
+            specialLabels[item.special] || ''
+        ].join(' ');
+
+        return normalizePlannerSearchValue(searchableText).includes(query);
+    });
+
+    if (!filteredData.length) {
+        container.innerHTML = allActivePlannerItems.length
+            ? '<div class="empty-state">Nenhum planejamento corresponde à pesquisa.</div>'
+            : '<div class="empty-state">Nenhuma aula planejada.</div>';
+        return;
+    }
+
+    const parseDateTime = (dateStr, timeStr) => {
+        if (!dateStr) return 0;
+        const parts = String(dateStr).split(/[/-]/);
+        if (parts.length !== 3) return 0;
+        const [year, month, day] = parts[0].length === 4
+            ? parts
+            : [parts[2], parts[1], parts[0]];
+        return new Date(year + '/' + month + '/' + day + ' ' + (timeStr || '00:00')).getTime();
+    };
+
+    const sortedData = [...filteredData].sort((a, b) =>
+        parseDateTime(a.date, a.time) - parseDateTime(b.date, b.time)
+    );
+
+    const groups = sortedData.reduce((acc, item) => {
+        const title = item.day ? item.day + ' - ' + item.date : item.date;
+        if (!acc[title]) acc[title] = [];
+        acc[title].push(item);
+        return acc;
+    }, {});
+
+    container.innerHTML = Object.entries(groups).map(([title, items]) => {
+        const isHidden = localStorage.getItem('planner_state_' + title) === 'true';
+        const displayClass = isHidden ? 'hidden' : '';
+        const btnText = isHidden ? 'Maximizar' : 'Minimizar';
+        const firstItem = items[0] || {};
+
+        return '<div class="planner-section">' +
+            '<h3 class="planner-section-title"><span>' + escapePlannerHtml(title) + '</span>' +
+                '<div class="planner-section-heading-actions">' +
+                    '<button class="btn-small btn-primary" onclick="window.addPlanForDay(\\'' + escapePlannerHtml(firstItem.day || '') + '\\', \\'' + escapePlannerHtml(firstItem.date || '') + '\\')">+ Nova aula</button>' +
+                    '<button class="minimize-btn" onclick="window.togglePlannerSection(this, \\'' + escapePlannerHtml(title) + '\\')">' + btnText + '</button>' +
+                '</div>' +
+            '</h3>' +
+            '<div class="planner-section-content ' + displayClass + '">' +
+                items.map(item => renderPlannerCard(item, 'active')).join('') +
+            '</div></div>';
+    }).join('');
+
+    setupPlannerCardInteractions(container);
+}
+
 async function loadPlanners() {
     const container = document.getElementById('planner-list');
     if (!container) return;
@@ -737,49 +799,14 @@ async function loadPlanners() {
         container.innerHTML = 'Erro ao carregar planos.';
         return;
     }
-    if (!data || !data.length) {
-        container.innerHTML = '<div class="empty-state">Nenhuma aula planejada.</div>';
-        return;
-    }
 
-    const parseDateTime = (dateStr, timeStr) => {
-        if (!dateStr) return 0;
-        const parts = String(dateStr).split(/[/-]/);
-        if (parts.length !== 3) return 0;
-        const [year, month, day] = parts[0].length === 4
-            ? parts
-            : [parts[2], parts[1], parts[0]];
-        return new Date(year + '/' + month + '/' + day + ' ' + (timeStr || '00:00')).getTime();
-    };
-    data.sort((a, b) => parseDateTime(a.date, a.time) - parseDateTime(b.date, b.time));
+    allActivePlannerItems = data || [];
+    allActivePlannerItems.forEach(item => {
+        plannerItemsById.set(String(item.id), item);
+    });
 
-    const groups = data.reduce((acc, item) => {
-        const title = item.day ? item.day + ' - ' + item.date : item.date;
-        if (!acc[title]) acc[title] = [];
-        acc[title].push(item);
-        return acc;
-    }, {});
-
-    container.innerHTML = Object.entries(groups).map(([title, items]) => {
-        const isHidden = localStorage.getItem('planner_state_' + title) === 'true';
-        const displayClass = isHidden ? 'hidden' : '';
-        const btnText = isHidden ? 'Maximizar' : 'Minimizar';
-        const firstItem = items[0] || {};
-
-        return '<div class="planner-section">' +
-            '<h3 class="planner-section-title"><span>' + escapePlannerHtml(title) + '</span>' +
-                '<div class="planner-section-heading-actions">' +
-                    '<button class="btn-small btn-primary" onclick="window.addPlanForDay(\'' + escapePlannerHtml(firstItem.day || '') + '\', \'' + escapePlannerHtml(firstItem.date || '') + '\')">+ Nova aula</button>' +
-                    '<button class="minimize-btn" onclick="window.togglePlannerSection(this, \'' + escapePlannerHtml(title) + '\')">' + btnText + '</button>' +
-                '</div>' +
-            '</h3>' +
-            '<div class="planner-section-content ' + displayClass + '">' +
-                items.map(item => renderPlannerCard(item, 'active')).join('') +
-            '</div></div>';
-    }).join('');
-
-    data.forEach(item => plannerItemsById.set(String(item.id), item));
-    setupPlannerCardInteractions(container);
+    // A pesquisa atual é preservada após salvar, excluir, concluir ou mover uma aula.
+    renderPlannerList();
 }
 
 async function loadCompletedPlanners() {
