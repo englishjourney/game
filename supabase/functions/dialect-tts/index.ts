@@ -1,5 +1,5 @@
-import { UniversalEdgeTTS } from "npm:edge-tts-universal@1.4.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2.119.0/cors";
+import { IsomorphicCommunicate } from "./vendor/isomorphic-communicate.ts";
 
 const CORS_HEADERS = {
   ...corsHeaders,
@@ -23,6 +23,8 @@ const requestWindows = new Map<string, number[]>();
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const RATE_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT = 120;
+const SYNTHESIS_DEADLINE_MS = 28000;
+const MAX_AUDIO_BYTES = 2 * 1024 * 1024;
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: CORS_HEADERS });
@@ -79,6 +81,44 @@ function toBase64(bytes: Uint8Array) {
   return btoa(binary);
 }
 
+async function synthesizeAudio(text: string, voice: string): Promise<Uint8Array> {
+  const communication = new IsomorphicCommunicate(text, { voice });
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+
+  for await (const chunk of communication.stream()) {
+    if (chunk.type !== "audio" || !chunk.data?.length) continue;
+    totalBytes += chunk.data.length;
+    if (totalBytes > MAX_AUDIO_BYTES) {
+      throw new Error("O áudio gerado excedeu o limite permitido.");
+    }
+    chunks.push(chunk.data);
+  }
+
+  if (!totalBytes) throw new Error("O serviço de voz não retornou áudio.");
+  const audio = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    audio.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return audio;
+}
+
+async function synthesizeWithDeadline(text: string, voice: string): Promise<Uint8Array> {
+  let timeoutId: number | undefined;
+  try {
+    return await Promise.race([
+      synthesizeAudio(text, voice),
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error("A geração do áudio excedeu o tempo limite.")), SYNTHESIS_DEADLINE_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  }
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", { headers: CORS_HEADERS });
@@ -111,17 +151,14 @@ Deno.serve(async (request: Request) => {
       return json({ audioBase64: cached.audioBase64, voice: VOICES[region], cached: true });
     }
 
-    const tts = new UniversalEdgeTTS(phrase, VOICES[region]);
-    const result = await tts.synthesize();
-    const audioBytes = new Uint8Array(await result.audio.arrayBuffer());
-    if (!audioBytes.length) throw new Error("Edge TTS returned an empty audio stream.");
-
+    const audioBytes = await synthesizeWithDeadline(phrase, VOICES[region]);
     const audioBase64 = toBase64(audioBytes);
     audioCache.set(cacheKey, { audioBase64, createdAt: Date.now() });
 
     return json({ audioBase64, voice: VOICES[region], cached: false });
   } catch (error) {
     console.error("Dialect TTS synthesis failed:", error);
-    return json({ error: "Não foi possível gerar o áudio com Edge TTS. Tente novamente." }, 502);
+    const message = error instanceof Error ? error.message : "Falha ao gerar o áudio.";
+    return json({ error: message }, 502);
   }
 });
