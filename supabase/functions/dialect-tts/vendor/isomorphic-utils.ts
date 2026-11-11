@@ -6,8 +6,8 @@
  * This module provides browser-compatible implementations without Node.js dependencies.
  */
 
-import { TTSConfig } from './tts_config';
-import { ValueError } from "./exceptions";
+import { TTSConfig } from './tts_config.ts';
+import { ValueError } from "./exceptions.ts";
 
 /**
  * Generates a UUID v4 string without hyphens using Web Crypto API.
