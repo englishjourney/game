@@ -79,9 +79,16 @@
       <div class="feed-toolbar">
         <div>
           <span class="feed-toolbar-title">Publicações</span>
-          <span class="feed-toolbar-subtitle">Mais recentes primeiro</span>
+          <span class="feed-toolbar-subtitle">Publicações da sua turma</span>
         </div>
         <span class="sort-pill"><i class="fa-solid fa-arrow-down-wide-short" aria-hidden="true"></i> Mais recentes</span>
+      </div>
+
+      <div id="admin-grade-filter-wrap" class="admin-grade-filter hidden">
+        <label for="admin-grade-filter">Visualizar grade</label>
+        <select id="admin-grade-filter" aria-label="Filtrar publicações por grade">
+          <option value="">Todas as turmas</option>
+        </select>
       </div>
 
       <div id="feed-list" class="feed-list" role="feed" aria-live="polite" aria-busy="false">
