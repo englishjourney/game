@@ -134,6 +134,54 @@ async function createPost(body: Record<string, unknown>, user: Record<string, un
   return { post };
 }
 
+async function getOwnedPost(postIdValue: unknown, username: string) {
+  const postId = Number(postIdValue);
+  if (!Number.isSafeInteger(postId) || postId <= 0) {
+    throw new DiscussError("Publicação inválida.");
+  }
+
+  const { data, error } = await db.from("discuss_posts")
+    .select("id, author_username")
+    .eq("id", postId)
+    .eq("author_username", username)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new DiscussError("Publicação não encontrada ou você não tem permissão para alterá-la.", 404);
+  return postId;
+}
+
+async function updatePost(body: Record<string, unknown>, user: Record<string, unknown>) {
+  const username = String(user.username);
+  const postId = await getOwnedPost(body.postId, username);
+  const title = requiredText(body.title, "o título", 120);
+  const content = requiredText(body.content, "o texto da publicação", 6000);
+  const imageUrl = validateImageUrl(body.imageUrl);
+
+  const { data, error } = await db.from("discuss_posts")
+    .update({ title, content, image_url: imageUrl })
+    .eq("id", postId)
+    .eq("author_username", username)
+    .select("id, created_at, title, content, image_url, author_username, author_name, avatar_url")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new DiscussError("Não foi possível atualizar esta publicação.", 404);
+  return { post: data };
+}
+
+async function deletePost(body: Record<string, unknown>, user: Record<string, unknown>) {
+  const username = String(user.username);
+  const postId = await getOwnedPost(body.postId, username);
+  const { data, error } = await db.from("discuss_posts")
+    .delete()
+    .eq("id", postId)
+    .eq("author_username", username)
+    .select("id")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new DiscussError("Não foi possível excluir esta publicação.", 404);
+  return { deleted: true, postId };
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
   if (request.method !== "POST") return json({ error: "Use uma requisição POST." }, 405);
@@ -151,6 +199,12 @@ Deno.serve(async (request: Request) => {
     }
     if (action === "create_post") {
       return json({ data: await createPost(body, user) }, 201);
+    }
+    if (action === "update_post") {
+      return json({ data: await updatePost(body, user) });
+    }
+    if (action === "delete_post") {
+      return json({ data: await deletePost(body, user) });
     }
     throw new DiscussError("Ação não reconhecida.");
   } catch (error) {
