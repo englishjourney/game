@@ -696,7 +696,7 @@ function setupPlannerCardInteractions(container) {
 function normalizePlannerSearchValue(value) {
     return String(value == null ? '' : value)
         .normalize('NFD')
-        .replace(/[\\u0300-\\u036f]/g, '')
+        .replace(/[\u0300-\u036f]/g, '')
         .toLocaleLowerCase('pt-BR')
         .trim();
 }
@@ -771,8 +771,8 @@ function renderPlannerList() {
         return '<div class="planner-section">' +
             '<h3 class="planner-section-title"><span>' + escapePlannerHtml(title) + '</span>' +
                 '<div class="planner-section-heading-actions">' +
-                    '<button class="btn-small btn-primary" onclick="window.addPlanForDay(\\'' + escapePlannerHtml(firstItem.day || '') + '\\', \\'' + escapePlannerHtml(firstItem.date || '') + '\\')">+ Nova aula</button>' +
-                    '<button class="minimize-btn" onclick="window.togglePlannerSection(this, \\'' + escapePlannerHtml(title) + '\\')">' + btnText + '</button>' +
+                    '<button class="btn-small btn-primary" onclick="window.addPlanForDay(\'' + escapePlannerHtml(firstItem.day || '') + '\', \'' + escapePlannerHtml(firstItem.date || '') + '\')">+ Nova aula</button>' +
+                    '<button class="minimize-btn" onclick="window.togglePlannerSection(this, \'' + escapePlannerHtml(title) + '\')">' + btnText + '</button>' +
                 '</div>' +
             '</h3>' +
             '<div class="planner-section-content ' + displayClass + '">' +
