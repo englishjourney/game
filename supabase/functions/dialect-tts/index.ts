@@ -23,7 +23,7 @@ const audioCache = new Map<string, { audioBase64: string; createdAt: number }>()
 const requestWindows = new Map<string, number[]>();
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const RATE_WINDOW_MS = 60 * 1000;
-const RATE_LIMIT = 30;
+const RATE_LIMIT = 120;
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: CORS_HEADERS });
@@ -42,6 +42,8 @@ function isAllowedAppKey(request: Request) {
     // Fall through to the legacy anon key for older project configurations.
   }
 
+  const singlePublishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
+  if (providedKey && providedKey === singlePublishableKey) return true;
   return providedKey === (Deno.env.get("SUPABASE_ANON_KEY") || "");
 }
 
