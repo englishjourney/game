@@ -30,6 +30,9 @@ const elements = {
   submitPost: document.getElementById("submit-post"),
   refreshFeed: document.getElementById("refresh-feed"),
   feedList: document.getElementById("feed-list"),
+  feedToolbarSubtitle: document.querySelector(".feed-toolbar-subtitle"),
+  adminGradeFilterWrap: document.getElementById("admin-grade-filter-wrap"),
+  adminGradeFilter: document.getElementById("admin-grade-filter"),
   loadMore: document.getElementById("load-more"),
   backToTop: document.getElementById("back-to-top"),
   toast: document.getElementById("toast"),
@@ -41,6 +44,8 @@ let nextOffset = 0;
 let hasMore = false;
 let toastTimer = null;
 let editingPostId = null;
+let isForumAdmin = false;
+let selectedGradeFilter = "";
 
 function readSession() {
   try {
@@ -296,6 +301,13 @@ function createPostCard(post) {
   time.textContent = formatDate(post.created_at);
   header.appendChild(time);
 
+  if (isForumAdmin && post.author_grade) {
+    const gradeBadge = document.createElement("span");
+    gradeBadge.className = "post-grade-badge";
+    gradeBadge.textContent = post.author_grade;
+    header.appendChild(gradeBadge);
+  }
+
   if (isOwner(post)) header.appendChild(createOwnerMenu(post));
   card.appendChild(header);
 
@@ -344,7 +356,11 @@ function renderPosts() {
     const title = document.createElement("h3");
     title.textContent = "Ainda não há publicações";
     const message = document.createElement("p");
-    message.textContent = "Seja a primeira pessoa a compartilhar um trabalho com a comunidade.";
+    message.textContent = isForumAdmin && selectedGradeFilter
+      ? "Ainda não há publicações da turma " + selectedGradeFilter + "."
+      : isForumAdmin
+        ? "Selecione uma turma no filtro ou visualize todas as publicações."
+        : "Ainda não há publicações para sua turma.";
     empty.append(title, message);
     elements.feedList.appendChild(empty);
   } else {
@@ -370,7 +386,7 @@ async function loadPosts(reset = false) {
   elements.refreshFeed.disabled = true;
   elements.loadMore.disabled = true;
   try {
-    const result = await invokeForum({ action: "list_posts", offset: nextOffset });
+    const result = await invokeForum({ action: "list_posts", offset: nextOffset, grade: isForumAdmin ? selectedGradeFilter : undefined });
     const received = Array.isArray(result?.posts) ? result.posts : [];
     posts = reset ? received : posts.concat(received);
     nextOffset = Number(result?.nextOffset ?? (nextOffset + received.length));
@@ -562,12 +578,45 @@ async function submitPost(event) {
   }
 }
 
-function initialize() {
+async function setupAdminGradeFilter() {
+  if (!isForumAdmin || !elements.adminGradeFilterWrap || !elements.adminGradeFilter) return;
+
+  try {
+    const result = await invokeForum({ action: "list_grades" });
+    const grades = Array.isArray(result?.grades) ? result.grades : [];
+
+    elements.adminGradeFilter.replaceChildren();
+    const allOption = document.createElement("option");
+    allOption.value = "";
+    allOption.textContent = "Todas as turmas";
+    elements.adminGradeFilter.appendChild(allOption);
+
+    grades.forEach((grade) => {
+      const option = document.createElement("option");
+      option.value = grade;
+      option.textContent = grade;
+      elements.adminGradeFilter.appendChild(option);
+    });
+
+    elements.adminGradeFilter.addEventListener("change", () => {
+      selectedGradeFilter = elements.adminGradeFilter.value;
+      loadPosts(true);
+    });
+
+    elements.adminGradeFilterWrap.classList.remove("hidden");
+  } catch (error) {
+    console.error("Não foi possível carregar os filtros de grade:", error);
+    showToast(error.message || "Não foi possível carregar as turmas para o filtro.", "error");
+  }
+}
+
+async function initialize() {
   elements.renewSession.addEventListener("click", () => {
     clearSession();
     window.location.href = "../../index.html";
   });
   session = readSession();
+  isForumAdmin = String(session?.username || "").trim().toLowerCase() === "micael.svg";
 
   if (!session?.username) {
     showAuthNotice({
@@ -589,6 +638,11 @@ function initialize() {
   elements.authRequired.classList.add("hidden");
   elements.forumContent.classList.remove("hidden");
   setCurrentUser();
+  if (elements.feedToolbarSubtitle) {
+    elements.feedToolbarSubtitle.textContent = isForumAdmin
+      ? "Visualize todas as turmas ou escolha um grade específico."
+      : (session.grade ? "Publicações da turma " + session.grade : "Publicações da sua turma");
+  }
   elements.imageUrl.disabled = true;
   updatePreview();
 
@@ -626,7 +680,8 @@ function initialize() {
     if (!event.target.closest(".post-menu-wrap")) closeOpenPostMenus();
   });
 
-  loadPosts(true);
+  await setupAdminGradeFilter();
+  await loadPosts(true);
 }
 
 initialize();
