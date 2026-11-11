@@ -252,9 +252,9 @@
           </div>
           <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
 
-          <div class="meaning-card">
+          <div id="meaning-card" class="meaning-card" hidden>
             <span class="meaning-label">Meaning</span>
-            <strong id="meaning" class="meaning">Elevador</strong>
+            <strong id="meaning" class="meaning"></strong>
           </div>
 
           <div class="audio-zone">
@@ -264,7 +264,7 @@
             </button>
           </div>
           <p class="audio-caption">Listen carefully. Tap the speaker to hear it again.</p>
-          <p id="audio-status" class="audio-status" role="status" aria-live="polite">Preparando áudio...</p>
+          <p id="audio-status" class="audio-status" role="status" aria-live="polite">Carregando áudio</p>
 
           <div class="answer-section">
             <div class="answer-title"><span>TYPE THE WORD</span><span id="letter-count">0 letters</span></div>
@@ -340,6 +340,8 @@
     let roundLocked = false;
     let gameActive = false;
     let ttsRequestId = 0;
+    let lastTtsRequestStartedAt = 0;
+    const TTS_REQUEST_INTERVAL_MS = 4100;
 
     const $ = id => document.getElementById(id);
     $('round-info').textContent = WORD_COUNT + ' rodadas · 1 ponto por tentativa';
@@ -487,7 +489,7 @@
     function setAudioLoading(loading) {
       $('sound-button').classList.toggle('loading', loading);
       $('sound-button').disabled = loading;
-      $('audio-status').textContent = loading ? 'Gerando áudio com Edge TTS...' : $('audio-status').textContent;
+      $('audio-status').textContent = loading ? 'Carregando áudio' : $('audio-status').textContent;
     }
 
     function base64ToBlobUrl(encoded) {
@@ -501,9 +503,25 @@
       const cacheKey = round.region + '|' + round.target;
       if (audioCache.has(cacheKey)) return audioCache.get(cacheKey);
 
-      const { data, error } = await supabase.functions.invoke('dialect-tts', {
-        body: { text: round.target, region: round.region }
-      });
+      const waitMs = Math.max(0, TTS_REQUEST_INTERVAL_MS - (Date.now() - lastTtsRequestStartedAt));
+      if (waitMs > 0) await new Promise(resolve => window.setTimeout(resolve, waitMs));
+      lastTtsRequestStartedAt = Date.now();
+
+      let timeoutId;
+      let response;
+      try {
+        response = await Promise.race([
+          supabase.functions.invoke('dialect-tts', {
+            body: { text: round.target, region: round.region }
+          }),
+          new Promise((_, reject) => {
+            timeoutId = window.setTimeout(() => reject(new Error('O serviço de áudio demorou demais para responder. Toque no alto-falante para tentar novamente.')), 35000);
+          })
+        ]);
+      } finally {
+        if (timeoutId) window.clearTimeout(timeoutId);
+      }
+      const { data, error } = response;
       if (error) {
         let message = error.message || 'Não foi possível gerar o áudio.';
         if (error.context && typeof error.context.clone === 'function') {
@@ -566,10 +584,11 @@
       $('clear-button').disabled = false;
       $('round-label').textContent = 'ROUND ' + (roundIndex + 1) + ' / ' + WORD_COUNT;
       $('progress-fill').style.width = ((roundIndex / WORD_COUNT) * 100) + '%';
-      $('meaning').textContent = currentRound.meaning;
+      $('meaning').textContent = '';
+      $('meaning-card').hidden = true;
       $('feedback').textContent = '';
       $('feedback').className = 'feedback neutral';
-      $('audio-status').textContent = 'Preparando áudio...';
+      $('audio-status').textContent = 'Carregando áudio';
       $('sound-button').disabled = true;
       $('sound-button').classList.add('loading');
       document.querySelectorAll('[data-region]').forEach(button => {
@@ -591,6 +610,8 @@
       const countryCorrect = selectedRegion === currentRound.region;
       const correct = wordCorrect && countryCorrect;
 
+      $('meaning').textContent = currentRound.meaning;
+      $('meaning-card').hidden = false;
       completedRounds++;
       if (correct) {
         if (activeTeam === 'yellow') yellowScore++;
