@@ -10,16 +10,16 @@ import {
   splitTextByByteLength,
   ssmlHeadersPlusData,
   unescape
-} from './isomorphic-utils';
+} from './isomorphic-utils.ts';
 import {
   NoAudioReceived,
   UnexpectedResponse,
   UnknownResponse,
   WebSocketError
-} from "./exceptions";
-import { TTSConfig } from './tts_config';
-import { DEFAULT_VOICE, WSS_URL, SEC_MS_GEC_VERSION, WSS_HEADERS } from './constants';
-import { IsomorphicDRM } from './isomorphic-drm';
+} from "./exceptions.ts";
+import { TTSConfig } from './tts_config.ts';
+import { DEFAULT_VOICE, WSS_URL, SEC_MS_GEC_VERSION, WSS_HEADERS } from './constants.ts';
+import { IsomorphicDRM } from './isomorphic-drm.ts';
 
 // Isomorphic buffer handling - works in both Node.js and browsers
 const IsomorphicBuffer = {
