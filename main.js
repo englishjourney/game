@@ -8,6 +8,7 @@ import { openFlashcards } from './flashcards.js';
 import { openAppsDialog } from './apps.js'; 
 import { supabase } from './supabaseClient.js'; // IMPORTAÇÃO DO SUPABASE PARA BUSCA EM TEMPO REAL
 import { initNotifications } from './notifications.js';
+import { initAccountRecovery } from './accountRecovery.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
     const session = getSession();
@@ -216,6 +217,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (btnCloseModal && modal) {
         btnCloseModal.addEventListener('click', () => modal.close());
     }
+
+    initAccountRecovery();
 });
 
 function applyTheme(grade) {
