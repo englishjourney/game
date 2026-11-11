@@ -565,8 +565,8 @@
         $('sound-button').disabled = false;
         $('sound-button').classList.remove('loading');
         renderAnswer();
-        $('audio-status').textContent = 'Não foi possível carregar o áudio. Toque no alto-falante para tentar novamente.';
-        $('feedback').textContent = error.message || 'Falha na geração do áudio.';
+        $('audio-status').textContent = 'Falha ao carregar áudio: ' + (error.message || 'erro desconhecido') + '. Toque no alto-falante para tentar novamente.';
+        $('feedback').textContent = 'Detalhes técnicos: ' + (error.message || 'Falha na geração do áudio.');
         $('feedback').className = 'feedback bad';
       }
     }
