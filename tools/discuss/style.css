@@ -378,3 +378,55 @@ input::placeholder, textarea::placeholder { color: #788594; }
 .back-to-top { background: #39485a; }
 .back-to-top:hover { background: #c95632; }
 ::selection { color: #fff; background: #9b4d32; }
+
+
+/* Filtro de grade exclusivo da conta administrativa */
+.admin-grade-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 13px;
+  padding: 10px 12px;
+  border: 1px solid #394452;
+  border-radius: 10px;
+  background: #202834;
+}
+.admin-grade-filter label {
+  color: #dce3ec;
+  font-size: 11px;
+  font-weight: 800;
+}
+.admin-grade-filter select {
+  min-width: 150px;
+  min-height: 34px;
+  padding: 6px 30px 6px 10px;
+  color: #edf1f6;
+  background: #141b24;
+  border: 1px solid #414d5c;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 11px;
+}
+.admin-grade-filter select:focus {
+  outline: 2px solid rgba(255, 147, 111, .45);
+  outline-offset: 1px;
+  border-color: #ff936f;
+}
+.post-grade-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 31px;
+  padding: 4px 7px;
+  border: 1px solid #536579;
+  border-radius: 999px;
+  color: #cdd9e7;
+  background: #273646;
+  font-size: 9px;
+  font-weight: 850;
+}
+@media (max-width: 560px) {
+  .admin-grade-filter { align-items: flex-start; flex-direction: column; }
+  .admin-grade-filter select { width: 100%; }
+}
