@@ -1,8 +1,8 @@
 // Based on edge-tts-universal by Travis (AGPL-3.0-or-later).
 // Original: https://github.com/travisvn/edge-tts-universal
 // EnglishJourney modification: Microsoft endpoint migration and bounded WebSocket waits.
-import { TRUSTED_CLIENT_TOKEN } from './constants';
-import { SkewAdjustmentError } from "./exceptions";
+import { TRUSTED_CLIENT_TOKEN } from './constants.ts';
+import { SkewAdjustmentError } from "./exceptions.ts";
 
 const WIN_EPOCH = 11644473600;
 const S_TO_NS = 1e9;
