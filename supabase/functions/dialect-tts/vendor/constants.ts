@@ -17,13 +17,13 @@ export const VOICE_LIST_URL = `https://${BASE_URL}/voices/list?trustedclienttoke
 export const DEFAULT_VOICE = "en-US-EmmaMultilingualNeural";
 
 /** Version string for Chromium browser emulation */
-export const CHROMIUM_FULL_VERSION = "143.0.3650.75";
+export const CHROMIUM_FULL_VERSION = "155.0.4283.45";
 
 /** Major version number extracted from the full Chromium version */
 export const CHROMIUM_MAJOR_VERSION = CHROMIUM_FULL_VERSION.split(".")[0];
 
 /** Security token version for API authentication */
-export const SEC_MS_GEC_VERSION = `1-${CHROMIUM_FULL_VERSION}`;
+export const SEC_MS_GEC_VERSION = `2-${CHROMIUM_FULL_VERSION}`;
 
 /** Base HTTP headers for API requests, mimicking a real browser */
 export const BASE_HEADERS = {
