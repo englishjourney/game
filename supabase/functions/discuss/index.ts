@@ -68,7 +68,7 @@ async function getUserBySession(token: string) {
 
   const { data: user, error: userError } = await db
     .from("users")
-    .select("id, username, name, avatar_url")
+    .select("id, username, name, avatar_url, grade")
     .eq("id", session.user_id)
     .maybeSingle();
 
@@ -96,13 +96,41 @@ function validateImageUrl(value: unknown): string | null {
   return parsed.toString();
 }
 
-async function listPosts(offsetValue: unknown) {
+function normalizeGrade(value: unknown) {
+  return String(value ?? "").trim().toUpperCase().replace(/\\s+/g, "");
+}
+
+function isForumAdmin(user: Record<string, unknown>) {
+  return String(user.username || "").trim().toLowerCase() === "micael.svg";
+}
+
+async function listPosts(
+  offsetValue: unknown,
+  user: Record<string, unknown>,
+  gradeFilterValue: unknown,
+) {
   const rawOffset = Number(offsetValue ?? 0);
   const offset = Number.isFinite(rawOffset) ? Math.max(0, Math.min(1000, Math.floor(rawOffset))) : 0;
+  const admin = isForumAdmin(user);
+  const requestedGrade = normalizeGrade(gradeFilterValue);
+  const ownGrade = normalizeGrade(user.grade);
 
-  const { data, error } = await db
+  let query = db
     .from("discuss_posts")
-    .select("id, created_at, title, content, image_url, author_username, author_name, avatar_url")
+    .select("id, created_at, title, content, image_url, author_username, author_name, avatar_url, author_grade");
+
+  // Somente a conta administrativa pode consultar todas as turmas ou escolher outra.
+  if (admin) {
+    if (requestedGrade) query = query.eq("author_grade", requestedGrade);
+  } else {
+    // Conta sem grade não recebe publicações de outras turmas por padrão.
+    if (!ownGrade) {
+      return { posts: [], hasMore: false, nextOffset: offset };
+    }
+    query = query.eq("author_grade", ownGrade);
+  }
+
+  const { data, error } = await query
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1);
@@ -110,6 +138,24 @@ async function listPosts(offsetValue: unknown) {
   if (error) throw error;
   const posts = data || [];
   return { posts, hasMore: posts.length === PAGE_SIZE, nextOffset: offset + posts.length };
+}
+
+async function listGrades(user: Record<string, unknown>) {
+  if (!isForumAdmin(user)) {
+    throw new DiscussError("Você não tem permissão para consultar os filtros do fórum.", 403);
+  }
+
+  const { data, error } = await db
+    .from("users")
+    .select("grade")
+    .not("grade", "is", null)
+    .order("grade", { ascending: true });
+
+  if (error) throw error;
+  const grades = Array.from(new Set((data || [])
+    .map((item: { grade: string | null }) => normalizeGrade(item.grade))
+    .filter(Boolean)));
+  return { grades };
 }
 
 async function createPost(body: Record<string, unknown>, user: Record<string, unknown>) {
@@ -126,8 +172,9 @@ async function createPost(body: Record<string, unknown>, user: Record<string, un
       author_username: String(user.username),
       author_name: String(user.name || user.username),
       avatar_url: user.avatar_url ? String(user.avatar_url) : null,
+      author_grade: normalizeGrade(user.grade) || null,
     })
-    .select("id, created_at, title, content, image_url, author_username, author_name, avatar_url")
+    .select("id, created_at, title, content, image_url, author_username, author_name, avatar_url, author_grade")
     .single();
 
   if (error) throw error;
@@ -195,7 +242,10 @@ Deno.serve(async (request: Request) => {
     const user = await getUserBySession(String(body.sessionToken || ""));
 
     if (action === "list_posts") {
-      return json({ data: await listPosts(body.offset) });
+      return json({ data: await listPosts(body.offset, user, body.grade) });
+    }
+    if (action === "list_grades") {
+      return json({ data: await listGrades(user) });
     }
     if (action === "create_post") {
       return json({ data: await createPost(body, user) }, 201);
