@@ -363,11 +363,9 @@
 
     function buildRounds() {
       const questions = shuffle(WORD_BANK);
-      const regionDistribution = shuffle([
-        ...Array(17).fill('USA'),
-        ...Array(17).fill('UK'),
-        ...Array(16).fill('AUS')
-      ]);
+      const regionDistribution = shuffle(
+        questions.map((_, index) => REGIONS[index % REGIONS.length])
+      );
       return questions.map((entry, index) => {
         const region = regionDistribution[index];
         const choices = entry.variants[region];
