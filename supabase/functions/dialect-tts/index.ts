@@ -1,5 +1,6 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2.119.0/cors";
 import { IsomorphicCommunicate } from "./vendor/isomorphic-communicate.ts";
+import { generateSecMsGec } from "./vendor/sec-ms-gec-v2.ts";
 
 const CORS_HEADERS = {
   ...corsHeaders,
