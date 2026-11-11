@@ -2,6 +2,7 @@
 // Original: https://github.com/travisvn/edge-tts-universal
 // EnglishJourney modification: Microsoft endpoint migration and bounded WebSocket waits.
 import { TRUSTED_CLIENT_TOKEN } from './constants.ts';
+import { generateSecMsGec as generateSecMsGecV2 } from './sec-ms-gec-v2.ts';
 import { SkewAdjustmentError } from "./exceptions.ts";
 
 const WIN_EPOCH = 11644473600;
@@ -56,23 +57,7 @@ export class IsomorphicDRM {
   }
 
   static async generateSecMsGec(): Promise<string> {
-    let ticks = IsomorphicDRM.getUnixTimestamp();
-    ticks += WIN_EPOCH;
-    ticks -= ticks % 300;
-    ticks *= S_TO_NS / 100;
-
-    const strToHash = `${ticks.toFixed(0)}${TRUSTED_CLIENT_TOKEN}`;
-
-    // Use Web Crypto API directly - available in both Node.js 16+ and browsers
-    if (!globalThis.crypto || !globalThis.crypto.subtle) {
-      throw new Error('Web Crypto API not available');
-    }
-
-    const encoder = new TextEncoder();
-    const data = encoder.encode(strToHash);
-    const hashBuffer = await globalThis.crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+    return generateSecMsGecV2(TRUSTED_CLIENT_TOKEN, IsomorphicDRM.getUnixTimestamp());
   }
 
   /**
