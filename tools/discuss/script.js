@@ -483,6 +483,10 @@ async function submitPost(event) {
 }
 
 function initialize() {
+  elements.renewSession.addEventListener("click", () => {
+    clearSession();
+    window.location.href = "../../index.html";
+  });
   session = readSession();
 
   if (!session?.username) {
@@ -528,11 +532,6 @@ function initialize() {
 
   elements.refreshFeed.addEventListener("click", () => loadPosts(true));
   elements.loadMore.addEventListener("click", () => loadPosts(false));
-  elements.renewSession.addEventListener("click", () => {
-    clearSession();
-    window.location.href = "../../index.html";
-  });
-
   loadPosts(true);
   window.setInterval(updateLikeCounters, 60 * 1000);
 }
