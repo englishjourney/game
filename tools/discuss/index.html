@@ -21,169 +21,168 @@
     <a class="back-link" href="../../index.html"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar ao site</a>
   </header>
 
-  <div class="page-shell">
-    <aside class="left-sidebar" aria-label="Sobre a comunidade">
-      <section class="community-card">
-        <div class="community-cover"></div>
-        <div class="community-avatar">eJ</div>
-        <div class="community-card-content">
-          <h1>EnglishJourney</h1>
-          <p class="community-handle">comunidade / discussões</p>
-          <p class="community-description">Um espaço para compartilhar trabalhos, ideias, descobertas e materiais de aprendizagem.</p>
-          <div class="community-stats">
-            <div><strong>Fórum</strong><span>da comunidade</span></div>
-            <div><strong>Sem comentários</strong><span>publicações organizadas</span></div>
+  <main class="page-shell">
+    <section class="feed-heading">
+      <div>
+        <p class="eyebrow">ESPAÇO DA COMUNIDADE</p>
+        <h1>Fórum de discussão</h1>
+        <p>Compartilhe seus trabalhos, ideias e descobertas com a turma.</p>
+      </div>
+      <button id="refresh-feed" class="icon-button" type="button" title="Atualizar publicações" aria-label="Atualizar publicações">
+        <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+      </button>
+    </section>
+
+    <section class="pinned-rules-card" aria-label="Regras fixadas do fórum">
+      <div class="pinned-rules-top">
+        <span class="pin-label"><i class="fa-solid fa-thumbtack" aria-hidden="true"></i> PUBLICAÇÃO FIXADA</span>
+        <span class="rules-community">EnglishJourney · Aviso da comunidade</span>
+      </div>
+      <h2><i class="fa-solid fa-book-open" aria-hidden="true"></i> Antes de publicar, leia as regras</h2>
+      <div class="rules-grid">
+        <p><i class="fa-solid fa-check" aria-hidden="true"></i> Compartilhe trabalhos e assuntos apropriados ao ambiente escolar.</p>
+        <p><i class="fa-solid fa-check" aria-hidden="true"></i> Respeite os colegas e o trabalho de cada pessoa.</p>
+        <p><i class="fa-solid fa-check" aria-hidden="true"></i> Não publique senhas, informações pessoais ou dados privados.</p>
+        <p><i class="fa-solid fa-check" aria-hidden="true"></i> Use apenas links de imagens que você tenha permissão para compartilhar.</p>
+      </div>
+      <div class="rules-footer">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        Comentários estão desativados. As publicações são exibidas da mais nova para a mais antiga.
+      </div>
+    </section>
+
+    <section id="auth-required" class="notice-card hidden" aria-live="polite">
+      <div class="notice-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></div>
+      <div>
+        <h2 id="auth-title">Entre no EnglishJourney</h2>
+        <p id="auth-message">É necessário estar conectado à sua conta para acessar o fórum.</p>
+        <a id="auth-link" class="primary-link" href="../../index.html">Ir para o login <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+        <button id="renew-session" class="text-button hidden" type="button">Sair e entrar novamente</button>
+      </div>
+    </section>
+
+    <section id="forum-content" class="hidden">
+      <div class="composer-launch">
+        <div class="current-user">
+          <div id="current-user-avatar" class="avatar avatar-large" aria-hidden="true"></div>
+          <div>
+            <strong id="current-user-name">Sua conta</strong>
+            <span id="current-user-handle"></span>
           </div>
         </div>
-      </section>
-
-      <section class="sidebar-box">
-        <h2><i class="fa-solid fa-compass" aria-hidden="true"></i> Como funciona</h2>
-        <p>Publique seu trabalho com um título e uma descrição. As publicações mais recentes aparecem primeiro.</p>
-        <p>As respostas por comentários ficam desativadas. Para conversar sobre uma publicação, use os canais indicados pelo professor.</p>
-      </section>
-    </aside>
-
-    <main class="feed-column">
-      <header class="feed-heading">
-        <div>
-          <p class="eyebrow">ESPAÇO DA TURMA</p>
-          <h2>Fórum de discussão</h2>
-          <p>Compartilhe seus trabalhos com a comunidade.</p>
-        </div>
-        <button id="refresh-feed" class="icon-button" type="button" title="Atualizar publicações" aria-label="Atualizar publicações">
-          <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+        <button id="open-post-dialog" class="write-post-button" type="button">
+          <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+          Escrever publicação
         </button>
-      </header>
+      </div>
 
-      <section id="auth-required" class="notice-card hidden" aria-live="polite">
-        <div class="notice-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></div>
+      <div class="feed-toolbar">
         <div>
-          <h2 id="auth-title">Entre no EnglishJourney</h2>
-          <p id="auth-message">É necessário estar conectado à sua conta para acessar o fórum.</p>
-          <a id="auth-link" class="primary-link" href="../../index.html">Ir para o login <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
-          <button id="renew-session" class="text-button hidden" type="button">Sair e entrar novamente</button>
+          <span class="feed-toolbar-title">Publicações</span>
+          <span class="feed-toolbar-subtitle">Mais recentes primeiro</span>
         </div>
-      </section>
+        <span class="sort-pill"><i class="fa-solid fa-arrow-down-wide-short" aria-hidden="true"></i> Mais recentes</span>
+      </div>
 
-      <section id="forum-content" class="hidden">
-        <form id="post-form" class="composer-card">
-          <div class="composer-topline">
-            <div class="current-user">
-              <div id="current-user-avatar" class="avatar avatar-large" aria-hidden="true"></div>
-              <div>
-                <strong id="current-user-name">Sua publicação</strong>
-                <span id="current-user-handle"></span>
-              </div>
+      <div id="feed-list" class="feed-list" role="feed" aria-live="polite" aria-busy="false">
+        <div class="loading-card"><span class="spinner"></span><span>Carregando publicações...</span></div>
+      </div>
+      <button id="load-more" class="load-more-button hidden" type="button">Carregar mais publicações</button>
+    </section>
+  </main>
+
+  <dialog id="post-dialog" class="post-dialog">
+    <div class="post-dialog-card">
+      <div class="post-dialog-header">
+        <div>
+          <p class="eyebrow">ENGLISHJOURNEY</p>
+          <h2 id="post-dialog-title">Nova publicação</h2>
+        </div>
+        <button id="close-post-dialog" class="dialog-close" type="button" aria-label="Fechar">×</button>
+      </div>
+
+      <form id="post-form">
+        <label class="field-label" for="post-title">Título</label>
+        <input id="post-title" name="title" type="text" maxlength="120" placeholder="Escreva um título para seu trabalho..." required>
+
+        <label class="field-label content-label" for="post-content">Texto da publicação</label>
+        <div class="format-toolbar" role="toolbar" aria-label="Formatação do texto">
+          <button type="button" data-marker="*" title="Negrito"><strong>B</strong></button>
+          <button type="button" data-marker="_" title="Itálico"><em>I</em></button>
+          <button type="button" data-marker="'''" title="Sublinhado"><u>U</u></button>
+          <span class="toolbar-divider"></span>
+          <span class="toolbar-hint">Selecione um trecho e escolha a formatação.</span>
+        </div>
+        <textarea id="post-content" name="content" rows="6" maxlength="6000" placeholder="Conte sobre seu trabalho, compartilhe uma ideia ou explique o que você produziu..." required></textarea>
+        <div class="editor-footer">
+          <span>Até 6.000 caracteres · Links http/https ficam clicáveis automaticamente.</span>
+          <span id="char-count">0/6000</span>
+        </div>
+
+        <div class="format-help">
+          <strong>Formatação:</strong>
+          <span><code>*texto*</code> negrito</span>
+          <span><code>_texto_</code> itálico</span>
+          <span><code>'''texto'''</code> sublinhado</span>
+        </div>
+
+        <div class="preview-wrap">
+          <button id="preview-toggle" class="preview-toggle" type="button" aria-expanded="false">
+            <i class="fa-regular fa-eye" aria-hidden="true"></i> Pré-visualizar texto
+            <i class="fa-solid fa-chevron-down preview-chevron" aria-hidden="true"></i>
+          </button>
+          <div id="post-preview" class="post-preview hidden">
+            <p class="preview-label">Prévia da publicação</p>
+            <div id="preview-content" class="rich-content"></div>
+          </div>
+        </div>
+
+        <div class="image-option">
+          <div class="image-option-heading">
+            <div>
+              <strong><i class="fa-regular fa-image" aria-hidden="true"></i> Imagem na publicação</strong>
+              <p>Não é permitido enviar arquivos de imagem do computador.</p>
             </div>
-            <span class="composer-tag"><i class="fa-solid fa-pen" aria-hidden="true"></i> Nova publicação</span>
-          </div>
-
-          <label class="field-label" for="post-title">Título</label>
-          <input id="post-title" name="title" type="text" maxlength="120" placeholder="Escreva um título para seu trabalho..." required>
-
-          <label class="field-label content-label" for="post-content">Texto da publicação</label>
-          <div class="format-toolbar" role="toolbar" aria-label="Formatação do texto">
-            <button type="button" data-marker="*" title="Negrito"><strong>B</strong></button>
-            <button type="button" data-marker="_" title="Itálico"><em>I</em></button>
-            <button type="button" data-marker="'''" title="Sublinhado"><u>U</u></button>
-            <span class="toolbar-divider"></span>
-            <span class="toolbar-hint">Selecione uma parte do texto e escolha a formatação.</span>
-          </div>
-          <textarea id="post-content" name="content" rows="6" maxlength="6000" placeholder="Conte sobre seu trabalho, compartilhe uma ideia ou explique o que você produziu..." required></textarea>
-          <div class="editor-footer">
-            <span>Até 6.000 caracteres · Links http/https ficam clicáveis automaticamente.</span>
-            <span id="char-count">0/6000</span>
-          </div>
-
-          <div class="format-help">
-            <strong>Formatação:</strong>
-            <span><code>*texto*</code> negrito</span>
-            <span><code>_texto_</code> itálico</span>
-            <span><code>'''texto'''</code> sublinhado</span>
-          </div>
-
-          <div class="preview-wrap">
-            <button id="preview-toggle" class="preview-toggle" type="button" aria-expanded="false">
-              <i class="fa-regular fa-eye" aria-hidden="true"></i> Pré-visualizar texto
-              <i class="fa-solid fa-chevron-down preview-chevron" aria-hidden="true"></i>
+            <button id="image-toggle" class="secondary-button" type="button" aria-expanded="false">
+              <i class="fa-solid fa-link" aria-hidden="true"></i> Usar link de imagem
             </button>
-            <div id="post-preview" class="post-preview hidden">
-              <p class="preview-label">Prévia da publicação</p>
-              <div id="preview-content" class="rich-content"></div>
+          </div>
+          <div id="image-fields" class="image-fields hidden">
+            <label class="field-label" for="image-url">Endereço direto da imagem</label>
+            <input id="image-url" name="imageUrl" type="url" maxlength="2048" inputmode="url" placeholder="https://...">
+            <div class="image-instructions">
+              <strong>Como copiar o endereço correto:</strong>
+              <ol>
+                <li>Pesquise a imagem no Google Imagens.</li>
+                <li>Clique com o botão direito do mouse sobre a imagem. No Chromebook sem mouse, use <strong>Alt + clique</strong> para abrir o menu de contexto.</li>
+                <li>Escolha <strong>“Copiar endereço da imagem”</strong> e cole o endereço no campo acima.</li>
+              </ol>
+              <p>Copie o endereço da própria imagem, não o link da página onde ela aparece. Apenas links diretos começando com http:// ou https:// são aceitos.</p>
+            </div>
+            <div id="image-preview-wrap" class="image-preview-wrap hidden">
+              <img id="image-preview" alt="Prévia da imagem escolhida">
             </div>
           </div>
+        </div>
 
-          <div class="image-option">
-            <div class="image-option-heading">
-              <div>
-                <strong><i class="fa-regular fa-image" aria-hidden="true"></i> Imagem na publicação</strong>
-                <p>Não é permitido enviar arquivos de imagem do computador.</p>
-              </div>
-              <button id="image-toggle" class="secondary-button" type="button" aria-expanded="false">
-                <i class="fa-solid fa-link" aria-hidden="true"></i> Usar link de imagem
-              </button>
-            </div>
-            <div id="image-fields" class="image-fields hidden">
-              <label class="field-label" for="image-url">Endereço direto da imagem</label>
-              <input id="image-url" name="imageUrl" type="url" maxlength="2048" inputmode="url" placeholder="https://...">
-              <div class="image-instructions">
-                <strong>Como copiar o endereço correto:</strong>
-                <ol>
-                  <li>Pesquise a imagem no Google Imagens.</li>
-                  <li>Clique com o botão direito do mouse sobre a imagem. No Chromebook sem mouse, use <strong>Alt + clique</strong> para abrir o menu de contexto.</li>
-                  <li>Escolha <strong>“Copiar endereço da imagem”</strong> e cole o endereço no campo acima.</li>
-                </ol>
-                <p>Copie o endereço da própria imagem, não o link da página onde ela aparece. Apenas links diretos começando com http:// ou https:// são aceitos.</p>
-              </div>
-              <div id="image-preview-wrap" class="image-preview-wrap hidden">
-                <img id="image-preview" alt="Prévia da imagem escolhida">
-              </div>
-            </div>
-          </div>
-
-          <div class="composer-actions">
-            <span class="privacy-note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Não compartilhe senhas ou dados pessoais.</span>
+        <div class="composer-actions">
+          <span class="privacy-note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Não compartilhe senhas ou dados pessoais.</span>
+          <div class="composer-action-buttons">
+            <button id="cancel-post" class="cancel-button" type="button">Cancelar</button>
             <button id="submit-post" class="submit-button" type="submit">
               <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Publicar
             </button>
           </div>
-        </form>
-
-        <div class="feed-toolbar">
-          <div>
-            <span class="feed-toolbar-title">Publicações recentes</span>
-            <span class="feed-toolbar-subtitle">Da mais nova para a mais antiga</span>
-          </div>
-          <span class="sort-pill"><i class="fa-solid fa-arrow-down-wide-short" aria-hidden="true"></i> Mais recentes</span>
         </div>
+      </form>
+    </div>
+  </dialog>
 
-        <div id="feed-list" class="feed-list" role="feed" aria-live="polite" aria-busy="false">
-          <div class="loading-card"><span class="spinner"></span><span>Carregando publicações...</span></div>
-        </div>
-        <button id="load-more" class="load-more-button hidden" type="button">Carregar mais publicações</button>
-      </section>
-    </main>
-
-    <aside class="right-sidebar" aria-label="Regras do fórum">
-      <section class="sidebar-box rules-box">
-        <h2><i class="fa-solid fa-list-check" aria-hidden="true"></i> Regras do fórum</h2>
-        <ul>
-          <li>Compartilhe apenas trabalhos e assuntos apropriados ao ambiente escolar.</li>
-          <li>Respeite os colegas e o trabalho de cada pessoa.</li>
-          <li>Não publique informações pessoais, senhas ou dados privados.</li>
-          <li>Use somente links de imagens que você tenha permissão para compartilhar.</li>
-        </ul>
-      </section>
-      <section class="sidebar-box likes-box">
-        <h2><i class="fa-solid fa-heart" aria-hidden="true"></i> Curtidas</h2>
-        <p>O número exibido é ilustrativo: cada publicação recebe automaticamente uma curtida simulada a cada 5 horas.</p>
-      </section>
-      <p class="sidebar-footer">EnglishJourney · Espaço de aprendizagem</p>
-    </aside>
-  </div>
-
+  <button id="back-to-top" class="back-to-top hidden" type="button" aria-label="Voltar ao topo" title="Voltar ao topo">
+    <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+  </button>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
   <script type="module" src="./script.js"></script>
 </body>
 </html>
