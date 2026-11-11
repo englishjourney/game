@@ -1,9 +1,8 @@
 import { UniversalEdgeTTS } from "npm:edge-tts-universal@1.4.0";
+import { corsHeaders } from "npm:@supabase/supabase-js@2.119.0/cors";
 
 const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  ...corsHeaders,
   "Content-Type": "application/json; charset=utf-8",
 };
 
