@@ -330,6 +330,8 @@
     let roundIndex = 0;
     let yellowScore = 0;
     let blueScore = 0;
+    let completedRounds = 0;
+    let audioReady = false;
     let selectedRegion = '';
     let currentRound = null;
     let tilePool = [];
@@ -413,7 +415,7 @@
       }
       const visibleCount = selectedTiles.filter(tile => tile.char !== ' ').length;
       $('letter-count').textContent = visibleCount + ' letters';
-      $('submit-button').disabled = !gameActive || roundLocked || !assembledAnswer.trim() || !selectedRegion;
+      $('submit-button').disabled = !gameActive || roundLocked || !audioReady || !assembledAnswer.trim() || !selectedRegion;
     }
 
     function renderKeyboard() {
@@ -529,6 +531,7 @@
         audioPlayer.pause();
         audioPlayer.src = url;
         audioPlayer.currentTime = 0;
+        audioReady = true;
         $('sound-button').disabled = false;
         $('sound-button').classList.remove('loading');
         $('audio-status').textContent = 'Áudio pronto. Toque no alto-falante para repetir.';
@@ -540,8 +543,10 @@
         }
       } catch (error) {
         if (requestId !== ttsRequestId) return;
+        audioReady = false;
         $('sound-button').disabled = false;
         $('sound-button').classList.remove('loading');
+        renderAnswer();
         $('audio-status').textContent = 'Não foi possível carregar o áudio. Toque no alto-falante para tentar novamente.';
         $('feedback').textContent = error.message || 'Falha na geração do áudio.';
         $('feedback').className = 'feedback bad';
@@ -556,6 +561,9 @@
       currentRound = rounds[roundIndex];
       selectedRegion = '';
       roundLocked = false;
+      audioReady = false;
+      $('undo-button').disabled = false;
+      $('clear-button').disabled = false;
       $('round-label').textContent = 'ROUND ' + (roundIndex + 1) + ' / ' + WORD_COUNT;
       $('progress-fill').style.width = ((roundIndex / WORD_COUNT) * 100) + '%';
       $('meaning').textContent = currentRound.meaning;
@@ -582,6 +590,7 @@
       const countryCorrect = selectedRegion === currentRound.region;
       const correct = wordCorrect && countryCorrect;
 
+      completedRounds++;
       if (correct) {
         if (activeTeam === 'yellow') yellowScore++;
         else blueScore++;
@@ -621,7 +630,7 @@
       roundLocked = true;
       ttsRequestId++;
       audioPlayer.pause();
-      $('progress-fill').style.width = ((roundIndex / WORD_COUNT) * 100) + '%';
+      $('progress-fill').style.width = ((completedRounds / WORD_COUNT) * 100) + '%';
       $('final-yellow').textContent = String(yellowScore);
       $('final-blue').textContent = String(blueScore);
       const winner = yellowScore > blueScore ? 'YELLOW TEAM WINS!' :
@@ -631,7 +640,7 @@
         ? 'A partida foi encerrada antes da última rodada. Os pontos das tentativas concluídas foram contabilizados.'
         : 'Todas as palavras foram trabalhadas. Confira o resultado final!';
       $('winner-label').textContent = winner;
-      $('rounds-summary').textContent = 'Rodadas contabilizadas: ' + Math.min(roundIndex + (early ? 0 : 1), WORD_COUNT) + ' de ' + WORD_COUNT + '.';
+      $('rounds-summary').textContent = 'Rodadas contabilizadas: ' + completedRounds + ' de ' + WORD_COUNT + '.';
       $('yellow-card').classList.remove('active-turn');
       $('blue-card').classList.remove('active-turn');
       showScreen('result-screen');
@@ -643,6 +652,8 @@
       roundIndex = 0;
       yellowScore = 0;
       blueScore = 0;
+      completedRounds = 0;
+      audioReady = false;
       gameActive = true;
       roundLocked = false;
       showScreen('game-screen');
