@@ -534,6 +534,7 @@
         audioReady = true;
         $('sound-button').disabled = false;
         $('sound-button').classList.remove('loading');
+        renderAnswer();
         $('audio-status').textContent = 'Áudio pronto. Toque no alto-falante para repetir.';
         try {
           await audioPlayer.play();
@@ -573,6 +574,7 @@
       $('sound-button').disabled = true;
       $('sound-button').classList.add('loading');
       document.querySelectorAll('[data-region]').forEach(button => {
+        button.disabled = false;
         button.classList.remove('selected');
         button.setAttribute('aria-pressed', 'false');
       });
@@ -626,6 +628,7 @@
 
     function finishGame(early) {
       if (!gameActive) return;
+      const endedEarly = early && completedRounds < WORD_COUNT;
       gameActive = false;
       roundLocked = true;
       ttsRequestId++;
@@ -635,8 +638,8 @@
       $('final-blue').textContent = String(blueScore);
       const winner = yellowScore > blueScore ? 'YELLOW TEAM WINS!' :
         blueScore > yellowScore ? 'BLUE TEAM WINS!' : 'IT’S A DRAW!';
-      $('result-title').textContent = early ? 'Game ended early' : 'All 50 rounds completed!';
-      $('result-summary').textContent = early
+      $('result-title').textContent = endedEarly ? 'Game ended early' : 'All 50 rounds completed!';
+      $('result-summary').textContent = endedEarly
         ? 'A partida foi encerrada antes da última rodada. Os pontos das tentativas concluídas foram contabilizados.'
         : 'Todas as palavras foram trabalhadas. Confira o resultado final!';
       $('winner-label').textContent = winner;
