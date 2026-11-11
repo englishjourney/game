@@ -1,7 +1,7 @@
 // Based on edge-tts-universal by Travis (AGPL-3.0-or-later).
 // Original: https://github.com/travisvn/edge-tts-universal
 // EnglishJourney modification: Microsoft endpoint migration and bounded WebSocket waits.
-import { ValueError } from "./exceptions";
+import { ValueError } from "./exceptions.ts";
 
 /**
  * Interface defining the configuration options for TTS synthesis.
