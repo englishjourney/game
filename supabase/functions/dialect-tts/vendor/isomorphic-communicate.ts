@@ -20,6 +20,7 @@ import {
 import { TTSConfig } from './tts_config.ts';
 import { DEFAULT_VOICE, WSS_URL, SEC_MS_GEC_VERSION, WSS_HEADERS } from './constants.ts';
 import { IsomorphicDRM } from './isomorphic-drm.ts';
+import WebSocket from 'npm:ws@8.18.3';
 
 // Isomorphic buffer handling - works in both Node.js and browsers
 const IsomorphicBuffer = {
@@ -220,28 +221,13 @@ export class IsomorphicCommunicate {
   }
 
   private async createWebSocket(url: string): Promise<WebSocket> {
-    // Handle WebSocket creation across different environments
-    const isNode = typeof globalThis !== 'undefined'
-      ? globalThis.process?.versions?.node !== undefined
-      : typeof process !== 'undefined' && process.versions?.node !== undefined;
-
-    if (isNode) {
-      // Node.js: Try to dynamically import ws library for better compatibility
-      try {
-        const { default: WS } = await import('ws');
-        return new WS(url, {
-          headers: IsomorphicDRM.headersWithMuid(WSS_HEADERS),
-        }) as any;
-      } catch (error) {
-        // Fall back to native Node.js WebSocket if ws not available
-        console.warn('ws library not available, using native WebSocket without headers');
-        return new WebSocket(url);
-      }
-    } else {
-      // Browser/Deno: Use native WebSocket
-      // Browsers automatically set appropriate headers like Origin
-      return new WebSocket(url);
-    }
+    // Deno's native WebSocket cannot set the custom Origin/User-Agent/MUID
+    // headers required by Microsoft's read-aloud handshake. Use ws explicitly.
+    return new WebSocket(url, {
+      headers: IsomorphicDRM.headersWithMuid(WSS_HEADERS),
+      handshakeTimeout: 10000,
+      perMessageDeflate: false,
+    });
   }
 
   private async * _stream(): AsyncGenerator<IsomorphicTTSChunk, void, unknown> {
@@ -361,8 +347,20 @@ export class IsomorphicCommunicate {
       handleMessage(message, isBinary);
     };
 
+    // The ws package exposes the rejected HTTP handshake response, unlike
+    // the native Deno WebSocket API. Keep its status in the returned error.
+    (websocket as any).on("unexpected-response", (_request: any, response: any) => {
+      const status = Number(response?.statusCode || 0);
+      const retryAfter = response?.headers?.["retry-after"];
+      const detail = retryAfter ? ` Retry-After: ${String(retryAfter)}.` : "";
+      rejectBeforeOpen?.(new WebSocketError(
+        `Microsoft rejected the speech connection (HTTP ${status}).${detail}`
+      ));
+      try { response?.resume?.(); } catch (_) {}
+    });
+
     websocket.onerror = (event: any) => {
-      const error = new WebSocketError(event?.message || 'Could not connect to the Microsoft speech service.');
+      const error = new WebSocketError(event?.error?.message || event?.message || 'Could not connect to the Microsoft speech service.');
       if (!connected) {
         rejectBeforeOpen?.(error);
         return;
