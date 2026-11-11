@@ -2,6 +2,9 @@ import { supabase } from '../supabaseClient.js';
 
 let taskRecords = new Map();
 let selectedTaskFilter = 'all';
+let availableTaskGrades = [];
+let taskGradesLoadPromise = null;
+let selectedTaskGrades = new Set();
 
 export function initTasks() {
     const form = document.getElementById('task-form');
@@ -10,18 +13,39 @@ export function initTasks() {
     const list = document.getElementById('tasks-list');
     if (!form || !addButton || !cancelButton || !list) return;
 
-    addButton.addEventListener('click', () => openTaskForm());
+    addButton.addEventListener('click', async () => {
+        await loadTaskGrades();
+        openTaskForm();
+    });
     cancelButton.addEventListener('click', () => document.getElementById('task-modal').close());
+
+    const gradeOptions = document.getElementById('task-grades-options');
+    gradeOptions?.addEventListener('click', event => {
+        const button = event.target.closest('[data-task-grade]');
+        if (!button) return;
+        const grade = button.dataset.taskGrade;
+        if (selectedTaskGrades.has(grade)) selectedTaskGrades.delete(grade);
+        else selectedTaskGrades.add(grade);
+        button.classList.toggle('selected', selectedTaskGrades.has(grade));
+        button.setAttribute('aria-pressed', String(selectedTaskGrades.has(grade)));
+    });
     form.addEventListener('submit', async event => {
         event.preventDefault();
         const id = document.getElementById('task-id').value;
         const localDeadline = document.getElementById('task-deadline').value;
         if (!localDeadline) { alert('Informe o prazo final do trabalho.'); return; }
+        const selectedGrades = Array.from(selectedTaskGrades).sort((a, b) =>
+            a.localeCompare(b, 'pt-BR', { numeric: true })
+        );
+        if (!selectedGrades.length) {
+            alert('Selecione pelo menos um grade para este trabalho.');
+            return;
+        }
+
         const taskData = {
             title: document.getElementById('task-title').value.trim(),
             description: document.getElementById('task-description').value.trim(),
-            serie: document.getElementById('task-serie').value || null,
-            team: document.getElementById('task-team').value || null,
+            grades: selectedGrades,
             deadline: new Date(localDeadline).toISOString()
         };
         if (!taskData.title) { alert('Informe o título do trabalho.'); return; }
@@ -53,7 +77,8 @@ export function initTasks() {
         renderTaskCards(currentTasks);
     });
 
-    // Carrega e verifica os prazos uma vez ao abrir a seção.
+    // Carrega os grades disponíveis e os trabalhos uma vez ao abrir a seção.
+    loadTaskGrades();
     loadTasks();
 }
 
@@ -75,13 +100,80 @@ function formatDeadline(value) {
     return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(date);
 }
 
+async function loadTaskGrades() {
+    if (availableTaskGrades.length) return availableTaskGrades;
+    if (taskGradesLoadPromise) return taskGradesLoadPromise;
+
+    taskGradesLoadPromise = (async () => {
+        const { data, error } = await supabase
+            .from('users')
+            .select('grade')
+            .not('grade', 'is', null);
+
+        if (error) {
+            console.error('Erro ao carregar grades dos alunos:', error);
+        }
+
+        const gradesFromUsers = (data || [])
+            .map(user => String(user.grade || '').trim().toUpperCase())
+            .filter(Boolean);
+
+        // Fallback para manter o formulário utilizável caso a consulta de usuários falhe.
+        const fallbackGrades = [
+            '1A', '2A', '3A',
+            '6A', '6B', '6C',
+            '7A', '7B', '7C',
+            '8A', '8B', '8C',
+            '9A', '9B', '9C'
+        ];
+
+        availableTaskGrades = Array.from(new Set(gradesFromUsers.length ? gradesFromUsers : fallbackGrades))
+            .sort((a, b) => a.localeCompare(b, 'pt-BR', { numeric: true }));
+
+        return availableTaskGrades;
+    })();
+
+    try {
+        return await taskGradesLoadPromise;
+    } finally {
+        taskGradesLoadPromise = null;
+    }
+}
+
+function getTaskGrades(task) {
+    if (Array.isArray(task?.grades)) {
+        return Array.from(new Set(task.grades.map(grade => String(grade || '').trim().toUpperCase()).filter(Boolean)));
+    }
+
+    const serie = String(task?.serie || '').trim();
+    const team = String(task?.team || '').trim().toUpperCase();
+    return serie && team ? [serie + team] : [];
+}
+
+function renderTaskGradeOptions() {
+    const container = document.getElementById('task-grades-options');
+    if (!container) return;
+
+    if (!availableTaskGrades.length) {
+        container.innerHTML = '<p class="task-grade-empty">Nenhuma turma disponível.</p>';
+        return;
+    }
+
+    container.innerHTML = availableTaskGrades.map(grade => {
+        const selected = selectedTaskGrades.has(grade);
+        return '<button type="button" class="task-grade-tag' + (selected ? ' selected' : '') +
+            '" data-task-grade="' + escapeTaskHtml(grade) +
+            '" aria-pressed="' + String(selected) + '">' + escapeTaskHtml(grade) + '</button>';
+    }).join('');
+}
+
 function openTaskForm(task = null) {
     document.getElementById('task-form').reset();
     document.getElementById('task-id').value = task ? task.id : '';
     document.getElementById('task-title').value = task ? task.title : '';
     document.getElementById('task-description').value = task ? task.description || '' : '';
-    document.getElementById('task-serie').value = task ? task.serie || '' : '';
-    document.getElementById('task-team').value = task ? task.team || '' : '';
+    selectedTaskGrades = new Set(task ? getTaskGrades(task) : []);
+    renderTaskGradeOptions();
     document.getElementById('task-deadline').value = task ? toLocalDateTimeInput(task.deadline) : '';
     document.getElementById('task-modal-title').textContent = task ? 'Editar trabalho pendente' : 'Novo trabalho pendente';
     document.getElementById('task-modal').showModal();
@@ -109,19 +201,10 @@ function buildTaskFilterOptions(tasks) {
     const options = new Map();
 
     tasks.forEach(task => {
-        const serie = String(task.serie || '').trim();
-        const team = String(task.team || '').trim();
-
-        if (serie && team) {
-            const key = 'class|' + serie + '|' + team;
-            options.set(key, { key, label: serie + 'º ' + team });
-        } else if (serie) {
-            const key = 'serie|' + serie;
-            options.set(key, { key, label: serie + 'º ano · todas as turmas' });
-        } else if (team) {
-            const key = 'team|' + team;
-            options.set(key, { key, label: 'Turma ' + team + ' · todas as séries' });
-        }
+        getTaskGrades(task).forEach(grade => {
+            const key = 'grade|' + grade;
+            options.set(key, { key, label: grade });
+        });
     });
 
     return Array.from(options.values()).sort((a, b) =>
@@ -132,17 +215,13 @@ function buildTaskFilterOptions(tasks) {
 function getTasksForFilter(tasks, filterKey) {
     if (!filterKey || filterKey === 'all') return tasks;
 
-    const [type, serie, team] = filterKey.split('|');
-    return tasks.filter(task => {
-        const taskSerie = String(task.serie || '').trim();
-        const taskTeam = String(task.team || '').trim();
+    const [type, grade] = filterKey.split('|');
+    if (type !== 'grade') return tasks;
 
-        if (type === 'class') {
-            return (!taskSerie || taskSerie === serie) && (!taskTeam || taskTeam === team);
-        }
-        if (type === 'serie') return !taskSerie || taskSerie === serie;
-        if (type === 'team') return !taskTeam || taskTeam === team;
-        return true;
+    return tasks.filter(task => {
+        const taskGrades = getTaskGrades(task);
+        // Trabalhos sem alvo definido continuam aparecendo para todas as turmas.
+        return !taskGrades.length || taskGrades.includes(grade);
     });
 }
 
@@ -193,20 +272,27 @@ function renderTaskCards(tasks) {
     const now = Date.now();
     container.innerHTML = visibleTasks.map(task => {
         const expired = new Date(task.deadline).getTime() <= now;
-        const target = [task.serie ? 'Série ' + task.serie : '', task.team ? 'Turma ' + task.team : ''].filter(Boolean).join(' · ') || 'Todas as turmas';
+        const grades = getTaskGrades(task);
+        const target = grades.length
+            ? '<div class="task-grade-badges" aria-label="Grades selecionados">' + grades.map(grade =>
+                '<span class="task-grade-badge">' + escapeTaskHtml(grade) + '</span>'
+            ).join('') + '</div>'
+            : '<p>Todas as turmas</p>';
         const description = task.description ? '<p class="task-description">' + escapeTaskHtml(task.description).replace(/\r?\n/g, '<br>') + '</p>' : '';
         return '<article class="data-card task-card' + (expired ? ' is-expired' : '') + '">' +
             '<div class="data-card-info"><p><strong>' + escapeTaskHtml(task.title) + '</strong></p>' +
-            '<p>' + escapeTaskHtml(target) + '</p><p><strong>Prazo:</strong> ' + escapeTaskHtml(formatDeadline(task.deadline)) +
+            target + '<p><strong>Prazo:</strong> ' + escapeTaskHtml(formatDeadline(task.deadline)) +
             (expired ? ' <span class="task-expired-label">PRAZO EXPIRADO</span>' : '') + '</p>' + description + '</div>' +
             '<div class="data-card-actions"><button type="button" class="btn-small btn-secondary" data-task-edit="' + escapeTaskHtml(task.id) + '">Editar</button>' +
             '<button type="button" class="btn-small btn-danger" data-task-delete="' + escapeTaskHtml(task.id) + '">Excluir</button></div></article>';
     }).join('');
 }
 
-window.editTask = id => {
+window.editTask = async id => {
     const task = taskRecords.get(String(id));
-    if (task) openTaskForm(task);
+    if (!task) return;
+    await loadTaskGrades();
+    openTaskForm(task);
 };
 
 window.deleteTask = async id => {
