@@ -360,8 +360,13 @@
             <div class="form-grid">
                 <label class="full-width">Título: <input id="task-title" type="text" maxlength="160" required></label>
                 <label class="full-width">Descrição: <textarea id="task-description" rows="4" placeholder="Orientações do trabalho (opcional)"></textarea></label>
-                <label>Série: <select id="task-serie"><option value="">Todas</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>
-                <label>Turma: <select id="task-team"><option value="">Todas</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></label>
+                <div class="full-width task-grade-picker">
+                    <div class="task-grade-picker-heading">
+                        <strong>Grades da atividade</strong>
+                        <span>Selecione uma ou mais turmas para receber o mesmo trabalho.</span>
+                    </div>
+                    <div id="task-grades-options" class="task-grade-options" role="group" aria-label="Grades que receberão esta atividade"></div>
+                </div>
                 <label class="full-width">Prazo final: <input id="task-deadline" type="datetime-local" required></label>
             </div>
             <div class="modal-actions"><button type="submit" class="btn-primary">Salvar trabalho</button><button type="button" id="btn-cancel-task" class="btn-secondary">Cancelar</button></div>
