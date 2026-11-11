@@ -25,6 +25,7 @@
                 <input type="password" id="login-password" placeholder="Senha" required>
                 <button type="submit" class="btn-primary">Entrar</button>
             </form>
+            <button id="btn-forgot-password" type="button" class="btn-text forgot-password-link">Esqueci minha senha</button>
             <p>Ainda não possui conta? <button id="btn-show-register" type="button" class="btn-text">Crie uma</button></p>
         </div>
 
@@ -103,6 +104,59 @@
             <div id="modal-content">
                 <!-- O conteúdo (missões, ranking, etc.) será injetado aqui via JS -->
             </div>
+        </div>
+    </dialog>
+
+
+    <dialog id="account-recovery-dialog" class="account-dialog">
+        <div class="account-dialog-card">
+            <button type="button" class="account-dialog-close" data-close-dialog="account-recovery-dialog" aria-label="Fechar">×</button>
+            <div class="account-dialog-icon"><i class="fa-solid fa-key" aria-hidden="true"></i></div>
+            <h2>Recuperar minha conta</h2>
+            <p class="account-dialog-intro">Informe seu usuário e responda às perguntas de segurança cadastradas para criar uma nova senha.</p>
+            <form id="account-recovery-form">
+                <section id="recovery-step-username">
+                    <label for="recovery-username">Nome de usuário</label>
+                    <input id="recovery-username" type="text" maxlength="40" autocomplete="username" placeholder="Seu usuário" required>
+                    <button id="recovery-continue" type="button" class="account-action-primary">Continuar</button>
+                </section>
+                <section id="recovery-step-answers" class="hidden">
+                    <div id="recovery-question-fields" class="security-question-fields"></div>
+                    <label for="recovery-new-password">Nova senha</label>
+                    <input id="recovery-new-password" type="password" autocomplete="new-password" placeholder="Nova senha" required>
+                    <label for="recovery-confirm-password">Confirme a nova senha</label>
+                    <input id="recovery-confirm-password" type="password" autocomplete="new-password" placeholder="Digite a senha novamente" required>
+                    <div class="account-dialog-buttons">
+                        <button id="recovery-back" type="button" class="account-action-secondary">Voltar</button>
+                        <button id="recovery-submit" type="submit" class="account-action-primary">Redefinir senha</button>
+                    </div>
+                </section>
+                <p id="recovery-message" class="account-form-message" role="status" aria-live="polite"></p>
+            </form>
+        </div>
+    </dialog>
+
+    <dialog id="account-security-setup-dialog" class="account-dialog">
+        <div class="account-dialog-card security-setup-card">
+            <button type="button" class="account-dialog-close" data-close-dialog="account-security-setup-dialog" aria-label="Fechar">×</button>
+            <div class="account-dialog-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></div>
+            <h2>Proteja a recuperação da sua conta</h2>
+            <p class="account-dialog-intro">Escolha pelo menos duas perguntas e crie respostas que você consiga lembrar. Elas serão usadas caso esqueça sua senha.</p>
+            <form id="account-security-setup-form">
+                <div id="security-question-choices" class="security-question-choices">
+                    <label><input type="checkbox" value="1"> Qual foi o nome do meu primeiro bicho de estimação?</label>
+                    <label><input type="checkbox" value="2"> Qual é o nome do meu avô?</label>
+                    <label><input type="checkbox" value="3"> Qual foi a primeira escola onde estudei?</label>
+                    <label><input type="checkbox" value="4"> Qual é minha comida favorita?</label>
+                </div>
+                <div id="security-answer-fields" class="security-question-fields"></div>
+                <p class="account-privacy-note">As respostas não ficarão visíveis no banco de dados: o sistema armazena somente versões protegidas delas. Maiúsculas, minúsculas, acentos e espaços não fazem diferença na verificação.</p>
+                <div class="account-dialog-buttons">
+                    <button id="security-setup-later" type="button" class="account-action-secondary">Configurar depois</button>
+                    <button id="security-setup-save" type="submit" class="account-action-primary">Salvar perguntas</button>
+                </div>
+                <p id="security-setup-message" class="account-form-message" role="status" aria-live="polite"></p>
+            </form>
         </div>
     </dialog>
 
