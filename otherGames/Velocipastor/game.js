@@ -1115,6 +1115,7 @@ function spawnPickup() {
     type = "shield";
   } else {
     const commonRoll = (remainingRoll - 0.15) / 0.85;
+    // Large kits are selected on 60% of the healing-item drops.
     type = commonRoll < 0.34 ? "holy"
       : commonRoll < 0.68 ? "cross"
       : Math.random() < 0.6 ? "medkit-large" : "medkit";
