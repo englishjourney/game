@@ -138,6 +138,7 @@ h1,h2 { font-family:var(--pixel); line-height:1.55; margin:0; }
 .terrain-block::before { content:""; position:absolute; top:-4px; left:-3px; right:-3px; height:6px; border:2px solid #36783b; background:repeating-linear-gradient(90deg,#78c95a 0 9px,#55a747 9px 18px); }
 .terrain-block::after { content:""; position:absolute; left:16px; top:7px; width:3px; height:5px; background:#d19a5d; box-shadow:22px 8px 0 #d19a5d; opacity:.8; }
 .pickup { z-index:4; width:48px; height:65px; }
+.pickup.pickup-mini-medkit { width:24px; height:32.5px; }
 .pickup.pickup-medkit-large { width:72px; height:86px; }
 .medkit-icon-large { transform:scale(1.5); transform-origin:center bottom; }
 .shield-pickup-icon { position:relative; display:block; width:37px; height:45px; margin:0 auto 5px; background:linear-gradient(90deg,#2386b6 0 20%,#7cecff 20% 78%,#287eae 78%); clip-path:polygon(0 0,50% 10%,100% 0,94% 58%,78% 82%,50% 100%,22% 82%,6% 58%); filter:drop-shadow(2px 3px 0 rgba(0,0,0,.42)) drop-shadow(0 0 8px rgba(93,224,255,.6)); }
@@ -151,6 +152,7 @@ h1,h2 { font-family:var(--pixel); line-height:1.55; margin:0; }
 .pickup-notice-holy { border-color:#ffe08a; color:#fff4c9; }
 .pickup-notice-cross { border-color:#9cecff; color:#e3faff; }
 .pickup-notice-medkit { border-color:#ff9fa9; color:#ffe6e8; }
+.pickup-notice-medkit-mini { border-color:#ffb5a7; color:#fff0e9; font-size:17px; }
 .pickup-notice-medkit-large { border-color:#ff7588; color:#fff0f2; font-size:23px; }
 .pickup-notice-shield { border-color:#73e6ff; color:#dffaff; }
 @keyframes pickup-notice-pop {
@@ -161,6 +163,7 @@ h1,h2 { font-family:var(--pixel); line-height:1.55; margin:0; }
 .pickup.airborne img { filter:drop-shadow(0 0 7px rgba(255,245,174,.85)) drop-shadow(2px 3px 0 rgba(0,0,0,.3)); }
 .pickup img { width:100%; height:100%; object-fit:contain; image-rendering:pixelated; filter:drop-shadow(2px 3px 0 rgba(0,0,0,.3)); }
 .medkit-icon { position:relative; width:38px; height:30px; margin:0 auto 5px; background:linear-gradient(135deg,#f8fbff 0 48%,#dce8f2 49% 100%); border:4px solid #a9bbc9; border-radius:3px; box-shadow:3px 4px 0 rgba(0,0,0,.3),inset 0 -3px 0 rgba(85,112,137,.12); image-rendering:pixelated; }
+.pickup-mini-medkit .medkit-icon { transform:scale(.5); transform-origin:center bottom; }
 .medkit-icon::before { content:""; position:absolute; left:8px; top:-10px; width:14px; height:6px; background:#eaf2f8; border:3px solid #a9bbc9; border-bottom:0; border-radius:3px 3px 0 0; }
 .medkit-icon::after { content:"+"; position:absolute; inset:-6px 0 0; display:grid; place-items:center; color:#e33d48; font: bold 27px/1 Arial,sans-serif; text-shadow:1px 1px 0 #fff; }
 .pickup.airborne .medkit-icon { filter:drop-shadow(0 0 8px rgba(255,245,174,.9)) drop-shadow(2px 3px 0 rgba(0,0,0,.3)); }
