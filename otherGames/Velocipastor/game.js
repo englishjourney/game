@@ -610,11 +610,9 @@ function scrollScenery(direction, dt, now) {
     return true;
   });
 
-  // Enemies are part of the moving level too. This keeps runners and fighters
-  // travelling with the scenery instead of appearing frozen as the road scrolls.
+  // Passing runners belong to the moving road and must travel with its scroll.
+  // Chasing fighters use their own measured screen-space AI speed instead.
   state.enemies.forEach((enemy) => {
-    // Passing runners belong to the moving road and must travel with its scroll.
-    // Chasing fighters use their own measured screen-space AI speed instead.
     if (!enemy.alive || enemy.mode !== "passing") return;
     enemy.x -= shift;
     positionEntity(enemy);
