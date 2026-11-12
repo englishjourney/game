@@ -24,6 +24,19 @@ const VOICES: Record<string, string> = {
   AUS: "en-AU-NatashaNeural",
 };
 
+const PHRASAL_VERBS = new Set([
+  "give up", "look after", "look for", "look up", "find out", "get up",
+  "wake up", "turn on", "turn off", "put on", "take off", "pick up",
+  "drop off", "run out of", "get along with", "get over", "come across",
+  "come back", "go on", "carry on", "break down", "break up", "bring up",
+  "call off", "check in", "check out", "fill in", "hand in", "hold on",
+  "keep on", "make up", "put off", "put away", "set up", "show up",
+  "take care of", "throw away", "try on", "work out", "point out",
+  "get in", "get out", "get back", "get together", "look forward to",
+  "make sure", "take after", "put up with", "go through", "bring back",
+  "cut down on"
+]);
+
 const ALLOWED_PHRASES: Record<string, Set<string>> = {
   USA: new Set(["elevator","cookie","trunk","hood","gas","gasoline","gas station","pickup truck","sweater","pants","underwear","diaper","pacifier","stroller","french fries","potato chips","candy","cotton candy","popsicle","bell pepper","zucchini","eggplant","arugula","cilantro","cantaloupe","ketchup","trash can","garbage","trash","garbage truck","sidewalk","crosswalk","parking lot","apartment","first floor","drugstore","pharmacy","liquor store","bar","sneakers","flip-flops","swimsuit","flashlight","eraser","scotch tape","shopping cart","restroom","bathroom","vacation","mail","zip code","mosquito","bug","sunglasses","afternoon","tractor trailer","water","bottle","tomato"]),
   UK: new Set(["lift","biscuit","boot","bonnet","petrol","petrol station","pick-up","jumper","trousers","pants","y-fronts","nappy","dummy","pram","pushchair","chips","crisps","sweets","candy floss","ice lolly","pepper","courgette","aubergine","rocket","coriander","melon","ketchup","dustbin","rubbish","dustcart","pavement","zebra crossing","car park","flat","ground floor","chemist","off-licence","pub","trainers","flip-flops","swimming costume","torch","rubber","sellotape","trolley","toilet","loo","holiday","post","postcode","gnat","mosquito","sunglasses","afternoon","lorry","water","bottle","tomato"]),
@@ -157,7 +170,7 @@ Deno.serve(async (request: Request) => {
     const region = String(body.region || "").trim().toUpperCase();
     const phrase = String(body.text || "").trim().toLowerCase();
 
-    if (!VOICES[region] || !ALLOWED_PHRASES[region]?.has(phrase)) {
+    if (!VOICES[region] || (!ALLOWED_PHRASES[region]?.has(phrase) && !(region === "USA" && PHRASAL_VERBS.has(phrase)))) {
       return json({ error: "Palavra ou sotaque não disponível neste jogo." }, 400);
     }
 
