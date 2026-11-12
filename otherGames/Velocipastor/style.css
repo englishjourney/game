@@ -102,7 +102,7 @@ h1,h2 { font-family:var(--pixel); line-height:1.55; margin:0; }
 /* Scenery is shifted by keyboard input in game.js; it never scrolls on its own. */
 .entities { position:absolute; z-index:5; inset:0 0 74px; pointer-events:none; }
 .player { position:absolute; z-index:7; bottom:75px; left:31%; width:clamp(84px,10vw,116px); height:clamp(125px,17vw,175px); display:flex; align-items:flex-end; justify-content:center; transition:transform .17s ease-out; }
-.player.jumping { transition:none; transform:translateY(var(--jump-offset, 0px)); }
+.player.jumping,.player.on-platform { transition:none; transform:translateY(var(--jump-offset, 0px)); }
 .player img { position:relative; z-index:2; width:100%; height:100%; object-fit:contain; object-position:center bottom; image-rendering:pixelated; filter:drop-shadow(3px 4px 0 rgba(0,0,0,.3)); transition:transform .08s linear; }
 .player.facing-left #player-sprite { transform:scaleX(-1); }
 .storm-cloud { --cloud-brightness:1; position:absolute; z-index:4; left:50%; bottom:calc(100% - 8px); width:82px; height:34px; transform:translateX(-50%); border-radius:30px; background:#f8fbff; filter:brightness(var(--cloud-brightness)); box-shadow:0 4px 0 rgba(41,52,70,.18),0 0 12px rgba(255,255,255,.32); transition:filter .25s ease,background .25s ease; }
@@ -127,13 +127,32 @@ h1,h2 { font-family:var(--pixel); line-height:1.55; margin:0; }
 .enemy.zapped .enemy-sprite { filter:brightness(2) saturate(.2) drop-shadow(0 0 12px #a9f4ff); }
 .enemy-health { position:absolute; top:1px; left:16%; width:68%; height:7px; border:1px solid #111; background:#541e28; }
 .enemy-health span { display:block; height:100%; width:100%; background:#ef5a52; }
+.scenery-plants { position:absolute; z-index:3; inset:0; overflow:hidden; pointer-events:none; }
+.scenery-plant { position:absolute; bottom:76px; width:34px; height:38px; image-rendering:pixelated; }
+.scenery-plant::before { content:""; position:absolute; left:8px; bottom:6px; width:15px; height:17px; background:#328747; box-shadow:-8px 5px 0 #4b9a42,8px 4px 0 #246d3e,0 -7px 0 #69b84e,-5px -2px 0 #72c65a,6px -3px 0 #3b9847; }
+.scenery-plant::after { content:""; position:absolute; left:15px; bottom:0; width:5px; height:12px; background:#7d552c; box-shadow:-5px 9px 0 -2px #b78a4d,5px 9px 0 -2px #b78a4d; }
+.scenery-plant.plant-sprout { transform:scale(.78); transform-origin:bottom center; }
+.scenery-plant.plant-sprout::before { left:10px; width:11px; height:15px; background:#53a94d; box-shadow:-8px 7px 0 #3b8c43,8px 7px 0 #6fc45d,0 -6px 0 #7bd15d; }
+.scenery-plant.plant-flower::before { background:#3f9844; box-shadow:-8px 5px 0 #267541,8px 4px 0 #4da84a,0 -7px 0 #ffe08a,-5px -2px 0 #e5a6d5,6px -3px 0 #f4d36b; }
+.terrain-block { position:absolute; z-index:1; width:60px; height:30px; border:3px solid #67472b; background:repeating-linear-gradient(0deg,#a96e3c 0 7px,#87542f 7px 14px); box-shadow:inset -4px 0 0 rgba(46,29,20,.25),inset 0 -4px 0 rgba(49,30,20,.2),3px 4px 0 rgba(0,0,0,.2); }
+.terrain-block::before { content:""; position:absolute; top:-4px; left:-3px; right:-3px; height:6px; border:2px solid #36783b; background:repeating-linear-gradient(90deg,#78c95a 0 9px,#55a747 9px 18px); }
+.terrain-block::after { content:""; position:absolute; left:16px; top:7px; width:3px; height:5px; background:#d19a5d; box-shadow:22px 8px 0 #d19a5d; opacity:.8; }
 .pickup { width:48px; height:65px; }
+.pickup.pickup-medkit-large { width:72px; height:86px; }
+.medkit-icon-large { transform:scale(1.5); transform-origin:center bottom; }
+.shield-pickup-icon { position:relative; display:block; width:37px; height:45px; margin:0 auto 5px; background:linear-gradient(90deg,#2386b6 0 20%,#7cecff 20% 78%,#287eae 78%); clip-path:polygon(0 0,50% 10%,100% 0,94% 58%,78% 82%,50% 100%,22% 82%,6% 58%); filter:drop-shadow(2px 3px 0 rgba(0,0,0,.42)) drop-shadow(0 0 8px rgba(93,224,255,.6)); }
+.shield-pickup-icon::before { content:""; position:absolute; left:16px; top:10px; width:5px; height:24px; background:#eaffff; box-shadow:-5px 9px 0 -1px #eaffff,5px 9px 0 -1px #eaffff; }
+.shield-pickup-icon::after { content:""; position:absolute; left:9px; top:8px; width:18px; height:3px; background:#d4fbff; }
+.player.shielded::before { content:""; position:absolute; z-index:1; pointer-events:none; inset:-9px -8px -5px; background:rgba(83,213,255,.19); border:4px solid #75e8ff; clip-path:polygon(50% 0,94% 15%,88% 62%,72% 84%,50% 100%,28% 84%,12% 62%,6% 15%); filter:drop-shadow(0 0 7px #62dfff) drop-shadow(0 0 15px rgba(105,230,255,.75)); animation:shield-pulse .72s steps(2,end) infinite alternate; }
+@keyframes shield-pulse { to { opacity:.58; filter:drop-shadow(0 0 12px #b6f5ff) drop-shadow(0 0 21px rgba(105,230,255,.9)); } }
 .star-pickup-icon { display:grid; place-items:center; width:42px; height:48px; margin:0 auto 5px; color:#ffe15a; font:42px/1 Arial,sans-serif; -webkit-text-stroke:1px #a96819; text-shadow:2px 2px 0 #965719,4px 4px 0 rgba(0,0,0,.35),0 0 13px rgba(255,224,86,.8); transform:translateY(-2px); }
 .pickup.airborne .star-pickup-icon { filter:drop-shadow(0 0 9px rgba(255,231,104,.95)); }
 .pickup-notice { position:absolute; z-index:16; max-width:220px; padding:7px 11px; transform:translate(-50%,-100%); border:2px solid #fff; border-radius:4px; background:rgba(4,13,29,.97); color:#fff; box-shadow:0 4px 0 rgba(0,0,0,.48),0 0 12px rgba(0,0,0,.38); font: bold 20px/1.05 var(--ui); letter-spacing:.4px; text-align:center; white-space:nowrap; text-shadow:1px 1px 0 #000; pointer-events:none; animation:pickup-notice-pop 1.65s ease-out forwards; }
 .pickup-notice-holy { border-color:#ffe08a; color:#fff4c9; }
 .pickup-notice-cross { border-color:#9cecff; color:#e3faff; }
 .pickup-notice-medkit { border-color:#ff9fa9; color:#ffe6e8; }
+.pickup-notice-medkit-large { border-color:#ff7588; color:#fff0f2; font-size:23px; }
+.pickup-notice-shield { border-color:#73e6ff; color:#dffaff; }
 @keyframes pickup-notice-pop {
   0% { opacity:0; transform:translate(-50%,-84%) scale(.94); }
   12%,76% { opacity:1; transform:translate(-50%,-100%) scale(1); }
