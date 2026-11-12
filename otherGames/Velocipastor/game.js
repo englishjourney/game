@@ -111,7 +111,7 @@ let mobileJoystickPointerId = null;
 const PLAYER_MOVE_SPEED = 255;
 const WORLD_SCROLL_SPEED = 205;
 const STAR_SPEED_MULTIPLIER = 3;
-const NINJA_CHASE_SPEED = WORLD_SCROLL_SPEED * 0.4;
+const NINJA_CHASE_SPEED = WORLD_SCROLL_SPEED * 0.35;
 const MAX_FIGHTER_CHASE_DISTANCE_MIN = 500;
 const MAX_FIGHTER_CHASE_DISTANCE_RATIO = 0.9;
 const NINJA_DISENGAGE_SPEED = 160;
@@ -421,13 +421,14 @@ function logMessage(message) {
   }
 }
 
-function setPlayerSprite(mode) {
-  if (playerSprite.dataset.mode === mode) return;
+function setPlayerSprite(mode, restart = false) {
+  if (playerSprite.dataset.mode === mode && !restart) return;
   playerSprite.dataset.mode = mode;
   const file = mode === "shouting" ? "velocipastor_shouting.gif"
     : mode === "running" ? "velocipastor_running.gif"
     : "velocipastor_standing.png";
-  // Never reset the attack GIF on repeated input; an attack window plays once.
+  // Restart only at the start of a new one-second attack window, never per click.
+  if (restart && mode === "shouting") playerSprite.removeAttribute("src");
   playerSprite.src = ASSET + file;
 }
 
@@ -469,17 +470,16 @@ function resetMobileJoystick() {
   if (state.screen === "game") updatePlayerAppearance(performance.now());
 }
 
-function updatePlayerAppearance(now) {
+function updatePlayerAppearance(now, restartAttackAnimation = false) {
   const direction = movementDirection();
   if (direction) state.facing = direction;
   updatePlayerFacing();
 
-  // Movement has visual priority; an attack GIF is started only once per
-  // one-second attack window and is never restarted by additional clicks.
+  // Movement has visual priority; attack animation is started once per window.
   const mode = direction !== 0
     ? "running"
     : now < state.attackUntil ? "shouting" : "standing";
-  setPlayerSprite(mode);
+  setPlayerSprite(mode, restartAttackAnimation && mode === "shouting");
 }
 
 function playerFreezeX() {
@@ -613,7 +613,9 @@ function scrollScenery(direction, dt, now) {
   // Enemies are part of the moving level too. This keeps runners and fighters
   // travelling with the scenery instead of appearing frozen as the road scrolls.
   state.enemies.forEach((enemy) => {
-    if (!enemy.alive) return;
+    // Passing runners belong to the moving road and must travel with its scroll.
+    // Chasing fighters use their own measured screen-space AI speed instead.
+    if (!enemy.alive || enemy.mode !== "passing") return;
     enemy.x -= shift;
     positionEntity(enemy);
   });
@@ -880,7 +882,7 @@ function attack() {
 
   state.attackStartedAt = now;
   state.attackUntil = now + ATTACK_WINDOW_MS;
-  updatePlayerAppearance(now);
+  updatePlayerAppearance(now, true);
 
   // The first strike is immediate; subsequent strikes follow attacks per second.
   hitNearbyEnemies(now);
