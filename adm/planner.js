@@ -481,11 +481,8 @@ function setupPlannerMerge() {
                     throw new Error('Uma das aulas não está mais disponível entre os planejamentos ativos. Atualize a lista e tente novamente.');
                 }
 
-                const sourceClass = normalizePlannerClassValue(currentSource.serie) + '::' + normalizePlannerClassValue(currentSource.team);
-                const targetClass = normalizePlannerClassValue(currentTarget.serie) + '::' + normalizePlannerClassValue(currentTarget.team);
-                if (sourceClass !== targetClass) {
-                    throw new Error('As duas aulas precisam pertencer à mesma turma.');
-                }
+                // O merge pode unir aulas de datas e turmas diferentes.
+                // Somente as atividades são copiadas; os demais campos do destino são preservados.
 
                 const targetActivities = String(currentTarget.activities || '');
                 const sourceActivities = String(currentSource.activities || '');
@@ -606,7 +603,7 @@ window.showPlannerMergePicker = async () => {
     const list = document.getElementById('merge-picker-list');
     comparison.classList.add('hidden');
     picker.classList.remove('hidden');
-    list.innerHTML = '<div class="empty-state">Carregando aulas da mesma turma...</div>';
+    list.innerHTML = '<div class="empty-state">Carregando todos os planejamentos ativos...</div>';
 
     const { data, error } = await supabase
         .from('planner')
@@ -620,14 +617,11 @@ window.showPlannerMergePicker = async () => {
         return;
     }
 
-    const sourceClass = normalizePlannerClassValue(mergeSourceItem.serie) + '::' + normalizePlannerClassValue(mergeSourceItem.team);
-    const candidates = (data || []).filter(item =>
-        String(item.id) !== String(mergeSourceItem.id) &&
-        normalizePlannerClassValue(item.serie) + '::' + normalizePlannerClassValue(item.team) === sourceClass
-    );
+    // Sem restrição de turma ou data: qualquer outro planejamento ativo pode ser destino.
+    const candidates = (data || []).filter(item => String(item.id) !== String(mergeSourceItem.id));
 
     if (!candidates.length) {
-        list.innerHTML = '<div class="empty-state">Não há outras aulas planejadas e não concluídas para esta turma.</div>';
+        list.innerHTML = '<div class="empty-state">Não há outras aulas planejadas e não concluídas disponíveis para merge.</div>';
         return;
     }
 
@@ -661,7 +655,7 @@ function renderPlannerCard(p, mode = 'active') {
           '<button class="btn-small btn-advance" onclick="window.advancePlanner(\'' + p.id + '\')" title="Trazer esta aula para a próxima data futura da turma">Adiantar</button>' +
           '<button class="btn-small btn-complete" onclick="window.completePlanner(\'' + p.id + '\')" title="Mover esta aula para Aulas passadas">Concluída</button>' +
           '<button class="btn-small btn-danger" onclick="window.deletePlanner(\'' + p.id + '\')" title="Excluir definitivamente este planejamento">Excluir</button>' +
-          '<button class="btn-small btn-merge" onclick="window.openPlannerMerge(\'' + p.id + '\')" title="Unir esta aula a outra aula da mesma turma">Merge</button>';
+          '<button class="btn-small btn-merge" onclick="window.openPlannerMerge(\'' + p.id + '\')" title="Unir esta aula a qualquer outro planejamento ativo">Merge</button>';
 
     return '<div class="data-card ' + cardClass + ' ' + (mode === 'completed' ? 'completed-card' : '') + '"' +
         ' id="plan-card-' + p.id + '" data-plan-id="' + p.id + '" role="button" tabindex="0" aria-label="Ver detalhes da aula">' +
