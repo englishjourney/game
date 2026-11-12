@@ -60,6 +60,7 @@ const state = {
   jumpHeld: false,
   distance: 0,
   worldSpeed: 205,
+  movementBoostUntil: 0,
   nextEnemyAt: 0,
   nextPickupAt: 0,
   enemies: [],
@@ -423,12 +424,13 @@ function playerFreezeX() {
   return Math.max(8, Math.min(maxX, centerOfRightHalf - player.offsetWidth / 2));
 }
 
-function movePlayer(direction, dt) {
+function movePlayer(direction, dt, now) {
   if (!direction) return { scrollDirection: 0, scrollDuration: 0 };
 
   const maxX = Math.max(8, playfield.clientWidth - player.offsetWidth - 8);
 
-  const moveSpeed = PLAYER_MOVE_SPEED * (state.jumpActive && state.jumpHeld ? 1.15 : 1);
+  const movementBoost = now < state.movementBoostUntil ? 1.5 : 1;
+  const moveSpeed = PLAYER_MOVE_SPEED * movementBoost * (state.jumpActive && state.jumpHeld ? 1.15 : 1);
 
   if (direction < 0) {
     state.playerX = Math.max(8, state.playerX - moveSpeed * dt);
@@ -509,6 +511,7 @@ function startGame() {
   clearJumpInputs();
   state.distance = 0;
   state.worldSpeed = 205;
+  state.movementBoostUntil = 0;
   state.nextEnemyAt = 0;
   state.nextPickupAt = 0;
   state.enemies = [];
@@ -960,7 +963,14 @@ function hitNearbyEnemies(now) {
 
 function spawnPickup() {
   const roll = Math.random();
-  const type = roll < 0.34 ? "holy" : roll < 0.68 ? "cross" : "medkit";
+  // Every pickup spawn has a 50% chance to become a rare speed star.
+  const type = roll < 0.5
+    ? "star"
+    : (roll - 0.5) * 2 < 0.34
+      ? "holy"
+      : (roll - 0.5) * 2 < 0.68
+        ? "cross"
+        : "medkit";
   const airborne = Math.random() < 0.62;
   const id = state.nextId++;
   const element = document.createElement("div");
@@ -977,6 +987,13 @@ function spawnPickup() {
     medkit.setAttribute("role", "img");
     medkit.setAttribute("aria-label", "Medkit");
     element.appendChild(medkit);
+  } else if (type === "star") {
+    const star = document.createElement("span");
+    star.className = "star-pickup-icon";
+    star.setAttribute("role", "img");
+    star.setAttribute("aria-label", "Speed star");
+    star.textContent = "★";
+    element.appendChild(star);
   } else {
     const image = document.createElement("img");
     image.src = ASSET + (type === "holy" ? "holy_water.png" : "cross.png");
@@ -1040,6 +1057,10 @@ function collectPickup(pickup) {
     state.attackSpeed += 1;
     state.score += 10;
     showPickupNotice(pickup, "+1 ATTACK SPEED");
+  } else if (pickup.type === "star") {
+    state.movementBoostUntil = performance.now() + 30000;
+    showPickupNotice(pickup, "+50% MOVE SPEED · 30s");
+    logMessage("Speed star! Move 50% faster for 30 seconds!");
   } else {
     const recovered = Math.min(10, 100 - state.hp);
     state.hp = Math.min(100, state.hp + 10);
@@ -1163,9 +1184,13 @@ function gameLoop(now) {
   if (state.ready) {
     state.elapsedSeconds = Math.floor((now - state.startedAt) / 1000);
     state.worldSpeed = Math.min(340, 205 + state.elapsedSeconds * 0.65);
+    if (state.movementBoostUntil && now >= state.movementBoostUntil) {
+      state.movementBoostUntil = 0;
+      logMessage("Speed boost ended.");
+    }
 
     const direction = movementDirection();
-    const movement = movePlayer(direction, dt);
+    const movement = movePlayer(direction, dt, now);
     scrollScenery(movement.scrollDirection, movement.scrollDuration);
     updatePlayerAppearance(now);
 
