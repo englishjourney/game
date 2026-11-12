@@ -513,12 +513,13 @@
       return URL.createObjectURL(new Blob([bytes], { type: 'audio/mpeg' }));
     }
 
-    async function getAudioUrl(round) {
+    async function getAudioUrl(round, requestId) {
       const cacheKey = round.region + '|' + round.target;
       if (audioCache.has(cacheKey)) return audioCache.get(cacheKey);
 
       const waitMs = Math.max(0, TTS_REQUEST_INTERVAL_MS - (Date.now() - lastTtsRequestStartedAt));
       if (waitMs > 0) await new Promise(resolve => window.setTimeout(resolve, waitMs));
+      if (requestId !== ttsRequestId || !gameActive || roundLocked) return null;
       lastTtsRequestStartedAt = Date.now();
 
       let timeoutId;
@@ -557,8 +558,8 @@
       const requestId = ++ttsRequestId;
       setAudioLoading(true);
       try {
-        const url = await getAudioUrl(currentRound);
-        if (requestId !== ttsRequestId || !gameActive || roundLocked) return;
+        const url = await getAudioUrl(currentRound, requestId);
+        if (!url || requestId !== ttsRequestId || !gameActive || roundLocked) return;
         audioPlayer.pause();
         audioPlayer.src = url;
         audioPlayer.currentTime = 0;
