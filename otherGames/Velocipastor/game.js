@@ -454,19 +454,18 @@ function playerMovementSpeed(direction, now) {
 }
 
 function nextWeightedPickupType() {
-  // One 25-item shuffled bag keeps the requested relative weights exact:
-  // mini medkit 70, standard medkit 50, big medkit 20, star 20,
-  // shield 20, holy water 30 and cross 40.
+  // A shuffled 20-item bag guarantees the requested distribution per cycle.
+  // Mini medkit 5, cross 4, holy water 4, medkit 3, star 2,
+  // big medkit 1 and shield 1.
   if (!state.pickupDropBag.length) {
     const bag = [
-      "medkit-mini", "medkit-mini", "medkit-mini", "medkit-mini",
-      "medkit-mini", "medkit-mini", "medkit-mini",
-      "medkit", "medkit", "medkit", "medkit", "medkit",
-      "medkit-large", "medkit-large",
+      "medkit-mini", "medkit-mini", "medkit-mini", "medkit-mini", "medkit-mini",
+      "cross", "cross", "cross", "cross",
+      "holy", "holy", "holy", "holy",
+      "medkit", "medkit", "medkit",
       "star", "star",
-      "shield", "shield",
-      "holy", "holy", "holy",
-      "cross", "cross", "cross", "cross"
+      "medkit-large",
+      "shield"
     ];
 
     for (let index = bag.length - 1; index > 0; index -= 1) {
