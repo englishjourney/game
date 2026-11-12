@@ -52,6 +52,7 @@ const state = {
   damage: 2,
   attackSpeed: 4,
   attackUntil: 0,
+  attackStartedAt: 0,
   nextPlayerAttackAt: 0,
   jumpActive: false,
   jumpVelocity: 0,
@@ -59,6 +60,11 @@ const state = {
   jumpHoldElapsed: 0,
   jumpHeld: false,
   distance: 0,
+  distancePixels: 0,
+  meterPixelsPerScreen: 0,
+  ninjaHealthTier: 0,
+  raid: null,
+  pendingRaid: false,
   worldSpeed: 205,
   movementBoostUntil: 0,
   shieldUntil: 0,
@@ -105,11 +111,18 @@ let mobileJoystickPointerId = null;
 const PLAYER_MOVE_SPEED = 255;
 const WORLD_SCROLL_SPEED = 205;
 const STAR_SPEED_MULTIPLIER = 3;
-const NINJA_CHASE_SPEED = WORLD_SCROLL_SPEED * 0.75;
+const NINJA_CHASE_SPEED = WORLD_SCROLL_SPEED * 0.35;
 const MAX_FIGHTER_CHASE_DISTANCE_MIN = 500;
 const MAX_FIGHTER_CHASE_DISTANCE_RATIO = 0.9;
-const NINJA_DISENGAGE_SPEED = 220;
+const NINJA_DISENGAGE_SPEED = 160;
 const PASSING_NINJA_SPEED = 495;
+const BASE_NINJA_HP = 20;
+const ATTACK_WINDOW_MS = 1000;
+const RAID_CHANCE = 0.05;
+const RUNNER_CHANCE = 0.3;
+const RAID_WALL_WIDTH = 38;
+const RAID_MIN_WIDTH = 220;
+const RAID_MAX_WIDTH = 760;
 const PLATFORM_BLOCK_HEIGHT = 24;
 const PLATFORM_STEP_HEIGHT = 20;
 const PLATFORM_BLOCK_WIDTH = 60;
@@ -359,8 +372,44 @@ function updateHud() {
   $("player-health-fill").style.background = state.hp <= 30 ? "#ef5b52" : state.hp <= 60 ? "#ffc94f" : "#67d36c";
   $("damage-number").textContent = state.damage;
   $("speed-number").textContent = state.attackSpeed;
+  $("distance-number").textContent = String(Math.floor(state.distance));
   $("score-number").textContent = state.score.toLocaleString("en-US");
   $("time-number").textContent = formatTime(state.elapsedSeconds);
+}
+
+function updateDistanceAndNinjaHealth() {
+  const screenWidth = state.meterPixelsPerScreen || playfield.clientWidth || 1;
+  state.distance = Math.max(0, state.distancePixels / screenWidth);
+  const nextTier = Math.floor(state.distance / 10);
+  const healthChange = (nextTier - state.ninjaHealthTier) * 2;
+
+  if (healthChange !== 0) {
+    state.enemies.forEach((enemy) => {
+      if (!enemy.alive) return;
+      enemy.maxHp = Math.max(BASE_NINJA_HP, enemy.maxHp + healthChange);
+      enemy.hp = Math.max(1, Math.min(enemy.maxHp, enemy.hp + healthChange));
+      enemy.healthFill.style.width = (enemy.hp / enemy.maxHp * 100) + "%";
+    });
+    state.ninjaHealthTier = nextTier;
+  }
+
+  $("distance-number").textContent = String(Math.floor(state.distance));
+}
+
+function clearAttackParticles() {
+  playfield.querySelectorAll(".attack-light-particle").forEach((particle) => particle.remove());
+}
+
+function finishNinjaRaid(now = performance.now()) {
+  if (!state.raid) return;
+  state.raid.walls.forEach((wall) => wall.remove());
+  state.raid = null;
+  state.pendingRaid = false;
+  playfield.classList.remove("raid-active");
+  state.nextEnemyAt = now + 2200;
+  state.nextPickupAt = now + 1600;
+  state.nextPlatformAt = now + 2600;
+  logMessage("Raid cleared! The walls are down. Power-ups can spawn again.");
 }
 
 function logMessage(message) {
@@ -378,9 +427,7 @@ function setPlayerSprite(mode, restart = false) {
   const file = mode === "shouting" ? "velocipastor_shouting.gif"
     : mode === "running" ? "velocipastor_running.gif"
     : "velocipastor_standing.png";
-
-  // Removing the source before reapplying it restarts the GIF even when the
-  // same attack animation is already active.
+  // Restart only at the start of a new one-second attack window, never per click.
   if (restart && mode === "shouting") playerSprite.removeAttribute("src");
   playerSprite.src = ASSET + file;
 }
@@ -428,8 +475,7 @@ function updatePlayerAppearance(now, restartAttackAnimation = false) {
   if (direction) state.facing = direction;
   updatePlayerFacing();
 
-  // Movement has visual priority. Attacks are shown independently as light
-  // projectiles, so running remains visible while the player attacks.
+  // Movement has visual priority; attack animation is started once per window.
   const mode = direction !== 0
     ? "running"
     : now < state.attackUntil ? "shouting" : "standing";
@@ -479,23 +525,43 @@ function nextWeightedPickupType() {
 }
 
 function movePlayer(direction, dt, now) {
-  if (!direction) return { scrollDirection: 0, scrollDuration: 0 };
-
-  const maxX = Math.max(8, playfield.clientWidth - player.offsetWidth - 8);
+  if (!direction) return { scrollDirection: 0, scrollDuration: 0, distanceDelta: 0 };
 
   const movementBoost = movementSpeedMultiplier(now);
   const moveSpeed = PLAYER_MOVE_SPEED * movementBoost * (state.jumpActive && state.jumpHeld ? 1.15 : 1);
 
+  // Inside a raid the road is locked, so the player can move only inside the walls.
+  if (state.raid?.active) {
+    const previousX = state.playerX;
+    state.playerX = Math.max(
+      state.raid.minPlayerX,
+      Math.min(state.raid.maxPlayerX, state.playerX + direction * moveSpeed * dt)
+    );
+    player.style.left = Math.round(state.playerX) + "px";
+    return {
+      scrollDirection: 0,
+      scrollDuration: 0,
+      distanceDelta: state.playerX - previousX
+    };
+  }
+
   if (direction < 0) {
+    const previousX = state.playerX;
     state.playerX = Math.max(8, state.playerX - moveSpeed * dt);
     player.style.left = Math.round(state.playerX) + "px";
-    return { scrollDirection: 0, scrollDuration: 0 };
+    return {
+      scrollDirection: 0,
+      scrollDuration: 0,
+      distanceDelta: state.playerX - previousX
+    };
   }
 
   const freezeX = playerFreezeX();
 
-  // Holding the jump key with a direction adds a small amount of horizontal travel.
+  // First move the character across the current screen; after reaching the
+  // forward anchor, the world itself scrolls.
   if (state.playerX < freezeX) {
+    const previousX = state.playerX;
     const distanceToFreeze = freezeX - state.playerX;
     const timeToFreeze = distanceToFreeze / moveSpeed;
     const playerMoveTime = Math.min(dt, timeToFreeze);
@@ -503,27 +569,27 @@ function movePlayer(direction, dt, now) {
     state.playerX = Math.min(freezeX, state.playerX + moveSpeed * playerMoveTime);
     player.style.left = Math.round(state.playerX) + "px";
 
-    // If the key stays held after reaching the anchor, the remaining frame scrolls the world.
     const scrollDuration = Math.max(0, dt - playerMoveTime);
     return {
       scrollDirection: scrollDuration > 0 ? 1 : 0,
-      scrollDuration
+      scrollDuration,
+      distanceDelta: state.playerX - previousX
     };
   }
 
-  state.playerX = Math.min(maxX, freezeX);
-  player.style.left = Math.round(state.playerX) + "px";
-  return { scrollDirection: 1, scrollDuration: dt };
+  return { scrollDirection: 1, scrollDuration: dt, distanceDelta: 0 };
 }
 
 function scrollScenery(direction, dt, now) {
-  if (!direction) {
+  if (!direction || state.raid?.active) {
     playfield.classList.remove("is-moving");
     return;
   }
 
   playfield.classList.add("is-moving");
   const shift = direction * state.worldSpeed * movementSpeedMultiplier(now) * dt;
+  state.distancePixels += shift;
+  updateDistanceAndNinjaHealth();
   state.sceneryOffset -= shift;
   const offset = state.sceneryOffset;
 
@@ -542,6 +608,14 @@ function scrollScenery(direction, dt, now) {
       return false;
     }
     return true;
+  });
+
+  // Passing runners belong to the moving road and must travel with its scroll.
+  // Chasing fighters use their own measured screen-space AI speed instead.
+  state.enemies.forEach((enemy) => {
+    if (!enemy.alive || enemy.mode !== "passing") return;
+    enemy.x -= shift;
+    positionEntity(enemy);
   });
 
   state.plants.forEach((plant) => {
@@ -618,6 +692,7 @@ function startGame() {
   state.damage = 2;
   state.attackSpeed = 4;
   state.attackUntil = 0;
+  state.attackStartedAt = 0;
   state.nextPlayerAttackAt = 0;
   state.jumpActive = false;
   state.jumpVelocity = 0;
@@ -625,6 +700,11 @@ function startGame() {
   state.jumpHoldElapsed = 0;
   clearJumpInputs();
   state.distance = 0;
+  state.distancePixels = 0;
+  state.meterPixelsPerScreen = 0;
+  state.ninjaHealthTier = 0;
+  state.raid = null;
+  state.pendingRaid = false;
   state.worldSpeed = 205;
   state.movementBoostUntil = 0;
   state.shieldUntil = 0;
@@ -646,7 +726,9 @@ function startGame() {
 
   heldDirections.clear();
   resetMobileJoystick();
+  clearAttackParticles();
   entities.innerHTML = "";
+  playfield.classList.remove("raid-active");
   sceneryPlantsLayer.replaceChildren();
   sceneryPlantsLayer.classList.remove("is-moving");
   player.classList.remove("shielded", "on-platform");
@@ -672,6 +754,7 @@ function startGame() {
   showScreen("game");
   void player.offsetWidth;
   createSceneryPlants();
+  state.meterPixelsPerScreen = Math.max(1, playfield.clientWidth);
   state.playerX = Math.round(playfield.clientWidth * 0.31);
   player.style.left = state.playerX + "px";
   alignPlayerToGround();
@@ -790,13 +873,19 @@ function updateJump(dt) {
 function attack() {
   if (!state.running || !state.ready || state.gameOver) return;
   const now = performance.now();
-  state.attackUntil = Math.max(now, state.attackUntil) + 850;
-  state.nextPlayerAttackAt = Math.min(state.nextPlayerAttackAt || now, now);
 
-  // One immediate projectile burst per attack input. Damage timing remains
-  // independent in the game loop, while movement keeps visual priority.
+  // Extra clicks during the active second do not restart the GIF or extend
+  // the window. The game loop continues dealing damage at the current rate.
+  if (now < state.attackUntil) return;
+
+  state.attackStartedAt = now;
+  state.attackUntil = now + ATTACK_WINDOW_MS;
   updatePlayerAppearance(now, true);
+
+  // The first strike is immediate; subsequent strikes follow attacks per second.
+  hitNearbyEnemies(now);
   launchAttackParticles();
+  state.nextPlayerAttackAt = now + (1000 / state.attackSpeed);
 }
 
 function getHitbox(element, proportions) {
@@ -924,22 +1013,26 @@ function enemyContactX(enemy) {
     : playerBox.left - entitiesLeft - rightOffset;
 }
 
-function spawnEnemy() {
+function spawnEnemy(kind = "fighter", options = {}) {
   const aliveCount = state.enemies.filter((enemy) => enemy.alive).length;
-  if (aliveCount >= 4) return;
+  if (aliveCount >= 4) return null;
 
   const id = state.nextId++;
-  const kind = Math.random() < 0.28 ? "runner" : "fighter";
-  const side = kind === "runner" ? "right" : (Math.random() < 0.5 ? "left" : "right");
+  const raidId = options.raidId ?? null;
+  const isRaid = raidId !== null;
+  const side = Number.isFinite(options.x)
+    ? options.x + 47 >= state.playerX + player.offsetWidth / 2 ? "right" : "left"
+    : kind === "runner" ? "right" : (Math.random() < 0.5 ? "left" : "right");
   const element = document.createElement("div");
   element.className = "entity enemy";
   if (kind === "runner") element.classList.add("passing-ninja");
+  if (isRaid) element.classList.add("raid-member");
   element.dataset.id = String(id);
 
   const image = document.createElement("img");
   image.className = "enemy-sprite";
   image.src = ASSET + "ninja_running.gif";
-  image.alt = kind === "runner" ? "Passing red ninja" : "Ninja";
+  image.alt = kind === "runner" ? "Passing red ninja" : isRaid ? "Raid ninja" : "Ninja";
   element.appendChild(image);
 
   const bar = document.createElement("div");
@@ -949,16 +1042,22 @@ function spawnEnemy() {
   element.appendChild(bar);
   entities.appendChild(element);
 
+  const maxHp = BASE_NINJA_HP + state.ninjaHealthTier * 2;
   const enemy = {
     id,
     kind,
+    raidId,
+    isRaid,
     side,
     facing: side === "right" ? -1 : 1,
     mode: kind === "runner" ? "passing" : "approaching",
-    x: side === "right"
-      ? playfield.clientWidth + 90 + Math.random() * 90
-      : -120 - Math.random() * 90,
-    hp: 20,
+    x: Number.isFinite(options.x)
+      ? options.x
+      : side === "right"
+        ? playfield.clientWidth + 90 + Math.random() * 90
+        : -120 - Math.random() * 90,
+    hp: maxHp,
+    maxHp,
     hitsSinceRetreat: 0,
     nextHitAt: 0,
     retreatStarted: 0,
@@ -981,6 +1080,90 @@ function spawnEnemy() {
   image.addEventListener("load", () => alignEnemyToGround(enemy));
   positionEntity(enemy);
   alignEnemyToGround(enemy);
+  return enemy;
+}
+
+function spawnNinjaRaid(now = performance.now()) {
+  if (state.raid) return;
+  if (state.enemies.some((enemy) => enemy.alive)) {
+    state.pendingRaid = true;
+    return;
+  }
+
+  const arenaWidth = Math.min(
+    RAID_MAX_WIDTH,
+    Math.max(RAID_MIN_WIDTH, playfield.clientWidth - 24)
+  );
+  const leftLimit = Math.max(8, playfield.clientWidth - arenaWidth - 8);
+  const leftWallX = Math.max(8, Math.min(leftLimit, state.playerX - arenaWidth * 0.48));
+  const rightWallX = leftWallX + arenaWidth;
+  const minPlayerX = leftWallX + RAID_WALL_WIDTH + 8;
+  const maxPlayerX = rightWallX - RAID_WALL_WIDTH - player.offsetWidth - 8;
+
+  const walls = [];
+  [
+    { x: leftWallX, className: "raid-wall raid-wall-left" },
+    { x: rightWallX - RAID_WALL_WIDTH, className: "raid-wall raid-wall-right" }
+  ].forEach((wallData) => {
+    const wall = document.createElement("div");
+    wall.className = wallData.className;
+    wall.setAttribute("aria-hidden", "true");
+    wall.style.left = Math.round(wallData.x) + "px";
+    entities.appendChild(wall);
+    walls.push(wall);
+  });
+
+  const raidId = state.nextId++;
+  state.raid = {
+    active: true,
+    id: raidId,
+    remaining: 4,
+    leftWallX,
+    rightWallX,
+    wallWidth: RAID_WALL_WIDTH,
+    minPlayerX,
+    maxPlayerX,
+    walls
+  };
+  state.pendingRaid = false;
+  playfield.classList.add("raid-active");
+
+  state.playerX = Math.max(minPlayerX, Math.min(maxPlayerX, state.playerX));
+  player.style.left = Math.round(state.playerX) + "px";
+
+  // A raid is a sealed encounter: clear any earlier drops and pause new ones.
+  state.pickups.forEach((pickup) => {
+    pickup.alive = false;
+    pickup.element.remove();
+  });
+  state.pickups = [];
+  state.nextPickupAt = now + 1600;
+
+  const enemyMinX = leftWallX + RAID_WALL_WIDTH + 4;
+  const enemyMaxX = rightWallX - RAID_WALL_WIDTH - 94 - 4;
+  const center = state.playerX + player.offsetWidth / 2;
+  [-150, -50, 50, 150].forEach((offset) => {
+    const x = Math.max(enemyMinX, Math.min(enemyMaxX, center + offset - 47));
+    spawnEnemy("fighter", { x, raidId });
+  });
+
+  logMessage("NINJA RAID! Defeat all 4 ninjas to break out of the walls.");
+}
+
+function spawnEnemyEncounter(now = performance.now()) {
+  if (state.raid?.active || state.pendingRaid) return;
+  const aliveCount = state.enemies.filter((enemy) => enemy.alive).length;
+  if (aliveCount >= 4) return;
+
+  const roll = Math.random();
+  if (roll < RAID_CHANCE) {
+    if (aliveCount === 0) spawnNinjaRaid(now);
+    else state.pendingRaid = true;
+  } else if (roll < RAID_CHANCE + RUNNER_CHANCE) {
+    spawnEnemy("runner");
+  } else {
+    spawnEnemy("fighter");
+  }
 }
 
 function positionEntity(entity) {
@@ -1002,6 +1185,11 @@ function defeatEnemy(enemy) {
   $("score-number").textContent = state.score.toLocaleString("en-US");
   logMessage("Ninja was defeated +100pts");
   enemy.element.classList.add("dusting");
+
+  if (enemy.raidId && state.raid?.id === enemy.raidId) {
+    state.raid.remaining = Math.max(0, state.raid.remaining - 1);
+    if (state.raid.remaining === 0) finishNinjaRaid();
+  }
 
   const fieldRect = playfield.getBoundingClientRect();
   const x = enemy.x + 44;
@@ -1140,16 +1328,17 @@ function hitNearbyEnemies(now) {
 
     enemy.hp = Math.max(0, enemy.hp - state.damage);
     enemy.hitsSinceRetreat += 1;
-    enemy.healthFill.style.width = (enemy.hp / 20 * 100) + "%";
+    enemy.healthFill.style.width = (enemy.hp / enemy.maxHp * 100) + "%";
     if (enemy.hp <= 0) {
       defeatEnemy(enemy);
-    } else if (enemy.hitsSinceRetreat >= 2) {
+    } else if (!enemy.isRaid && enemy.hitsSinceRetreat >= 2) {
       retreatEnemy(enemy, now);
     }
   });
 }
 
 function spawnPickup() {
+  if (state.raid?.active) return;
   const type = nextWeightedPickupType();
   const airborne = Math.random() < 0.62;
   const id = state.nextId++;
@@ -1322,12 +1511,20 @@ function updateEnemies(now, dt) {
         MAX_FIGHTER_CHASE_DISTANCE_MIN,
         playfield.clientWidth * MAX_FIGHTER_CHASE_DISTANCE_RATIO
       );
+      const playerHasStar = now < state.movementBoostUntil && direction !== 0;
 
-      // Fighters give up when the player is out of range or running away
-      // faster than they can. They never turn into the 20-damage passing ninja.
-      if (distance > maxChaseDistance || (movingAway && playerSpeed > NINJA_CHASE_SPEED)) {
+      // A speed-star lets the player escape ordinary fighters. They run away
+      // instead of snapping to the player; raid members remain locked in battle.
+      if (!enemy.isRaid && playerHasStar) {
+        beginEnemyDisengage(enemy, targetX, Math.max(
+          NINJA_DISENGAGE_SPEED,
+          playerSpeed + NINJA_CHASE_SPEED
+        ));
+        enemy.x += enemy.disengageDirection * enemy.disengageSpeed * dt;
+      } else if (!enemy.isRaid
+        && (distance > maxChaseDistance || (movingAway && playerSpeed > NINJA_CHASE_SPEED))) {
         const escapeSpeed = movingAway
-          ? playerSpeed - NINJA_CHASE_SPEED
+          ? Math.max(NINJA_DISENGAGE_SPEED, playerSpeed - NINJA_CHASE_SPEED)
           : NINJA_DISENGAGE_SPEED;
         beginEnemyDisengage(enemy, targetX, escapeSpeed);
         enemy.x += enemy.disengageDirection * enemy.disengageSpeed * dt;
@@ -1336,7 +1533,7 @@ function updateEnemies(now, dt) {
         if (distance <= step) {
           enemy.x = targetX;
           enemy.mode = "fighting";
-          enemy.nextHitAt = now + 250;
+          enemy.nextHitAt = now + (enemy.isRaid ? 650 : 250);
           enemy.image.src = ASSET + "ninja_fighting.gif";
         } else {
           enemy.x += Math.sign(difference) * step;
@@ -1351,7 +1548,7 @@ function updateEnemies(now, dt) {
           const playerBox = playerContactBox();
           const ninjaBox = getEnemyHitbox(enemy);
           if (hitboxesTouch(playerBox, ninjaBox) && now >= enemy.nextHitAt) {
-            enemy.nextHitAt = now + 250;
+            enemy.nextHitAt = now + (enemy.isRaid ? 650 : 250);
             damagePlayer(2);
           }
         }
@@ -1367,7 +1564,7 @@ function updateEnemies(now, dt) {
         enemy.image.src = ASSET + "ninja_running.gif";
       }
     } else if (enemy.mode === "passing") {
-      // The red runner crosses the level continuously and never switches to pursuit mode.
+      // The red runner travels across the level and is shifted along with it.
       enemy.x -= PASSING_NINJA_SPEED * dt;
       positionEntity(enemy);
       if (!enemy.damageApplied) {
@@ -1384,6 +1581,12 @@ function updateEnemies(now, dt) {
       }
     }
 
+    if (enemy.isRaid && state.raid?.id === enemy.raidId) {
+      const minX = state.raid.leftWallX + state.raid.wallWidth + 2;
+      const maxX = state.raid.rightWallX - state.raid.wallWidth - enemy.element.offsetWidth - 2;
+      enemy.x = Math.max(minX, Math.min(maxX, enemy.x));
+    }
+
     updateEnemyPlatform(enemy);
     positionEntity(enemy);
   });
@@ -1394,7 +1597,7 @@ function updateEnemies(now, dt) {
       enemy.element.remove();
       return false;
     }
-    if (enemy.mode === "disengaging"
+    if (!enemy.isRaid && enemy.mode === "disengaging"
       && (enemy.x < -220 || enemy.x > playfield.clientWidth + 220)) {
       enemy.element.remove();
       return false;
@@ -1456,18 +1659,27 @@ function gameLoop(now) {
 
     const direction = movementDirection();
     const movement = movePlayer(direction, dt, now);
+    if (movement.distanceDelta) {
+      state.distancePixels += movement.distanceDelta;
+      updateDistanceAndNinjaHealth();
+    }
     scrollScenery(movement.scrollDirection, movement.scrollDuration, now);
     updatePlayerAppearance(now);
 
-    if (now >= state.nextEnemyAt) {
-      spawnEnemy();
+    if (state.pendingRaid && !state.raid?.active
+      && !state.enemies.some((enemy) => enemy.alive)) {
+      spawnNinjaRaid(now);
+    }
+
+    if (now >= state.nextEnemyAt && !state.raid?.active && !state.pendingRaid) {
+      spawnEnemyEncounter(now);
       state.nextEnemyAt = now + 1850 + Math.random() * 1450;
     }
-    if (now >= state.nextPickupAt) {
+    if (!state.raid?.active && now >= state.nextPickupAt) {
       if (Math.random() < 0.9) spawnPickup();
       state.nextPickupAt = now + 2600 + Math.random() * 2200;
     }
-    if (now >= state.nextPlatformAt) {
+    if (!state.raid?.active && now >= state.nextPlatformAt) {
       spawnPlatformGroup();
       state.nextPlatformAt = now + 8500 + Math.random() * 5500;
     }
@@ -1477,8 +1689,15 @@ function gameLoop(now) {
     if (state.gameOver) return;
     updatePickups(movement.scrollDirection, movement.scrollDuration, now);
 
-    if (now < state.attackUntil && now >= state.nextPlayerAttackAt) {
+    if (state.attackUntil && now >= state.attackUntil) {
+      state.attackUntil = 0;
+      state.attackStartedAt = 0;
+      state.nextPlayerAttackAt = 0;
+      clearAttackParticles();
+      updatePlayerAppearance(now);
+    } else if (state.attackUntil && now >= state.nextPlayerAttackAt) {
       hitNearbyEnemies(now);
+      launchAttackParticles();
       state.nextPlayerAttackAt = now + (1000 / state.attackSpeed);
     }
 
@@ -1554,7 +1773,11 @@ function finishGame() {
   state.gameOver = true;
   state.running = false;
   state.elapsedSeconds = state.startedAt ? Math.floor((performance.now() - state.startedAt) / 1000) : 0;
-  playfield.classList.remove("is-moving");
+  clearAttackParticles();
+  if (state.raid) state.raid.walls.forEach((wall) => wall.remove());
+  state.raid = null;
+  state.pendingRaid = false;
+  playfield.classList.remove("is-moving", "raid-active");
   heldDirections.clear();
   resetMobileJoystick();
   clearJumpInputs();
