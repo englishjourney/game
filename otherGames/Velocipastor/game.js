@@ -105,7 +105,6 @@ let mobileJoystickPointerId = null;
 const PLAYER_MOVE_SPEED = 255;
 const WORLD_SCROLL_SPEED = 205;
 const STAR_SPEED_MULTIPLIER = 3;
-const BASIC_MEDKIT_CHANCE = 0.0544;
 const NINJA_CHASE_SPEED = WORLD_SCROLL_SPEED * 0.75;
 const MAX_FIGHTER_CHASE_DISTANCE_MIN = 500;
 const MAX_FIGHTER_CHASE_DISTANCE_RATIO = 0.9;
@@ -455,10 +454,14 @@ function playerMovementSpeed(direction, now) {
 }
 
 function nextWeightedPickupType() {
-  // A 13-item shuffled bag gives the requested 20:20:20:30:40 ratio exactly
-  // in every complete cycle, instead of allowing short random streaks.
+  // One 25-item shuffled bag keeps the requested relative weights exact:
+  // mini medkit 70, standard medkit 50, big medkit 20, star 20,
+  // shield 20, holy water 30 and cross 40.
   if (!state.pickupDropBag.length) {
     const bag = [
+      "medkit-mini", "medkit-mini", "medkit-mini", "medkit-mini",
+      "medkit-mini", "medkit-mini", "medkit-mini",
+      "medkit", "medkit", "medkit", "medkit", "medkit",
       "medkit-large", "medkit-large",
       "star", "star",
       "shield", "shield",
@@ -1148,11 +1151,7 @@ function hitNearbyEnemies(now) {
 }
 
 function spawnPickup() {
-  // Small medkits keep their separate legacy rate. The five requested
-  // special drops are selected from an exact 2:2:2:3:4 shuffled cycle.
-  const type = Math.random() < BASIC_MEDKIT_CHANCE
-    ? "medkit"
-    : nextWeightedPickupType();
+  const type = nextWeightedPickupType();
   const airborne = Math.random() < 0.62;
   const id = state.nextId++;
   const element = document.createElement("div");
@@ -1163,12 +1162,15 @@ function spawnPickup() {
   const heightOffset = airborne ? 90 + Math.random() * 65 : 0;
   element.style.bottom = heightOffset + "px";
 
-  if (type === "medkit" || type === "medkit-large") {
+  if (type === "medkit" || type === "medkit-mini" || type === "medkit-large") {
+    if (type === "medkit-mini") element.classList.add("pickup-mini-medkit");
     if (type === "medkit-large") element.classList.add("pickup-medkit-large");
     const medkit = document.createElement("div");
     medkit.className = "medkit-icon" + (type === "medkit-large" ? " medkit-icon-large" : "");
     medkit.setAttribute("role", "img");
-    medkit.setAttribute("aria-label", type === "medkit-large" ? "Large medkit" : "Medkit");
+    medkit.setAttribute("aria-label", type === "medkit-mini"
+      ? "Mini medkit"
+      : type === "medkit-large" ? "Large medkit" : "Medkit");
     element.appendChild(medkit);
   } else if (type === "shield") {
     const shield = document.createElement("span");
@@ -1250,6 +1252,10 @@ function collectPickup(pickup) {
     state.movementBoostUntil = performance.now() + 30000;
     showPickupNotice(pickup, "+200% MOVE SPEED · 30s");
     logMessage("Speed star! Move 200% faster for 30 seconds!");
+  } else if (pickup.type === "medkit-mini") {
+    const recovered = Math.min(5, 100 - state.hp);
+    state.hp = Math.min(100, state.hp + 5);
+    showPickupNotice(pickup, recovered > 0 ? "+" + recovered + " HP" : "HP FULL");
   } else if (pickup.type === "medkit-large") {
     const recovered = Math.min(20, 100 - state.hp);
     state.hp = Math.min(100, state.hp + 20);
