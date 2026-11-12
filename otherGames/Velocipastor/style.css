@@ -120,7 +120,7 @@ h1,h2 { font-family:var(--pixel); line-height:1.55; margin:0; }
 @keyframes cloud-electricity { to { transform:translateX(-50%) translateY(-4px) scale(1.08); } }
 @keyframes cloud-discharge { 0%,100% { opacity:0; } 15%,75% { opacity:1; } }
 .entity { position:absolute; bottom:0; width:94px; height:142px; display:flex; align-items:flex-end; justify-content:center; }
-.entity.enemy { bottom:3px; }
+.entity.enemy { z-index:3; bottom:3px; }
 .enemy-sprite { width:100%; height:100%; object-fit:contain; object-position:center bottom; image-rendering:pixelated; filter:drop-shadow(3px 4px 0 rgba(0,0,0,.25)); }
 .enemy-sprite.facing-right { transform:scaleX(-1); }
 .enemy.passing-ninja .enemy-sprite { filter:sepia(1) saturate(12) hue-rotate(318deg) brightness(.92) contrast(1.12) drop-shadow(3px 4px 0 rgba(0,0,0,.25)); }
@@ -137,7 +137,7 @@ h1,h2 { font-family:var(--pixel); line-height:1.55; margin:0; }
 .terrain-block { position:absolute; z-index:1; width:60px; height:24px; border:3px solid #67472b; background:repeating-linear-gradient(0deg,#a96e3c 0 7px,#87542f 7px 14px); box-shadow:inset -4px 0 0 rgba(46,29,20,.25),inset 0 -4px 0 rgba(49,30,20,.2),3px 4px 0 rgba(0,0,0,.2); }
 .terrain-block::before { content:""; position:absolute; top:-4px; left:-3px; right:-3px; height:6px; border:2px solid #36783b; background:repeating-linear-gradient(90deg,#78c95a 0 9px,#55a747 9px 18px); }
 .terrain-block::after { content:""; position:absolute; left:16px; top:7px; width:3px; height:5px; background:#d19a5d; box-shadow:22px 8px 0 #d19a5d; opacity:.8; }
-.pickup { width:48px; height:65px; }
+.pickup { z-index:4; width:48px; height:65px; }
 .pickup.pickup-medkit-large { width:72px; height:86px; }
 .medkit-icon-large { transform:scale(1.5); transform-origin:center bottom; }
 .shield-pickup-icon { position:relative; display:block; width:37px; height:45px; margin:0 auto 5px; background:linear-gradient(90deg,#2386b6 0 20%,#7cecff 20% 78%,#287eae 78%); clip-path:polygon(0 0,50% 10%,100% 0,94% 58%,78% 82%,50% 100%,22% 82%,6% 58%); filter:drop-shadow(2px 3px 0 rgba(0,0,0,.42)) drop-shadow(0 0 8px rgba(93,224,255,.6)); }
