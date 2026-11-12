@@ -1200,55 +1200,83 @@ function renderPlannerMarkdown(value) {
     const lines = String(value == null ? '' : value).replace(/\r/g, '').split('\n');
     const output = [];
     let index = 0;
+
+    // Every parsing branch must consume at least one line. In particular, an
+    // empty heading such as "## " is valid while the user is still typing.
     while (index < lines.length) {
         const line = lines[index];
-        if (!line.trim()) { index++; continue; }
-        const heading = line.match(/^(#{1,3})\s+(.+)$/);
+        if (!line.trim()) {
+            index++;
+            continue;
+        }
+
+        const heading = line.match(/^(#{1,6})[ \t]+(.*)$/);
         if (heading) {
             const level = heading[1].length;
             output.push('<h' + level + '>' + renderPlannerInlineMarkdown(heading[2]) + '</h' + level + '>');
             index++;
             continue;
         }
+
         if (/^\s*([-*_])\1\1+\s*$/.test(line)) {
-            output.push('<hr>'); index++; continue;
+            output.push('<hr>');
+            index++;
+            continue;
         }
+
         if (/^\s*[-*+]\s+/.test(line)) {
             const items = [];
             while (index < lines.length && /^\s*[-*+]\s+/.test(lines[index])) {
                 items.push('<li>' + renderPlannerInlineMarkdown(lines[index].replace(/^\s*[-*+]\s+/, '')) + '</li>');
                 index++;
             }
-            output.push('<ul>' + items.join('') + '</ul>'); continue;
+            output.push('<ul>' + items.join('') + '</ul>');
+            continue;
         }
+
         if (/^\s*\d+[.)]\s+/.test(line)) {
             const items = [];
             while (index < lines.length && /^\s*\d+[.)]\s+/.test(lines[index])) {
                 items.push('<li>' + renderPlannerInlineMarkdown(lines[index].replace(/^\s*\d+[.)]\s+/, '')) + '</li>');
                 index++;
             }
-            output.push('<ol>' + items.join('') + '</ol>'); continue;
+            output.push('<ol>' + items.join('') + '</ol>');
+            continue;
         }
+
         if (/^\s*>\s?/.test(line)) {
             const quote = [];
             while (index < lines.length && /^\s*>\s?/.test(lines[index])) {
                 quote.push(renderPlannerInlineMarkdown(lines[index].replace(/^\s*>\s?/, '')));
                 index++;
             }
-            output.push('<blockquote>' + quote.join('<br>') + '</blockquote>'); continue;
+            output.push('<blockquote>' + quote.join('<br>') + '</blockquote>');
+            continue;
         }
+
         const paragraph = [];
-        while (index < lines.length && lines[index].trim() &&
-            !/^(#{1,3})\s+/.test(lines[index]) &&
-            !/^\s*[-*+]\s+/.test(lines[index]) &&
-            !/^\s*\d+[.)]\s+/.test(lines[index]) &&
-            !/^\s*>\s?/.test(lines[index]) &&
-            !/^\s*([-*_])\1\1+\s*$/.test(lines[index])) {
-            paragraph.push(renderPlannerInlineMarkdown(lines[index]));
+        while (index < lines.length && lines[index].trim()) {
+            const currentLine = lines[index];
+            const beginsBlock = /^(#{1,6})[ \t]+/.test(currentLine)
+                || /^\s*[-*+]\s+/.test(currentLine)
+                || /^\s*\d+[.)]\s+/.test(currentLine)
+                || /^\s*>\s?/.test(currentLine)
+                || /^\s*([-*_])\1\1+\s*$/.test(currentLine);
+            if (beginsBlock) break;
+            paragraph.push(renderPlannerInlineMarkdown(currentLine));
             index++;
         }
-        output.push('<p>' + paragraph.join('<br>') + '</p>');
+
+        // Defensive fallback: malformed or future Markdown syntax must never
+        // leave the parser stuck on the same line.
+        if (paragraph.length) {
+            output.push('<p>' + paragraph.join('<br>') + '</p>');
+        } else {
+            output.push('<p>' + renderPlannerInlineMarkdown(line) + '</p>');
+            index++;
+        }
     }
+
     return output.join('');
 }
 
@@ -1286,10 +1314,18 @@ function setupActivitiesEditor() {
             const actualEnd = lineEnd === -1 ? editor.value.length : lineEnd;
             const block = editor.value.slice(lineStart, actualEnd);
             const prefix = format === 'heading' ? '## ' : format === 'bullet' ? '- ' : format === 'number' ? '1. ' : '> ';
-            const replacement = block.split('\n').map(line => prefix + line.replace(/^(#{1,3}\s+|[-*+]\s+|\d+[.)]\s+|>\s?)/, '')).join('\n');
+            const replacement = block.split('\n').map(line => prefix + line.replace(/^(#{1,6}[ \t]+|[-*+][ \t]+|\d+[.)][ \t]+|>[ \t]?)/, '')).join('\n');
             editor.value = editor.value.slice(0, lineStart) + replacement + editor.value.slice(actualEnd);
             editor.focus();
-            editor.setSelectionRange(lineStart, lineStart + replacement.length);
+
+            // Leave the caret after the heading marker when starting from an
+            // empty line, instead of selecting "## " and replacing it on type.
+            const contentStart = lineStart + prefix.length;
+            if (!block.trim()) {
+                editor.setSelectionRange(contentStart, contentStart);
+            } else {
+                editor.setSelectionRange(contentStart, lineStart + replacement.length);
+            }
         } else {
             editor.value = editor.value.slice(0, start) + before + inserted + after + editor.value.slice(end);
             editor.focus();
