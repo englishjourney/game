@@ -244,7 +244,14 @@ dialog::backdrop { background: rgba(0,0,0,0.7); }
 .data-card.card-adapted .data-card-info,
 .data-card.card-adapted .data-card-info p,
 .data-card.card-adapted .data-card-info strong,
-.data-card.card-adapted .adapted-label { color: #111827 !important; }
+.data-card.card-adapted .adapted-label {
+  color: #111 !important;
+  -webkit-text-stroke: .65px #fff;
+  paint-order: stroke fill;
+  text-shadow: 0 0 2px #fff, 0 1px 2px rgba(255,255,255,.95);
+}
+.data-card.card-adapted .data-card-info p,
+.data-card.card-adapted .data-card-info strong { font-weight: 800; }
 .data-card .adapted-label { font-size: 1.15rem; text-transform: uppercase; font-weight: 800; }
 .data-card .adapted-label i { margin-right: 5px; }
 /* Dropdown e formulário de lembretes sobre qualquer seção visível */
