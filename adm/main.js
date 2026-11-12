@@ -566,7 +566,7 @@ async function playReminderNotificationSound() {
         oscillator.frequency.setValueAtTime(740, context.currentTime);
         oscillator.frequency.setValueAtTime(940, context.currentTime + 0.16);
         gain.gain.setValueAtTime(0.0001, context.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.09, context.currentTime + 0.025);
+        gain.gain.exponentialRampToValueAtTime(0.32, context.currentTime + 0.025);
         gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.42);
         oscillator.connect(gain);
         gain.connect(context.destination);
