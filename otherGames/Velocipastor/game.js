@@ -69,6 +69,7 @@ const state = {
   nextPlatformAt: 0,
   enemies: [],
   pickups: [],
+  pickupDropBag: [],
   platforms: [],
   plants: [],
   nextId: 1,
@@ -102,7 +103,14 @@ let mobileJoystickDirection = 0;
 let mobileJoystickPointerId = null;
 
 const PLAYER_MOVE_SPEED = 255;
-const PASSING_NINJA_SPEED = 330;
+const WORLD_SCROLL_SPEED = 205;
+const STAR_SPEED_MULTIPLIER = 3;
+const BASIC_MEDKIT_CHANCE = 0.0544;
+const NINJA_CHASE_SPEED = WORLD_SCROLL_SPEED * 0.75;
+const MAX_FIGHTER_CHASE_DISTANCE_MIN = 500;
+const MAX_FIGHTER_CHASE_DISTANCE_RATIO = 0.9;
+const NINJA_DISENGAGE_SPEED = 220;
+const PASSING_NINJA_SPEED = 495;
 const PLATFORM_BLOCK_HEIGHT = 24;
 const PLATFORM_STEP_HEIGHT = 20;
 const PLATFORM_BLOCK_WIDTH = 60;
@@ -435,12 +443,45 @@ function playerFreezeX() {
   return Math.max(8, Math.min(maxX, centerOfRightHalf - player.offsetWidth / 2));
 }
 
+function movementSpeedMultiplier(now = performance.now()) {
+  return now < state.movementBoostUntil ? STAR_SPEED_MULTIPLIER : 1;
+}
+
+function playerMovementSpeed(direction, now) {
+  if (!direction) return 0;
+  const multiplier = movementSpeedMultiplier(now);
+  const isRunningAtAnchor = direction > 0 && state.playerX >= playerFreezeX() - 2;
+  return (isRunningAtAnchor ? state.worldSpeed : PLAYER_MOVE_SPEED) * multiplier;
+}
+
+function nextWeightedPickupType() {
+  // A 13-item shuffled bag gives the requested 20:20:20:30:40 ratio exactly
+  // in every complete cycle, instead of allowing short random streaks.
+  if (!state.pickupDropBag.length) {
+    const bag = [
+      "medkit-large", "medkit-large",
+      "star", "star",
+      "shield", "shield",
+      "holy", "holy", "holy",
+      "cross", "cross", "cross", "cross"
+    ];
+
+    for (let index = bag.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [bag[index], bag[swapIndex]] = [bag[swapIndex], bag[index]];
+    }
+    state.pickupDropBag = bag;
+  }
+
+  return state.pickupDropBag.pop();
+}
+
 function movePlayer(direction, dt, now) {
   if (!direction) return { scrollDirection: 0, scrollDuration: 0 };
 
   const maxX = Math.max(8, playfield.clientWidth - player.offsetWidth - 8);
 
-  const movementBoost = now < state.movementBoostUntil ? 3 : 1;
+  const movementBoost = movementSpeedMultiplier(now);
   const moveSpeed = PLAYER_MOVE_SPEED * movementBoost * (state.jumpActive && state.jumpHeld ? 1.15 : 1);
 
   if (direction < 0) {
@@ -473,14 +514,14 @@ function movePlayer(direction, dt, now) {
   return { scrollDirection: 1, scrollDuration: dt };
 }
 
-function scrollScenery(direction, dt) {
+function scrollScenery(direction, dt, now) {
   if (!direction) {
     playfield.classList.remove("is-moving");
     return;
   }
 
   playfield.classList.add("is-moving");
-  const shift = direction * state.worldSpeed * dt;
+  const shift = direction * state.worldSpeed * movementSpeedMultiplier(now) * dt;
   state.sceneryOffset -= shift;
   const offset = state.sceneryOffset;
 
@@ -592,6 +633,7 @@ function startGame() {
   state.nextPlatformAt = 0;
   state.enemies = [];
   state.pickups = [];
+  state.pickupDropBag = [];
   state.platforms = [];
   state.plants = [];
   state.nextId = 1;
@@ -921,6 +963,8 @@ function spawnEnemy() {
     retreatUntil: 0,
     retreatStartX: 0,
     retreatDirection: 0,
+    disengageDirection: 0,
+    disengageSpeed: NINJA_DISENGAGE_SPEED,
     groundHeight: 0,
     platformId: null,
     damageApplied: false,
@@ -1104,33 +1148,11 @@ function hitNearbyEnemies(now) {
 }
 
 function spawnPickup() {
-  // The requested weights add up to 130, so they are normalized over the
-  // remaining drops. Keep the regular medkit at its previous 5.44% global rate.
-  const basicMedkitChance = 0.0544;
-  let type;
-
-  if (Math.random() < basicMedkitChance) {
-    type = "medkit";
-  } else {
-    const weights = [
-      { type: "medkit-large", weight: 20 },
-      { type: "star", weight: 20 },
-      { type: "shield", weight: 20 },
-      { type: "holy", weight: 30 },
-      { type: "cross", weight: 40 }
-    ];
-    const totalWeight = weights.reduce((total, item) => total + item.weight, 0);
-    let roll = Math.random() * totalWeight;
-    type = weights[weights.length - 1].type;
-
-    for (const item of weights) {
-      if (roll < item.weight) {
-        type = item.type;
-        break;
-      }
-      roll -= item.weight;
-    }
-  }
+  // Small medkits keep their separate legacy rate. The five requested
+  // special drops are selected from an exact 2:2:2:3:4 shuffled cycle.
+  const type = Math.random() < BASIC_MEDKIT_CHANCE
+    ? "medkit"
+    : nextWeightedPickupType();
   const airborne = Math.random() < 0.62;
   const id = state.nextId++;
   const element = document.createElement("div");
@@ -1271,40 +1293,66 @@ function updateEnemyPlatform(enemy) {
   }
 }
 
+function beginEnemyDisengage(enemy, targetX, speed) {
+  enemy.mode = "disengaging";
+  enemy.disengageDirection = Math.sign(enemy.x - targetX) || 1;
+  enemy.disengageSpeed = Math.max(80, speed);
+  enemy.image.src = ASSET + "ninja_running.gif";
+  setEnemyFacing(enemy, enemy.disengageDirection);
+}
+
 function updateEnemies(now, dt) {
   state.enemies.forEach((enemy) => {
     if (!enemy.alive) return;
 
-    if (enemy.mode === "approaching") {
+    if (enemy.mode === "approaching" || enemy.mode === "fighting") {
       const targetX = enemyContactX(enemy);
       const difference = targetX - enemy.x;
-      const step = state.worldSpeed * 1.12 * dt;
+      const distance = Math.abs(difference);
+      const direction = movementDirection();
+      const playerSpeed = playerMovementSpeed(direction, now);
+      const movingAway = (enemy.x < targetX && direction > 0)
+        || (enemy.x > targetX && direction < 0);
+      const maxChaseDistance = Math.max(
+        MAX_FIGHTER_CHASE_DISTANCE_MIN,
+        playfield.clientWidth * MAX_FIGHTER_CHASE_DISTANCE_RATIO
+      );
 
-      if (Math.abs(difference) <= step) {
-        enemy.x = targetX;
-        enemy.mode = "fighting";
-        enemy.nextHitAt = now + 250;
-        enemy.image.src = ASSET + "ninja_fighting.gif";
-      } else {
-        enemy.x += Math.sign(difference) * step;
-      }
-    } else if (enemy.mode === "fighting") {
-      const targetX = enemyContactX(enemy);
-      const difference = targetX - enemy.x;
-
-      if (Math.abs(difference) > 42) {
-        enemy.mode = "approaching";
-        enemy.x += Math.sign(difference) * Math.min(Math.abs(difference), state.worldSpeed * 1.12 * dt);
-      } else {
-        enemy.x = targetX;
-        positionEntity(enemy);
-        const playerBox = playerContactBox();
-        const ninjaBox = getEnemyHitbox(enemy);
-        if (hitboxesTouch(playerBox, ninjaBox) && now >= enemy.nextHitAt) {
+      // Fighters give up when the player is out of range or running away
+      // faster than they can. They never turn into the 20-damage passing ninja.
+      if (distance > maxChaseDistance || (movingAway && playerSpeed > NINJA_CHASE_SPEED)) {
+        const escapeSpeed = movingAway
+          ? playerSpeed - NINJA_CHASE_SPEED
+          : NINJA_DISENGAGE_SPEED;
+        beginEnemyDisengage(enemy, targetX, escapeSpeed);
+        enemy.x += enemy.disengageDirection * enemy.disengageSpeed * dt;
+      } else if (enemy.mode === "approaching") {
+        const step = NINJA_CHASE_SPEED * dt;
+        if (distance <= step) {
+          enemy.x = targetX;
+          enemy.mode = "fighting";
           enemy.nextHitAt = now + 250;
-          damagePlayer(2);
+          enemy.image.src = ASSET + "ninja_fighting.gif";
+        } else {
+          enemy.x += Math.sign(difference) * step;
+        }
+      } else if (enemy.mode === "fighting") {
+        if (distance > 42) {
+          enemy.mode = "approaching";
+          enemy.x += Math.sign(difference) * Math.min(distance, NINJA_CHASE_SPEED * dt);
+        } else {
+          enemy.x = targetX;
+          positionEntity(enemy);
+          const playerBox = playerContactBox();
+          const ninjaBox = getEnemyHitbox(enemy);
+          if (hitboxesTouch(playerBox, ninjaBox) && now >= enemy.nextHitAt) {
+            enemy.nextHitAt = now + 250;
+            damagePlayer(2);
+          }
         }
       }
+    } else if (enemy.mode === "disengaging") {
+      enemy.x += enemy.disengageDirection * enemy.disengageSpeed * dt;
     } else if (enemy.mode === "retreating") {
       const progress = Math.min(1, (now - enemy.retreatStarted) / 1000);
       enemy.x = enemy.retreatStartX + enemy.retreatDirection * 105 * progress;
@@ -1341,16 +1389,21 @@ function updateEnemies(now, dt) {
       enemy.element.remove();
       return false;
     }
+    if (enemy.mode === "disengaging"
+      && (enemy.x < -220 || enemy.x > playfield.clientWidth + 220)) {
+      enemy.element.remove();
+      return false;
+    }
     return enemy.alive || enemy.element.isConnected;
   });
 }
 
-function updatePickups(scrollDirection, scrollDuration) {
+function updatePickups(scrollDirection, scrollDuration, now) {
   const playerBox = playerContactBox();
   state.pickups.forEach((pickup) => {
     if (!pickup.alive) return;
     if (scrollDirection) {
-      pickup.x -= scrollDirection * state.worldSpeed * scrollDuration;
+      pickup.x -= scrollDirection * state.worldSpeed * movementSpeedMultiplier(now) * scrollDuration;
     }
     positionEntity(pickup);
     const pickupBox = getHitbox(pickup.element, { left: 0, right: 1, top: 0, bottom: 1 });
@@ -1385,7 +1438,7 @@ function gameLoop(now) {
 
   if (state.ready) {
     state.elapsedSeconds = Math.floor((now - state.startedAt) / 1000);
-    state.worldSpeed = Math.min(340, 205 + state.elapsedSeconds * 0.65);
+    state.worldSpeed = WORLD_SCROLL_SPEED;
     if (state.shieldUntil && now >= state.shieldUntil) {
       state.shieldUntil = 0;
       player.classList.remove("shielded");
@@ -1398,7 +1451,7 @@ function gameLoop(now) {
 
     const direction = movementDirection();
     const movement = movePlayer(direction, dt, now);
-    scrollScenery(movement.scrollDirection, movement.scrollDuration);
+    scrollScenery(movement.scrollDirection, movement.scrollDuration, now);
     updatePlayerAppearance(now);
 
     if (now >= state.nextEnemyAt) {
@@ -1417,7 +1470,7 @@ function gameLoop(now) {
     updateJump(dt);
     updateEnemies(now, dt);
     if (state.gameOver) return;
-    updatePickups(movement.scrollDirection, movement.scrollDuration);
+    updatePickups(movement.scrollDirection, movement.scrollDuration, now);
 
     if (now < state.attackUntil && now >= state.nextPlayerAttackAt) {
       hitNearbyEnemies(now);
