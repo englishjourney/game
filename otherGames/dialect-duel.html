@@ -97,6 +97,9 @@
     .meaning-card { text-align:center; margin:0 auto 4px; }
     .meaning-label { color:#8ea1bb; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1.6px; }
     .meaning { display:block; margin-top:4px; font-size:clamp(23px,4vw,34px); font-weight:900; letter-spacing:-.6px; }
+    .country-reveal { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; width:max-content; max-width:100%; margin:12px auto 0; padding:10px 15px; border:1px solid rgba(83,214,155,.3); border-radius:12px; background:rgba(83,214,155,.08); }
+    .country-reveal-label { color:#9cabc0; font-size:10px; font-weight:850; letter-spacing:1px; text-transform:uppercase; }
+    .country-reveal-value { color:#9dffca; font-size:14px; font-weight:950; }
     .audio-zone { min-height:180px; display:grid; place-items:center; position:relative; }
     .sound-button {
       width:114px; height:114px; display:grid; place-items:center; position:relative;
@@ -256,6 +259,10 @@
             <span class="meaning-label">Meaning</span>
             <strong id="meaning" class="meaning"></strong>
           </div>
+          <div id="country-reveal" class="country-reveal" hidden aria-live="polite">
+            <span class="country-reveal-label">Correct country</span>
+            <strong id="correct-country" class="country-reveal-value"></strong>
+          </div>
 
           <div class="audio-zone">
             <button id="sound-button" class="sound-button loading" type="button" aria-label="Ouvir a palavra" disabled>
@@ -283,6 +290,7 @@
               <button id="undo-button" class="subtle-button" type="button">⌫ Apagar</button>
               <button id="clear-button" class="subtle-button" type="button">Limpar</button>
               <button id="submit-button" class="primary-button" type="button" disabled>ENVIAR TENTATIVA</button>
+              <button id="next-round-button" class="primary-button" type="button" hidden>PRÓXIMA PALAVRA →</button>
             </div>
             <p id="feedback" class="feedback neutral" role="status" aria-live="polite"></p>
           </div>
@@ -586,6 +594,10 @@
       $('progress-fill').style.width = ((roundIndex / WORD_COUNT) * 100) + '%';
       $('meaning').textContent = '';
       $('meaning-card').hidden = true;
+      $('correct-country').textContent = '';
+      $('country-reveal').hidden = true;
+      $('submit-button').hidden = false;
+      $('next-round-button').hidden = true;
       $('feedback').textContent = '';
       $('feedback').className = 'feedback neutral';
       $('audio-status').textContent = 'Carregando áudio';
@@ -612,6 +624,8 @@
 
       $('meaning').textContent = currentRound.meaning;
       $('meaning-card').hidden = false;
+      $('correct-country').textContent = regionDisplay(currentRound.region);
+      $('country-reveal').hidden = false;
       completedRounds++;
       if (correct) {
         if (activeTeam === 'yellow') yellowScore++;
@@ -633,17 +647,21 @@
       renderScoreboard();
       document.querySelectorAll('[data-region]').forEach(button => button.disabled = true);
       $('submit-button').disabled = true;
+      $('submit-button').hidden = true;
+      $('next-round-button').hidden = false;
+      $('next-round-button').textContent = roundIndex + 1 >= rounds.length ? 'VER RESULTADO FINAL →' : 'PRÓXIMA PALAVRA →';
       $('undo-button').disabled = true;
       $('clear-button').disabled = true;
       $('keyboard').querySelectorAll('button').forEach(button => button.disabled = true);
       audioPlayer.pause();
 
-      window.setTimeout(() => {
-        if (!gameActive) return;
-        roundIndex++;
-        if (roundIndex >= rounds.length) finishGame(false);
-        else loadRound();
-      }, 1900);
+    }
+
+    function advanceRound() {
+      if (!gameActive || !roundLocked) return;
+      roundIndex++;
+      if (roundIndex >= rounds.length) finishGame(false);
+      else loadRound();
     }
 
     function finishGame(early) {
@@ -689,6 +707,7 @@
     $('undo-button').addEventListener('click', undoTile);
     $('clear-button').addEventListener('click', clearAnswer);
     $('submit-button').addEventListener('click', submitAttempt);
+    $('next-round-button').addEventListener('click', advanceRound);
     $('end-button').addEventListener('click', () => finishGame(true));
     document.querySelectorAll('[data-region]').forEach(button => {
       button.addEventListener('click', () => selectRegion(button.dataset.region));
