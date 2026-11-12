@@ -61,10 +61,16 @@ const state = {
   distance: 0,
   worldSpeed: 205,
   movementBoostUntil: 0,
+  shieldUntil: 0,
+  groundHeight: 0,
+  groundPlatformId: null,
   nextEnemyAt: 0,
   nextPickupAt: 0,
+  nextPlatformAt: 0,
   enemies: [],
   pickups: [],
+  platforms: [],
+  plants: [],
   nextId: 1,
   playerX: 0,
   facing: 1,
@@ -76,6 +82,7 @@ const player = $("player");
 const playerSprite = $("player-sprite");
 const playfield = $("playfield");
 const entities = $("entities");
+const sceneryPlantsLayer = $("scenery-plants");
 const messageLog = $("message-log");
 const gameOverOverlay = $("game-over-overlay");
 const rankModal = $("rank-modal");
@@ -96,6 +103,10 @@ let mobileJoystickPointerId = null;
 
 const PLAYER_MOVE_SPEED = 255;
 const PASSING_NINJA_SPEED = 330;
+const PLATFORM_BLOCK_HEIGHT = 30;
+const PLATFORM_STEP_HEIGHT = 24;
+const PLATFORM_BLOCK_WIDTH = 60;
+const MAX_ENEMY_STEP_UP = 32;
 const SPECIAL_ATTACK_RADIUS = 310;
 const HOLY_WATER_FOR_SPECIAL = 10;
 
@@ -469,13 +480,74 @@ function scrollScenery(direction, dt) {
   }
 
   playfield.classList.add("is-moving");
-  state.sceneryOffset -= direction * state.worldSpeed * dt;
+  const shift = direction * state.worldSpeed * dt;
+  state.sceneryOffset -= shift;
   const offset = state.sceneryOffset;
 
   groundLayer.style.backgroundPositionX = offset + "px";
   groundTop.style.backgroundPositionX = (offset * 1.05) + "px";
   skyFar.style.backgroundPositionX = (offset * 0.28) + "px";
   skyNear.style.backgroundPositionX = (offset * 0.58) + "px";
+
+  state.platforms.forEach((platform) => {
+    platform.x -= shift;
+    positionEntity(platform);
+  });
+  state.platforms = state.platforms.filter((platform) => {
+    if (platform.x + platform.width < -24) {
+      platform.element.remove();
+      return false;
+    }
+    return true;
+  });
+
+  state.plants.forEach((plant) => {
+    plant.x -= shift;
+    if (plant.x < -42) plant.x = playfield.clientWidth + 35 + Math.random() * 150;
+    plant.element.style.left = Math.round(plant.x) + "px";
+  });
+}
+
+function createSceneryPlants() {
+  sceneryPlantsLayer.replaceChildren();
+  state.plants = [];
+  const width = playfield.clientWidth;
+  const variants = ["plant-bush", "plant-sprout", "plant-flower", "plant-bush"];
+  for (let index = 0; index < 10; index += 1) {
+    const element = document.createElement("span");
+    const variant = variants[Math.floor(Math.random() * variants.length)];
+    element.className = "scenery-plant " + variant;
+    const x = (index + 0.35) * (width / 10) + (Math.random() * 48 - 24);
+    element.style.left = Math.max(4, x) + "px";
+    sceneryPlantsLayer.appendChild(element);
+    state.plants.push({ x, element });
+  }
+}
+
+function spawnPlatformGroup() {
+  const count = 1 + Math.floor(Math.random() * 4);
+  const groupId = state.nextId++;
+  const startX = playfield.clientWidth + 110 + Math.random() * 130;
+
+  for (let index = 0; index < count; index += 1) {
+    const elevation = PLATFORM_BLOCK_HEIGHT + index * PLATFORM_STEP_HEIGHT;
+    const element = document.createElement("div");
+    element.className = "terrain-block";
+    element.setAttribute("aria-hidden", "true");
+    element.style.bottom = (-6 + index * PLATFORM_STEP_HEIGHT) + "px";
+    entities.appendChild(element);
+
+    const platform = {
+      id: state.nextId++,
+      groupId,
+      x: startX + index * (PLATFORM_BLOCK_WIDTH - 6),
+      width: PLATFORM_BLOCK_WIDTH,
+      elevation,
+      element
+    };
+    state.platforms.push(platform);
+    positionEntity(platform);
+  }
 }
 
 function updateStormCloud() {
@@ -512,10 +584,16 @@ function startGame() {
   state.distance = 0;
   state.worldSpeed = 205;
   state.movementBoostUntil = 0;
+  state.shieldUntil = 0;
+  state.groundHeight = 0;
+  state.groundPlatformId = null;
   state.nextEnemyAt = 0;
   state.nextPickupAt = 0;
+  state.nextPlatformAt = 0;
   state.enemies = [];
   state.pickups = [];
+  state.platforms = [];
+  state.plants = [];
   state.nextId = 1;
   state.playerX = 0;
   state.facing = 1;
@@ -525,6 +603,10 @@ function startGame() {
   heldDirections.clear();
   resetMobileJoystick();
   entities.innerHTML = "";
+  sceneryPlantsLayer.replaceChildren();
+  sceneryPlantsLayer.classList.remove("is-moving");
+  player.classList.remove("shielded", "on-platform");
+  player.style.setProperty("--jump-offset", "0px");
   messageLog.innerHTML = "";
   gameOverOverlay.classList.add("hidden");
   rankModal.classList.add("hidden");
@@ -545,6 +627,7 @@ function startGame() {
   updateHud();
   showScreen("game");
   void player.offsetWidth;
+  createSceneryPlants();
   state.playerX = Math.round(playfield.clientWidth * 0.31);
   player.style.left = state.playerX + "px";
   alignPlayerToGround();
@@ -565,19 +648,68 @@ function clearJumpInputs() {
   state.jumpHeld = false;
 }
 
+function playerCenterX() {
+  return state.playerX + player.offsetWidth / 2;
+}
+
+function playerOverlapsPlatform(platform) {
+  const centerX = playerCenterX();
+  return centerX >= platform.x - 10 && centerX <= platform.x + platform.width + 10;
+}
+
+function settlePlayerOnGround() {
+  state.jumpOffset = 0;
+  state.groundHeight = 0;
+  state.groundPlatformId = null;
+  state.jumpActive = false;
+  state.jumpVelocity = 0;
+  state.jumpHoldElapsed = 0;
+  player.classList.remove("jumping", "on-platform");
+  player.style.setProperty("--jump-offset", "0px");
+}
+
+function settlePlayerOnPlatform(platform) {
+  state.jumpOffset = platform.elevation;
+  state.groundHeight = platform.elevation;
+  state.groundPlatformId = platform.id;
+  state.jumpActive = false;
+  state.jumpVelocity = 0;
+  state.jumpHoldElapsed = 0;
+  player.classList.remove("jumping");
+  player.classList.add("on-platform");
+  player.style.setProperty("--jump-offset", (-platform.elevation) + "px");
+}
+
 function jump() {
   if (!state.running || !state.ready || state.gameOver || state.jumpActive) return;
 
   state.jumpActive = true;
   state.jumpVelocity = 560;
-  state.jumpOffset = 0;
+  state.jumpOffset = state.groundHeight;
+  state.groundHeight = 0;
+  state.groundPlatformId = null;
   state.jumpHoldElapsed = 0;
-  player.style.setProperty("--jump-offset", "0px");
+  player.style.setProperty("--jump-offset", (-state.jumpOffset) + "px");
+  player.classList.remove("on-platform");
   player.classList.add("jumping");
 }
 
 function updateJump(dt) {
-  if (!state.jumpActive) return;
+  if (!state.jumpActive) {
+    if (state.groundHeight <= 0) return;
+    const support = state.platforms.find((platform) =>
+      platform.id === state.groundPlatformId && playerOverlapsPlatform(platform)
+    );
+    if (support) return;
+
+    // Walking off a platform starts a natural fall to the next lower surface.
+    state.jumpActive = true;
+    state.jumpVelocity = 0;
+    state.groundHeight = 0;
+    state.groundPlatformId = null;
+    player.classList.remove("on-platform");
+    player.classList.add("jumping");
+  }
 
   // Holding Space adds a small upward impulse only at the beginning of the jump.
   if (state.jumpHeld && state.jumpVelocity > 0 && state.jumpHoldElapsed < 0.16) {
@@ -586,17 +718,25 @@ function updateJump(dt) {
     state.jumpHoldElapsed += holdStep;
   }
 
-  // Integrating velocity and gravity creates a real take-off, apex and landing arc.
+  const previousOffset = state.jumpOffset;
   state.jumpVelocity -= 1950 * dt;
   state.jumpOffset += state.jumpVelocity * dt;
 
+  // One-way platforms catch the player only while descending through their top.
+  if (state.jumpVelocity < 0 && state.jumpOffset < previousOffset) {
+    const landing = state.platforms
+      .filter((platform) => previousOffset >= platform.elevation
+        && state.jumpOffset <= platform.elevation
+        && playerOverlapsPlatform(platform))
+      .sort((first, second) => second.elevation - first.elevation)[0];
+    if (landing) {
+      settlePlayerOnPlatform(landing);
+      return;
+    }
+  }
+
   if (state.jumpOffset <= 0 && state.jumpVelocity < 0) {
-    state.jumpOffset = 0;
-    state.jumpActive = false;
-    state.jumpVelocity = 0;
-    state.jumpHoldElapsed = 0;
-    player.classList.remove("jumping");
-    player.style.setProperty("--jump-offset", "0px");
+    settlePlayerOnGround();
     return;
   }
 
@@ -674,7 +814,7 @@ function alignPlayerToGround() {
 function alignEnemyToGround(enemy) {
   const footGap = getFootGap(enemy.element, enemy.image, NINJA_SPRITE.footY);
   if (footGap === null) return;
-  enemy.element.style.bottom = (GROUND_HEIGHT - ENTITY_LAYER_BOTTOM - footGap) + "px";
+  enemy.element.style.bottom = (GROUND_HEIGHT - ENTITY_LAYER_BOTTOM - footGap + (enemy.groundHeight || 0)) + "px";
 }
 
 playerSprite.addEventListener("load", alignPlayerToGround);
@@ -781,6 +921,8 @@ function spawnEnemy() {
     retreatUntil: 0,
     retreatStartX: 0,
     retreatDirection: 0,
+    groundHeight: 0,
+    platformId: null,
     damageApplied: false,
     alive: true,
     element,
@@ -800,7 +942,7 @@ function positionEntity(entity) {
 }
 
 function damagePlayer(amount, message) {
-  if (state.gameOver) return;
+  if (state.gameOver || performance.now() < state.shieldUntil) return;
   state.hp = Math.max(0, state.hp - amount);
   if (message) logMessage(message);
   updateHud();
@@ -963,14 +1105,20 @@ function hitNearbyEnemies(now) {
 
 function spawnPickup() {
   const roll = Math.random();
-  // Every pickup spawn has a 50% chance to become a rare speed star.
-  const type = roll < 0.5
-    ? "star"
-    : (roll - 0.5) * 2 < 0.34
-      ? "holy"
-      : (roll - 0.5) * 2 < 0.68
-        ? "cross"
-        : "medkit";
+  // The speed star keeps its 50% share. The shield is a rare 15% of the
+  // remaining drops; the old item mix keeps its original relative weights.
+  const remainingRoll = (roll - 0.5) * 2;
+  let type;
+  if (roll < 0.5) {
+    type = "star";
+  } else if (remainingRoll < 0.15) {
+    type = "shield";
+  } else {
+    const commonRoll = (remainingRoll - 0.15) / 0.85;
+    type = commonRoll < 0.34 ? "holy"
+      : commonRoll < 0.68 ? "cross"
+      : Math.random() < 0.6 ? "medkit-large" : "medkit";
+  }
   const airborne = Math.random() < 0.62;
   const id = state.nextId++;
   const element = document.createElement("div");
@@ -981,12 +1129,19 @@ function spawnPickup() {
   const heightOffset = airborne ? 90 + Math.random() * 65 : 0;
   element.style.bottom = heightOffset + "px";
 
-  if (type === "medkit") {
+  if (type === "medkit" || type === "medkit-large") {
+    if (type === "medkit-large") element.classList.add("pickup-medkit-large");
     const medkit = document.createElement("div");
-    medkit.className = "medkit-icon";
+    medkit.className = "medkit-icon" + (type === "medkit-large" ? " medkit-icon-large" : "");
     medkit.setAttribute("role", "img");
-    medkit.setAttribute("aria-label", "Medkit");
+    medkit.setAttribute("aria-label", type === "medkit-large" ? "Large medkit" : "Medkit");
     element.appendChild(medkit);
+  } else if (type === "shield") {
+    const shield = document.createElement("span");
+    shield.className = "shield-pickup-icon";
+    shield.setAttribute("role", "img");
+    shield.setAttribute("aria-label", "Shield");
+    element.appendChild(shield);
   } else if (type === "star") {
     const star = document.createElement("span");
     star.className = "star-pickup-icon";
@@ -1061,6 +1216,15 @@ function collectPickup(pickup) {
     state.movementBoostUntil = performance.now() + 30000;
     showPickupNotice(pickup, "+50% MOVE SPEED · 30s");
     logMessage("Speed star! Move 50% faster for 30 seconds!");
+  } else if (pickup.type === "medkit-large") {
+    const recovered = Math.min(20, 100 - state.hp);
+    state.hp = Math.min(100, state.hp + 20);
+    showPickupNotice(pickup, recovered > 0 ? "+" + recovered + " HP" : "HP FULL");
+  } else if (pickup.type === "shield") {
+    state.shieldUntil = performance.now() + 10000;
+    player.classList.add("shielded");
+    showPickupNotice(pickup, "IMMUNITY · 10s");
+    logMessage("Shield active! Ninja attacks cannot hurt you for 10 seconds!");
   } else {
     const recovered = Math.min(10, 100 - state.hp);
     state.hp = Math.min(100, state.hp + 10);
@@ -1069,6 +1233,30 @@ function collectPickup(pickup) {
 
   pickup.element.remove();
   updateHud();
+}
+
+function updateEnemyPlatform(enemy) {
+  const centerX = enemy.x + enemy.element.offsetWidth / 2;
+  const underfoot = state.platforms.filter((platform) =>
+    centerX >= platform.x - 2 && centerX <= platform.x + platform.width + 2
+  );
+  const current = underfoot.find((platform) => platform.id === enemy.platformId);
+  if (current) return;
+
+  const nextStep = underfoot
+    .filter((platform) => platform.elevation > enemy.groundHeight
+      && platform.elevation - enemy.groundHeight <= MAX_ENEMY_STEP_UP)
+    .sort((first, second) => second.elevation - first.elevation)[0];
+  const lowerStep = underfoot
+    .filter((platform) => platform.elevation <= enemy.groundHeight)
+    .sort((first, second) => second.elevation - first.elevation)[0];
+  const support = nextStep || lowerStep || null;
+  const nextHeight = support ? support.elevation : 0;
+  if (nextHeight !== enemy.groundHeight || (support?.id ?? null) !== enemy.platformId) {
+    enemy.groundHeight = nextHeight;
+    enemy.platformId = support?.id ?? null;
+    alignEnemyToGround(enemy);
+  }
 }
 
 function updateEnemies(now, dt) {
@@ -1131,6 +1319,7 @@ function updateEnemies(now, dt) {
       }
     }
 
+    updateEnemyPlatform(enemy);
     positionEntity(enemy);
   });
 
@@ -1179,11 +1368,17 @@ function gameLoop(now) {
     state.startedAt = now;
     state.nextEnemyAt = now + 1300;
     state.nextPickupAt = now + 2200;
+    state.nextPlatformAt = now + 3200;
   }
 
   if (state.ready) {
     state.elapsedSeconds = Math.floor((now - state.startedAt) / 1000);
     state.worldSpeed = Math.min(340, 205 + state.elapsedSeconds * 0.65);
+    if (state.shieldUntil && now >= state.shieldUntil) {
+      state.shieldUntil = 0;
+      player.classList.remove("shielded");
+      logMessage("Shield protection ended.");
+    }
     if (state.movementBoostUntil && now >= state.movementBoostUntil) {
       state.movementBoostUntil = 0;
       logMessage("Speed boost ended.");
@@ -1201,6 +1396,10 @@ function gameLoop(now) {
     if (now >= state.nextPickupAt) {
       if (Math.random() < 0.9) spawnPickup();
       state.nextPickupAt = now + 2600 + Math.random() * 2200;
+    }
+    if (now >= state.nextPlatformAt) {
+      spawnPlatformGroup();
+      state.nextPlatformAt = now + 8500 + Math.random() * 5500;
     }
 
     updateJump(dt);
