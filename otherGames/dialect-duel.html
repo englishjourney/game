@@ -292,6 +292,8 @@
               <button id="clear-button" class="subtle-button" type="button">Limpar</button>
               <button id="submit-button" class="primary-button" type="button" disabled>ENVIAR TENTATIVA</button>
               <button id="next-round-button" class="primary-button" type="button" hidden>PRÓXIMA PALAVRA →</button>
+              <button id="pass-turn-button" class="subtle-button" type="button">Desistir · Passar vez</button>
+              <button id="skip-word-button" class="subtle-button" type="button">Pular palavra ↷</button>
             </div>
             <p id="feedback" class="feedback neutral" role="status" aria-live="polite"></p>
           </div>
@@ -340,6 +342,9 @@
     let yellowScore = 0;
     let blueScore = 0;
     let completedRounds = 0;
+    let skippedRounds = 0;
+    let activeTeam = 'yellow';
+    let passUsedForCurrentWord = false;
     let audioReady = false;
     let selectedRegion = '';
     let currentRound = null;
@@ -392,7 +397,7 @@
     function renderScoreboard() {
       $('yellow-score').textContent = String(yellowScore);
       $('blue-score').textContent = String(blueScore);
-      const isYellow = roundIndex % 2 === 0;
+      const isYellow = activeTeam === 'yellow';
       $('yellow-card').classList.toggle('active-turn', gameActive && isYellow);
       $('blue-card').classList.toggle('active-turn', gameActive && !isYellow);
       $('turn-pill').className = 'turn-pill ' + (isYellow ? 'yellow' : 'blue');
@@ -599,6 +604,9 @@
       $('country-reveal').hidden = true;
       $('submit-button').hidden = false;
       $('next-round-button').hidden = true;
+      $('pass-turn-button').hidden = false;
+      $('skip-word-button').hidden = false;
+      passUsedForCurrentWord = false;
       $('feedback').textContent = '';
       $('feedback').className = 'feedback neutral';
       $('audio-status').textContent = 'Carregando áudio';
@@ -617,7 +625,6 @@
     function submitAttempt() {
       if (!gameActive || roundLocked || !assembledAnswer.trim() || !selectedRegion) return;
       roundLocked = true;
-      const activeTeam = roundIndex % 2 === 0 ? 'yellow' : 'blue';
       const otherTeam = activeTeam === 'yellow' ? 'blue' : 'yellow';
       const wordCorrect = normalizeAnswer(assembledAnswer) === normalizeAnswer(currentRound.target);
       const countryCorrect = selectedRegion === currentRound.region;
@@ -650,6 +657,8 @@
       $('submit-button').disabled = true;
       $('submit-button').hidden = true;
       $('next-round-button').hidden = false;
+      $('pass-turn-button').hidden = true;
+      $('skip-word-button').hidden = true;
       $('next-round-button').textContent = roundIndex + 1 >= rounds.length ? 'VER RESULTADO FINAL →' : 'PRÓXIMA PALAVRA →';
       $('undo-button').disabled = true;
       $('clear-button').disabled = true;
@@ -660,29 +669,62 @@
 
     function advanceRound() {
       if (!gameActive || !roundLocked) return;
+      activeTeam = activeTeam === 'yellow' ? 'blue' : 'yellow';
       roundIndex++;
+      if (roundIndex >= rounds.length) finishGame(false);
+      else loadRound();
+    }
+
+    function passTurn() {
+      if (!gameActive || roundLocked || passUsedForCurrentWord) return;
+      passUsedForCurrentWord = true;
+      activeTeam = activeTeam === 'yellow' ? 'blue' : 'yellow';
+      selectedRegion = '';
+      selectedTiles = [];
+      assembledAnswer = '';
+      document.querySelectorAll('[data-region]').forEach(button => {
+        button.classList.remove('selected');
+        button.setAttribute('aria-pressed', 'false');
+      });
+      renderKeyboard();
+      renderAnswer();
+      renderScoreboard();
+      $('pass-turn-button').hidden = true;
+      $('feedback').textContent = 'A vez passou para ' + (activeTeam === 'yellow' ? 'YELLOW TEAM' : 'BLUE TEAM') + '. A mesma palavra continua!';
+      $('feedback').className = 'feedback neutral';
+    }
+
+    function skipWord() {
+      if (!gameActive || roundLocked) return;
+      skippedRounds++;
+      roundIndex++;
+      audioPlayer.pause();
+      ttsRequestId++;
       if (roundIndex >= rounds.length) finishGame(false);
       else loadRound();
     }
 
     function finishGame(early) {
       if (!gameActive) return;
-      const endedEarly = early && completedRounds < WORD_COUNT;
+      const processedRounds = completedRounds + skippedRounds;
+      const endedEarly = early && processedRounds < WORD_COUNT;
       gameActive = false;
       roundLocked = true;
       ttsRequestId++;
       audioPlayer.pause();
-      $('progress-fill').style.width = ((completedRounds / WORD_COUNT) * 100) + '%';
+      $('progress-fill').style.width = ((processedRounds / WORD_COUNT) * 100) + '%';
       $('final-yellow').textContent = String(yellowScore);
       $('final-blue').textContent = String(blueScore);
       const winner = yellowScore > blueScore ? 'YELLOW TEAM WINS!' :
         blueScore > yellowScore ? 'BLUE TEAM WINS!' : 'IT’S A DRAW!';
-      $('result-title').textContent = endedEarly ? 'Game ended early' : 'All ' + WORD_COUNT + ' rounds completed!';
+      $('result-title').textContent = endedEarly ? 'Game ended early' : skippedRounds > 0 ? 'Game finished!' : 'All ' + WORD_COUNT + ' rounds completed!';
       $('result-summary').textContent = endedEarly
-        ? 'A partida foi encerrada antes da última rodada. Os pontos das tentativas concluídas foram contabilizados.'
-        : 'Todas as palavras foram trabalhadas. Confira o resultado final!';
+        ? 'A partida foi encerrada antes da última palavra. As tentativas concluídas foram contabilizadas.'
+        : skippedRounds > 0
+          ? 'Todas as palavras foram percorridas. Confira as respostas e os pulos registrados.'
+          : 'Todas as palavras foram trabalhadas. Confira o resultado final!';
       $('winner-label').textContent = winner;
-      $('rounds-summary').textContent = 'Rodadas contabilizadas: ' + completedRounds + ' de ' + WORD_COUNT + '.';
+      $('rounds-summary').textContent = 'Respondidas: ' + completedRounds + ' · Puladas: ' + skippedRounds + ' · Total: ' + WORD_COUNT + '.';
       $('yellow-card').classList.remove('active-turn');
       $('blue-card').classList.remove('active-turn');
       showScreen('result-screen');
@@ -695,6 +737,9 @@
       yellowScore = 0;
       blueScore = 0;
       completedRounds = 0;
+      skippedRounds = 0;
+      activeTeam = 'yellow';
+      passUsedForCurrentWord = false;
       audioReady = false;
       gameActive = true;
       roundLocked = false;
@@ -709,6 +754,8 @@
     $('clear-button').addEventListener('click', clearAnswer);
     $('submit-button').addEventListener('click', submitAttempt);
     $('next-round-button').addEventListener('click', advanceRound);
+    $('pass-turn-button').addEventListener('click', passTurn);
+    $('skip-word-button').addEventListener('click', skipWord);
     $('end-button').addEventListener('click', () => finishGame(true));
     document.querySelectorAll('[data-region]').forEach(button => {
       button.addEventListener('click', () => selectRegion(button.dataset.region));
