@@ -423,8 +423,6 @@
           display.appendChild(part);
         });
       }
-      const visibleCount = selectedTiles.filter(tile => tile.char !== ' ').length;
-      $('letter-count').textContent = visibleCount + ' letters';
       $('submit-button').disabled = !gameActive || roundLocked || !audioReady || !assembledAnswer.trim() || !selectedRegion;
     }
 
@@ -446,6 +444,8 @@
 
     function buildKeyboard(target) {
       const required = Array.from(target.toLocaleLowerCase('en'));
+      const letterLimit = Array.from(target).filter(char => /[a-z]/i.test(char)).length;
+      $('letter-count').textContent = letterLimit + (letterLimit === 1 ? ' letter' : ' letters');
       const extras = Array.from({ length: 5 }, () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)]);
       tilePool = shuffle([...required, ...extras].map((char, index) => ({ id: index, char })));
       selectedTiles = [];
