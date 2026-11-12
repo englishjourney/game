@@ -588,7 +588,7 @@ function scrollScenery(direction, dt, now) {
 
   playfield.classList.add("is-moving");
   const shift = direction * state.worldSpeed * movementSpeedMultiplier(now) * dt;
-  state.distancePixels = Math.max(0, state.distancePixels + shift);
+  state.distancePixels += shift;
   updateDistanceAndNinjaHealth();
   state.sceneryOffset -= shift;
   const offset = state.sceneryOffset;
@@ -1660,7 +1660,7 @@ function gameLoop(now) {
     const direction = movementDirection();
     const movement = movePlayer(direction, dt, now);
     if (movement.distanceDelta) {
-      state.distancePixels = Math.max(0, state.distancePixels + movement.distanceDelta);
+      state.distancePixels += movement.distanceDelta;
       updateDistanceAndNinjaHealth();
     }
     scrollScenery(movement.scrollDirection, movement.scrollDuration, now);
