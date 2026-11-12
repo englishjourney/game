@@ -440,7 +440,7 @@ function movePlayer(direction, dt, now) {
 
   const maxX = Math.max(8, playfield.clientWidth - player.offsetWidth - 8);
 
-  const movementBoost = now < state.movementBoostUntil ? 1.5 : 1;
+  const movementBoost = now < state.movementBoostUntil ? 3 : 1;
   const moveSpeed = PLAYER_MOVE_SPEED * movementBoost * (state.jumpActive && state.jumpHeld ? 1.15 : 1);
 
   if (direction < 0) {
@@ -1104,21 +1104,32 @@ function hitNearbyEnemies(now) {
 }
 
 function spawnPickup() {
-  const roll = Math.random();
-  // The speed star keeps its 50% share. The shield is a rare 15% of the
-  // remaining drops; the old item mix keeps its original relative weights.
-  const remainingRoll = (roll - 0.5) * 2;
+  // The requested weights add up to 130, so they are normalized over the
+  // remaining drops. Keep the regular medkit at its previous 5.44% global rate.
+  const basicMedkitChance = 0.0544;
   let type;
-  if (roll < 0.5) {
-    type = "star";
-  } else if (remainingRoll < 0.15) {
-    type = "shield";
+
+  if (Math.random() < basicMedkitChance) {
+    type = "medkit";
   } else {
-    const commonRoll = (remainingRoll - 0.15) / 0.85;
-    // Large kits are selected on 60% of the healing-item drops.
-    type = commonRoll < 0.34 ? "holy"
-      : commonRoll < 0.68 ? "cross"
-      : Math.random() < 0.6 ? "medkit-large" : "medkit";
+    const weights = [
+      { type: "medkit-large", weight: 20 },
+      { type: "star", weight: 20 },
+      { type: "shield", weight: 20 },
+      { type: "holy", weight: 30 },
+      { type: "cross", weight: 40 }
+    ];
+    const totalWeight = weights.reduce((total, item) => total + item.weight, 0);
+    let roll = Math.random() * totalWeight;
+    type = weights[weights.length - 1].type;
+
+    for (const item of weights) {
+      if (roll < item.weight) {
+        type = item.type;
+        break;
+      }
+      roll -= item.weight;
+    }
   }
   const airborne = Math.random() < 0.62;
   const id = state.nextId++;
@@ -1215,8 +1226,8 @@ function collectPickup(pickup) {
     showPickupNotice(pickup, "+1 ATTACK SPEED");
   } else if (pickup.type === "star") {
     state.movementBoostUntil = performance.now() + 30000;
-    showPickupNotice(pickup, "+50% MOVE SPEED · 30s");
-    logMessage("Speed star! Move 50% faster for 30 seconds!");
+    showPickupNotice(pickup, "+200% MOVE SPEED · 30s");
+    logMessage("Speed star! Move 200% faster for 30 seconds!");
   } else if (pickup.type === "medkit-large") {
     const recovered = Math.min(20, 100 - state.hp);
     state.hp = Math.min(100, state.hp + 20);
