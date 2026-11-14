@@ -1550,6 +1550,8 @@ function setupActivitiesEditor() {
             const cursorStart = start + before.length;
             editor.setSelectionRange(cursorStart, cursorStart + inserted.length);
         }
+        const firstLine = editor.value.split(/\r?\n/, 1)[0] || '';
+        if (/^#\s+\S.*$/.test(firstLine) || (!editor.required && !editor.value.trim())) editor.setCustomValidity('');
         updatePreview();
     });
     editor.addEventListener('input', () => {
