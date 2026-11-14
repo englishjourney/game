@@ -617,14 +617,13 @@
         <form id="flashcard-form">
             <header class="edu-modal-header edu-modal-form-header">
                 <span class="edu-modal-mark"><i class="fa-regular fa-clone" aria-hidden="true"></i></span>
-                <span class="edu-modal-heading-copy"><small>FLASHCARDS</small><h3 id="flashcard-modal-title">Adicionar Flashcard</h3><p>Cadastre a palavra, sua tradução e o áudio relacionado.</p></span>
+                <span class="edu-modal-heading-copy"><small>FLASHCARDS</small><h3 id="flashcard-modal-title">Adicionar Flashcard</h3><p>Cadastre a palavra e sua tradução. O áudio será gerado automaticamente.</p></span>
                 <button type="button" class="edu-modal-close" aria-label="Fechar" onclick="this.closest('dialog').close()"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
             </header>
             <input type="hidden" id="flashcard-id">
             <div class="form-grid">
                 <label class="full-width">Palavra (Word): <input type="text" id="fc-word" required></label>
                 <label class="full-width">Tradução: <input type="text" id="fc-translation" required></label>
-                <label class="full-width">Link de Áudio (audio_link): <input type="text" id="fc-audio"></label>
                 <label class="full-width">Stack (Baralho): <input type="text" id="fc-stack" required></label>
             </div>
             <div class="modal-actions">
