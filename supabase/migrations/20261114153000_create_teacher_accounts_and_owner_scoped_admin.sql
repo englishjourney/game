@@ -174,7 +174,7 @@ begin
 
     return new;
 end;
-$;
+$create_teacher_from_auth_user$;
 
 revoke all on function public.create_teacher_from_auth_user() from public, anon, authenticated;
 
