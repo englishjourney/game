@@ -2571,3 +2571,80 @@ dialog .merge-modal-header h3 {
         padding: 18px;
     }
 }
+
+
+/* Navegação ligada diretamente ao cabeçalho: evita camada sticky sobre as pesquisas */
+@media (min-width: 761px) {
+    #adm-navigation {
+        position: relative;
+        top: auto;
+        z-index: 2;
+        margin-top: 0;
+        flex-wrap: wrap;
+        overflow: visible;
+    }
+}
+
+/* Editor de activities: controles compactos, legíveis e responsivos */
+.activities-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+    padding: 9px;
+}
+.activities-toolbar button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 36px;
+    padding: 7px 10px;
+    white-space: nowrap;
+}
+.activities-heading-level {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 8px;
+    border: 1px solid #415875;
+    border-radius: 8px;
+    background: #14253a;
+    color: #b9cbe0;
+    font-size: .8rem;
+    font-weight: 700;
+}
+.activities-heading-level select {
+    width: auto;
+    min-width: 112px;
+    min-height: 30px;
+    padding: 4px 7px;
+    border: 1px solid #3c5674;
+    border-radius: 6px;
+    background: #0b1728;
+    color: #e8f3ff;
+    font-size: .8rem;
+}
+.activities-toolbar button:focus-visible,
+.activities-heading-level select:focus-visible {
+    outline: 2px solid #7dd3fc;
+    outline-offset: 2px;
+}
+.markdown-preview > p:first-child { margin-top: 0; }
+.markdown-preview > p:last-child { margin-bottom: 0; }
+.markdown-preview .activity-inline-tag {
+    display: inline-block;
+    margin: 0 2px;
+    padding: 2px 7px;
+    border: 1px solid rgba(125,211,252,.3);
+    border-radius: 6px;
+    background: rgba(56,189,248,.13);
+    color: #bceaff;
+    font: 600 .9em/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+@media (max-width: 560px) {
+    .activities-toolbar { gap: 6px; padding: 7px; }
+    .activities-toolbar button { flex: 1 1 auto; font-size: .78rem; padding: 7px 8px; }
+    .activities-heading-level { flex: 1 1 100%; justify-content: space-between; }
+    .activities-heading-level select { flex: 1; }
+}
