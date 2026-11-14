@@ -1049,3 +1049,275 @@ input:focus, select:focus, textarea:focus {
     #planner-section .planner-section-title { align-items: flex-start; flex-direction: column; }
     #planner-section .planner-section-heading-actions { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+
+/* Sidebar fixa e retrátil — corrige o conflito com o seletor legado nav#adm-navigation. */
+#adm-panel {
+    position: relative;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    padding-left: 240px;
+    overflow: clip;
+    background: #fff;
+    transition: padding-left .22s ease;
+}
+#adm-panel > header {
+    width: 100%;
+    min-width: 0;
+    min-height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin: 0;
+    padding: 16px 28px;
+    position: sticky;
+    top: 0;
+    z-index: 3200;
+    background: rgba(255,255,255,.96);
+}
+#adm-panel > nav#adm-navigation {
+    position: fixed !important;
+    inset: 0 auto 0 0 !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 240px !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    padding: 24px 14px 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+    transform: none;
+    transition: width .22s ease, transform .22s ease, padding .22s ease;
+    background:
+        radial-gradient(circle at 14% 100%, rgba(108, 77, 171, .22), transparent 28%),
+        linear-gradient(180deg, #241e39 0%, #1e192f 100%) !important;
+}
+#adm-panel > main {
+    display: block;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 27px 34px 48px !important;
+    background: #fff;
+}
+#adm-panel .admin-header-brand {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 15px;
+}
+#adm-panel .mobile-menu-toggle {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    border: 1px solid #e8e2f5;
+    border-radius: 12px;
+    background: #f3edff;
+    color: #5426c8;
+    cursor: pointer;
+}
+#adm-panel .admin-global-search {
+    width: min(560px, 100%);
+    min-width: 0;
+    flex: 1 1 420px;
+    height: 56px;
+    padding: 0 18px;
+    border-radius: 17px;
+    background: #f4f1fa;
+    color: #5e5384;
+}
+#adm-panel .admin-global-search input,
+#adm-panel #global-search {
+    width: 100% !important;
+    min-width: 0;
+    max-width: none !important;
+    height: auto;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: 0;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #211744 !important;
+    font-size: 1rem;
+}
+#adm-panel .admin-global-search input::placeholder { color: #655d82; opacity: 1; }
+#adm-panel .header-controls {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 12px;
+}
+#adm-panel .header-controls .reminders-wrapper { margin: 0 !important; }
+#adm-panel .header-reminders-button {
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    border-radius: 12px;
+    color: #4e4779 !important;
+}
+#adm-panel .header-divider {
+    width: 1px;
+    height: 38px;
+    background: #ddd5ec;
+}
+#adm-panel .btn-logout {
+    min-width: 104px;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border: 0;
+    border-radius: 14px;
+    padding: 0 18px;
+    background: #eae1ff;
+    color: #4520b7;
+    font-size: .92rem;
+    font-weight: 750;
+    cursor: pointer;
+}
+#adm-panel .btn-logout:hover { background: #dfd2ff; }
+#adm-panel .sidebar-brand {
+    position: relative;
+    flex: 0 0 auto;
+    min-height: 154px;
+    margin-bottom: 26px;
+    padding-top: 12px;
+}
+#adm-panel .mobile-nav-heading { display: none !important; }
+#adm-panel .sidebar-nav-group { flex: 0 0 auto; width: 100%; }
+#adm-panel .sidebar-bottom { margin-top: auto; width: 100%; }
+#adm-panel .content-section { width: 100%; min-width: 0; }
+#adm-panel .dashboard-page-heading { margin: 0 0 18px; }
+#adm-panel .dashboard-page-heading h1 {
+    margin: 0;
+    color: #17133b;
+    font-size: clamp(1.8rem, 2.8vw, 2.35rem);
+    line-height: 1.15;
+    font-weight: 850;
+    letter-spacing: -.045em;
+}
+#adm-panel .dashboard-page-heading p {
+    margin-top: 6px;
+    color: #40395e;
+    font-size: 1.02rem;
+}
+#adm-panel .subject-picker {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-height: 250px;
+    overflow-y: auto;
+    gap: 9px 14px;
+}
+#adm-panel .subject-picker label { min-height: 30px; }
+#adm-panel.sidebar-collapsed { padding-left: 80px; }
+#adm-panel.sidebar-collapsed > nav#adm-navigation {
+    width: 80px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+}
+#adm-panel.sidebar-collapsed .sidebar-brand {
+    min-height: 80px;
+    margin: 0 0 26px;
+    padding: 0;
+}
+#adm-panel.sidebar-collapsed .sidebar-brand > span:last-child,
+#adm-panel.sidebar-collapsed .sidebar-nav-group .nav-btn > span,
+#adm-panel.sidebar-collapsed #btn-yuki-planner > span,
+#adm-panel.sidebar-collapsed .teacher-profile-copy { display: none !important; }
+#adm-panel.sidebar-collapsed .sidebar-brand-mark {
+    width: 54px;
+    height: 54px;
+}
+#adm-panel.sidebar-collapsed .sidebar-brand-mark .fa-book-open { font-size: 2.25rem; left: 4px; }
+#adm-panel.sidebar-collapsed .sidebar-brand-mark .fa-graduation-cap { left: 18px; font-size: 1.25rem; }
+#adm-panel.sidebar-collapsed .sidebar-nav-group .nav-btn,
+#adm-panel.sidebar-collapsed #btn-yuki-planner {
+    width: 58px;
+    min-height: 54px;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+    margin: 0 auto;
+}
+#adm-panel.sidebar-collapsed .sidebar-nav-group .nav-btn > i,
+#adm-panel.sidebar-collapsed #btn-yuki-planner > i {
+    width: auto;
+    margin: 0;
+    font-size: 1.25rem;
+}
+#adm-panel.sidebar-collapsed .teacher-profile {
+    justify-content: center;
+    padding: 12px 0 0;
+}
+#adm-panel.sidebar-collapsed .teacher-avatar { margin: 0 auto; }
+#adm-panel.sidebar-collapsed .mobile-menu-toggle i { transform: rotate(180deg); }
+#adm-panel:not(.sidebar-collapsed) .mobile-menu-toggle i { transform: none; }
+#adm-panel .mobile-menu-toggle i { transition: transform .22s ease; }
+#adm-panel .nav-backdrop { display: none; }
+
+@media (max-width: 1100px) {
+    #adm-panel > main { padding: 24px 22px 40px !important; }
+    #adm-panel > header { padding: 14px 20px; }
+}
+@media (max-width: 920px) {
+    #adm-panel { padding-left: 0; }
+    #adm-panel > header { min-height: 76px; padding: 12px 16px; }
+    #adm-panel > nav#adm-navigation {
+        width: min(84vw, 320px) !important;
+        padding: 16px 14px !important;
+        transform: translateX(-105%);
+        z-index: 5001;
+        box-shadow: 12px 0 34px rgba(20,13,40,.2);
+    }
+    #adm-panel > nav#adm-navigation.mobile-open { transform: translateX(0); }
+    #adm-panel.sidebar-collapsed { padding-left: 0; }
+    #adm-panel.sidebar-collapsed > nav#adm-navigation { width: min(84vw, 320px) !important; }
+    #adm-panel .mobile-nav-heading { display: flex !important; }
+    #adm-panel .mobile-menu-toggle { display: inline-flex !important; }
+    #adm-panel > main { padding: 22px 18px 36px !important; }
+    #adm-panel .subject-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #adm-panel .nav-backdrop.is-visible {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 5000;
+        border: 0;
+        border-radius: 0;
+        background: rgba(25,17,48,.48);
+    }
+}
+@media (max-width: 600px) {
+    #adm-panel > header { align-items: center; gap: 9px; padding: 10px 12px; }
+    #adm-panel .admin-header-brand { gap: 8px; }
+    #adm-panel .admin-global-search { height: 46px; padding: 0 12px; gap: 9px; }
+    #adm-panel .admin-global-search input { font-size: 16px; }
+    #adm-panel .header-controls { gap: 5px; }
+    #adm-panel .btn-logout { min-width: 42px; width: 42px; height: 42px; padding: 0; }
+    #adm-panel .btn-logout span { display: none; }
+    #adm-panel > main { padding: 18px 12px 30px !important; }
+    #adm-panel .dashboard-page-heading h1 { font-size: 1.75rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #adm-panel, #adm-panel > nav#adm-navigation, #adm-panel .mobile-menu-toggle i { transition: none; }
+}
