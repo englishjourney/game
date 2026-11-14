@@ -412,27 +412,15 @@ function setupGlobalSearch() {
             const pattern = '%' + query + '%';
             const [
                 usersName, usersLogin, usersGrade,
-                plansActivity, plansSkill, plansGrade, plansTeam, plansDate, plansDay, plansTime,
-                tasksTitle, tasksDescription, tasksSerie, tasksTeam, tasksGrade,
-                scheduleResult, missionsName,
+                plannerRowsResult, taskRowsResult, scheduleResult, missionsName,
                 flashWords, flashTranslations, flashStacks,
                 remindersText
             ] = await Promise.all([
                 supabase.from('users').select('id,name,username,grade').neq('username', 'micael.svg').ilike('name', pattern).limit(4),
                 supabase.from('users').select('id,name,username,grade').neq('username', 'micael.svg').ilike('username', pattern).limit(4),
                 supabase.from('users').select('id,name,username,grade').neq('username', 'micael.svg').ilike('grade', pattern).limit(4),
-                supabase.from('planner').select('id,date,day,time,serie,team,activities,completed_at').eq('owner', authData.user.id).ilike('activities', pattern).limit(4),
-                supabase.from('planner').select('id,date,day,time,serie,team,activities,completed_at').eq('owner', authData.user.id).ilike('skills', pattern).limit(4),
-                supabase.from('planner').select('id,date,day,time,serie,team,activities,completed_at').eq('owner', authData.user.id).ilike('serie', pattern).limit(4),
-                supabase.from('planner').select('id,date,day,time,serie,team,activities,completed_at').eq('owner', authData.user.id).ilike('team', pattern).limit(4),
-                supabase.from('planner').select('id,date,day,time,serie,team,activities,completed_at').eq('owner', authData.user.id).ilike('date', pattern).limit(4),
-                supabase.from('planner').select('id,date,day,time,serie,team,activities,completed_at').eq('owner', authData.user.id).ilike('day', pattern).limit(4),
-                supabase.from('planner').select('id,date,day,time,serie,team,activities,completed_at').eq('owner', authData.user.id).ilike('time', pattern).limit(4),
-                supabase.from('tasks').select('id,title,description,grades,serie,team,deadline').eq('owner', authData.user.id).ilike('title', pattern).limit(4),
-                supabase.from('tasks').select('id,title,description,grades,serie,team,deadline').eq('owner', authData.user.id).ilike('description', pattern).limit(4),
-                supabase.from('tasks').select('id,title,description,grades,serie,team,deadline').eq('owner', authData.user.id).ilike('serie', pattern).limit(4),
-                supabase.from('tasks').select('id,title,description,grades,serie,team,deadline').eq('owner', authData.user.id).ilike('team', pattern).limit(4),
-                supabase.from('tasks').select('id,title,description,grades,serie,team,deadline').eq('owner', authData.user.id).contains('grades', [query.toUpperCase()]).limit(4),
+                supabase.from('planner').select('id,date,day,time,serie,team,activities,skills,completed_at,tag,special').eq('owner', authData.user.id).order('id', { ascending: false }).range(0, 999),
+                supabase.from('tasks').select('id,title,description,grades,serie,team,deadline').eq('owner', authData.user.id).order('id', { ascending: false }).range(0, 999),
                 supabase.from('schedule').select('*').eq('owner', authData.user.id).maybeSingle(),
                 supabase.from('missions').select('id,mission_name,mission_score,mission_link').ilike('mission_name', pattern).limit(4),
                 supabase.from('flashcards').select('id,word,translation,stack').ilike('word', pattern).limit(4),
@@ -444,8 +432,7 @@ function setupGlobalSearch() {
             if (sequence !== searchSequence) return;
             const queryResults = [
                 usersName, usersLogin, usersGrade,
-                plansActivity, plansSkill, plansGrade, plansTeam, plansDate, plansDay, plansTime,
-                tasksTitle, tasksDescription, tasksSerie, tasksTeam, tasksGrade,
+                plannerRowsResult, taskRowsResult,
                 scheduleResult, missionsName, flashWords, flashTranslations, flashStacks, remindersText
             ];
             const failedQuery = queryResults.find(result => result?.error);
@@ -457,11 +444,18 @@ function setupGlobalSearch() {
                 return Array.from(map.values()).slice(0, 5);
             };
             const users = combineUnique([usersName, usersLogin, usersGrade]);
-            const plans = combineUnique([plansActivity, plansSkill, plansGrade, plansTeam, plansDate, plansDay, plansTime]).map(plan => ({
+            const normalizedQuery = query.toLocaleLowerCase('pt-BR');
+            const plans = (plannerRowsResult.data || []).filter(plan =>
+                [plan.day, plan.date, plan.time, plan.serie, plan.team, plan.serie + plan.team, plan.activities, plan.skills, plan.tag, plan.special]
+                    .some(value => String(value ?? '').toLocaleLowerCase('pt-BR').includes(normalizedQuery))
+            ).slice(0, 5).map(plan => ({
                 ...plan,
                 section: plan.completed_at ? 'completed-planner-section' : 'planner-section'
             }));
-            const tasks = combineUnique([tasksTitle, tasksDescription, tasksSerie, tasksTeam, tasksGrade]);
+            const tasks = (taskRowsResult.data || []).filter(task =>
+                [task.title, task.description, task.serie, task.team, (task.grades || []).join(' ')]
+                    .some(value => String(value ?? '').toLocaleLowerCase('pt-BR').includes(normalizedQuery))
+            ).slice(0, 5);
             const missions = missionsName.data || [];
             const flashcards = combineUnique([flashWords, flashTranslations, flashStacks]);
             const reminders = remindersText.data || [];
