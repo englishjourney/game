@@ -1840,3 +1840,35 @@ dialog .markdown-preview-label { color: #6c5b91; }
     .edu-details-dialog .details-modal-actions { padding: 13px 17px 18px; }
     .edu-details-dialog .edu-modal-close { top: 17px; right: 17px; }
 }
+
+
+/* Special card action menus remain neutral while the card background carries the category color */
+#planner-section #planner-list .planner-card.card-special-1 .planner-actions-menu,
+#planner-section #planner-list .planner-card.card-special-2 .planner-actions-menu,
+#planner-section #planner-list .planner-card.card-special-3 .planner-actions-menu,
+#planner-section #planner-list .planner-card.card-adapted .planner-actions-menu {
+    border: 1px solid #e5def0 !important;
+    background: #fff !important;
+    box-shadow: 0 14px 34px rgba(37,22,79,.16) !important;
+}
+#planner-section #planner-list .planner-card.card-special-1 .planner-actions-menu button,
+#planner-section #planner-list .planner-card.card-special-2 .planner-actions-menu button,
+#planner-section #planner-list .planner-card.card-special-3 .planner-actions-menu button,
+#planner-section #planner-list .planner-card.card-adapted .planner-actions-menu button {
+    color: #30264f !important;
+    -webkit-text-stroke: 0 !important;
+    text-shadow: none !important;
+    background: transparent !important;
+}
+#planner-section #planner-list .planner-card.card-special-1 .planner-actions-menu button:hover,
+#planner-section #planner-list .planner-card.card-special-2 .planner-actions-menu button:hover,
+#planner-section #planner-list .planner-card.card-special-3 .planner-actions-menu button:hover,
+#planner-section #planner-list .planner-card.card-adapted .planner-actions-menu button:hover {
+    background: #f5f1ff !important;
+}
+#planner-section #planner-list .planner-card .planner-card-meta .planner-card-tag {
+    background: rgba(255,255,255,.52) !important;
+    border: 1px solid rgba(255,255,255,.8) !important;
+    color: #171717 !important;
+    -webkit-text-stroke: .28px #fff;
+}
