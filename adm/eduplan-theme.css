@@ -1621,54 +1621,45 @@ dialog .markdown-preview-label { color: #6c5b91; }
 }
 #planner-section #planner-list .planner-card-datetime { margin-top: 8px; }
 #planner-section #planner-list .planner-card-meta { margin-top: auto; }
+/* Cards atípicos: a cor fica somente no fundo do card, sem marcação nos textos ou ícones. */
 #planner-section #planner-list .planner-card.card-special-1 {
     background: #fff0c9 !important;
     border-color: #f0d58b !important;
 }
 #planner-section #planner-list .planner-card.card-special-2 {
-    background: #f7b8b8 !important;
+    background: #f4a8a8 !important;
     border-color: #df7777 !important;
 }
 #planner-section #planner-list .planner-card.card-special-3 {
-    background: #dcecff !important;
-    border-color: #9fc6ee !important;
+    background: #ffd7b3 !important;
+    border-color: #ed9e5c !important;
 }
-#planner-section #planner-list .planner-card.card-adapted {
-    background: #d9f2e8 !important;
-    border-color: #8bcfb5 !important;
-}
-#planner-section #planner-list .planner-card.card-special-1 *,
-#planner-section #planner-list .planner-card.card-special-2 *,
-#planner-section #planner-list .planner-card.card-special-3 *,
-#planner-section #planner-list .planner-card.card-adapted * {
-    color: #111 !important;
-    -webkit-text-stroke: .28px #fff;
-    text-shadow: 0 0 .35px rgba(255,255,255,.95);
-}
-#planner-section #planner-list .planner-card.card-special-1 .planner-card-menu *,
-#planner-section #planner-list .planner-card.card-special-2 .planner-card-menu *,
-#planner-section #planner-list .planner-card.card-special-3 .planner-card-menu *,
-#planner-section #planner-list .planner-card.card-adapted .planner-card-menu * {
-    -webkit-text-stroke: 0;
+#planner-section #planner-list .planner-card.card-special-1 .planner-card-info,
+#planner-section #planner-list .planner-card.card-special-1 .planner-card-info *,
+#planner-section #planner-list .planner-card.card-special-2 .planner-card-info,
+#planner-section #planner-list .planner-card.card-special-2 .planner-card-info *,
+#planner-section #planner-list .planner-card.card-special-3 .planner-card-info,
+#planner-section #planner-list .planner-card.card-special-3 .planner-card-info * {
+    color: #171326 !important;
+    background: transparent !important;
+    -webkit-text-stroke: 0 !important;
+    text-shadow: none !important;
+    filter: none !important;
+    box-shadow: none !important;
 }
 #planner-section #planner-list .planner-card.card-special-1 .planner-type-chip,
 #planner-section #planner-list .planner-card.card-special-2 .planner-type-chip,
 #planner-section #planner-list .planner-card.card-special-3 .planner-type-chip,
-#planner-section #planner-list .planner-card.card-adapted .planner-type-chip,
 #planner-section #planner-list .planner-card.card-special-1 .planner-card-grade,
 #planner-section #planner-list .planner-card.card-special-2 .planner-card-grade,
 #planner-section #planner-list .planner-card.card-special-3 .planner-card-grade,
-#planner-section #planner-list .planner-card.card-adapted .planner-card-grade,
 #planner-section #planner-list .planner-card.card-special-1 .planner-card-datetime > strong,
 #planner-section #planner-list .planner-card.card-special-2 .planner-card-datetime > strong,
 #planner-section #planner-list .planner-card.card-special-3 .planner-card-datetime > strong,
-#planner-section #planner-list .planner-card.card-adapted .planner-card-datetime > strong,
 #planner-section #planner-list .planner-card.card-special-1 .planner-card-tag,
 #planner-section #planner-list .planner-card.card-special-2 .planner-card-tag,
-#planner-section #planner-list .planner-card.card-special-3 .planner-card-tag,
-#planner-section #planner-list .planner-card.card-adapted .planner-card-tag {
-    background: rgba(255,255,255,.42) !important;
-    border: 1px solid rgba(255,255,255,.65) !important;
+#planner-section #planner-list .planner-card.card-special-3 .planner-card-tag {
+    border-color: transparent !important;
 }
 #planner-section #planner-list .planner-card .planner-card-meta,
 #planner-section #planner-list .planner-card .planner-card-datetime,
@@ -1677,7 +1668,6 @@ dialog .markdown-preview-label { color: #6c5b91; }
 #planner-section #planner-list .planner-card .planner-type-chip {
     color: #171717 !important;
 }
-#planner-section #planner-list .planner-card.card-special-2 { background: #f4a8a8 !important; }
 
 /* Light modal details without nested mini-cards */
 .edu-details-dialog { width: min(94vw, 1160px); max-width: 1160px; }
@@ -2243,29 +2233,57 @@ dialog .markdown-preview-label { color: #6c5b91; }
     background: #ded3f1;
 }
 
-/* Adapted lesson cards use a soft multicolour glass finish. */
+/* Adaptado: glassmorphism visível com as sete cores do arco-íris. */
 #planner-section #planner-list .planner-card.card-adapted {
-    border: 1px solid rgba(255,255,255,.82) !important;
+    border: 1px solid rgba(255,255,255,.9) !important;
     background:
-        radial-gradient(circle at 9% 13%, rgba(255, 72, 170, .43), transparent 35%),
-        radial-gradient(circle at 91% 10%, rgba(255, 187, 54, .42), transparent 34%),
-        radial-gradient(circle at 89% 88%, rgba(48, 206, 151, .39), transparent 36%),
-        radial-gradient(circle at 11% 88%, rgba(77, 139, 255, .43), transparent 35%),
-        radial-gradient(circle at 53% 48%, rgba(171, 111, 255, .28), transparent 43%),
-        linear-gradient(135deg, rgba(255,255,255,.86), rgba(247,242,255,.62)) !important;
-    background-blend-mode: screen, screen, screen, screen, screen, normal;
-    -webkit-backdrop-filter: blur(14px) saturate(155%);
-    backdrop-filter: blur(14px) saturate(155%);
-    box-shadow: 0 9px 26px rgba(84, 56, 151, .11), inset 0 1px 0 rgba(255,255,255,.9);
+        linear-gradient(135deg, rgba(255,255,255,.18), rgba(255,255,255,.035)),
+        linear-gradient(115deg,
+            rgba(255,64,93,.72) 0%,
+            rgba(255,152,50,.72) 16.6%,
+            rgba(255,221,64,.70) 33.2%,
+            rgba(67,196,110,.69) 49.8%,
+            rgba(54,154,239,.70) 66.4%,
+            rgba(101,89,233,.72) 83%,
+            rgba(209,73,192,.72) 100%
+        ) !important;
+    background-blend-mode: screen, normal;
+    -webkit-backdrop-filter: blur(15px) saturate(165%);
+    backdrop-filter: blur(15px) saturate(165%);
+    box-shadow: 0 10px 28px rgba(84,56,151,.16), inset 0 1px 0 rgba(255,255,255,.88);
 }
-#planner-section #planner-list .planner-card.card-adapted .planner-card-title,
-#planner-section #planner-list .planner-card.card-adapted .planner-card-meta,
-#planner-section #planner-list .planner-card.card-adapted .planner-card-meta > span,
-#planner-section #planner-list .planner-card.card-adapted .planner-card-datetime,
-#planner-section #planner-list .planner-card.card-adapted .planner-card-datetime strong,
-#planner-section #planner-list .planner-card.card-adapted .planner-card-grade,
-#planner-section #planner-list .planner-card.card-adapted .planner-type-chip {
+#planner-section #planner-list .planner-card.card-adapted .planner-card-info,
+#planner-section #planner-list .planner-card.card-adapted .planner-card-info * {
     color: #171326 !important;
+    background: transparent !important;
+    -webkit-text-stroke: 0 !important;
+    text-shadow: none !important;
+    filter: none !important;
+    box-shadow: none !important;
+}
+#planner-section #planner-list .planner-card.card-adapted .planner-type-chip,
+#planner-section #planner-list .planner-card.card-adapted .planner-card-grade,
+#planner-section #planner-list .planner-card.card-adapted .planner-card-datetime > strong,
+#planner-section #planner-list .planner-card.card-adapted .planner-card-tag {
+    border-color: transparent !important;
+}
+
+/* As turmas de Aulas passadas usam minicápsulas com espaço interno. */
+#completed-planner-section .completed-class-tabs {
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 6px 4px 12px !important;
+}
+#completed-planner-section .completed-class-tab,
+#completed-planner-section .completed-class-tab.active {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 9px 17px !important;
+    border-radius: 999px !important;
+    line-height: 1.2;
+    flex: 0 0 auto;
 }
 
 /* Stronger foreground for lesson duration text on both planner views. */
