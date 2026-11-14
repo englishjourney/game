@@ -161,11 +161,13 @@ function setupNavigation() {
                 }
             }
             setMobileNav(false);
+            const pageHeading = targetSection?.querySelector('h2')?.textContent?.trim() || 'Painel do Professor';
+            document.title = 'EduPlan | ' + pageHeading;
         });
     });
 
     const menu = document.getElementById('adm-navigation');
-    const menuToggle = document.getElementById('mobile-menu-toggle');
+    const menuToggle = document.getElementById('sidebar-toggle');
     const menuClose = document.getElementById('mobile-menu-close');
     const backdrop = document.getElementById('mobile-nav-backdrop');
     const setMobileNav = open => {
@@ -176,7 +178,26 @@ function setupNavigation() {
         if (menuToggle) menuToggle.setAttribute('aria-expanded', String(open));
         document.body.classList.toggle('mobile-nav-active', open);
     };
-    if (menuToggle) menuToggle.addEventListener('click', () => setMobileNav(!menu.classList.contains('mobile-open')));
+    const isMobileLayout = () => window.matchMedia('(max-width: 920px)').matches;
+    const setSidebarCollapsed = collapsed => {
+        document.getElementById('adm-panel')?.classList.toggle('sidebar-collapsed', collapsed);
+        if (menuToggle) {
+            menuToggle.setAttribute('aria-expanded', String(!collapsed));
+            menuToggle.setAttribute('aria-label', collapsed ? 'Expandir menu lateral' : 'Recolher menu lateral');
+            menuToggle.innerHTML = '<i class="fa-solid ' + (collapsed ? 'fa-bars' : 'fa-angles-left') + '" aria-hidden="true"></i>';
+        }
+    };
+    if (menuToggle) menuToggle.addEventListener('click', () => {
+        if (isMobileLayout()) {
+            setMobileNav(!menu.classList.contains('mobile-open'));
+        } else {
+            setSidebarCollapsed(!document.getElementById('adm-panel')?.classList.contains('sidebar-collapsed'));
+        }
+    });
+    if (menuToggle) menuToggle.innerHTML = '<i class="fa-solid fa-angles-left" aria-hidden="true"></i>';
+    window.addEventListener('resize', () => {
+        if (!isMobileLayout()) setMobileNav(false);
+    });
     if (menuClose) menuClose.addEventListener('click', () => setMobileNav(false));
     if (backdrop) backdrop.addEventListener('click', () => setMobileNav(false));
     document.addEventListener('keydown', event => { if (event.key === 'Escape') setMobileNav(false); });
