@@ -33,7 +33,7 @@ returns text
 language plpgsql
 security definer
 set search_path = ''
-as $$
+as $verify_admin_gate$
 declare
     v_token uuid;
 begin
@@ -59,7 +59,7 @@ begin
 
     return v_token::text;
 end;
-$$;
+$verify_admin_gate$;
 
 revoke all on function public.verify_admin_gate(text) from public;
 grant execute on function public.verify_admin_gate(text) to anon, authenticated;
@@ -109,7 +109,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path = ''
-as $$
+as $create_teacher_from_auth_user$
 declare
     v_gate_token text;
     v_subjects_json jsonb;
