@@ -702,7 +702,7 @@ function renderPlannerCard(p, mode = 'active') {
                 '<strong><i class="fa-regular fa-clock" aria-hidden="true"></i> ' + escapePlannerHtml(p.time || 'Horário não definido') + '</strong>' +
             '</div>' +
             '<div class="planner-card-meta">' +
-            (grade ? '<span class="planner-card-grade"><small>Turma</small><strong>' + escapePlannerHtml(grade) + '</strong></span>' : '');
+            (grade ? '<span class="planner-card-grade"><small>Turma</small><strong>' + escapePlannerHtml(grade) + '</strong></span>' : '') +
             (p.duration ? '<span><i class="fa-regular fa-hourglass-half"></i> ' + escapePlannerHtml(p.duration) + '</span>' : '') +
             (p.tag ? '<span class="planner-card-tag"><i class="fa-solid fa-arrows-rotate"></i> ' + escapePlannerHtml(p.tag) + '</span>' : '') +
             (isCompleted && p.completed_at ? '<span class="completed-at"><i class="fa-solid fa-circle-check"></i> Concluída em ' + new Date(p.completed_at).toLocaleString('pt-BR') + '</span>' : '') +
