@@ -40,6 +40,7 @@ const SHIFTS = {
 let scheduleRecord = null;
 let dashboardInitialized = false;
 let scheduleAutoAdvanceTimer = null;
+const scheduleManualExpandedState = new Map();
 
 function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, character => ({
@@ -245,13 +246,15 @@ function renderSchedule(data) {
 
     const dayCards = visibleDays.map(day => {
         const isOpen = day.id === preferredOpenDayId;
-        return '<article class="schedule-day-card ' + (isOpen ? 'is-open' : '') + '" data-day-card="' + day.id + '">' +
-            '<button type="button" class="schedule-day-header" data-day-toggle="' + day.id + '" aria-expanded="' + String(isOpen) + '" aria-label="' + (isOpen ? 'Recolher ' : 'Expandir ') + day.label + '" title="' + (isOpen ? 'Recolher' : 'Expandir') + '">' +
+        const manualState = scheduleManualExpandedState.get(day.id);
+        const expanded = manualState === undefined ? isOpen : manualState;
+        return '<article class="schedule-day-card ' + (expanded ? 'is-open' : '') + '" data-day-card="' + day.id + '">' +
+            '<button type="button" class="schedule-day-header" data-day-toggle="' + day.id + '" aria-expanded="' + String(expanded) + '" aria-label="' + (expanded ? 'Recolher ' : 'Expandir ') + day.label + '" title="' + (expanded ? 'Recolher' : 'Expandir') + '">' +
                 '<span class="schedule-day-mark"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span>' +
                 '<span class="schedule-day-title">' + day.label + '</span>' +
-                '<i class="fa-solid ' + (isOpen ? 'fa-chevron-up' : 'fa-chevron-down') + ' schedule-day-chevron" aria-hidden="true"></i>' +
+                '<i class="fa-solid ' + (expanded ? 'fa-chevron-up' : 'fa-chevron-down') + ' schedule-day-chevron" aria-hidden="true"></i>' +
             '</button>' +
-            '<div class="schedule-day-content" ' + (isOpen ? '' : 'hidden') + '>' +
+            '<div class="schedule-day-content" ' + (expanded ? '' : 'hidden') + '>' +
                 '<div class="schedule-shifts-grid">' +
                     renderShift(data, SHIFTS.mat, day.id, 'mat') +
                     renderShift(data, SHIFTS.ves, day.id, 'ves') +
@@ -269,6 +272,7 @@ function renderSchedule(data) {
             const card = button.closest('[data-day-card]');
             const content = card.querySelector('.schedule-day-content');
             const open = card.classList.toggle('is-open');
+            scheduleManualExpandedState.set(card.dataset.dayCard, open);
             content.hidden = !open;
             button.setAttribute('aria-expanded', String(open));
             button.setAttribute('aria-label', (open ? 'Recolher ' : 'Expandir ') + card.dataset.dayCard);
@@ -485,6 +489,10 @@ function setupGlobalSearch() {
         revealTargetAncestors(target);
         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         target.classList.add('search-result-highlight');
+        if (target.id.startsWith('schedule-slot-')) {
+            const dayId = target.id.split('-')[2];
+            if (dayId) scheduleManualExpandedState.set(dayId, true);
+        }
         window.setTimeout(() => target.classList.remove('search-result-highlight'), 3000);
         return true;
     };
