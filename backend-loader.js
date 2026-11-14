@@ -111,7 +111,21 @@
     "@media (prefers-reduced-motion: reduce) {",
     "  .ej-loader-star, .ej-loader-star-stage::after, .ej-loader-bubble-word > span, .ej-loader-bubble-word .ej-dots,",
     "  .ej-hs-loader-ring, .ej-hs-loader-orbit, .ej-hs-loader-core, .ej-hs-loader-progress > span { animation-duration: 2.8s; }",
-    "}"
+    "}",
+    "/* Formal EduPlan ADM loader: sequential bounce, 4-second orbit, horizontal reset */",
+    "dialog#global-loader.ej-loader-dialog[data-theme='admin']::backdrop { background: rgba(35,27,62,.25) !important; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }",
+    "dialog#global-loader.ej-loader-dialog[data-theme='admin'] .ej-loader-content { gap: 12px; padding: 25px 32px; border: 1px solid rgba(231,224,246,.95) !important; border-radius: 22px !important; background: rgba(255,255,255,.97) !important; box-shadow: 0 20px 60px rgba(38,24,78,.15) !important; color: #23164f !important; }",
+    ".ej-admin-loader-stage { position: relative; width: 104px; height: 72px; }",
+    ".ej-admin-loader-dot { position: absolute; top: 28px; width: 13px; height: 13px; border-radius: 50%; box-shadow: 0 4px 10px rgba(53,35,104,.16); }",
+    ".ej-admin-loader-dot.dot-one { background: #6330d9; animation: ej-admin-dot-one 5.8s linear infinite; }",
+    ".ej-admin-loader-dot.dot-two { background: #21b6a6; animation: ej-admin-dot-two 5.8s linear infinite; }",
+    ".ej-admin-loader-dot.dot-three { background: #f29a3e; animation: ej-admin-dot-three 5.8s linear infinite; }",
+    ".ej-admin-loader-title { color: #2a1b5c; font: 800 .82rem/1.3 system-ui,sans-serif; letter-spacing: .12em; text-transform: uppercase; }",
+    ".ej-admin-loader-caption { color: #7d7397; font: 500 .73rem/1.4 system-ui,sans-serif; }",
+    "@keyframes ej-admin-dot-one { 0%,4% { left:10px; top:28px; } 1.8% { left:10px; top:12px; } 14.9% { left:10px; top:28px; } 15%,85% { left:45px; top:7px; } 26.67% { left:62px; top:17px; } 38.33% { left:62px; top:39px; } 50% { left:45px; top:49px; } 61.67% { left:28px; top:39px; } 73.33% { left:28px; top:17px; } 100% { left:10px; top:28px; } }",
+    "@keyframes ej-admin-dot-two { 0%,5.5% { left:45px; top:28px; } 7.2% { left:45px; top:12px; } 9.5%,14.9% { left:45px; top:28px; } 15%,85% { left:62px; top:39px; } 26.67% { left:45px; top:49px; } 38.33% { left:28px; top:39px; } 50% { left:28px; top:17px; } 61.67% { left:45px; top:7px; } 73.33% { left:62px; top:17px; } 100% { left:45px; top:28px; } }",
+    "@keyframes ej-admin-dot-three { 0%,10.5% { left:80px; top:28px; } 12.2% { left:80px; top:12px; } 14.9% { left:80px; top:28px; } 15%,85% { left:28px; top:39px; } 26.67% { left:28px; top:17px; } 38.33% { left:45px; top:7px; } 50% { left:62px; top:17px; } 61.67% { left:62px; top:39px; } 73.33% { left:45px; top:49px; } 100% { left:80px; top:28px; } }",
+    "@media (prefers-reduced-motion: reduce) { .ej-admin-loader-dot { animation-duration: 5.8s; } }",
   ].join("\n");
 
   function ensureStyles() {
@@ -147,6 +161,22 @@
       '<span class="ej-loader-sr-only">Carregando. Aguarde.</span></div>';
   }
 
+  function buildAdminMarkup() {
+    return '<div class="ej-loader-content ej-admin-loader-content" role="status" aria-live="polite">' +
+      '<div class="ej-admin-loader-stage" aria-hidden="true">' +
+      '<span class="ej-admin-loader-dot dot-one"></span>' +
+      '<span class="ej-admin-loader-dot dot-two"></span>' +
+      '<span class="ej-admin-loader-dot dot-three"></span>' +
+      '</div>' +
+      '<div class="ej-admin-loader-title">Carregando painel</div>' +
+      '<div class="ej-admin-loader-caption">Preparando seus dados e planejamentos</div>' +
+      '<span class="ej-loader-sr-only">Carregando o painel administrativo. Aguarde.</span></div>';
+  }
+
+  function isAdminPage() {
+    return /(?:^|\/)adm(?:\/|$)/i.test(window.location.pathname);
+  }
+
   function buildHighSchoolMarkup() {
     return '<div class="ej-loader-content ej-hs-content" role="status" aria-live="polite">' +
       '<div class="ej-hs-loader-mark" aria-hidden="true"><span class="ej-hs-loader-ring"></span>' +
@@ -160,13 +190,14 @@
 
   function ensureDialog() {
     ensureStyles();
+    const adminPage = isAdminPage();
     const highSchool = isHighSchool(state.activeGrade);
-    const theme = highSchool ? "high-school" : "fundamental";
+    const theme = adminPage ? "admin" : (highSchool ? "high-school" : "fundamental");
     if (!state.dialog || !state.dialog.isConnected) {
       const dialog = document.createElement("dialog");
       dialog.id = "global-loader";
       dialog.className = "ej-loader-dialog";
-      dialog.setAttribute("aria-label", highSchool ? "Processando dados" : "Carregando");
+      dialog.setAttribute("aria-label", adminPage ? "Carregando painel administrativo" : (highSchool ? "Processando dados" : "Carregando"));
       dialog.addEventListener("cancel", event => event.preventDefault());
       (document.body || document.documentElement).appendChild(dialog);
       state.dialog = dialog;
@@ -174,8 +205,8 @@
 
     if (state.dialog.dataset.theme !== theme) {
       state.dialog.dataset.theme = theme;
-      state.dialog.innerHTML = highSchool ? buildHighSchoolMarkup() : buildFundamentalMarkup();
-      state.dialog.setAttribute("aria-label", highSchool ? "Processando dados" : "Carregando");
+      state.dialog.innerHTML = adminPage ? buildAdminMarkup() : (highSchool ? buildHighSchoolMarkup() : buildFundamentalMarkup());
+      state.dialog.setAttribute("aria-label", adminPage ? "Carregando painel administrativo" : (highSchool ? "Processando dados" : "Carregando"));
     }
 
     if (!state.dialog.open) {
