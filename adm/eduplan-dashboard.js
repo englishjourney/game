@@ -133,8 +133,8 @@ function renderSlot(rawValue, slot, dayId, shiftId) {
     '</div>';
 }
 
-function renderBreak(time) {
-    return '<div class="schedule-entry schedule-entry-break">' +
+function renderBreak(time, dayId, shiftId) {
+    return '<div id="schedule-slot-' + dayId + '-' + shiftId + '-4" class="schedule-entry schedule-entry-break">' +
         '<span class="schedule-entry-index"><i class="fa-solid fa-mug-hot" aria-hidden="true"></i></span>' +
         '<span class="schedule-entry-label">Intervalo</span>' +
         '<strong class="schedule-entry-time">' + time + '</strong>' +
@@ -151,7 +151,7 @@ function renderShift(dayData, config, dayId, shiftId) {
         '</header>' +
         '<div class="schedule-period-list">' +
             config.slots.slice(0, 4).map(slot => renderSlot(values[slot.index], slot, dayId, shiftId)).join('') +
-            renderBreak(config.breakTime) +
+            renderBreak(config.breakTime, dayId, shiftId) +
             config.slots.slice(4).map(slot => renderSlot(values[slot.index], slot, dayId, shiftId)).join('') +
         '</div>' +
     '</section>';
