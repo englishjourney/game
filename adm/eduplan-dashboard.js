@@ -400,7 +400,6 @@ function setupScheduleEditor() {
         const { error } = await supabase.from('schedule').upsert({
             ...(scheduleRecord?.id ? { id: scheduleRecord.id } : {}),
             ...payload,
-            owner: userData.user.id
         }, { onConflict: 'owner' });
 
         if (saveButton) {
