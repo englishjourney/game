@@ -55,81 +55,99 @@ function verificarESalvarAulasNoCache(swRegistration) {
 let initializedTeacherId = null;
 
 export async function showAdmPanel() {
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    if (authError || !authData.user) return;
+    // Keep one loader operation open until every module has completed its first data load.
+    const finishPanelLoad = window.EnglishJourneyLoader?.beginOperation({ immediate: true });
+    try {
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError || !authData.user) return;
 
-    const { data: teacher, error: teacherError } = await supabase
-        .from('teachers')
-        .select('id, email, display_name, avatar_key, subjects, is_primary')
-        .eq('id', authData.user.id)
-        .single();
+        const { data: teacher, error: teacherError } = await supabase
+            .from('teachers')
+            .select('id, email, display_name, avatar_key, subjects, is_primary')
+            .eq('id', authData.user.id)
+            .single();
 
-    if (teacherError || !teacher) {
-        console.error('Perfil de professor não encontrado:', teacherError);
-        await supabase.auth.signOut();
-        document.getElementById('login-container')?.classList.remove('hidden');
-        document.getElementById('adm-panel')?.classList.add('hidden');
-        document.querySelectorAll('.auth-stage').forEach(stage => stage.classList.add('hidden'));
-        document.getElementById('login-step')?.classList.remove('hidden');
-        return;
-    }
+        if (teacherError || !teacher) {
+            console.error('Perfil de professor não encontrado:', teacherError);
+            await supabase.auth.signOut();
+            document.getElementById('login-container')?.classList.remove('hidden');
+            document.getElementById('adm-panel')?.classList.add('hidden');
+            document.querySelectorAll('.auth-stage').forEach(stage => stage.classList.add('hidden'));
+            document.getElementById('login-step')?.classList.remove('hidden');
+            return;
+        }
 
-    window.currentTeacher = teacher;
-    document.getElementById('login-container').classList.add('hidden');
-    document.getElementById('adm-panel').classList.remove('hidden');
+        window.currentTeacher = teacher;
+        document.getElementById('login-container').classList.add('hidden');
+        document.getElementById('adm-panel').classList.remove('hidden');
 
-    const avatarIcons = {
-        'violet-book': 'fa-book-open',
-        'blue-graduation': 'fa-graduation-cap',
-        'teal-user': 'fa-user-astronaut',
-        'orange-atom': 'fa-atom',
-        'pink-palette': 'fa-palette',
-        'indigo-globe': 'fa-earth-americas'
-    };
-    const profile = document.getElementById('teacher-profile');
-    if (profile) {
-        profile.innerHTML =
-            '<span class="teacher-avatar avatar-' + (avatarIcons[teacher.avatar_key] ? teacher.avatar_key : 'violet-book') + '">' +
-                '<i class="fa-solid ' + (avatarIcons[teacher.avatar_key] || 'fa-book-open') + '" aria-hidden="true"></i>' +
-            '</span>' +
-            '<span class="teacher-profile-copy"><strong>' + escapeAdminHtml(teacher.display_name) + '</strong>' +
-                '<small>' + escapeAdminHtml((teacher.subjects || []).join(', ')) + '</small></span>';
-    }
+        const avatarIcons = {
+            'violet-book': 'fa-book-open',
+            'blue-graduation': 'fa-graduation-cap',
+            'teal-user': 'fa-user-astronaut',
+            'orange-atom': 'fa-atom',
+            'pink-palette': 'fa-palette',
+            'indigo-globe': 'fa-earth-americas'
+        };
+        const profile = document.getElementById('teacher-profile');
+        if (profile) {
+            profile.innerHTML =
+                '<span class="teacher-avatar avatar-' + (avatarIcons[teacher.avatar_key] ? teacher.avatar_key : 'violet-book') + '">' +
+                    '<i class="fa-solid ' + (avatarIcons[teacher.avatar_key] || 'fa-book-open') + '" aria-hidden="true"></i>' +
+                '</span>' +
+                '<span class="teacher-profile-copy"><strong>' + escapeAdminHtml(teacher.display_name) + '</strong>' +
+                    '<small>' + escapeAdminHtml((teacher.subjects || []).join(', ')) + '</small></span>';
+        }
 
-    const missionsNav = document.querySelector('.nav-btn[data-target="missions-section"]');
-    const flashcardsNav = document.querySelector('.nav-btn[data-target="flashcards-section"]');
-    [missionsNav, flashcardsNav].forEach(button => {
-        if (!button) return;
-        button.classList.toggle('hidden', !teacher.is_primary);
-        button.setAttribute('aria-hidden', String(!teacher.is_primary));
-        button.tabIndex = teacher.is_primary ? 0 : -1;
-    });
-    if (!teacher.is_primary) {
-        document.getElementById('missions-section')?.classList.add('hidden');
-        document.getElementById('flashcards-section')?.classList.add('hidden');
-    }
+        const missionsNav = document.querySelector('.nav-btn[data-target="missions-section"]');
+        const flashcardsNav = document.querySelector('.nav-btn[data-target="flashcards-section"]');
+        [missionsNav, flashcardsNav].forEach(button => {
+            if (!button) return;
+            button.classList.toggle('hidden', !teacher.is_primary);
+            button.setAttribute('aria-hidden', String(!teacher.is_primary));
+            button.tabIndex = teacher.is_primary ? 0 : -1;
+        });
+        if (!teacher.is_primary) {
+            document.getElementById('missions-section')?.classList.add('hidden');
+            document.getElementById('flashcards-section')?.classList.add('hidden');
+        }
 
-    if (initializedTeacherId === teacher.id) {
-        await window.refreshEduPlanDashboard?.();
-        return;
-    }
-    initializedTeacherId = teacher.id;
+        if (initializedTeacherId === teacher.id) {
+            await window.refreshEduPlanDashboard?.();
+            return;
+        }
+        initializedTeacherId = teacher.id;
 
-    setupNavigation();
-    await initEduPlanDashboard();
-    initPlanner();
-    initUsers();
-    if (teacher.is_primary) {
-        initMissions();
-        initFlashcardsAdm();
-    }
-    initReminders();
-    initTasks();
+        setupNavigation();
+        await initEduPlanDashboard();
 
-    const logoutButton = document.getElementById('btn-logout');
-    if (logoutButton && logoutButton.dataset.initialized !== 'true') {
-        logoutButton.dataset.initialized = 'true';
-        logoutButton.addEventListener('click', logout);
+        const initialLoads = [
+            Promise.resolve().then(() => initPlanner()),
+            Promise.resolve().then(() => initUsers()),
+            Promise.resolve().then(() => initReminders()),
+            Promise.resolve().then(() => initTasks())
+        ];
+        if (teacher.is_primary) {
+            initialLoads.push(
+                Promise.resolve().then(() => initMissions()),
+                Promise.resolve().then(() => initFlashcardsAdm())
+            );
+        }
+
+        const loadResults = await Promise.allSettled(initialLoads);
+        loadResults.forEach((result, index) => {
+            if (result.status === 'rejected') {
+                console.error('Erro durante o carregamento inicial do módulo administrativo ' + (index + 1) + ':', result.reason);
+            }
+        });
+
+        const logoutButton = document.getElementById('btn-logout');
+        if (logoutButton && logoutButton.dataset.initialized !== 'true') {
+            logoutButton.dataset.initialized = 'true';
+            logoutButton.addEventListener('click', logout);
+        }
+    } finally {
+        finishPanelLoad?.();
     }
 }
 
@@ -534,7 +552,7 @@ export function initReminders() {
 
     // O navegador exige interação prévia para liberar áudio em algumas situações.
     document.addEventListener('pointerdown', primeReminderAudio, { once: true });
-    checkRemindersStatus();
+    return checkRemindersStatus();
 }
 
 // Abrir modal de formulário
