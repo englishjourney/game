@@ -943,9 +943,16 @@ function openPlannerSectionReschedule(items) {
     const countLabel = document.getElementById('planner-reschedule-count');
     if (!modal || !dateInput || !items || !items.length) return;
 
-    pendingPlannerRescheduleItems = [...items];
     const first = items[0];
     const currentDate = parsePlannerDateBR(first.date);
+    // A pesquisa pode esconder cartões, mas remarcar deve atingir todas as aulas ativas da data.
+    const completeSectionItems = currentDate
+        ? allActivePlannerItems.filter(item => {
+            const itemDate = parsePlannerDateBR(item.date);
+            return itemDate && itemDate.formatted === currentDate.formatted;
+        })
+        : items;
+    pendingPlannerRescheduleItems = completeSectionItems.length ? [...completeSectionItems] : [...items];
     dateInput.value = currentDate ? currentDate.iso : '';
     if (currentLabel) {
         currentLabel.textContent = currentDate
@@ -953,7 +960,7 @@ function openPlannerSectionReschedule(items) {
             : 'Data atual não identificada';
     }
     if (countLabel) {
-        countLabel.textContent = `${items.length} aula(s) serão atualizadas. Horários, turmas e atividades serão mantidos.`;
+        countLabel.textContent = `${pendingPlannerRescheduleItems.length} aula(s) serão atualizadas. Horários, turmas e atividades serão mantidos.`;
     }
     if (!modal.open) modal.showModal();
 }
@@ -1545,6 +1552,7 @@ window.editPlanner = (p) => {
     document.getElementById('cb-folga').checked = p.special == 2;
     document.getElementById('cb-prova').checked = p.special == 3;
     document.getElementById('plan-end-date').value = '';
+    document.getElementById('plan-end-date-picker').value = '';
     
     window.updateRequiredFields();
 
