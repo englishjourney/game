@@ -16,14 +16,6 @@ where username = 'micael.svg'
 limit 1
 on conflict (singleton) do nothing;
 
-do $$
-begin
-    if not exists (select 1 from public.admin_gate_config where singleton = true) then
-        raise exception 'Não foi possível configurar a senha geral: o registro administrativo legado não foi encontrado.';
-    end if;
-end;
-$$;
-
 create table if not exists public.admin_gate_tokens (
     token_hash text primary key,
     expires_at timestamptz not null,
