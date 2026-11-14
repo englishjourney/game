@@ -698,10 +698,11 @@ function renderPlannerCard(p, mode = 'active') {
         selectionControl +
         '<div class="data-card-info planner-card-info"><div class="planner-card-heading"><div class="planner-card-title-wrap">' + specialLabel +
             '<h3 class="planner-card-title">' + escapePlannerHtml(getPlannerTitle(p)) + '</h3></div>' + actions + '</div>' +
-            '<div class="planner-card-datetime"><span><i class="fa-regular fa-calendar"></i> ' + escapePlannerHtml((p.day ? p.day + ' · ' : '') + (p.date || 'Sem data')) + '</span>' +
-            (p.time ? '<strong><i class="fa-regular fa-clock"></i> ' + escapePlannerHtml(p.time) + '</strong>' : '') + '</div>' +
+            '<div class="planner-card-datetime">' +
+                '<strong><i class="fa-regular fa-clock" aria-hidden="true"></i> ' + escapePlannerHtml(p.time || 'Horário não definido') + '</strong>' +
+            '</div>' +
             '<div class="planner-card-meta">' +
-            (grade ? '<span><i class="fa-solid fa-users"></i> ' + escapePlannerHtml(grade) + '</span>' : '') +
+            (grade ? '<span class="planner-card-grade"><small>Turma</small><strong>' + escapePlannerHtml(grade) + '</strong></span>' : '');
             (p.duration ? '<span><i class="fa-regular fa-hourglass-half"></i> ' + escapePlannerHtml(p.duration) + '</span>' : '') +
             (p.tag ? '<span class="planner-card-tag"><i class="fa-solid fa-arrows-rotate"></i> ' + escapePlannerHtml(p.tag) + '</span>' : '') +
             (isCompleted && p.completed_at ? '<span class="completed-at"><i class="fa-solid fa-circle-check"></i> Concluída em ' + new Date(p.completed_at).toLocaleString('pt-BR') + '</span>' : '') +
