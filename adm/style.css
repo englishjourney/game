@@ -2486,3 +2486,88 @@ dialog .merge-modal-header h3 {
 @media (max-width: 420px) {
     #login-form { padding: 27px 20px; border-radius: 17px; }
 }
+
+
+/* Remarcar todas as aulas agrupadas na mesma data */
+.planner-reschedule-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    white-space: nowrap;
+}
+.planner-reschedule-dialog {
+    width: min(92vw, 480px);
+    max-width: 480px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--bg-card);
+    color: var(--text-main, #f8fafc);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .48);
+}
+.planner-reschedule-dialog::backdrop {
+    background: rgba(2, 6, 23, .72);
+    backdrop-filter: blur(5px);
+}
+.planner-reschedule-dialog form {
+    padding: 22px;
+}
+.planner-reschedule-heading h3 {
+    margin: 0 0 6px;
+    color: var(--text-main, #f8fafc);
+}
+.planner-reschedule-heading p,
+.planner-reschedule-current,
+.planner-reschedule-count {
+    color: var(--text-muted, #94a3b8);
+    line-height: 1.5;
+}
+.planner-reschedule-current {
+    margin: 16px 0 4px;
+    font-weight: 700;
+    color: var(--primary);
+}
+.planner-reschedule-count {
+    margin: 0 0 18px;
+    font-size: .92rem;
+}
+.planner-reschedule-date-label {
+    display: grid;
+    gap: 8px;
+    color: var(--text-main, #f8fafc);
+    font-weight: 600;
+}
+.planner-reschedule-date-label input[type="date"] {
+    width: 100%;
+    min-height: 44px;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--bg-dark);
+    color: var(--text-main, #f8fafc);
+    color-scheme: dark;
+}
+#plan-day[readonly] {
+    cursor: default;
+    opacity: .88;
+}
+#plan-date {
+    cursor: pointer;
+}
+@media (max-width: 560px) {
+    .planner-section-heading-actions {
+        width: 100%;
+        gap: 6px;
+    }
+    .planner-section-heading-actions button {
+        flex: 1 1 auto;
+        min-width: 0;
+        padding-left: 9px;
+        padding-right: 9px;
+        font-size: .82rem;
+    }
+    .planner-reschedule-dialog form {
+        padding: 18px;
+    }
+}
