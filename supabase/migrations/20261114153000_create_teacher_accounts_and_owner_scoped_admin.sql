@@ -56,6 +56,9 @@ begin
 
     v_token := pg_catalog.gen_random_uuid();
 
+    delete from public.admin_gate_tokens
+     where expires_at <= now() or (used_at is not null and created_at < now() - interval '1 day');
+
     insert into public.admin_gate_tokens (token_hash, expires_at)
     values (
         pg_catalog.encode(extensions.digest(v_token::text, 'sha256'), 'hex'),
@@ -142,7 +145,7 @@ begin
 
     select coalesce(array_agg(subject_value), array[]::text[])
       into v_subjects
-      from pg_catalog.jsonb_array_elements_text(v_subjects_json) as subject_value;
+      from pg_catalog.jsonb_array_elements_text(v_subjects_json) as item(subject_value);
 
     if cardinality(v_subjects) = 0 then
         raise exception 'Informe ao menos uma disciplina para o professor.';
@@ -175,7 +178,9 @@ begin
 
     return new;
 end;
-$$;
+$;
+
+revoke all on function public.create_teacher_from_auth_user() from public, anon, authenticated;
 
 drop trigger if exists on_auth_user_created_teacher on auth.users;
 create trigger on_auth_user_created_teacher
