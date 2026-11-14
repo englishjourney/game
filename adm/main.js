@@ -454,8 +454,7 @@ async function loadSchedule() {
         container.innerHTML = '<div class="empty-state schedule-error">Não foi possível carregar os horários. Verifique a conexão com o Supabase e a tabela de horários.</div>';
     }
 }
-// Um único aviso discreto junto ao sino; a verificação periódica ocorre a cada 30 minutos.
-let reminderStatusInterval = null;
+// Lembretes são consultados ao abrir o painel e após alterações manuais, sem polling periódico.
 let reminderAudioContext = null;
 let pendingReminderSound = false;
 let notificationCheckInProgress = false;
@@ -536,12 +535,6 @@ export function initReminders() {
     // O navegador exige interação prévia para liberar áudio em algumas situações.
     document.addEventListener('pointerdown', primeReminderAudio, { once: true });
     checkRemindersStatus();
-
-    if (!reminderStatusInterval) {
-        reminderStatusInterval = setInterval(() => {
-            checkRemindersStatus({ playSound: true });
-        }, 30 * 60 * 1000);
-    }
 }
 
 // Abrir modal de formulário
