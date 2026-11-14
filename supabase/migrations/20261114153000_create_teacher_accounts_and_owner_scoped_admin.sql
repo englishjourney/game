@@ -159,6 +159,10 @@ begin
     perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtext('eduplan-primary-teacher'));
     select not exists (select 1 from public.teachers) into v_is_primary;
 
+    if v_is_primary and not ('Inglês' = any(v_subjects)) then
+        raise exception 'A primeira conta do EduPlan deve ser do professor de Inglês.';
+    end if;
+
     insert into public.teachers (id, email, display_name, avatar_key, subjects, is_primary)
     values (new.id, lower(new.email), v_display_name, v_avatar_key, v_subjects, v_is_primary);
 
@@ -202,6 +206,7 @@ drop policy if exists "Provide all skills" on public.schedule;
 drop policy if exists "Permission to dance" on public.planner;
 drop policy if exists "Tasks access for app" on public.tasks;
 
+drop policy if exists "Teachers manage own schedule" on public.schedule;
 create policy "Teachers manage own schedule"
     on public.schedule
     for all
@@ -209,6 +214,7 @@ create policy "Teachers manage own schedule"
     using (owner = (select auth.uid()))
     with check (owner = (select auth.uid()));
 
+drop policy if exists "Teachers manage own planner" on public.planner;
 create policy "Teachers manage own planner"
     on public.planner
     for all
@@ -216,6 +222,7 @@ create policy "Teachers manage own planner"
     using (owner = (select auth.uid()))
     with check (owner = (select auth.uid()));
 
+drop policy if exists "Teachers manage own tasks" on public.tasks;
 create policy "Teachers manage own tasks"
     on public.tasks
     for all
@@ -228,7 +235,15 @@ grant select, insert, update, delete on public.schedule, public.planner, public.
 -- The student-facing games continue to read shared English missions and flashcards
 -- with the anonymous client. Only the primary teacher can manage their contents.
 drop policy if exists "Permissão para tudo" on public.missions;
+drop policy if exists "Students can read missions" on public.missions;
+drop policy if exists "Authenticated users can read missions" on public.missions;
+drop policy if exists "Primary teacher can read missions" on public.missions;
+drop policy if exists "Primary teacher manages missions" on public.missions;
 drop policy if exists "Permission for all" on public.flashcards;
+drop policy if exists "Students can read flashcards" on public.flashcards;
+drop policy if exists "Authenticated users can read flashcards" on public.flashcards;
+drop policy if exists "Primary teacher can read flashcards" on public.flashcards;
+drop policy if exists "Primary teacher manages flashcards" on public.flashcards;
 
 create policy "Students can read missions"
     on public.missions
