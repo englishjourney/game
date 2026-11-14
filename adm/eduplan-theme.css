@@ -1124,7 +1124,7 @@ body { margin: 0; overflow-x: hidden; }
 
 
 /* EduPlan modal system — light violet, layered surfaces, clear content hierarchy */
-#adm-panel dialog {
+dialog {
     width: min(92vw, 760px);
     max-width: 760px;
     max-height: min(92vh, 920px);
@@ -1136,21 +1136,21 @@ body { margin: 0; overflow-x: hidden; }
     color: #19143b;
     box-shadow: 0 28px 90px rgba(31, 19, 72, .28), 0 5px 18px rgba(31, 19, 72, .08);
 }
-#adm-panel dialog::backdrop {
+dialog::backdrop {
     background: rgba(28, 21, 52, .52);
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     animation: eduModalBackdropIn .22s ease-out both;
 }
 @keyframes eduModalBackdropIn { from { opacity: 0; } to { opacity: 1; } }
-#adm-panel dialog[open] { animation: eduModalIn .24s cubic-bezier(.2,.75,.25,1) both; }
+dialog[open] { animation: eduModalIn .24s cubic-bezier(.2,.75,.25,1) both; }
 @keyframes eduModalIn {
     from { opacity: 0; transform: translateY(10px) scale(.985); }
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
-#adm-panel dialog h3,
-#adm-panel dialog h4 { color: #21134f; }
-#adm-panel dialog p { color: #51496e; }
+dialog h3,
+dialog h4 { color: #21134f; }
+dialog p { color: #51496e; }
 .edu-form-dialog form { padding: 0 28px 28px; overflow-y: auto; max-height: min(92vh, 920px); }
 .edu-modal-header {
     min-height: 124px;
@@ -1207,14 +1207,14 @@ body { margin: 0; overflow-x: hidden; }
     cursor: pointer;
 }
 .edu-modal-close:hover { background: #d9cbf7; transform: rotate(5deg); }
-#adm-panel dialog .form-grid {
+dialog .form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 18px 16px;
     padding: 0;
 }
-#adm-panel dialog .form-grid .full-width { grid-column: 1 / -1; }
-#adm-panel dialog .form-grid > label {
+dialog .form-grid .full-width { grid-column: 1 / -1; }
+dialog .form-grid > label {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -1223,9 +1223,9 @@ body { margin: 0; overflow-x: hidden; }
     font-size: .82rem;
     font-weight: 750;
 }
-#adm-panel dialog input:not([type="checkbox"]):not([type="radio"]),
-#adm-panel dialog select,
-#adm-panel dialog textarea,
+dialog input:not([type="checkbox"]):not([type="radio"]),
+dialog select,
+dialog textarea,
 #modal-reminder-form input,
 #modal-reminder-form textarea {
     width: 100%;
@@ -1240,20 +1240,20 @@ body { margin: 0; overflow-x: hidden; }
     font: inherit;
     font-size: .88rem;
 }
-#adm-panel dialog textarea,
+dialog textarea,
 #modal-reminder-form textarea { min-height: 94px; line-height: 1.55; resize: vertical; }
-#adm-panel dialog input:focus,
-#adm-panel dialog select:focus,
-#adm-panel dialog textarea:focus,
+dialog input:focus,
+dialog select:focus,
+dialog textarea:focus,
 #modal-reminder-form input:focus,
 #modal-reminder-form textarea:focus {
     border-color: #9879e3;
     outline: none;
     box-shadow: 0 0 0 3px rgba(110, 68, 211, .11);
 }
-#adm-panel dialog input[type="checkbox"],
-#adm-panel dialog input[type="radio"] { accent-color: #5b2dcc; }
-#adm-panel dialog .modal-actions {
+dialog input[type="checkbox"],
+dialog input[type="radio"] { accent-color: #5b2dcc; }
+dialog .modal-actions {
     display: flex;
     justify-content: flex-end;
     flex-wrap: wrap;
@@ -1262,7 +1262,7 @@ body { margin: 0; overflow-x: hidden; }
     padding-top: 17px;
     border-top: 1px solid #eee9f6;
 }
-#adm-panel dialog .modal-actions button,
+dialog .modal-actions button,
 #modal-reminder-form .reminder-modal-buttons button {
     min-height: 44px;
     padding: 10px 18px;
@@ -1270,48 +1270,48 @@ body { margin: 0; overflow-x: hidden; }
     font-size: .88rem;
     font-weight: 750;
 }
-#adm-panel dialog .btn-primary,
+dialog .btn-primary,
 #modal-reminder-form .btn-primary {
     border: 0;
     background: linear-gradient(135deg, #632cdb, #4a20c6);
     color: #fff;
     box-shadow: 0 7px 16px rgba(84, 42, 199, .18);
 }
-#adm-panel dialog .btn-primary:hover,
+dialog .btn-primary:hover,
 #modal-reminder-form .btn-primary:hover { background: linear-gradient(135deg, #5523c8, #3d19ad); }
-#adm-panel dialog .btn-secondary,
+dialog .btn-secondary,
 #modal-reminder-form .btn-secondary {
     border: 1px solid #e3dbf0;
     background: #f5f1fb;
     color: #4b397b;
 }
-#adm-panel dialog .btn-secondary:hover,
+dialog .btn-secondary:hover,
 #modal-reminder-form .btn-secondary:hover { border-color: #c9b8eb; background: #eee8fb; }
-#adm-panel dialog .activities-toolbar {
+dialog .activities-toolbar {
     border: 1px solid #e7e0f3;
     border-radius: 12px 12px 0 0;
     background: #f3effb;
 }
-#adm-panel dialog .activities-toolbar button,
-#adm-panel dialog .activities-toolbar select { color: #514274; }
-#adm-panel dialog .activities-toolbar button:hover { background: #e8defb; color: #4c22bd; }
-#adm-panel dialog .markdown-preview {
+dialog .activities-toolbar button,
+dialog .activities-toolbar select { color: #514274; }
+dialog .activities-toolbar button:hover { background: #e8defb; color: #4c22bd; }
+dialog .markdown-preview {
     border: 1px solid #e7e0f3;
     background: #fbfaff;
     color: #282047;
 }
-#adm-panel dialog .markdown-preview-label { color: #6c5b91; }
+dialog .markdown-preview-label { color: #6c5b91; }
 
 /* Modal de detalhes da aula: dados rápidos + blocos de conteúdo */
-#adm-panel .edu-details-dialog { width: min(94vw, 1160px); max-width: 1160px; }
-#adm-panel .edu-details-dialog .edu-modal-header { min-height: 124px; }
-#adm-panel .planner-details-grid {
+.edu-details-dialog { width: min(94vw, 1160px); max-width: 1160px; }
+.edu-details-dialog .edu-modal-header { min-height: 124px; }
+.planner-details-grid {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 13px;
     padding: 24px 28px 4px;
 }
-#adm-panel .detail-mini-card {
+.detail-mini-card {
     display: flex;
     align-items: flex-start;
     gap: 12px;
@@ -1322,8 +1322,8 @@ body { margin: 0; overflow-x: hidden; }
     background: linear-gradient(145deg, #fff, #f9f7fe);
     overflow-wrap: anywhere;
 }
-#adm-panel .detail-mini-card.full-width { grid-column: 1 / -1; }
-#adm-panel .detail-card-icon {
+.detail-mini-card.full-width { grid-column: 1 / -1; }
+.detail-card-icon {
     flex: 0 0 32px;
     width: 32px;
     height: 32px;
@@ -1334,7 +1334,7 @@ body { margin: 0; overflow-x: hidden; }
     color: #5b2bd2;
     font-size: 1.04rem;
 }
-#adm-panel .detail-mini-card h4 {
+.detail-mini-card h4 {
     margin: 0 0 5px;
     color: #7660b6 !important;
     font-size: .78rem;
@@ -1342,9 +1342,9 @@ body { margin: 0; overflow-x: hidden; }
     letter-spacing: 0;
     text-transform: none;
 }
-#adm-panel .detail-mini-card p { margin: 0; color: #211744 !important; font-size: .96rem; font-weight: 750; line-height: 1.4; }
-#adm-panel .detail-mini-card.planner-detail-tag { grid-column: span 2; }
-#adm-panel .planner-detail-tag-value {
+.detail-mini-card p { margin: 0; color: #211744 !important; font-size: .96rem; font-weight: 750; line-height: 1.4; }
+.detail-mini-card.planner-detail-tag { grid-column: span 2; }
+.planner-detail-tag-value {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -1354,13 +1354,13 @@ body { margin: 0; overflow-x: hidden; }
     color: #08784f;
     font-size: .82rem;
 }
-#adm-panel .planner-detail-section {
+.planner-detail-section {
     display: block;
     padding: 17px;
     border-radius: 15px;
     background: #faf8ff;
 }
-#adm-panel .planner-detail-section > h4 {
+.planner-detail-section > h4 {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -1369,14 +1369,15 @@ body { margin: 0; overflow-x: hidden; }
     font-size: 1rem;
     font-weight: 850;
 }
-#adm-panel .planner-detail-section > h4 i { color: #6230d6; font-size: 1.12rem; }
-#adm-panel .planner-detail-skills .planner-markdown-content {
+.planner-detail-section > h4 i { color: #6230d6; font-size: 1.12rem; }
+.planner-detail-skills .planner-markdown-content {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
 }
-#adm-panel .planner-detail-skills .planner-markdown-content p,
-#adm-panel .planner-detail-skills .planner-markdown-content li {
+.planner-detail-skills .planner-markdown-content p,
+.planner-detail-skills .planner-markdown-content li,
+.planner-detail-skills .planner-markdown-content .planner-skill-chip {
     margin: 0;
     padding: 7px 12px;
     border-radius: 999px;
@@ -1385,9 +1386,10 @@ body { margin: 0; overflow-x: hidden; }
     font-size: .82rem;
     font-weight: 700;
 }
-#adm-panel .planner-detail-skills .planner-markdown-content ul { display: contents; margin: 0; padding: 0; }
-#adm-panel .planner-detail-skills .planner-markdown-content li::marker { content: ''; }
-#adm-panel .planner-detail-activities .planner-markdown-content {
+.planner-detail-skills .planner-markdown-content ul { display: contents; margin: 0; padding: 0; }
+.planner-detail-skills .planner-markdown-content li::marker { content: ''; }
+.planner-detail-skills .planner-markdown-content .planner-skill-chip { display: inline-flex; align-items: center; }
+.planner-detail-activities .planner-markdown-content {
     max-height: min(34vh, 330px);
     overflow: auto;
     padding: 17px 19px;
@@ -1397,63 +1399,62 @@ body { margin: 0; overflow-x: hidden; }
     background: linear-gradient(120deg, #fbfaff, #f5f1fd);
     color: #211744;
 }
-#adm-panel .planner-detail-activities .planner-markdown-content,
-#adm-panel .planner-detail-activities .planner-markdown-content p,
-#adm-panel .planner-detail-activities .planner-markdown-content li { color: #211744; line-height: 1.55; }
-#adm-panel .planner-detail-activities .planner-markdown-content h1,
-#adm-panel .planner-detail-activities .planner-markdown-content h2,
-#adm-panel .planner-detail-activities .planner-markdown-content h3,
-#adm-panel .planner-detail-activities .planner-markdown-content h4 { color: #20134e; }
-#adm-panel .edu-details-dialog .details-modal-actions { margin: 0; padding: 18px 28px 24px; border: 0; }
-#adm-panel .edu-details-dialog .details-modal-actions .btn-primary { min-height: 50px; }
-#adm-panel .edu-details-dialog .details-modal-actions .btn-secondary { min-height: 50px; }
+.planner-detail-activities .planner-markdown-content,
+.planner-detail-activities .planner-markdown-content p,
+.planner-detail-activities .planner-markdown-content li { color: #211744; line-height: 1.55; }
+.planner-detail-activities .planner-markdown-content h1,
+.planner-detail-activities .planner-markdown-content h2,
+.planner-detail-activities .planner-markdown-content h3,
+.planner-detail-activities .planner-markdown-content h4 { color: #20134e; }
+.edu-details-dialog .details-modal-actions { margin: 0; padding: 18px 28px 24px; border: 0; }
+.edu-details-dialog .details-modal-actions .btn-primary { min-height: 50px; }
+.edu-details-dialog .details-modal-actions .btn-secondary { min-height: 50px; }
 
 /* Outros modais: merge, remarcação, horário e lembrete */
-#adm-panel .merge-modal-header,
-#adm-panel .details-modal-header,
-#adm-panel .merge-picker-header,
-#adm-panel .planner-reschedule-heading,
-#adm-panel .schedule-editor-heading {
+.merge-modal-header,
+.details-modal-header,
+.merge-picker-header,
+.planner-reschedule-heading,
+.schedule-editor-heading {
     margin: 0;
     padding: 24px 28px;
     border-bottom: 1px solid #e9e2f6;
     background: linear-gradient(110deg, #f0eafd, #f7f3ff);
 }
-#adm-panel .merge-modal-header h3,
-#adm-panel .details-modal-header h3,
-#adm-panel .planner-reschedule-heading h3,
-#adm-panel .schedule-editor-heading h3 { color: #21134f !important; font-size: 1.35rem; font-weight: 850; }
-#adm-panel .merge-modal-header p,
-#adm-panel .planner-reschedule-heading p,
-#adm-panel .schedule-editor-heading p { color: #70658f !important; }
-#adm-panel .planner-merge-dialog,
-#adm-panel .planner-bulk-merge-dialog,
-#adm-panel .planner-reschedule-dialog,
-#adm-panel .schedule-editor-dialog { width: min(94vw, 980px); max-width: 980px; }
-#adm-panel .planner-merge-dialog > *,
-#adm-panel .planner-bulk-merge-dialog > * { margin-right: 28px; margin-left: 28px; }
-#adm-panel .planner-merge-dialog > .merge-modal-header,
-#adm-panel .planner-bulk-merge-dialog > .details-modal-header { margin-right: 0; margin-left: 0; }
-#adm-panel .planner-merge-dialog .merge-comparison-grid { margin-top: 22px; }
-#adm-panel .merge-side,
-#adm-panel .merge-explanation,
-#adm-panel .bulk-merge-target-label,
-#adm-panel .bulk-merge-summary { color: #51496e; }
-#adm-panel .schedule-editor-dialog form { max-height: min(92vh, 920px); overflow: auto; padding: 0 28px 26px; }
-#adm-panel .schedule-editor-dialog .edu-modal-header { margin: 0 -28px 22px; }
-#adm-panel .schedule-editor-day {
+.merge-modal-header h3,
+.details-modal-header h3,
+.planner-reschedule-heading h3,
+.schedule-editor-heading h3 { color: #21134f !important; font-size: 1.35rem; font-weight: 850; }
+.merge-modal-header p,
+.planner-reschedule-heading p,
+.schedule-editor-heading p { color: #70658f !important; }
+.planner-merge-dialog,
+.planner-bulk-merge-dialog,
+.planner-reschedule-dialog,
+.schedule-editor-dialog { width: min(94vw, 980px); max-width: 980px; }
+.planner-merge-dialog > *,
+.planner-bulk-merge-dialog > * { margin-right: 28px; margin-left: 28px; }
+.planner-merge-dialog > .merge-modal-header,
+.planner-bulk-merge-dialog > .details-modal-header { margin-right: 0; margin-left: 0; }
+.planner-merge-dialog .merge-comparison-grid { margin-top: 22px; }
+.merge-side,
+.merge-explanation,
+.bulk-merge-target-label,
+.bulk-merge-summary { color: #51496e; }
+.schedule-editor-dialog form { max-height: min(92vh, 920px); overflow: auto; padding: 0 28px 26px; }
+.schedule-editor-dialog .edu-modal-header { margin: 0 -28px 22px; }
+.schedule-editor-day {
     border: 1px solid #e8e1f3;
     border-radius: 15px;
     background: #fbfaff;
 }
-#adm-panel .schedule-editor-shift h5 { color: #5d35b4; }
-#adm-panel .schedule-editor-shift input { min-height: 38px; }
-#adm-panel .planner-reschedule-dialog form { padding: 0 28px 26px; }
-#adm-panel .planner-reschedule-dialog .planner-reschedule-heading { margin: 0 -28px 20px; }
-#adm-panel .planner-reschedule-dialog .planner-reschedule-current,
-#adm-panel .planner-reschedule-dialog .planner-reschedule-count { color: #5d527a; }
+.schedule-editor-shift h5 { color: #5d35b4; }
+.schedule-editor-shift input { min-height: 38px; }
+.planner-reschedule-dialog form { padding: 0 28px 26px; }
+.planner-reschedule-dialog .planner-reschedule-heading { margin: 0 -28px 20px; }
+.planner-reschedule-dialog .planner-reschedule-current,
+.planner-reschedule-dialog .planner-reschedule-count { color: #5d527a; }
 
-#modal-reminder-form .reminder-modal-overlay { display: flex; }
 #modal-reminder-form .reminder-modal {
     width: min(92vw, 560px);
     max-height: 90vh;
@@ -1471,31 +1472,31 @@ body { margin: 0; overflow-x: hidden; }
 
 /* Subtle entry motion and compact responsive layouts */
 @media (max-width: 760px) {
-    #adm-panel dialog { width: calc(100vw - 18px); max-width: calc(100vw - 18px); max-height: 94vh; border-radius: 18px; }
+    dialog { width: calc(100vw - 18px); max-width: calc(100vw - 18px); max-height: 94vh; border-radius: 18px; }
     .edu-modal-header { min-height: 104px; gap: 12px; padding: 17px; }
     .edu-modal-mark { flex-basis: 54px; width: 54px; height: 54px; border-radius: 15px; font-size: 1.55rem; }
     .edu-modal-heading-copy h3 { font-size: 1.12rem; }
     .edu-modal-heading-copy p { font-size: .78rem; }
-    #adm-panel .edu-form-dialog form,
-    #adm-panel .schedule-editor-dialog form,
-    #adm-panel .planner-reschedule-dialog form { padding: 0 16px 18px; }
-    #adm-panel .edu-modal-form-header,
-    #adm-panel .schedule-editor-dialog .edu-modal-header { margin: 0 -16px 18px; }
-    #adm-panel dialog .form-grid { grid-template-columns: minmax(0,1fr); gap: 13px; }
-    #adm-panel .planner-details-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; padding: 14px 16px; }
-    #adm-panel .detail-mini-card { padding: 11px; gap: 8px; }
-    #adm-panel .detail-card-icon { flex-basis: 28px; width: 28px; height: 28px; font-size: .9rem; }
-    #adm-panel .detail-mini-card h4 { font-size: .7rem; }
-    #adm-panel .detail-mini-card p { font-size: .83rem; }
-    #adm-panel .detail-mini-card.planner-detail-tag { grid-column: span 1; }
-    #adm-panel .planner-detail-section { grid-column: 1 / -1; }
-    #adm-panel .edu-details-dialog .details-modal-actions { padding: 10px 16px 18px; }
-    #adm-panel .edu-details-dialog .details-modal-actions button { flex: 1 1 100%; }
-    #adm-panel .planner-merge-dialog > *,
-    #adm-panel .planner-bulk-merge-dialog > * { margin-right: 16px; margin-left: 16px; }
-    #adm-panel .planner-merge-dialog > .merge-modal-header,
-    #adm-panel .planner-bulk-merge-dialog > .details-modal-header { margin-right: 0; margin-left: 0; }
-    #adm-panel .schedule-editor-dialog .schedule-editor-heading { margin-right: -16px; margin-left: -16px; }
+    .edu-form-dialog form,
+    .schedule-editor-dialog form,
+    .planner-reschedule-dialog form { padding: 0 16px 18px; }
+    .edu-modal-form-header,
+    .schedule-editor-dialog .edu-modal-header { margin: 0 -16px 18px; }
+    dialog .form-grid { grid-template-columns: minmax(0,1fr); gap: 13px; }
+    .planner-details-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; padding: 14px 16px; }
+    .detail-mini-card { padding: 11px; gap: 8px; }
+    .detail-card-icon { flex-basis: 28px; width: 28px; height: 28px; font-size: .9rem; }
+    .detail-mini-card h4 { font-size: .7rem; }
+    .detail-mini-card p { font-size: .83rem; }
+    .detail-mini-card.planner-detail-tag { grid-column: span 1; }
+    .planner-detail-section { grid-column: 1 / -1; }
+    .edu-details-dialog .details-modal-actions { padding: 10px 16px 18px; }
+    .edu-details-dialog .details-modal-actions button { flex: 1 1 100%; }
+    .planner-merge-dialog > *,
+    .planner-bulk-merge-dialog > * { margin-right: 16px; margin-left: 16px; }
+    .planner-merge-dialog > .merge-modal-header,
+    .planner-bulk-merge-dialog > .details-modal-header { margin-right: 0; margin-left: 0; }
+    .schedule-editor-dialog .schedule-editor-heading { margin-right: -16px; margin-left: -16px; }
     #modal-reminder-form .reminder-modal { width: calc(100vw - 20px); padding: 0 16px 18px; }
     #modal-reminder-form .edu-reminder-header { margin-right: -16px; margin-left: -16px; }
     #modal-reminder-form .reminder-modal-buttons { flex-direction: column-reverse; }
@@ -1503,6 +1504,6 @@ body { margin: 0; overflow-x: hidden; }
 }
 @media (max-width: 420px) {
     .edu-modal-close { flex-basis: 36px; width: 36px; height: 36px; }
-    #adm-panel .planner-details-grid { grid-template-columns: minmax(0,1fr); }
-    #adm-panel .detail-mini-card.planner-detail-tag { grid-column: span 1; }
+    .planner-details-grid { grid-template-columns: minmax(0,1fr); }
+    .detail-mini-card.planner-detail-tag { grid-column: span 1; }
 }
