@@ -151,7 +151,7 @@
         <header class="edu-modal-header edu-reminder-header">
             <span class="edu-modal-mark"><i class="fa-regular fa-bell" aria-hidden="true"></i></span>
             <span class="edu-modal-heading-copy"><small>LEMBRETES</small><h3 id="reminder-modal-title">Novo Lembrete</h3><p>Defina o que lembrar e quando.</p></span>
-            <button type="button" class="edu-modal-close" aria-label="Fechar" id="btn-close-reminder-form"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            <button type="button" class="edu-modal-close" aria-label="Fechar" id="btn-close-reminder-form" onclick="this.closest('#modal-reminder-form').classList.add('hidden')"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
         </header>
         <input type="hidden" id="reminder-edit-id" value="">
         
