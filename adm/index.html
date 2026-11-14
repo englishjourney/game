@@ -99,12 +99,31 @@
 
             <!-- PLANNER SECTION -->
             <section id="planner-section" class="content-section hidden">
-                <div class="section-header" style="flex-wrap: wrap; gap: 15px;">
+                <div class="section-header planner-main-header">
                     <h2>Aulas Planejadas</h2>
-                    <div class="search-bar" style="margin-bottom: 0; flex: 1; min-width: 250px; position: relative;">
-                        <input type="text" id="planner-search" placeholder="Pesquisar por data, hora, turma ou atividade..." aria-label="Pesquisar planejamentos" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-dark); color: white;">
+                    <div class="planner-header-controls">
+                        <div class="search-bar planner-search-wrap">
+                            <input type="text" id="planner-search" placeholder="Pesquisar por data, hora, turma ou atividade..." aria-label="Pesquisar planejamentos">
+                        </div>
+                        <div class="planner-bulk-actions">
+                            <button type="button" id="btn-toggle-plan-selection" class="btn-secondary">
+                                <i class="fa-regular fa-square-check" aria-hidden="true"></i> Selecionar
+                            </button>
+                            <div class="planner-bulk-menu-wrap">
+                                <button type="button" id="btn-planner-bulk-menu" class="btn-primary hidden" disabled aria-expanded="false" aria-controls="planner-bulk-menu">
+                                    <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+                                    Ações <span id="planner-selected-count">0</span>
+                                </button>
+                                <div id="planner-bulk-menu" class="planner-bulk-menu hidden" role="menu">
+                                    <button type="button" data-bulk-action="merge" role="menuitem"><i class="fa-solid fa-object-group"></i> Mesclar selecionadas</button>
+                                    <button type="button" data-bulk-action="delete" role="menuitem"><i class="fa-solid fa-trash"></i> Excluir selecionadas</button>
+                                    <button type="button" data-bulk-action="defer" role="menuitem"><i class="fa-solid fa-clock"></i> Adiar selecionadas</button>
+                                    <button type="button" data-bulk-action="advance" role="menuitem"><i class="fa-solid fa-forward"></i> Adiantar selecionadas</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="btn-add-plan" class="btn-primary"><i class="fa-solid fa-plus"></i> Nova Aula</button>
                     </div>
-                    <button id="btn-add-plan" class="btn-primary">+ Nova Aula</button>
                 </div>
                 <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
                     <label class="switch-container" style="font-size: 0.9rem; cursor: pointer;">
@@ -243,6 +262,25 @@
         </div>
     </dialog>
 
+    <!-- MODAL: MESCLAGEM EM LOTE -->
+    <dialog id="planner-bulk-merge-modal" class="planner-bulk-merge-dialog">
+        <div class="details-modal-header">
+            <div>
+                <h3>Mesclar planejamentos</h3>
+                <p class="bulk-merge-description">Escolha qual aula será mantida. As atividades das demais serão acrescentadas a ela; data, hora, turma, duração e outros dados do destino serão preservados.</p>
+            </div>
+            <button type="button" id="btn-close-planner-bulk-merge" class="btn-secondary" aria-label="Fechar">×</button>
+        </div>
+        <label class="bulk-merge-target-label" for="planner-bulk-merge-target">Aula que será mantida (destino):
+            <select id="planner-bulk-merge-target" required></select>
+        </label>
+        <p id="planner-bulk-merge-summary" class="bulk-merge-summary"></p>
+        <div class="modal-actions">
+            <button type="button" id="btn-cancel-planner-bulk-merge" class="btn-secondary">Cancelar</button>
+            <button type="button" id="btn-confirm-planner-bulk-merge" class="btn-primary">Mesclar aulas</button>
+        </div>
+    </dialog>
+
     <!-- MODAL PLANNER -->
     <dialog id="planner-modal">
         <form id="planner-form">
@@ -306,27 +344,23 @@
                     </select>
                 </label>
 
-                <label>Série: 
-                    <select id="plan-serie" required>
-                        <option value="">Selecione...</option>
-                        <option value="6">6</option>
-                        <option value="7">7</option>
-                        <option value="8">8</option>
-                        <option value="9">9</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="__ADD_NEW__">+ Adicionar novo</option>
-                    </select>
-                </label>
-
-                <label>Turma: 
-                    <select id="plan-team" required>
-                        <option value="">Selecione...</option>
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                        <option value="__ADD_NEW__">+ Adicionar novo</option>
+                <label>Turma:
+                    <select id="plan-grade" required>
+                        <option value="">Selecione a turma...</option>
+                        <option value="6A">6A</option>
+                        <option value="6B">6B</option>
+                        <option value="6C">6C</option>
+                        <option value="7A">7A</option>
+                        <option value="7B">7B</option>
+                        <option value="7C">7C</option>
+                        <option value="8A">8A</option>
+                        <option value="8B">8B</option>
+                        <option value="9A">9A</option>
+                        <option value="9B">9B</option>
+                        <option value="9C">9C</option>
+                        <option value="1A">1A</option>
+                        <option value="2A">2A</option>
+                        <option value="3A">3A</option>
                     </select>
                 </label>
 
@@ -336,7 +370,8 @@
                     <div id="activities-toolbar" class="activities-toolbar" aria-label="Formatação das atividades">
                         <button type="button" data-format="heading" title="Título">H2</button><button type="button" data-format="bold" title="Negrito"><strong>B</strong></button><button type="button" data-format="italic" title="Itálico"><em>I</em></button><button type="button" data-format="bullet" title="Lista com marcadores">• Lista</button><button type="button" data-format="number" title="Lista numerada">1. Lista</button><button type="button" data-format="quote" title="Citação">❝</button><button type="button" data-format="code" title="Código">&lt;/&gt;</button><button type="button" data-format="divider" title="Divisor">―</button>
                     </div>
-                    <textarea id="plan-activities" rows="5" required placeholder="Escreva as atividades e use os botões para formatar..."></textarea>
+                    <textarea id="plan-activities" rows="5" required placeholder="# Título da aula&#10;&#10;Descreva as atividades e use os botões para formatar..."></textarea>
+                    <small class="activities-title-hint">A primeira linha deve conter o título neste formato: <strong># Título da aula</strong>.</small>
                     <div class="markdown-preview-label">Pré-visualização</div><div id="plan-activities-preview" class="markdown-preview"></div>
                 </label>
             </div>
