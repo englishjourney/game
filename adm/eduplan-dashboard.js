@@ -323,6 +323,7 @@ function setupGlobalSearch() {
     input.dataset.initialized = 'true';
 
     let searchSequence = 0;
+    let searchDebounce = null;
 
     const appendResultGroup = (label, items, idField, section, formatLabel) => {
         if (!items.length) return '';
@@ -337,6 +338,15 @@ function setupGlobalSearch() {
         '</div>';
     };
 
+    const highlightTarget = targetId => {
+        const target = document.getElementById(targetId);
+        if (!target) return false;
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.classList.add('search-result-highlight');
+        window.setTimeout(() => target.classList.remove('search-result-highlight'), 2200);
+        return true;
+    };
+
     const navigateToResult = button => {
         const sectionId = button.dataset.searchSection;
         const targetId = button.dataset.searchId;
@@ -346,20 +356,12 @@ function setupGlobalSearch() {
         input.value = '';
 
         if (sectionId === 'reminders-section') {
-            const scrollReminderWhenReady = () => {
-                const target = document.getElementById(targetId);
-                if (!target) return false;
-                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                target.classList.add('search-result-highlight');
-                window.setTimeout(() => target.classList.remove('search-result-highlight'), 2200);
-                return true;
-            };
-            const onRemindersLoaded = () => scrollReminderWhenReady();
+            const onRemindersLoaded = () => highlightTarget(targetId);
             document.addEventListener('reminders-section:loaded', onRemindersLoaded, { once: true });
             window.setTimeout(() => {
                 document.removeEventListener('reminders-section:loaded', onRemindersLoaded);
-                scrollReminderWhenReady();
-            }, 1200);
+                highlightTarget(targetId);
+            }, 1500);
             return;
         }
 
@@ -371,13 +373,14 @@ function setupGlobalSearch() {
             }
         }
 
-        window.setTimeout(() => {
-            const target = document.getElementById(targetId);
-            if (!target) return;
-            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            target.classList.add('search-result-highlight');
-            window.setTimeout(() => target.classList.remove('search-result-highlight'), 2200);
-        }, sectionId === 'reminders-section' ? 350 : 120);
+        if (sectionId === 'dashboard-section') {
+            Promise.resolve(window.refreshEduPlanDashboard?.()).finally(() => {
+                window.setTimeout(() => highlightTarget(targetId), 90);
+            });
+            return;
+        }
+
+        window.setTimeout(() => highlightTarget(targetId), 140);
     };
 
     resultsContainer.addEventListener('click', event => {
@@ -385,18 +388,24 @@ function setupGlobalSearch() {
         if (button) navigateToResult(button);
     });
 
-    input.addEventListener('input', async event => {
+    input.addEventListener('input', event => {
         const query = event.target.value.trim();
         const sequence = ++searchSequence;
         if (query.length < 2) {
+            window.clearTimeout(searchDebounce);
             resultsContainer.classList.add('hidden');
             resultsContainer.innerHTML = '';
             return;
         }
 
+        window.clearTimeout(searchDebounce);
         resultsContainer.innerHTML = '<div class="search-item search-loading"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Pesquisando em todo o painel...</div>';
         resultsContainer.classList.remove('hidden');
+        searchDebounce = window.setTimeout(() => performGlobalSearch(query, sequence), 240);
+    });
 
+    async function performGlobalSearch(query, sequence) {
+        if (sequence !== searchSequence) return;
         try {
             const { data: authData, error: authError } = await supabase.auth.getUser();
             if (authError || !authData.user) throw new Error('Sessão de professor não encontrada.');
@@ -405,8 +414,7 @@ function setupGlobalSearch() {
                 usersName, usersLogin, usersGrade,
                 plansActivity, plansSkill, plansGrade, plansTeam, plansDate, plansDay, plansTime,
                 tasksTitle, tasksDescription, tasksSerie, tasksTeam, tasksGrade,
-                scheduleResult,
-                missionsName,
+                scheduleResult, missionsName,
                 flashWords, flashTranslations, flashStacks,
                 remindersText
             ] = await Promise.all([
@@ -434,6 +442,15 @@ function setupGlobalSearch() {
             ]);
 
             if (sequence !== searchSequence) return;
+            const queryResults = [
+                usersName, usersLogin, usersGrade,
+                plansActivity, plansSkill, plansGrade, plansTeam, plansDate, plansDay, plansTime,
+                tasksTitle, tasksDescription, tasksSerie, tasksTeam, tasksGrade,
+                scheduleResult, missionsName, flashWords, flashTranslations, flashStacks, remindersText
+            ];
+            const failedQuery = queryResults.find(result => result?.error);
+            if (failedQuery) throw failedQuery.error;
+
             const combineUnique = (results, key = 'id') => {
                 const map = new Map();
                 results.forEach(result => (result.data || []).forEach(item => map.set(String(item[key]), item)));
@@ -445,9 +462,19 @@ function setupGlobalSearch() {
                 section: plan.completed_at ? 'completed-planner-section' : 'planner-section'
             }));
             const tasks = combineUnique([tasksTitle, tasksDescription, tasksSerie, tasksTeam, tasksGrade]);
+            const missions = missionsName.data || [];
+            const flashcards = combineUnique([flashWords, flashTranslations, flashStacks]);
+            const reminders = remindersText.data || [];
+
             const scheduleMatches = [];
             const scheduleRow = scheduleResult.data;
-            const weekdayLabels = { seg: 'Segunda-feira', ter: 'Terça-feira', qua: 'Quarta-feira', qui: 'Quinta-feira', sex: 'Sexta-feira' };
+            const weekdayLabels = {
+                seg: 'Segunda-feira',
+                ter: 'Terça-feira',
+                qua: 'Quarta-feira',
+                qui: 'Quinta-feira',
+                sex: 'Sexta-feira'
+            };
             const shiftLabels = { mat: 'Manhã', ves: 'Tarde' };
             const slotLabels = ['1º', '2º', '3º', '4º', 'Intervalo', '5º', '6º'];
             if (scheduleRow) {
@@ -467,9 +494,6 @@ function setupGlobalSearch() {
                     });
                 });
             }
-            const missions = missionsName.data || [];
-            const flashcards = combineUnique([flashWords, flashTranslations, flashStacks]);
-            const reminders = remindersText.data || [];
 
             const pieces = [];
             pieces.push(appendResultGroup('Aulas', scheduleMatches, 'id', 'dashboard-section', lesson =>
@@ -478,7 +502,7 @@ function setupGlobalSearch() {
             ));
             pieces.push(appendResultGroup('Trabalhos', tasks, 'id', 'tasks-section', task =>
                 '<strong>' + escapeHtml(task.title || 'Trabalho sem título') + '</strong>' +
-                '<span>' + escapeHtml((task.grades || []).join(', ') || 'Todas as turmas') + '</span>'
+                '<span>' + escapeHtml((task.grades || []).join(', ') || [task.serie, task.team].filter(Boolean).join('') || 'Todas as turmas') + '</span>'
             ));
             pieces.push(appendResultGroup('Planejamentos', plans, 'id', plan => plan.section, plan =>
                 '<strong>' + escapeHtml([plan.serie, plan.team].filter(Boolean).join('') || 'Aula') + '</strong>' +
@@ -508,13 +532,7 @@ function setupGlobalSearch() {
             console.error('Erro na pesquisa global:', error);
             resultsContainer.innerHTML = '<div class="search-item search-empty">Não foi possível realizar a pesquisa.</div>';
         }
-    });
-
-    document.addEventListener('click', event => {
-        if (!resultsContainer.contains(event.target) && event.target !== input) {
-            resultsContainer.classList.add('hidden');
-        }
-    });
+    }
 }
 
 function setupScheduleEditor() {
