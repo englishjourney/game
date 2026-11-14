@@ -17,6 +17,7 @@
 
   const SHOW_DELAY = 110;
   const MIN_VISIBLE_TIME = 440;
+  const HIDE_IDLE_DELAY = 520;
   const SUPABASE_HOST = "rmsmamzutvxugdbiqsrz.supabase.co";
 
   const styleLines = [
@@ -267,7 +268,7 @@
     }
     if (state.hideTimer) window.clearTimeout(state.hideTimer);
     const elapsed = Date.now() - state.shownAt;
-    const wait = Math.max(0, MIN_VISIBLE_TIME - elapsed);
+    const wait = Math.max(HIDE_IDLE_DELAY, MIN_VISIBLE_TIME - elapsed);
     state.hideTimer = window.setTimeout(() => {
       state.hideTimer = null;
       if (!hasActiveWork()) removeDialog();
@@ -323,12 +324,6 @@
 
       if (isSupabase && parsed.pathname.startsWith("/functions/v1/dialect-tts")) {
         // Dialect Duel has its own compact speaker spinner while audio is generated.
-        return false;
-      }
-
-      if (isSupabase && parsed.pathname === "/rest/v1/reminders" && method === "GET") {
-        // The admin panel checks reminder expiration in the background every 10 seconds.
-        // These silent status checks must not cover the entire page with the global loader.
         return false;
       }
 
