@@ -15,28 +15,33 @@ export function initUsers() {
         let found = false;
         document.querySelectorAll('.users-table tbody tr').forEach(row => {
             const teamSection = row.closest('.team-section');
-            const gradeHeader = teamSection?.querySelector('.team-header > span')?.innerText || '';
-            const grade = gradeHeader.replace(/^Turma:\\s*/i, '').trim();
+            const grade = teamSection?.querySelector('.team-grade-badge')?.textContent.trim() || '';
             const searchableText = `${row.innerText} ${grade}`.toLocaleLowerCase('pt-BR');
 
             if (searchableText.includes(q)) {
                 found = true;
                 const name = row.cells[0].innerText;
-                const div = document.createElement('div');
-                div.className = 'search-item';
+                const div = document.createElement('button');
+                div.type = 'button';
+                div.className = 'search-item search-result-item';
                 div.innerText = grade ? `${name} — Turma ${grade}` : name;
                 div.onclick = () => {
+                    const navButton = document.querySelector('.nav-btn[data-target="users-section"]');
+                    if (navButton) navButton.click();
                     const teamContent = teamSection && teamSection.querySelector('.team-content');
-                    const minimizeButton = teamSection && teamSection.querySelector('.team-header .minimize-btn');
+                    const toggleButton = teamSection && teamSection.querySelector('.team-header .team-toggle');
                     if (teamContent) teamContent.classList.remove('hidden');
-                    if (minimizeButton) {
-                        minimizeButton.textContent = 'Minimizar';
-                        minimizeButton.setAttribute('aria-expanded', 'true');
+                    if (toggleButton) {
+                        toggleButton.setAttribute('aria-expanded', 'true');
+                        toggleButton.setAttribute('aria-label', 'Recolher turma');
+                        toggleButton.title = 'Recolher turma';
+                        toggleButton.innerHTML = '<i class="fa-solid fa-chevron-up" aria-hidden="true"></i>';
                     }
                     row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    row.style.backgroundColor = 'rgba(56, 189, 248, 0.4)';
-                    setTimeout(() => row.style.backgroundColor = '', 2000);
+                    row.classList.add('search-result-highlight');
+                    setTimeout(() => row.classList.remove('search-result-highlight'), 3000);
                     resultsContainer.classList.add('hidden');
+                    searchInput.value = '';
                 };
                 resultsContainer.appendChild(div);
             }
@@ -87,7 +92,7 @@ async function loadUsers() {
                     <strong class="team-grade-badge">${team}</strong>
                     <span class="team-student-count">${users.length} ${users.length === 1 ? 'aluno' : 'alunos'}</span>
                 </div>
-                <button class="minimize-btn" aria-expanded="false" onclick="const content=this.parentElement.nextElementSibling; const isHidden=content.classList.toggle('hidden'); this.textContent=isHidden?'Expandir':'Recolher'; this.setAttribute('aria-expanded',String(!isHidden));">Expandir</button>
+                <button type="button" class="minimize-btn team-toggle" aria-label="Expandir turma" title="Expandir turma" aria-expanded="false"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button>
             </div>
             <div class="team-content hidden" style="overflow-x: auto;">
                 <table class="users-table">
@@ -120,6 +125,16 @@ async function loadUsers() {
         `;
     }
     container.innerHTML = html;
+    container.querySelectorAll('.team-toggle').forEach(button => {
+        button.addEventListener('click', () => {
+            const content = button.closest('.team-header').nextElementSibling;
+            const collapsed = content.classList.toggle('hidden');
+            button.setAttribute('aria-expanded', String(!collapsed));
+            button.setAttribute('aria-label', collapsed ? 'Expandir turma' : 'Recolher turma');
+            button.title = collapsed ? 'Expandir turma' : 'Recolher turma';
+            button.innerHTML = '<i class="fa-solid ' + (collapsed ? 'fa-chevron-down' : 'fa-chevron-up') + '" aria-hidden="true"></i>';
+        });
+    });
 }
 
 window.saveUser = async (id) => {
