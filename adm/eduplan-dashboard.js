@@ -350,6 +350,14 @@ function setupGlobalSearch() {
                 }
             }
 
+            if (ancestor.classList.contains('completed-class-panel') && ancestor.classList.contains('hidden')) {
+                const panelIndex = ancestor.dataset.completedPanel;
+                const tabsContainer = ancestor.closest('#completed-planner-container');
+                const tab = tabsContainer?.querySelector('[data-completed-tab="' + panelIndex + '"]');
+                if (tab) tab.click();
+                else ancestor.classList.remove('hidden');
+            }
+
             if (ancestor.classList.contains('team-content') && ancestor.classList.contains('hidden')) {
                 ancestor.classList.remove('hidden');
                 const toggle = ancestor.previousElementSibling?.querySelector('.minimize-btn');
