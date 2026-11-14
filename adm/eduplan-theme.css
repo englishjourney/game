@@ -2392,3 +2392,118 @@ dialog .markdown-preview-label { color: #6c5b91; }
     #task-modal form { padding: 0 16px 18px; }
     #task-modal .edu-modal-form-header { margin: 0 -16px 18px; }
 }
+
+
+/* Accordion controls: icon-only affordances across the requested sections. */
+#dashboard-section .schedule-day-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+#dashboard-section .schedule-day-title { flex: 1; }
+#dashboard-section .schedule-day-chevron { margin-left: auto; }
+#users-section .team-header .team-toggle {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 36px;
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    min-height: 36px;
+    padding: 0;
+    border: 1px solid #d8cbed;
+    border-radius: 50%;
+    background: #e9e1f7;
+    color: #352064 !important;
+    cursor: pointer;
+}
+#users-section .team-header .team-toggle:hover {
+    border-color: #bca9e4;
+    background: #ded3f1;
+}
+
+/* Planner sections start collapsed unless the current v3 cache records a manual choice. */
+#planner-section #planner-list .planner-section-content.hidden {
+    display: none !important;
+}
+
+/* Flashcard stacks start collapsed; their chevron is the sole expand/collapse control. */
+#flashcards-list .flashcard-stack-content[hidden] { display: none !important; }
+
+/* Search input and result panel use a pale surface with high-contrast dark text. */
+#adm-panel .admin-global-search {
+    border: 1px solid #ded5ed;
+    background: #fff !important;
+    color: #342653 !important;
+    box-shadow: 0 3px 12px rgba(53, 35, 95, .055);
+}
+#adm-panel .admin-global-search > i { color: #59437f !important; }
+#adm-panel .admin-global-search input,
+#adm-panel .admin-global-search input:focus {
+    background: transparent !important;
+    color: #211744 !important;
+    caret-color: #5128bb;
+}
+#adm-panel .admin-global-search input::placeholder { color: #716786 !important; opacity: 1; }
+#adm-panel #search-results {
+    border: 1px solid #ded5ed;
+    background: #fff !important;
+    color: #211744 !important;
+    box-shadow: 0 16px 40px rgba(37,22,79,.16);
+}
+#adm-panel #search-results .search-group-label { color: #6040a0 !important; }
+#adm-panel #search-results .search-result-item { color: #241947 !important; }
+#adm-panel #search-results .search-result-item strong { color: #211344 !important; }
+#adm-panel #search-results .search-result-item span { color: #615875 !important; }
+
+/* Three compact dots pulse inside the search bar only while the debounced request runs. */
+.global-search-loader {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 32px;
+    height: 24px;
+    margin-left: 2px;
+}
+.global-search-loader i {
+    display: block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #6b45b7;
+    animation: globalSearchDotBounce .72s ease-in-out infinite;
+}
+.global-search-loader i:nth-child(2) { animation-delay: .12s; }
+.global-search-loader i:nth-child(3) { animation-delay: .24s; }
+@keyframes globalSearchDotBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: .55; }
+    30% { transform: translateY(-5px); opacity: 1; }
+}
+
+/* Search hits stay visibly tinted for three seconds after navigation. */
+.search-result-highlight {
+    background: #fff0a8 !important;
+    outline: 3px solid rgba(139, 99, 24, .42) !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 6px rgba(255, 211, 85, .2) !important;
+    transition: background-color .2s ease, outline-color .2s ease, box-shadow .2s ease;
+}
+#users-section .users-table tbody tr.search-result-highlight,
+#users-section .users-table tbody tr.search-result-highlight td {
+    background: #fff0a8 !important;
+    color: #241947 !important;
+}
+#planner-section #planner-list .planner-card.search-result-highlight,
+#completed-planner-section .planner-card.search-result-highlight,
+#tasks-section .task-card.search-result-highlight,
+#missions-section .mission-card.search-result-highlight,
+#flashcards-list .flashcard-card.search-result-highlight,
+#reminders-section .admin-reminder-card.search-result-highlight {
+    background: #fff0a8 !important;
+}
+#dashboard-section .schedule-entry.search-result-highlight {
+    background: #fff0a8 !important;
+    color: #241947 !important;
+}
