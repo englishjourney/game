@@ -24,7 +24,7 @@ export function initFlashcardsAdm() {
 
     if (!flashcardsList || !btnAddFlashcard || !flashcardModal || !flashcardForm) return;
 
-    loadFlashcards();
+    const initialLoad = loadFlashcards();
 
     if (flashcardsList.dataset.stackToggleInitialized !== 'true') {
         flashcardsList.dataset.stackToggleInitialized = 'true';
@@ -108,6 +108,7 @@ export function initFlashcardsAdm() {
         flashcardModal.close();
         await loadFlashcards();
     });
+    return initialLoad;
 }
 
 async function loadFlashcards() {
