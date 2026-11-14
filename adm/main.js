@@ -293,8 +293,7 @@ async function loadSchedule() {
 
     const splitScheduleItems = value => String(value || '')
         .split(',')
-        .map(item => item.replace(/[\[\]]/g, '').trim())
-        .filter(Boolean);
+        .map(item => item.replace(/[\[\]]/g, '').trim());
 
     const renderScheduleEntry = (rawValue, slot) => {
         if (slot.interval) {
@@ -338,7 +337,7 @@ async function loadSchedule() {
 
     const renderShift = (value, config, shiftKey) => {
         const entries = splitScheduleItems(value);
-        const hasData = entries.length > 0;
+        const hasData = entries.some(Boolean);
         return '<section class="schedule-shift schedule-shift-' + shiftKey + '">' +
             '<header class="schedule-shift-header">' +
                 '<span class="schedule-shift-icon"><i class="fa-solid ' + config.icon + '" aria-hidden="true"></i></span>' +
