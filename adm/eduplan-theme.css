@@ -1647,6 +1647,12 @@ dialog .markdown-preview-label { color: #6c5b91; }
     filter: none !important;
     box-shadow: none !important;
 }
+#planner-section #planner-list .planner-card.card-special-1 .planner-card-info i,
+#planner-section #planner-list .planner-card.card-special-2 .planner-card-info i,
+#planner-section #planner-list .planner-card.card-special-3 .planner-card-info i,
+#planner-section #planner-list .planner-card.card-adapted .planner-card-info i {
+    color: #171326 !important;
+}
 #planner-section #planner-list .planner-card.card-special-1 .planner-type-chip,
 #planner-section #planner-list .planner-card.card-special-2 .planner-type-chip,
 #planner-section #planner-list .planner-card.card-special-3 .planner-type-chip,
@@ -1860,11 +1866,11 @@ dialog .markdown-preview-label { color: #6c5b91; }
 #planner-section #planner-list .planner-card.card-adapted .planner-actions-menu button:hover {
     background: #f5f1ff !important;
 }
-#planner-section #planner-list .planner-card .planner-card-meta .planner-card-tag {
+#planner-section #planner-list .planner-card:not(.card-special-1):not(.card-special-2):not(.card-special-3):not(.card-adapted) .planner-card-meta .planner-card-tag {
     background: rgba(255,255,255,.52) !important;
     border: 1px solid rgba(255,255,255,.8) !important;
     color: #171717 !important;
-    -webkit-text-stroke: .28px #fff;
+    -webkit-text-stroke: 0 !important;
 }
 
 
