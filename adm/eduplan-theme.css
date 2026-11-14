@@ -2269,13 +2269,13 @@ dialog .markdown-preview-label { color: #6c5b91; }
 }
 
 /* Stronger foreground for lesson duration text on both planner views. */
-#planner-section #planner-list .planner-card-meta > span:first-child,
-#completed-planner-section .planner-card-meta > span:first-child {
+#planner-section #planner-list .planner-card .planner-card-meta > span:first-child,
+#completed-planner-section .planner-card .planner-card-meta > span:first-child {
     color: #30234f !important;
     font-weight: 850 !important;
 }
-#planner-section #planner-list .planner-card-meta > span:first-child i,
-#completed-planner-section .planner-card-meta > span:first-child i {
+#planner-section #planner-list .planner-card .planner-card-meta > span:first-child i,
+#completed-planner-section .planner-card .planner-card-meta > span:first-child i {
     color: #483174 !important;
 }
 
