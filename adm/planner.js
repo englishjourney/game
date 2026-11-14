@@ -821,13 +821,15 @@ function renderPlannerCard(p, mode = 'active') {
         ' id="plan-card-' + escapePlannerHtml(p.id) + '" data-plan-id="' + escapePlannerHtml(p.id) + '" role="button" tabindex="0" aria-label="Ver detalhes: ' + escapePlannerHtml(getPlannerTitle(p)) + '">' +
         selectionControl +
         '<div class="data-card-info planner-card-info"><div class="planner-card-heading"><div class="planner-card-title-wrap">' + specialLabel +
-            '<h3 class="planner-card-title">' + escapePlannerHtml(getPlannerTitle(p)) + '</h3></div>' + actions + '</div>' +
+            '<div class="planner-card-title-line">' +
+                (grade ? '<span class="planner-card-grade"><i class="fa-solid fa-users" aria-hidden="true"></i>' + escapePlannerHtml(grade) + '</span>' : '') +
+                '<h3 class="planner-card-title">' + escapePlannerHtml(getPlannerTitle(p)) + '</h3>' +
+            '</div></div>' + actions + '</div>' +
             '<div class="planner-card-datetime">' +
                 (isCompleted ? '<span class="planner-completed-date"><i class="fa-regular fa-calendar" aria-hidden="true"></i> ' + escapePlannerHtml((p.day ? p.day + ' · ' : '') + (p.date || 'Sem data')) + '</span>' : '') +
                 '<strong><i class="fa-regular fa-clock" aria-hidden="true"></i> ' + escapePlannerHtml(p.time || 'Horário não definido') + '</strong>' +
             '</div>' +
             '<div class="planner-card-meta">' +
-            (grade ? '<span class="planner-card-grade"><small>Turma</small><strong>' + escapePlannerHtml(grade) + '</strong></span>' : '') +
             (p.duration ? '<span><i class="fa-regular fa-hourglass-half"></i> ' + escapePlannerHtml(p.duration) + '</span>' : '') +
             (p.tag ? '<span class="planner-card-tag"><i class="fa-solid fa-arrows-rotate"></i> ' + escapePlannerHtml(p.tag) + '</span>' : '') +
             (isCompleted && p.completed_at ? '<span class="completed-at"><i class="fa-solid fa-circle-check"></i> Concluída em ' + new Date(p.completed_at).toLocaleString('pt-BR') + '</span>' : '') +
