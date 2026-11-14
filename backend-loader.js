@@ -111,7 +111,7 @@
     "@media (prefers-reduced-motion: reduce) {",
     "  .ej-loader-star, .ej-loader-star-stage::after, .ej-loader-bubble-word > span, .ej-loader-bubble-word .ej-dots,",
     "  .ej-hs-loader-ring, .ej-hs-loader-orbit, .ej-hs-loader-core, .ej-hs-loader-progress > span { animation-duration: 2.8s; }",
-    "}"
+    "}",
     "/* Formal EduPlan ADM loader: sequential bounce, 4-second orbit, horizontal reset */",
     "dialog#global-loader.ej-loader-dialog[data-theme='admin']::backdrop { background: rgba(35,27,62,.25) !important; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }",
     "dialog#global-loader.ej-loader-dialog[data-theme='admin'] .ej-loader-content { gap: 12px; padding: 25px 32px; border: 1px solid rgba(231,224,246,.95) !important; border-radius: 22px !important; background: rgba(255,255,255,.97) !important; box-shadow: 0 20px 60px rgba(38,24,78,.15) !important; color: #23164f !important; }",
