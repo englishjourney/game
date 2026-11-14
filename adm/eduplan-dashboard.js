@@ -279,9 +279,16 @@ async function loadDashboard() {
     if (summary) summary.innerHTML = '<div class="dashboard-summary-loading"><i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Carregando resumo...</div>';
     if (schedule) schedule.innerHTML = '<div class="schedule-loading"><i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Carregando cronograma...</div>';
 
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) {
+        if (summary) summary.innerHTML = '<p class="dashboard-load-error">Entre novamente para visualizar seus horários.</p>';
+        if (schedule) schedule.innerHTML = '<p class="dashboard-load-error">Sua sessão expirou.</p>';
+        return;
+    }
+
     const [plannerResult, scheduleResult] = await Promise.all([
         supabase.from('planner').select('date,time,serie,team,completed_at').is('completed_at', null),
-        supabase.from('schedule').select('*').limit(1)
+        supabase.from('schedule').select('*').eq('owner', authData.user.id).maybeSingle()
     ]);
 
     if (plannerResult.error) {
@@ -360,12 +367,25 @@ function setupScheduleEditor() {
     openButton.dataset.initialized = 'true';
 
     openButton.addEventListener('click', async () => {
-        const { data, error } = await supabase.from('schedule').select('*').limit(1);
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError || !authData.user) {
+            alert('Sua sessão expirou. Entre novamente para editar os horários.');
+            return;
+        }
+
+        const { data, error } = await supabase
+            .from('schedule')
+            .select('*')
+            .eq('owner', authData.user.id)
+            .maybeSingle();
+
         if (error) {
             alert('Não foi possível abrir os horários: ' + error.message);
             return;
         }
-        scheduleRecord = data?.[0] || null;
+
+        // Nunca carregar ou reutilizar a linha legada sem owner.
+        scheduleRecord = data || null;
         renderScheduleEditor(scheduleRecord || {});
         modal.showModal();
     });
@@ -397,10 +417,24 @@ function setupScheduleEditor() {
             saveButton.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Salvando...';
         }
 
-        const { error } = await supabase.from('schedule').upsert({
-            ...(scheduleRecord?.id ? { id: scheduleRecord.id } : {}),
-            ...payload,
-        }, { onConflict: 'owner' });
+        // Atualiza somente o registro que pertence à sessão atual.
+        // Se o professor ainda não tiver uma linha, cria uma nova e deixa
+        // o banco preencher owner por meio de DEFAULT auth.uid().
+        const saveResult = scheduleRecord?.id
+            ? await supabase
+                .from('schedule')
+                .update(payload)
+                .eq('id', scheduleRecord.id)
+                .eq('owner', userData.user.id)
+                .select('id')
+                .single()
+            : await supabase
+                .from('schedule')
+                .insert(payload)
+                .select('id')
+                .single();
+
+        const { error } = saveResult;
 
         if (saveButton) {
             saveButton.disabled = false;
