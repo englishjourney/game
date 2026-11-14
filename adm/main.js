@@ -153,6 +153,8 @@ function setupNavigation() {
             const targetSection = document.getElementById(target);
             if (targetSection) {
                 targetSection.classList.remove('hidden');
+                const pageLabel = btn.querySelector('span')?.textContent?.trim();
+                if (pageLabel) document.title = pageLabel + ' | EduPlan';
                 if (target === 'reminders-section') {
                     loadRemindersSection();
                 }
@@ -168,18 +170,49 @@ function setupNavigation() {
     const menuToggle = document.getElementById('mobile-menu-toggle');
     const menuClose = document.getElementById('mobile-menu-close');
     const backdrop = document.getElementById('mobile-nav-backdrop');
+    const panel = document.getElementById('adm-panel');
+    const isDesktopSidebar = () => window.matchMedia('(min-width: 921px)').matches;
     const setMobileNav = open => {
         if (!menu || !backdrop) return;
         menu.classList.toggle('mobile-open', open);
         backdrop.classList.toggle('is-visible', open);
         backdrop.setAttribute('aria-hidden', String(!open));
-        if (menuToggle) menuToggle.setAttribute('aria-expanded', String(open));
+        if (menuToggle) {
+            menuToggle.setAttribute('aria-expanded', String(open));
+            menuToggle.setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
+        }
         document.body.classList.toggle('mobile-nav-active', open);
     };
-    if (menuToggle) menuToggle.addEventListener('click', () => setMobileNav(!menu.classList.contains('mobile-open')));
+    const setDesktopSidebar = collapsed => {
+        if (!panel || !menuToggle) return;
+        panel.classList.toggle('sidebar-collapsed', collapsed);
+        menuToggle.setAttribute('aria-expanded', String(!collapsed));
+        menuToggle.setAttribute('aria-label', collapsed ? 'Expandir menu' : 'Recolher menu');
+        menuToggle.title = collapsed ? 'Expandir menu' : 'Recolher menu';
+        const icon = menuToggle.querySelector('i');
+        if (icon) icon.className = collapsed ? 'fa-solid fa-angles-right' : 'fa-solid fa-angles-left';
+    };
+    if (menuToggle) {
+        menuToggle.addEventListener('click', () => {
+            if (isDesktopSidebar()) {
+                setDesktopSidebar(!panel?.classList.contains('sidebar-collapsed'));
+            } else {
+                setMobileNav(!menu.classList.contains('mobile-open'));
+            }
+        });
+    }
     if (menuClose) menuClose.addEventListener('click', () => setMobileNav(false));
     if (backdrop) backdrop.addEventListener('click', () => setMobileNav(false));
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') setMobileNav(false); });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') setMobileNav(false);
+    });
+    window.addEventListener('resize', () => {
+        if (isDesktopSidebar()) {
+            setMobileNav(false);
+        } else {
+            panel?.classList.remove('sidebar-collapsed');
+        }
+    });
 }
 
 async function setupDashboard() {
