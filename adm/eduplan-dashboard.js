@@ -121,12 +121,12 @@ function displayLesson(rawValue) {
     return { label: value, vacant: false, empty: false };
 }
 
-function renderSlot(rawValue, slot) {
+function renderSlot(rawValue, slot, dayId, shiftId) {
     const lesson = displayLesson(rawValue);
     const classes = ['schedule-entry'];
     if (lesson.vacant) classes.push('schedule-entry-vacant');
     if (lesson.empty) classes.push('schedule-entry-empty');
-    return '<div class="' + classes.join(' ') + '">' +
+    return '<div id="schedule-slot-' + dayId + '-' + shiftId + '-' + slot.index + '" class="' + classes.join(' ') + '">' +
         '<span class="schedule-entry-index">' + slot.label + '</span>' +
         '<span class="schedule-entry-content"><strong>' + escapeHtml(lesson.label) + '</strong></span>' +
         '<strong class="schedule-entry-time">' + slot.time + '</strong>' +
@@ -150,9 +150,9 @@ function renderShift(dayData, config, dayId, shiftId) {
             '<h4>' + config.label + '</h4>' +
         '</header>' +
         '<div class="schedule-period-list">' +
-            config.slots.slice(0, 4).map(slot => renderSlot(values[slot.index], slot)).join('') +
+            config.slots.slice(0, 4).map(slot => renderSlot(values[slot.index], slot, dayId, shiftId)).join('') +
             renderBreak(config.breakTime) +
-            config.slots.slice(4).map(slot => renderSlot(values[slot.index], slot)).join('') +
+            config.slots.slice(4).map(slot => renderSlot(values[slot.index], slot, dayId, shiftId)).join('') +
         '</div>' +
     '</section>';
 }
@@ -405,6 +405,7 @@ function setupGlobalSearch() {
                 usersName, usersLogin, usersGrade,
                 plansActivity, plansSkill, plansGrade, plansTeam, plansDate, plansDay, plansTime,
                 tasksTitle, tasksDescription, tasksSerie, tasksTeam, tasksGrade,
+                scheduleResult,
                 missionsName,
                 flashWords, flashTranslations, flashStacks,
                 remindersText
@@ -424,6 +425,7 @@ function setupGlobalSearch() {
                 supabase.from('tasks').select('id,title,description,grades,serie,team,deadline').eq('owner', authData.user.id).ilike('serie', pattern).limit(4),
                 supabase.from('tasks').select('id,title,description,grades,serie,team,deadline').eq('owner', authData.user.id).ilike('team', pattern).limit(4),
                 supabase.from('tasks').select('id,title,description,grades,serie,team,deadline').eq('owner', authData.user.id).contains('grades', [query.toUpperCase()]).limit(4),
+                supabase.from('schedule').select('*').eq('owner', authData.user.id).maybeSingle(),
                 supabase.from('missions').select('id,mission_name,mission_score,mission_link').ilike('mission_name', pattern).limit(4),
                 supabase.from('flashcards').select('id,word,translation,stack').ilike('word', pattern).limit(4),
                 supabase.from('flashcards').select('id,word,translation,stack').ilike('translation', pattern).limit(4),
@@ -443,11 +445,37 @@ function setupGlobalSearch() {
                 section: plan.completed_at ? 'completed-planner-section' : 'planner-section'
             }));
             const tasks = combineUnique([tasksTitle, tasksDescription, tasksSerie, tasksTeam, tasksGrade]);
+            const scheduleMatches = [];
+            const scheduleRow = scheduleResult.data;
+            const weekdayLabels = { seg: 'Segunda-feira', ter: 'Terça-feira', qua: 'Quarta-feira', qui: 'Quinta-feira', sex: 'Sexta-feira' };
+            const shiftLabels = { mat: 'Manhã', ves: 'Tarde' };
+            const slotLabels = ['1º', '2º', '3º', '4º', 'Intervalo', '5º', '6º'];
+            if (scheduleRow) {
+                Object.keys(weekdayLabels).forEach(dayId => {
+                    ['mat', 'ves'].forEach(shiftId => {
+                        const raw = String(scheduleRow[dayId + '_' + shiftId] || '');
+                        const values = raw.match(/\[([^\]]*)\]/g)?.map(item => item.slice(1, -1).trim()) || [];
+                        values.forEach((value, index) => {
+                            if (value.toLocaleLowerCase('pt-BR').includes(query.toLocaleLowerCase('pt-BR'))) {
+                                scheduleMatches.push({
+                                    id: 'schedule-slot-' + dayId + '-' + shiftId + '-' + index,
+                                    label: weekdayLabels[dayId] + ' • ' + shiftLabels[shiftId] + ' • ' + (slotLabels[index] || 'Horário'),
+                                    value
+                                });
+                            }
+                        });
+                    });
+                });
+            }
             const missions = missionsName.data || [];
             const flashcards = combineUnique([flashWords, flashTranslations, flashStacks]);
             const reminders = remindersText.data || [];
 
             const pieces = [];
+            pieces.push(appendResultGroup('Aulas', scheduleMatches, 'id', 'dashboard-section', lesson =>
+                '<strong>' + escapeHtml(lesson.label) + '</strong>' +
+                '<span>' + escapeHtml(lesson.value) + '</span>'
+            ));
             pieces.push(appendResultGroup('Trabalhos', tasks, 'id', 'tasks-section', task =>
                 '<strong>' + escapeHtml(task.title || 'Trabalho sem título') + '</strong>' +
                 '<span>' + escapeHtml((task.grades || []).join(', ') || 'Todas as turmas') + '</span>'
