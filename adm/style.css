@@ -1592,3 +1592,817 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .planner-card.card-special-3 .planner-card-meta > span {
     background: transparent !important;
 }
+
+
+
+/* =========================================================
+   ADMIN PANEL — unified dark interface across every section
+   ========================================================= */
+:root {
+    --bg-dark: #080f1c;
+    --bg-card: #101d2e;
+    --primary: #7dd3fc;
+    --primary-hover: #38bdf8;
+    --text-main: #f4f7fb;
+    --text-muted: #9aacc2;
+    --border: #293b52;
+    --danger: #fb7185;
+    --success: #34d399;
+    --surface-raised: #17273b;
+    --surface-soft: #0d1929;
+    --accent-violet: #a78bfa;
+}
+body {
+    color: var(--text-main);
+    background:
+        radial-gradient(ellipse at 12% -12%, rgba(14, 165, 233, .14), transparent 34%),
+        radial-gradient(ellipse at 100% 16%, rgba(124, 58, 237, .08), transparent 28%),
+        var(--bg-dark);
+}
+#adm-panel { min-height: 100vh; }
+#adm-panel > header {
+    position: sticky;
+    top: 0;
+    z-index: 4000;
+    min-height: 70px;
+    padding: 14px clamp(14px, 3vw, 30px);
+    border-bottom: 1px solid rgba(125, 153, 184, .16);
+    background: rgba(12, 23, 39, .92);
+    backdrop-filter: blur(18px);
+    box-shadow: 0 8px 28px rgba(0,0,0,.18);
+}
+#adm-panel > header h1 {
+    color: #e6f6ff;
+    font-size: clamp(1rem, 2vw, 1.35rem);
+    font-weight: 850;
+    letter-spacing: -.025em;
+}
+#adm-panel > header .header-controls { gap: 12px; }
+#adm-navigation {
+    position: sticky;
+    top: 70px;
+    z-index: 3500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px clamp(12px, 3vw, 30px);
+    border-bottom: 1px solid rgba(125, 153, 184, .13);
+    background: rgba(12, 23, 39, .9);
+    backdrop-filter: blur(16px);
+}
+#adm-navigation .nav-btn {
+    min-height: 39px;
+    padding: 9px 13px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: #9eafc4;
+    font-size: .85rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+#adm-navigation .nav-btn.active,
+#adm-navigation .nav-btn:hover {
+    border-color: rgba(125, 211, 252, .2);
+    border-bottom-color: rgba(125, 211, 252, .2);
+    background: rgba(56, 189, 248, .12);
+    color: #c7efff;
+}
+main {
+    width: min(100%, 1600px);
+    margin: 0 auto;
+    padding: clamp(14px, 2.6vw, 30px);
+}
+.content-section { min-width: 0; animation: adminSectionIn .2s ease-out; }
+@keyframes adminSectionIn {
+    from { opacity: .72; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.content-section > .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(125, 153, 184, .16);
+}
+.content-section > .section-header h2 {
+    color: #f1f7fd;
+    font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+    font-weight: 850;
+    letter-spacing: -.035em;
+}
+.content-section > .section-header > button,
+.content-section > .section-header .btn-primary {
+    min-height: 41px;
+    padding: 9px 14px;
+    border-radius: 11px;
+}
+.section-description {
+    margin: -7px 0 17px;
+    color: #93a8c0;
+    font-size: .88rem;
+}
+button {
+    border-radius: 10px;
+    font-weight: 700;
+    letter-spacing: -.005em;
+}
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: 2px solid #7dd3fc;
+    outline-offset: 2px;
+}
+.btn-primary {
+    color: #062034;
+    background: linear-gradient(135deg, #a5e5ff, #5cc8f5);
+    box-shadow: 0 5px 16px rgba(56, 189, 248, .15);
+}
+.btn-primary:hover { background: linear-gradient(135deg, #c5f0ff, #8bdcff); }
+.btn-secondary {
+    color: #e1ebf6;
+    background: #1b2b40;
+    border: 1px solid #354b66;
+}
+.btn-secondary:hover { color: #fff; background: #263c56; border-color: #526e8d; }
+.btn-danger { background: #a3344e; color: #fff; }
+.btn-danger:hover { background: #c33d5a; }
+.search-bar input,
+#global-search,
+#users-search {
+    border: 1px solid #30445e !important;
+    border-radius: 12px !important;
+    background: #0d1a2b !important;
+    color: #f0f6fc !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+}
+.search-bar input::placeholder { color: #71869f; }
+#search-results, #users-search-results {
+    overflow: hidden;
+    border: 1px solid #3a506b !important;
+    border-radius: 12px !important;
+    background: #13243a !important;
+    box-shadow: 0 14px 36px rgba(0,0,0,.4);
+}
+.search-item {
+    border-bottom: 1px solid rgba(125,153,184,.12);
+    color: #dce8f5;
+}
+.search-item:hover { background: #1b3550; }
+
+/* Today's lesson panel */
+.today-plans-panel {
+    overflow: hidden;
+    margin: 0 0 22px;
+    border: 1px solid #2d435e;
+    border-radius: 17px;
+    background: linear-gradient(145deg, rgba(19, 36, 57, .98), rgba(12, 25, 42, .98));
+    box-shadow: 0 10px 28px rgba(0,0,0,.16);
+}
+.today-plans-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 17px 19px;
+    border-bottom: 1px solid rgba(125,153,184,.15);
+}
+.today-plans-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #e9f6ff;
+    font-size: 1rem;
+    font-weight: 850;
+}
+.today-plans-header h3 i { color: #79d4ff; }
+.today-plans-header > span { color: #9fb2c8; font-size: .8rem; }
+.today-plans-list { display: grid; gap: 0; padding: 5px 16px; }
+.today-plan-item {
+    display: grid;
+    grid-template-columns: 76px minmax(0,1fr);
+    gap: 14px;
+    padding: 14px 3px;
+    border-bottom: 1px solid rgba(125,153,184,.12);
+}
+.today-plan-item:last-child { border-bottom: 0; }
+.today-plan-time {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 9px 7px;
+    border: 1px solid rgba(125,211,252,.26);
+    border-radius: 10px;
+    background: rgba(14,165,233,.12);
+    color: #bcecff;
+    font-size: .88rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+}
+.today-plan-details { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.today-plan-grade {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-height: 34px;
+    padding: 6px 12px;
+    border: 1px solid rgba(125,211,252,.34);
+    border-radius: 10px;
+    background: rgba(56,189,248,.14);
+    color: #d1f2ff;
+    font-size: .92rem;
+    font-weight: 900;
+    letter-spacing: .015em;
+}
+.today-plan-type {
+    display: inline-flex;
+    padding: 5px 9px;
+    border: 1px solid rgba(167,139,250,.28);
+    border-radius: 999px;
+    background: rgba(139,92,246,.13);
+    color: #d8cbff;
+    font-size: .72rem;
+    font-weight: 800;
+}
+.today-plan-activities { flex: 1 1 100%; min-width: 0; margin-top: 2px; }
+.today-plan-activities small {
+    display: block;
+    margin-bottom: 4px;
+    color: #8196ad;
+    font-size: .68rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.today-plan-activities p { color: #c6d4e4; font-size: .84rem; line-height: 1.55; overflow-wrap: anywhere; }
+.today-plans-empty, .today-plans-loading { padding: 22px; color: #91a5bd; text-align: center; }
+
+/* Weekly timetable — each configured period has its own time and class */
+.schedule-week-grid { display: grid; grid-template-columns: 1fr; gap: 17px; }
+.schedule-day-card {
+    overflow: hidden;
+    border: 1px solid #2c4059;
+    border-radius: 17px;
+    background: linear-gradient(145deg, #132238, #0e1a2b);
+    box-shadow: 0 9px 25px rgba(0,0,0,.16);
+}
+.schedule-day-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 18px;
+    border-bottom: 1px solid rgba(125,153,184,.17);
+    background: rgba(255,255,255,.018);
+}
+.schedule-day-mark {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(125,211,252,.24);
+    border-radius: 10px;
+    background: rgba(56,189,248,.12);
+    color: #8ad9ff;
+}
+.schedule-day-header h3 { color: #eff8ff; font-size: 1rem; font-weight: 850; }
+.schedule-shifts-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; padding: 14px; }
+.schedule-shift {
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid rgba(125,153,184,.13);
+    border-radius: 13px;
+    background: rgba(5,15,27,.32);
+}
+.schedule-shift-header {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(125,153,184,.15);
+}
+.schedule-shift-icon {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: rgba(56,189,248,.13);
+    color: #8cddff;
+}
+.schedule-shift-afternoon .schedule-shift-icon {
+    background: rgba(167,139,250,.13);
+    color: #c2afff;
+}
+.schedule-shift-header h4 { color: #edf6ff; font-size: .9rem; font-weight: 850; }
+.schedule-shift-header small { display: block; margin-top: 2px; color: #849ab2; font-size: .68rem; }
+.schedule-period-list { display: grid; gap: 6px; }
+.schedule-entry {
+    display: grid;
+    grid-template-columns: 39px minmax(0,1fr) auto;
+    align-items: center;
+    gap: 8px;
+    min-height: 49px;
+    padding: 7px 9px;
+    border: 1px solid rgba(125,153,184,.12);
+    border-radius: 10px;
+    background: rgba(255,255,255,.035);
+}
+.schedule-entry-index {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 27px;
+    border-radius: 7px;
+    background: rgba(125,153,184,.1);
+    color: #93aac3;
+    font-size: .68rem;
+    font-weight: 850;
+    font-variant-numeric: tabular-nums;
+}
+.schedule-entry-content { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; min-width: 0; }
+.schedule-entry-content > strong {
+    color: #dce8f6;
+    font-size: .79rem;
+    font-weight: 750;
+    overflow-wrap: anywhere;
+}
+.schedule-grade-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 27px;
+    padding: 4px 9px;
+    border: 1px solid rgba(125,211,252,.35);
+    border-radius: 8px;
+    background: rgba(14,165,233,.15);
+    color: #c6efff;
+    font-size: .76rem;
+    font-weight: 950;
+    letter-spacing: .025em;
+    white-space: nowrap;
+}
+.schedule-entry-time {
+    color: #a8c7df;
+    font-size: .78rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.schedule-entry-break {
+    border-color: rgba(167,139,250,.26);
+    background: rgba(139,92,246,.09);
+}
+.schedule-entry-break .schedule-entry-index,
+.schedule-entry-break .schedule-entry-label {
+    color: #d6c8ff;
+}
+.schedule-entry-break .schedule-entry-label { font-size: .79rem; font-weight: 850; }
+.schedule-entry-break .schedule-entry-index {
+    background: rgba(139,92,246,.15);
+    color: #c8b5ff;
+}
+.schedule-entry-break .schedule-entry-time { color: #c8b5ff; }
+.schedule-entry-vacant {
+    border-style: dashed;
+    border-color: rgba(245, 190, 88, .28);
+    background: rgba(245, 158, 11, .06);
+}
+.schedule-entry-vacant .schedule-entry-content > strong { color: #e9c98d; }
+.schedule-entry-status { color: #c99e50; font-size: .66rem; font-weight: 800; }
+.schedule-entry-empty { opacity: .52; }
+.schedule-entry-empty .schedule-entry-content > strong { color: #8495a9; font-weight: 600; font-style: italic; }
+.schedule-loading { padding: 35px 18px; color: #91a7bf; text-align: center; }
+.schedule-loading i { margin-right: 7px; color: #7dd3fc; }
+.schedule-error { border-color: rgba(251,113,133,.26); color: #fda4af; }
+
+/* Stronger class chip on all planner cards */
+.planner-card-meta { align-items: center; }
+.planner-card-grade {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px !important;
+    min-height: 36px;
+    padding: 5px 11px;
+    border: 1px solid rgba(125,211,252,.32);
+    border-radius: 10px;
+    background: rgba(14,165,233,.13);
+    color: #d6f3ff !important;
+}
+.planner-card-grade small {
+    color: #8cc9e6;
+    font-size: .66rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+.planner-card-grade strong {
+    color: #e8f9ff !important;
+    font-size: .96rem;
+    font-weight: 950;
+    letter-spacing: .035em;
+}
+.planner-card-datetime { margin-top: 8px; }
+.planner-card-datetime > strong {
+    min-height: 34px;
+    padding: 7px 11px;
+    font-size: .88rem;
+}
+.planner-card-meta > span:not(.planner-card-grade) { color: #a0b2c7; }
+
+/* Adapted lessons: no text stroke, no blur, stable contrast */
+.data-card.card-adapted,
+.planner-card.card-adapted {
+    position: relative;
+    overflow: hidden;
+    padding-left: 21px;
+    border: 1px solid rgba(255,255,255,.22) !important;
+    border-left: 4px solid #c084fc !important;
+    background: linear-gradient(145deg, #1a2440, #132139 58%, #1e1b3a) !important;
+    color: #f7f4ff !important;
+    box-shadow: 0 9px 25px rgba(0,0,0,.22), inset 0 0 0 1px rgba(255,255,255,.025);
+}
+.data-card.card-adapted .data-card-info,
+.data-card.card-adapted .data-card-info p,
+.data-card.card-adapted .data-card-info strong,
+.data-card.card-adapted .data-card-info span,
+.data-card.card-adapted .planner-card-title,
+.data-card.card-adapted .planner-card-meta,
+.data-card.card-adapted .planner-card-grade,
+.data-card.card-adapted .planner-card-grade strong,
+.data-card.card-adapted .planner-card-grade small,
+.data-card.card-adapted .planner-card-datetime,
+.data-card.card-adapted .planner-card-datetime strong,
+.data-card.card-adapted .adapted-label {
+    color: #f4f1ff !important;
+    -webkit-text-stroke: 0 !important;
+    text-shadow: none !important;
+    paint-order: normal !important;
+    filter: none !important;
+}
+.data-card.card-adapted .planner-card-title { font-weight: 900; }
+.data-card.card-adapted .planner-type-chip,
+.data-card.card-adapted .adapted-label {
+    color: #eadcff !important;
+    border-color: rgba(216,180,254,.35) !important;
+    background: rgba(168,85,247,.18) !important;
+    text-shadow: none !important;
+    -webkit-text-stroke: 0 !important;
+}
+.data-card.card-adapted .planner-card-grade {
+    background: rgba(56,189,248,.15) !important;
+    border-color: rgba(125,211,252,.35) !important;
+}
+.data-card.card-adapted .planner-card-datetime > strong {
+    background: rgba(8,16,31,.55) !important;
+    border-color: rgba(255,255,255,.14) !important;
+}
+
+/* Student groups and grade visibility */
+.team-section {
+    overflow: hidden;
+    margin-bottom: 16px;
+    border: 1px solid #2b405a;
+    border-radius: 15px;
+    background: #101d2e;
+    box-shadow: 0 7px 20px rgba(0,0,0,.14);
+}
+.team-header {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    background: linear-gradient(110deg, #1a3049, #14243a) !important;
+    color: #eaf5ff !important;
+}
+.team-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; min-width: 0; }
+.team-heading-label {
+    color: #9fb4ca;
+    font-size: .72rem;
+    font-weight: 850;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+}
+.team-grade-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    min-height: 36px;
+    padding: 5px 13px;
+    border: 1px solid rgba(125,211,252,.42);
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(14,165,233,.24), rgba(56,189,248,.1));
+    color: #d6f4ff;
+    font-size: 1.02rem;
+    font-weight: 950;
+    letter-spacing: .055em;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+}
+.team-student-count { color: #90a6bd; font-size: .77rem; font-weight: 650; }
+.team-header .minimize-btn {
+    min-height: 32px;
+    padding: 6px 10px;
+    border: 1px solid rgba(125,211,252,.22);
+    border-radius: 9px;
+    background: rgba(56,189,248,.08);
+    color: #b9eaff !important;
+    font-size: .75rem;
+}
+.team-content { background: #0e1928; }
+.users-table { color: #dce7f3; }
+.users-table thead { background: #182a40; }
+.users-table th {
+    position: sticky;
+    top: 0;
+    background: #182a40;
+    color: #9eb4cb;
+    font-size: .72rem;
+    font-weight: 850;
+    letter-spacing: .045em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.users-table th, .users-table td {
+    padding: 11px 12px;
+    border-bottom: 1px solid rgba(125,153,184,.12);
+}
+.users-table td { color: #d8e4f0; }
+.users-table tbody tr { background: rgba(255,255,255,.012); }
+.users-table tbody tr:nth-child(even) { background: rgba(255,255,255,.028); }
+.users-table tbody tr:hover { background: rgba(56,189,248,.08); }
+.users-table td:first-child { color: #f1f6fb; font-weight: 800; }
+.editable-input {
+    width: 58px;
+    min-height: 32px;
+    border: 1px solid #354b65;
+    border-radius: 8px;
+    background: #0a1626;
+    color: #e9f3fc;
+}
+#users-container { display: grid; gap: 4px; }
+
+/* Tasks: clearer filter chips, grade tags and cards */
+.tasks-filters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 17px;
+    padding: 11px;
+    border: 1px solid rgba(125,153,184,.13);
+    border-radius: 14px;
+    background: rgba(15,29,47,.7);
+}
+.tasks-filter-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 36px;
+    padding: 7px 10px;
+    border: 1px solid #344a64;
+    border-radius: 10px;
+    background: #14243a;
+    color: #aebfd2;
+    font-size: .78rem;
+    font-weight: 800;
+}
+.tasks-filter-button.active {
+    border-color: rgba(125,211,252,.48);
+    background: rgba(14,165,233,.16);
+    color: #d4f2ff;
+}
+.tasks-filter-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 21px;
+    height: 21px;
+    border-radius: 7px;
+    background: rgba(255,255,255,.08);
+    color: #b8c9dc;
+    font-size: .7rem;
+}
+.task-card {
+    border-radius: 15px;
+    border-color: #2d425d;
+    background: linear-gradient(145deg, #14243a, #101d30);
+}
+.task-card > .data-card-info > p:first-child strong {
+    color: #f0f6fd;
+    font-size: 1.02rem;
+    font-weight: 850;
+}
+.task-grade-badges { gap: 7px; margin: 9px 0 10px; }
+.task-grade-badge {
+    min-height: 30px;
+    padding: 5px 11px;
+    border: 1px solid rgba(125,211,252,.34);
+    border-radius: 9px;
+    background: rgba(14,165,233,.14);
+    color: #c8efff;
+    font-size: .84rem;
+    font-weight: 950;
+    letter-spacing: .025em;
+}
+.task-card .task-description { color: #a9bbcf; line-height: 1.55; }
+.task-card.is-expired { border-color: rgba(251,113,133,.42); }
+.task-expired-label {
+    display: inline-flex;
+    padding: 3px 7px;
+    border-radius: 6px;
+    background: rgba(251,113,133,.15);
+    color: #fda4af;
+    font-size: .64rem;
+    font-weight: 900;
+}
+.task-empty-state, .task-grade-empty { color: #90a5bc; }
+
+/* Missions and flashcards */
+#missions-list .data-card {
+    border-radius: 15px;
+    border-color: #2d425d;
+    background: linear-gradient(145deg, #14243a, #101d30);
+}
+#missions-list .data-card-info p:first-child strong {
+    color: #f0f6fd;
+    font-size: 1.02rem;
+    font-weight: 850;
+}
+#missions-list .data-card-info p { color: #a9bbcf; line-height: 1.5; }
+#flashcards-list .stack-group {
+    margin: 0 0 22px !important;
+    padding: 15px;
+    border: 1px solid #2c405a;
+    border-radius: 16px;
+    background: rgba(16,29,46,.72);
+}
+#flashcards-list .stack-group h3 {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0 0 13px !important;
+    padding: 0 0 11px !important;
+    border-bottom: 1px solid rgba(125,153,184,.2) !important;
+    color: #c6ecff !important;
+    font-size: 1rem;
+}
+#flashcards-list .card-item {
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 9px !important;
+    padding: 13px 14px !important;
+    border: 1px solid #2d425c !important;
+    border-radius: 12px !important;
+    background: #14243a !important;
+    color: #e8f0f8 !important;
+}
+#flashcards-list .card-item strong { color: #d6f1ff; }
+#flashcards-list .card-item small { color: #9bb0c7 !important; }
+#flashcards-list .card-item > div:last-child { display: flex; gap: 7px; flex-wrap: wrap; }
+#flashcards-list .card-item button {
+    min-height: 34px;
+    padding: 7px 10px !important;
+    border-radius: 8px !important;
+    font-size: .76rem;
+}
+
+/* Reminders */
+#reminder-items-container { display: grid; gap: 10px; }
+#reminder-items-container > div {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0 !important;
+    padding: 15px !important;
+    border: 1px solid #2e435e !important;
+    border-radius: 14px !important;
+    background: linear-gradient(145deg,#14243a,#101d30) !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,.12);
+}
+#reminder-items-container > div > div:first-child { min-width: 0; }
+#reminder-items-container > div > div:first-child strong {
+    color: #eff7ff !important;
+    font-size: .96rem !important;
+    line-height: 1.4;
+}
+#reminder-items-container > div > div:first-child small { color: #8edaff !important; }
+#reminder-items-container > div > div:last-child { display: flex; flex-wrap: wrap; gap: 7px !important; }
+#reminder-items-container > div button {
+    min-height: 34px;
+    padding: 7px 10px !important;
+    border-radius: 8px !important;
+    font-size: .75rem !important;
+}
+
+/* Modals and forms shared by every section */
+dialog {
+    border: 1px solid #3a506b;
+    border-radius: 18px;
+    background: linear-gradient(145deg, #17283e, #0f1c2e);
+    color: #edf5fc;
+    box-shadow: 0 24px 70px rgba(0,0,0,.48);
+}
+dialog::backdrop { background: rgba(2,8,17,.78); backdrop-filter: blur(5px); }
+dialog h3, dialog h4 { color: #c7edff; }
+dialog form > h3,
+dialog .details-modal-header h3,
+dialog .merge-modal-header h3 {
+    margin-bottom: 7px;
+    color: #e6f6ff;
+    font-size: 1.2rem;
+    font-weight: 900;
+    letter-spacing: -.02em;
+}
+.form-grid { gap: 16px; }
+.form-grid label { color: #adbed1; font-size: .83rem; font-weight: 700; }
+.form-grid input,
+.form-grid textarea,
+.form-grid select,
+.reminder-modal input,
+.reminder-modal textarea {
+    border: 1px solid #344a65;
+    border-radius: 9px;
+    background: #0b1728;
+    color: #f3f7fb;
+}
+.form-grid input:focus,
+.form-grid textarea:focus,
+.form-grid select:focus,
+.reminder-modal input:focus,
+.reminder-modal textarea:focus {
+    border-color: #65c9f5;
+    box-shadow: 0 0 0 3px rgba(56,189,248,.12);
+    outline: none;
+}
+.form-grid textarea { line-height: 1.55; }
+.modal-actions { gap: 9px; margin-top: 17px; }
+.modal-actions button { min-height: 39px; padding: 9px 14px; }
+.detail-mini-card {
+    border: 1px solid #2f4560;
+    border-radius: 12px;
+    background: #101e31;
+}
+.detail-mini-card h4 { color: #8bdcff; }
+.planner-details-dialog,
+.planner-merge-dialog,
+.planner-bulk-merge-dialog { border-radius: 18px; }
+.reminder-modal {
+    border: 1px solid #3a506b;
+    border-radius: 17px;
+    background: linear-gradient(145deg, #17283e, #0f1c2e);
+    box-shadow: 0 24px 70px rgba(0,0,0,.48);
+}
+.reminder-modal h3 { color: #d9f3ff; }
+
+/* Mobile refinements across all admin pages */
+@media (max-width: 900px) {
+    #adm-navigation { overflow-x: auto; }
+    .schedule-shifts-grid { gap: 9px; padding: 10px; }
+    .schedule-shift { padding: 9px; }
+    .schedule-entry { grid-template-columns: 34px minmax(0,1fr) auto; gap: 6px; padding: 6px; }
+    .schedule-grade-badge { padding: 3px 7px; font-size: .72rem; }
+}
+@media (max-width: 760px) {
+    #adm-panel > header { position: relative; }
+    #adm-navigation { top: 0; }
+    main { padding: 14px 11px calc(25px + env(safe-area-inset-bottom)); }
+    .content-section > .section-header { align-items: stretch; }
+    .content-section > .section-header h2 { font-size: 1.25rem; }
+    .content-section > .section-header > button { width: 100%; }
+    #dashboard-section > .section-header { flex-direction: column; }
+    #dashboard-section .search-bar { width: 100%; max-width: none !important; }
+    .schedule-shifts-grid { grid-template-columns: 1fr; }
+    .schedule-day-card { border-radius: 14px; }
+    .schedule-day-header { padding: 12px 14px; }
+    .schedule-shift-header { margin-bottom: 8px; }
+    .today-plan-item { grid-template-columns: 64px minmax(0,1fr); gap: 10px; }
+    .today-plans-header { padding: 14px; }
+    .today-plans-list { padding: 4px 12px; }
+    #reminder-items-container > div { align-items: flex-start; flex-direction: column; }
+    #reminder-items-container > div > div:last-child { width: 100%; }
+    #reminder-items-container > div button { flex: 1 1 0; }
+    #flashcards-list .card-item { align-items: flex-start; flex-direction: column; }
+    #flashcards-list .card-item > div:last-child { width: 100%; }
+    #flashcards-list .card-item button { flex: 1 1 0; }
+    .team-header { padding: 12px !important; }
+    .team-grade-badge { min-width: 43px; min-height: 33px; font-size: .94rem; }
+    .tasks-filters { padding: 9px; }
+    .task-card { align-items: stretch; }
+    .task-card .data-card-actions { width: 100%; }
+}
+@media (max-width: 420px) {
+    .today-plan-item { grid-template-columns: 58px minmax(0,1fr); }
+    .today-plan-time { font-size: .78rem; }
+    .today-plan-grade { min-height: 31px; font-size: .83rem; }
+    .schedule-entry { grid-template-columns: 31px minmax(0,1fr) auto; }
+    .schedule-entry-index { font-size: .62rem; }
+    .schedule-entry-content > strong { font-size: .74rem; }
+    .schedule-entry-time { font-size: .71rem; }
+    .team-heading { gap: 6px; }
+    .team-heading-label { font-size: .64rem; }
+    .team-student-count { font-size: .68rem; }
+    .team-header .minimize-btn { padding: 5px 8px; }
+}
