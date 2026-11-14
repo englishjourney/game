@@ -33,7 +33,9 @@ export function initPlanner() {
         
         document.getElementById('plan-time').required = !(isEsp || isFlg || isPrv);
         document.getElementById('plan-grade').required = !(isEsp || isFlg || isPrv);
-        document.getElementById('plan-activities').required = !(isFlg || isPrv);
+        const activitiesEditor = document.getElementById('plan-activities');
+        activitiesEditor.required = !(isFlg || isPrv);
+        if (!activitiesEditor.required) activitiesEditor.setCustomValidity('');
         document.getElementById('plan-end-date').required = isPrv;
         
         document.getElementById('label-end-date').classList.toggle('hidden', !isPrv);
@@ -1550,6 +1552,10 @@ function setupActivitiesEditor() {
         }
         updatePreview();
     });
-    editor.addEventListener('input', updatePreview);
+    editor.addEventListener('input', () => {
+        const firstLine = editor.value.split(/\r?\n/, 1)[0] || '';
+        if (!editor.required || /^#\s+\S.*$/.test(firstLine)) editor.setCustomValidity('');
+        updatePreview();
+    });
     updatePreview();
 }
