@@ -81,9 +81,13 @@ async function loadUsers() {
     for (const [team, users] of Object.entries(teams)) {
         html += `
         <div class="team-section">
-            <div class="team-header" style="display:flex; justify-content:space-between; align-items:center;">
-                <span>Turma: ${team}</span>
-                <button class="minimize-btn" style="color:var(--primary);" aria-expanded="false" onclick="const content=this.parentElement.nextElementSibling; const isHidden=content.classList.toggle('hidden'); this.textContent=isHidden?'Maximizar':'Minimizar'; this.setAttribute('aria-expanded',String(!isHidden));">Maximizar</button>
+            <div class="team-header">
+                <div class="team-heading">
+                    <span class="team-heading-label">Turma</span>
+                    <strong class="team-grade-badge">${team}</strong>
+                    <span class="team-student-count">${users.length} ${users.length === 1 ? 'aluno' : 'alunos'}</span>
+                </div>
+                <button class="minimize-btn" aria-expanded="false" onclick="const content=this.parentElement.nextElementSibling; const isHidden=content.classList.toggle('hidden'); this.textContent=isHidden?'Expandir':'Recolher'; this.setAttribute('aria-expanded',String(!isHidden));">Expandir</button>
             </div>
             <div class="team-content hidden" style="overflow-x: auto;">
                 <table class="users-table">
