@@ -329,9 +329,11 @@
 
     <!-- MODAL: MERGE DE AULAS -->
     <dialog id="planner-merge-modal" class="planner-merge-dialog">
-        <div class="merge-modal-header">
-            <div>
-                <h3>Merge de aulas</h3>
+        <div class="merge-modal-header edu-modal-header">
+            <span class="edu-modal-mark"><i class="fa-solid fa-object-group" aria-hidden="true"></i></span>
+            <div class="edu-modal-heading-copy">
+                <small>PLANEJAMENTOS</small>
+                <h3>Mesclar aulas</h3>
                 <p>Una as atividades de duas aulas da mesma turma.</p>
             </div>
             <button type="button" id="btn-close-planner-merge" class="btn-secondary" aria-label="Fechar">×</button>
@@ -387,8 +389,10 @@
 
     <!-- MODAL: MESCLAGEM EM LOTE -->
     <dialog id="planner-bulk-merge-modal" class="planner-bulk-merge-dialog">
-        <div class="details-modal-header">
-            <div>
+        <div class="details-modal-header edu-modal-header">
+            <span class="edu-modal-mark"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span>
+            <div class="edu-modal-heading-copy">
+                <small>PLANEJAMENTOS</small>
                 <h3>Mesclar planejamentos</h3>
                 <p class="bulk-merge-description">Escolha qual aula será mantida. As atividades das demais serão acrescentadas a ela; data, hora, turma, duração e outros dados do destino serão preservados.</p>
             </div>
@@ -407,9 +411,13 @@
     <!-- MODAL: REMARCAR TODA A SEÇÃO DO PLANNER -->
     <dialog id="planner-reschedule-modal" class="planner-reschedule-dialog">
         <form id="planner-reschedule-form">
-            <div class="planner-reschedule-heading">
-                <h3>Remarcar seção</h3>
-                <p>Escolha a nova data para todas as aulas desta seção.</p>
+            <div class="planner-reschedule-heading edu-modal-header">
+                <span class="edu-modal-mark"><i class="fa-solid fa-calendar-day" aria-hidden="true"></i></span>
+                <span class="edu-modal-heading-copy">
+                    <small>PLANEJAMENTOS</small>
+                    <h3>Remarcar seção</h3>
+                    <p>Escolha a nova data para todas as aulas desta seção.</p>
+                </span>
             </div>
             <p id="planner-reschedule-current" class="planner-reschedule-current"></p>
             <p id="planner-reschedule-count" class="planner-reschedule-count"></p>
