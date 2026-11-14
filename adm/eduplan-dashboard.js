@@ -338,9 +338,61 @@ function setupGlobalSearch() {
         '</div>';
     };
 
+    const revealTargetAncestors = target => {
+        let ancestor = target.parentElement;
+        while (ancestor && ancestor !== document.body) {
+            if (ancestor.classList.contains('planner-section-content') && ancestor.classList.contains('hidden')) {
+                ancestor.classList.remove('hidden');
+                const toggle = ancestor.closest('.planner-section')?.querySelector('[data-toggle-planner-section]');
+                if (toggle) {
+                    toggle.textContent = 'Minimizar';
+                    toggle.setAttribute('aria-expanded', 'true');
+                }
+            }
+
+            if (ancestor.classList.contains('team-content') && ancestor.classList.contains('hidden')) {
+                ancestor.classList.remove('hidden');
+                const toggle = ancestor.previousElementSibling?.querySelector('.minimize-btn');
+                if (toggle) {
+                    toggle.textContent = 'Recolher';
+                    toggle.setAttribute('aria-expanded', 'true');
+                }
+            }
+
+            if (ancestor.classList.contains('flashcard-stack-content') && ancestor.hidden) {
+                ancestor.hidden = false;
+                const toggle = ancestor.previousElementSibling;
+                if (toggle?.matches('[data-flashcard-stack-toggle]')) {
+                    toggle.setAttribute('aria-expanded', 'true');
+                    const chevron = toggle.querySelector('.flashcard-stack-chevron');
+                    chevron?.classList.add('fa-chevron-up');
+                    chevron?.classList.remove('fa-chevron-down');
+                }
+            }
+
+            if (ancestor.classList.contains('schedule-day-content') && ancestor.hidden) {
+                ancestor.hidden = false;
+                const toggle = ancestor.previousElementSibling;
+                const card = ancestor.closest('[data-day-card]');
+                card?.classList.add('is-open');
+                if (toggle?.matches('[data-day-toggle]')) {
+                    toggle.setAttribute('aria-expanded', 'true');
+                    const label = toggle.querySelector('.schedule-day-toggle-label');
+                    if (label) label.textContent = 'Minimizar';
+                    const chevron = toggle.querySelector('.schedule-day-chevron');
+                    chevron?.classList.add('fa-chevron-up');
+                    chevron?.classList.remove('fa-chevron-down');
+                }
+            }
+
+            ancestor = ancestor.parentElement;
+        }
+    };
+
     const highlightTarget = targetId => {
         const target = document.getElementById(targetId);
         if (!target) return false;
+        revealTargetAncestors(target);
         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         target.classList.add('search-result-highlight');
         window.setTimeout(() => target.classList.remove('search-result-highlight'), 2200);
