@@ -23,7 +23,7 @@ export function initUsers() {
                 const name = row.cells[0].innerText;
                 const div = document.createElement('button');
                 div.type = 'button';
-                div.className = 'search-item search-result-item';
+                div.className = 'search-item search-result-item users-search-result';
                 div.innerText = grade ? `${name} — Turma ${grade}` : name;
                 div.onclick = () => {
                     const navButton = document.querySelector('.nav-btn[data-target="users-section"]');
