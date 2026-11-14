@@ -78,8 +78,8 @@ export function initTasks() {
     });
 
     // Carrega os grades disponíveis e os trabalhos uma vez ao abrir a seção.
-    loadTaskGrades();
-    loadTasks();
+    const initialLoad = Promise.all([loadTaskGrades(), loadTasks()]);
+    return initialLoad;
 }
 
 function escapeTaskHtml(value) {
