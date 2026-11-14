@@ -276,9 +276,13 @@ async function loadTodayPlans() {
     container.innerHTML = '<div class="today-plans-panel"><div class="today-plans-loading">Carregando aulas de hoje...</div></div>';
 
     try {
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError || !authData.user) throw new Error('Sessão de professor não encontrada.');
+
         const { data, error } = await supabase
             .from('planner')
             .select('date, time, serie, team, activities, special, tag')
+            .eq('owner', authData.user.id)
             .is('completed_at', null);
 
         if (error) throw error;
@@ -783,9 +787,11 @@ async function checkRemindersStatus(options = {}) {
     notificationCheckInProgress = true;
     try {
         const now = Date.now();
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError || !authData.user) throw new Error('Sessão de professor não encontrada.');
         const [remindersResult, tasksResult] = await Promise.all([
             supabase.from('reminders').select('id, remindMeTo, date, time'),
-            supabase.from('tasks').select('id, title, serie, team, deadline')
+            supabase.from('tasks').select('id, title, serie, team, deadline').eq('owner', authData.user.id)
         ]);
         if (remindersResult.error) throw remindersResult.error;
         if (tasksResult.error) console.warn('Não foi possível consultar os prazos dos trabalhos:', tasksResult.error);

@@ -90,14 +90,17 @@ function getWeekDates() {
 }
 
 function readScheduleValues(value) {
-    if (!value) return ['', '', '', '', 'Intervalo', '', ''];
+    if (!value) return ['', '', '', '', '', '', ''];
     const matches = String(value).match(/\[([^\]]*)\]/g);
     const values = matches
         ? matches.map(item => item.slice(1, -1).trim())
         : String(value).split(',').map(item => item.replace(/[\[\]]/g, '').trim());
-    const normalized = Array.from({ length: 7 }, (_, index) => values[index] || '');
-    normalized[4] = 'Intervalo';
-    return normalized;
+    return Array.from({ length: 7 }, (_, index) => values[index] || '');
+}
+
+function shiftHasLessons(data, dayId, shiftId) {
+    const values = readScheduleValues(data[dayId + '_' + shiftId]);
+    return [0, 1, 2, 3, 5, 6].some(index => Boolean(String(values[index] || '').trim()));
 }
 
 function displayLesson(rawValue) {
@@ -139,6 +142,7 @@ function renderBreak(time) {
 }
 
 function renderShift(dayData, config, dayId, shiftId) {
+    if (!shiftHasLessons(dayData, dayId, shiftId)) return '';
     const values = readScheduleValues(dayData[dayId + '_' + shiftId]);
     return '<section class="schedule-shift schedule-shift-' + (shiftId === 'mat' ? 'morning' : 'afternoon') + '">' +
         '<header class="schedule-shift-header">' +
@@ -161,8 +165,13 @@ function renderSchedule(data) {
     const currentWeekday = (new Date().getDay() + 6) % 7;
     const defaultOpenIndex = Math.min(currentWeekday, 4);
 
-    const dayCards = weekDates.map((day, index) => {
-        const isOpen = index === defaultOpenIndex;
+    const visibleDays = weekDates.filter(day =>
+        shiftHasLessons(data, day.id, 'mat') || shiftHasLessons(data, day.id, 'ves')
+    );
+    const firstOpenDayId = visibleDays.find(day => day.id === weekDates[defaultOpenIndex]?.id)?.id || visibleDays[0]?.id;
+
+    const dayCards = visibleDays.map(day => {
+        const isOpen = day.id === firstOpenDayId;
         const dateLabel = day.date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
         return '<article class="schedule-day-card ' + (isOpen ? 'is-open' : '') + '" data-day-card="' + day.id + '">' +
             '<button type="button" class="schedule-day-header" data-day-toggle="' + day.id + '" aria-expanded="' + String(isOpen) + '">' +
@@ -287,7 +296,7 @@ async function loadDashboard() {
     }
 
     const [plannerResult, scheduleResult] = await Promise.all([
-        supabase.from('planner').select('date,time,serie,team,completed_at').is('completed_at', null),
+        supabase.from('planner').select('date,time,serie,team,completed_at').eq('owner', authData.user.id).is('completed_at', null),
         supabase.from('schedule').select('*').eq('owner', authData.user.id).maybeSingle()
     ]);
 
@@ -304,7 +313,7 @@ async function loadDashboard() {
         return;
     }
 
-    scheduleRecord = scheduleResult.data?.[0] || null;
+    scheduleRecord = scheduleResult.data || null;
     renderSchedule(scheduleRecord || {});
 }
 
@@ -325,9 +334,11 @@ function setupGlobalSearch() {
         resultsContainer.classList.remove('hidden');
 
         try {
+            const { data: authData, error: authError } = await supabase.auth.getUser();
+            if (authError || !authData.user) throw new Error('Sessão de professor não encontrada.');
             const [usersResult, plansResult] = await Promise.all([
                 supabase.from('users').select('name, username, grade').ilike('name', '%' + query + '%').limit(5),
-                supabase.from('planner').select('serie, team, activities').ilike('activities', '%' + query + '%').limit(5)
+                supabase.from('planner').select('serie, team, activities').eq('owner', authData.user.id).ilike('activities', '%' + query + '%').limit(5)
             ]);
 
             let html = '';
@@ -402,11 +413,17 @@ function setupScheduleEditor() {
         const payload = {};
         WEEKDAYS.forEach(day => {
             ['mat', 'ves'].forEach(shiftId => {
-                const values = ['', '', '', '', 'Intervalo', '', ''];
+                const values = ['', '', '', '', '', '', ''];
                 form.querySelectorAll('[data-schedule-field][data-day="' + day.id + '"][data-shift="' + shiftId + '"]').forEach(input => {
                     values[Number(input.dataset.index)] = input.value.trim();
                 });
-                payload[day.id + '_' + shiftId] = values.map(value => '[' + value.replace(/[\[\]]/g, '') + ']').join(', ');
+                const hasLessons = [0, 1, 2, 3, 5, 6].some(index => values[index]);
+                if (hasLessons) {
+                    values[4] = 'Intervalo';
+                    payload[day.id + '_' + shiftId] = values.map(value => '[' + value.replace(/[\[\]]/g, '') + ']').join(', ');
+                } else {
+                    payload[day.id + '_' + shiftId] = null;
+                }
             });
         });
 
