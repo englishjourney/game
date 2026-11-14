@@ -279,9 +279,16 @@ async function loadDashboard() {
     if (summary) summary.innerHTML = '<div class="dashboard-summary-loading"><i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Carregando resumo...</div>';
     if (schedule) schedule.innerHTML = '<div class="schedule-loading"><i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Carregando cronograma...</div>';
 
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) {
+        if (summary) summary.innerHTML = '<p class="dashboard-load-error">Entre novamente para visualizar seu cronograma.</p>';
+        if (schedule) schedule.innerHTML = '<div class="empty-state schedule-error">Sua sessão expirou. Entre novamente.</div>';
+        return;
+    }
+
     const [plannerResult, scheduleResult] = await Promise.all([
         supabase.from('planner').select('date,time,serie,team,completed_at').is('completed_at', null),
-        supabase.from('schedule').select('*').limit(1)
+        supabase.from('schedule').select('*').eq('owner', authData.user.id).maybeSingle()
     ]);
 
     if (plannerResult.error) {
@@ -360,12 +367,24 @@ function setupScheduleEditor() {
     openButton.dataset.initialized = 'true';
 
     openButton.addEventListener('click', async () => {
-        const { data, error } = await supabase.from('schedule').select('*').limit(1);
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError || !authData.user) {
+            alert('Sua sessão expirou. Entre novamente para editar os horários.');
+            return;
+        }
+
+        // A consulta sempre procura o registro do professor autenticado.
+        // Uma linha legada com owner NULL nunca é usada como registro de edição.
+        const { data, error } = await supabase
+            .from('schedule')
+            .select('*')
+            .eq('owner', authData.user.id)
+            .maybeSingle();
         if (error) {
             alert('Não foi possível abrir os horários: ' + error.message);
             return;
         }
-        scheduleRecord = data?.[0] || null;
+        scheduleRecord = data || null;
         renderScheduleEditor(scheduleRecord || {});
         modal.showModal();
     });
@@ -397,18 +416,45 @@ function setupScheduleEditor() {
             saveButton.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Salvando...';
         }
 
-        const { error } = await supabase.from('schedule').upsert({
-            ...(scheduleRecord?.id ? { id: scheduleRecord.id } : {}),
-            ...payload,
-        }, { onConflict: 'owner' });
+        let saveError = null;
+        try {
+            // Busca exclusivamente o horário deste professor antes de decidir
+            // entre atualizar a própria linha ou inserir uma nova.
+            const { data: ownSchedule, error: lookupError } = await supabase
+                .from('schedule')
+                .select('id')
+                .eq('owner', userData.user.id)
+                .maybeSingle();
 
-        if (saveButton) {
-            saveButton.disabled = false;
-            saveButton.innerHTML = '<i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Salvar horários';
+            if (lookupError) throw lookupError;
+
+            if (ownSchedule) {
+                const { error } = await supabase
+                    .from('schedule')
+                    .update(payload)
+                    .eq('id', ownSchedule.id)
+                    .eq('owner', userData.user.id);
+                if (error) throw error;
+            } else {
+                // Não informa id nem owner: o Postgres gera um novo id e
+                // define owner com auth.uid(). A linha legada permanece intacta.
+                const { error } = await supabase
+                    .from('schedule')
+                    .insert(payload);
+                if (error) throw error;
+            }
+        } catch (error) {
+            saveError = error;
+        } finally {
+            if (saveButton) {
+                saveButton.disabled = false;
+                saveButton.innerHTML = '<i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Salvar horários';
+            }
         }
 
-        if (error) {
-            alert('Erro ao salvar horários: ' + error.message);
+        if (saveError) {
+            console.error('Erro ao salvar horários do professor:', saveError);
+            alert('Erro ao salvar horários: ' + saveError.message);
             return;
         }
         modal.close();
