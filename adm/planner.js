@@ -1696,44 +1696,62 @@ window.viewPlanner = id => {
     if (!p) return;
     selectedPlannerItem = p;
 
-    const types = { 0: 'Aula regular', 1: 'Aula especial', 2: 'Folga', 3: 'Prova', 4: 'Aula adaptada' };
-    const fields = [
+    const special = Number(p.special || 0);
+    const types = { 0: 'Regular', 1: 'Especial', 2: 'Folga', 3: 'Prova', 4: 'Adaptada' };
+    const typeIcons = {
+        0: 'fa-graduation-cap',
+        1: 'fa-star',
+        2: 'fa-calendar-xmark',
+        3: 'fa-file-circle-check',
+        4: 'fa-puzzle-piece'
+    };
+    const facts = [
         { label: 'Data', value: p.date || 'Não informada', icon: 'fa-calendar-days' },
         { label: 'Hora', value: p.time || 'Não informada', icon: 'fa-clock' },
-        { label: 'Dia da semana', value: p.day || 'Não informado', icon: 'fa-calendar-check' },
+        { label: 'Dia da Semana', value: p.day || 'Não informado', icon: 'fa-calendar-days' },
         { label: 'Turma', value: formatPlannerGrade(p) || 'Não informada', icon: 'fa-users' },
-        { label: 'Duração', value: p.duration || 'Não informada', icon: 'fa-hourglass-half' },
-        { label: 'Tipo', value: types[p.special] || 'Aula regular', icon: 'fa-graduation-cap' },
-        { label: 'Tag', value: p.tag || 'Nenhuma', icon: 'fa-tag', isTag: true }
+        { label: 'Duração', value: p.duration || 'Não informada', icon: 'fa-hourglass-half' }
     ];
 
     const title = getPlannerTitle(p);
     const heading = document.getElementById('planner-detail-heading');
     if (heading) heading.textContent = title;
+    const mark = document.querySelector('#planner-details-modal .edu-modal-mark i');
+    if (mark) mark.className = 'fa-solid ' + (special === 4 ? 'fa-puzzle-piece' : 'fa-book-open');
+
     const grid = document.getElementById('planner-details-grid');
+    const tag = p.tag || (special === 2 ? 'Folga' : 'Original desta data');
     grid.innerHTML =
-        fields.map(field =>
-            '<article class="detail-mini-card planner-detail-meta' + (field.isTag ? ' planner-detail-tag' : '') + '">' +
-                '<span class="detail-card-icon"><i class="fa-solid ' + field.icon + '" aria-hidden="true"></i></span>' +
-                '<div><h4>' + escapePlannerHtml(field.label) + '</h4>' +
-                (field.isTag
-                    ? '<p><span class="planner-detail-tag-value">' + escapePlannerHtml(field.value) + '</span></p>'
-                    : '<p>' + escapePlannerHtml(field.value) + '</p>') +
-                '</div>' +
-            '</article>'
-        ).join('') +
-        '<article class="detail-mini-card full-width planner-detail-section planner-detail-skills">' +
-            '<h4><i class="fa-solid fa-list-check" aria-hidden="true"></i> Habilidades (BNCC e Competências)</h4>' +
+        '<div class="planner-details-facts">' +
+            facts.map(field =>
+                '<div class="planner-detail-fact">' +
+                    '<i class="fa-solid ' + field.icon + '" aria-hidden="true"></i>' +
+                    '<div><span>' + escapePlannerHtml(field.label) + '</span><strong>' + escapePlannerHtml(field.value) + '</strong></div>' +
+                '</div>'
+            ).join('') +
+        '</div>' +
+        '<div class="planner-details-classification">' +
+            '<div class="planner-detail-classification-card planner-detail-type special-type-' + special + '">' +
+                '<i class="fa-solid ' + typeIcons[special] + '" aria-hidden="true"></i>' +
+                '<div><span>Tipo</span><strong>' + escapePlannerHtml(types[special] || 'Regular') + '</strong></div>' +
+            '</div>' +
+            '<div class="planner-detail-classification-card planner-detail-tag-card">' +
+                '<i class="fa-solid fa-tag" aria-hidden="true"></i>' +
+                '<div><span>Tag</span><strong>' + escapePlannerHtml(tag) + '</strong></div>' +
+            '</div>' +
+        '</div>' +
+        '<section class="planner-detail-section planner-detail-skills">' +
+            '<h4><i class="fa-solid fa-list-ul" aria-hidden="true"></i> Habilidades (BNCC e Competências)</h4>' +
             '<div class="planner-markdown-content">' +
                 (p.skills
                     ? String(p.skills).split(/[,;\n]+/).map(skill => skill.trim()).filter(Boolean).map(skill => '<span class="planner-skill-chip">' + escapePlannerHtml(skill) + '</span>').join('')
-                    : '<p>Não informado</p>') +
+                    : '<span class="planner-skill-chip">Não informado</span>') +
             '</div>' +
-        '</article>' +
-        '<article class="detail-mini-card full-width planner-detail-section planner-detail-activities">' +
+        '</section>' +
+        '<section class="planner-detail-section planner-detail-activities">' +
             '<h4><i class="fa-solid fa-file-lines" aria-hidden="true"></i> Atividades</h4>' +
             '<div class="planner-markdown-content">' + (p.activities ? renderPlannerMarkdown(p.activities) : '<p>Não informado</p>') + '</div>' +
-        '</article>';
+        '</section>';
 
     document.getElementById('planner-details-modal').showModal();
 };
