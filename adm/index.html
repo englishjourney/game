@@ -148,7 +148,11 @@
 <!-- === MODAL: NOVO / EDITAR LEMBRETE === -->
 <div id="modal-reminder-form" class="reminder-modal-overlay hidden">
     <div class="reminder-modal">
-        <h3 id="reminder-modal-title">Novo Lembrete</h3>
+        <header class="edu-modal-header edu-reminder-header">
+            <span class="edu-modal-mark"><i class="fa-regular fa-bell" aria-hidden="true"></i></span>
+            <span class="edu-modal-heading-copy"><small>LEMBRETES</small><h3 id="reminder-modal-title">Novo Lembrete</h3><p>Defina o que lembrar e quando.</p></span>
+            <button type="button" class="edu-modal-close" aria-label="Fechar" id="btn-close-reminder-form"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        </header>
         <input type="hidden" id="reminder-edit-id" value="">
         
         <label for="reminder-text">Lembrete (remindMeTo):</label>
@@ -420,9 +424,13 @@
     </dialog>
 
     <!-- MODAL PLANNER -->
-    <dialog id="planner-modal">
+    <dialog id="planner-modal" class="edu-form-dialog edu-planner-form-dialog">
         <form id="planner-form">
-            <h3 id="planner-modal-title">Adicionar Aula</h3>
+            <header class="edu-modal-header edu-modal-form-header">
+                <span class="edu-modal-mark"><i class="fa-solid fa-book-open" aria-hidden="true"></i></span>
+                <span class="edu-modal-heading-copy"><small>PLANEJAMENTOS</small><h3 id="planner-modal-title">Adicionar Aula</h3><p>Organize os dados, habilidades e atividades desta aula.</p></span>
+                <button type="button" class="edu-modal-close" aria-label="Fechar" onclick="this.closest('dialog').close()"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </header>
             <input type="hidden" id="plan-id">
             <div class="form-grid">
                 <!-- OPÇÕES ESPECIAIS E SWITCHER ÚLTIMA TURMA -->
@@ -531,15 +539,30 @@
     </dialog>
 
     <!-- MODAL: DETALHES DA AULA -->
-    <dialog id="planner-details-modal" class="planner-details-dialog">
-        <div class="details-modal-header"><h3>Detalhes da aula</h3><button type="button" class="btn-secondary" onclick="document.getElementById('planner-details-modal').close()" aria-label="Fechar">×</button></div>
-        <div id="planner-details-grid" class="planner-details-grid"></div>
-        <div class="modal-actions details-modal-actions"><button type="button" id="btn-edit-planner-from-details" class="btn-primary">Editar aula</button><button type="button" class="btn-secondary" onclick="document.getElementById('planner-details-modal').close()">Fechar</button></div>
+    <dialog id="planner-details-modal" class="planner-details-dialog edu-details-dialog">
+        <div class="edu-modal-shell">
+            <header class="edu-modal-header edu-details-header">
+                <span class="edu-modal-mark"><i class="fa-solid fa-book-open" aria-hidden="true"></i></span>
+                <span class="edu-modal-heading-copy"><small>PLANO DE AULA</small><h3 id="planner-detail-heading">Detalhes da aula</h3><p>Informações, habilidades e atividades planejadas.</p></span>
+                <button type="button" class="edu-modal-close" onclick="this.closest('dialog').close()" aria-label="Fechar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </header>
+            <div id="planner-details-grid" class="planner-details-grid"></div>
+            <footer class="modal-actions details-modal-actions">
+                <button type="button" id="btn-edit-planner-from-details" class="btn-primary"><i class="fa-solid fa-pen" aria-hidden="true"></i> Editar plano de aula</button>
+                <button type="button" class="btn-secondary" onclick="this.closest('dialog').close()"><i class="fa-solid fa-xmark" aria-hidden="true"></i> Fechar</button>
+            </footer>
+        </div>
     </dialog>
 
     <!-- MODAL: NOVO / EDITAR TRABALHO -->
-    <dialog id="task-modal">
-        <form id="task-form"><h3 id="task-modal-title">Novo trabalho pendente</h3><input type="hidden" id="task-id">
+    <dialog id="task-modal" class="edu-form-dialog">
+        <form id="task-form">
+            <header class="edu-modal-header edu-modal-form-header">
+                <span class="edu-modal-mark"><i class="fa-regular fa-clipboard" aria-hidden="true"></i></span>
+                <span class="edu-modal-heading-copy"><small>TRABALHOS</small><h3 id="task-modal-title">Novo trabalho pendente</h3><p>Defina as orientações, turmas e prazo de entrega.</p></span>
+                <button type="button" class="edu-modal-close" aria-label="Fechar" onclick="this.closest('dialog').close()"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </header>
+            <input type="hidden" id="task-id">
             <div class="form-grid">
                 <label class="full-width">Título: <input id="task-title" type="text" maxlength="160" required></label>
                 <label class="full-width">Descrição: <textarea id="task-description" rows="4" placeholder="Orientações do trabalho (opcional)"></textarea></label>
@@ -557,9 +580,13 @@
     </dialog>
 
     <!-- MODAL MISSIONS -->
-    <dialog id="mission-modal">
+    <dialog id="mission-modal" class="edu-form-dialog">
         <form id="mission-form">
-            <h3 id="mission-modal-title">Adicionar Missão</h3>
+            <header class="edu-modal-header edu-modal-form-header">
+                <span class="edu-modal-mark"><i class="fa-solid fa-trophy" aria-hidden="true"></i></span>
+                <span class="edu-modal-heading-copy"><small>MISSÕES</small><h3 id="mission-modal-title">Adicionar Missão</h3><p>Configure o desafio e a recompensa para os alunos.</p></span>
+                <button type="button" class="edu-modal-close" aria-label="Fechar" onclick="this.closest('dialog').close()"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </header>
             <input type="hidden" id="mission-id">
             <div class="form-grid">
                 <label class="full-width">Nome da Missão: <input type="text" id="mission-name" required></label>
@@ -574,9 +601,13 @@
     </dialog>
 
     <!-- MODAL FLASHCARDS -->
-    <dialog id="flashcard-modal">
+    <dialog id="flashcard-modal" class="edu-form-dialog">
         <form id="flashcard-form">
-            <h3 id="flashcard-modal-title">Adicionar Flashcard</h3>
+            <header class="edu-modal-header edu-modal-form-header">
+                <span class="edu-modal-mark"><i class="fa-regular fa-clone" aria-hidden="true"></i></span>
+                <span class="edu-modal-heading-copy"><small>FLASHCARDS</small><h3 id="flashcard-modal-title">Adicionar Flashcard</h3><p>Cadastre a palavra, sua tradução e o áudio relacionado.</p></span>
+                <button type="button" class="edu-modal-close" aria-label="Fechar" onclick="this.closest('dialog').close()"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </header>
             <input type="hidden" id="flashcard-id">
             <div class="form-grid">
                 <label class="full-width">Palavra (Word): <input type="text" id="fc-word" required></label>
@@ -594,13 +625,11 @@
     <!-- MODAL: EDIÇÃO DOS HORÁRIOS SEMANAIS -->
     <dialog id="schedule-editor-modal" class="schedule-editor-dialog">
         <form id="schedule-editor-form">
-            <div class="schedule-editor-heading">
-                <div>
-                    <h3>Editar horários</h3>
-                    <p>Organize as aulas da manhã e da tarde para cada dia da semana.</p>
-                </div>
-                <button type="button" id="btn-cancel-schedule-editor" class="icon-close-button" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
-            </div>
+            <header class="edu-modal-header edu-modal-form-header schedule-editor-heading">
+                <span class="edu-modal-mark"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i></span>
+                <span class="edu-modal-heading-copy"><small>CRONOGRAMA SEMANAL</small><h3>Editar horários</h3><p>Organize as aulas da manhã e da tarde para cada dia da semana.</p></span>
+                <button type="button" id="btn-cancel-schedule-editor" class="edu-modal-close" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+            </header>
             <div id="schedule-editor-fields" class="schedule-editor-fields"></div>
             <div class="modal-actions schedule-editor-actions">
                 <button type="button" id="btn-cancel-schedule-editor-footer" class="btn-secondary">Cancelar</button>
