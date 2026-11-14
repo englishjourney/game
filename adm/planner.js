@@ -1687,7 +1687,11 @@ window.viewPlanner = id => {
         ).join('') +
         '<article class="detail-mini-card full-width planner-detail-section planner-detail-skills">' +
             '<h4><i class="fa-solid fa-list-check" aria-hidden="true"></i> Habilidades (BNCC e Competências)</h4>' +
-            '<div class="planner-markdown-content">' + (p.skills ? renderPlannerMarkdown(p.skills) : '<p>Não informado</p>') + '</div>' +
+            '<div class="planner-markdown-content">' +
+                (p.skills
+                    ? String(p.skills).split(/[,;\\n]+/).map(skill => skill.trim()).filter(Boolean).map(skill => '<span class="planner-skill-chip">' + escapePlannerHtml(skill) + '</span>').join('')
+                    : '<p>Não informado</p>') +
+            '</div>' +
         '</article>' +
         '<article class="detail-mini-card full-width planner-detail-section planner-detail-activities">' +
             '<h4><i class="fa-solid fa-file-lines" aria-hidden="true"></i> Atividades</h4>' +
