@@ -345,6 +345,24 @@ function setupGlobalSearch() {
         resultsContainer.classList.add('hidden');
         input.value = '';
 
+        if (sectionId === 'reminders-section') {
+            const scrollReminderWhenReady = () => {
+                const target = document.getElementById(targetId);
+                if (!target) return false;
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                target.classList.add('search-result-highlight');
+                window.setTimeout(() => target.classList.remove('search-result-highlight'), 2200);
+                return true;
+            };
+            const onRemindersLoaded = () => scrollReminderWhenReady();
+            document.addEventListener('reminders-section:loaded', onRemindersLoaded, { once: true });
+            window.setTimeout(() => {
+                document.removeEventListener('reminders-section:loaded', onRemindersLoaded);
+                scrollReminderWhenReady();
+            }, 1200);
+            return;
+        }
+
         if (sectionId === 'planner-section') {
             const plannerSearch = document.getElementById('planner-search');
             if (plannerSearch) {
@@ -385,8 +403,8 @@ function setupGlobalSearch() {
             const pattern = '%' + query + '%';
             const [
                 usersName, usersLogin, usersGrade,
-                plansActivity, plansSkill, plansGrade, plansTeam,
-                tasksTitle, tasksDescription,
+                plansActivity, plansSkill, plansGrade, plansTeam, plansDate, plansDay, plansTime,
+                tasksTitle, tasksDescription, tasksSerie, tasksTeam, tasksGrade,
                 missionsName,
                 flashWords, flashTranslations, flashStacks,
                 remindersText
@@ -398,8 +416,14 @@ function setupGlobalSearch() {
                 supabase.from('planner').select('id,date,day,time,serie,team,activities,completed_at').eq('owner', authData.user.id).ilike('skills', pattern).limit(4),
                 supabase.from('planner').select('id,date,day,time,serie,team,activities,completed_at').eq('owner', authData.user.id).ilike('serie', pattern).limit(4),
                 supabase.from('planner').select('id,date,day,time,serie,team,activities,completed_at').eq('owner', authData.user.id).ilike('team', pattern).limit(4),
-                supabase.from('tasks').select('id,title,description,grades,deadline').eq('owner', authData.user.id).ilike('title', pattern).limit(4),
-                supabase.from('tasks').select('id,title,description,grades,deadline').eq('owner', authData.user.id).ilike('description', pattern).limit(4),
+                supabase.from('planner').select('id,date,day,time,serie,team,activities,completed_at').eq('owner', authData.user.id).ilike('date', pattern).limit(4),
+                supabase.from('planner').select('id,date,day,time,serie,team,activities,completed_at').eq('owner', authData.user.id).ilike('day', pattern).limit(4),
+                supabase.from('planner').select('id,date,day,time,serie,team,activities,completed_at').eq('owner', authData.user.id).ilike('time', pattern).limit(4),
+                supabase.from('tasks').select('id,title,description,grades,serie,team,deadline').eq('owner', authData.user.id).ilike('title', pattern).limit(4),
+                supabase.from('tasks').select('id,title,description,grades,serie,team,deadline').eq('owner', authData.user.id).ilike('description', pattern).limit(4),
+                supabase.from('tasks').select('id,title,description,grades,serie,team,deadline').eq('owner', authData.user.id).ilike('serie', pattern).limit(4),
+                supabase.from('tasks').select('id,title,description,grades,serie,team,deadline').eq('owner', authData.user.id).ilike('team', pattern).limit(4),
+                supabase.from('tasks').select('id,title,description,grades,serie,team,deadline').eq('owner', authData.user.id).contains('grades', [query.toUpperCase()]).limit(4),
                 supabase.from('missions').select('id,mission_name,mission_score,mission_link').ilike('mission_name', pattern).limit(4),
                 supabase.from('flashcards').select('id,word,translation,stack').ilike('word', pattern).limit(4),
                 supabase.from('flashcards').select('id,word,translation,stack').ilike('translation', pattern).limit(4),
@@ -414,11 +438,11 @@ function setupGlobalSearch() {
                 return Array.from(map.values()).slice(0, 5);
             };
             const users = combineUnique([usersName, usersLogin, usersGrade]);
-            const plans = combineUnique([plansActivity, plansSkill, plansGrade, plansTeam]).map(plan => ({
+            const plans = combineUnique([plansActivity, plansSkill, plansGrade, plansTeam, plansDate, plansDay, plansTime]).map(plan => ({
                 ...plan,
                 section: plan.completed_at ? 'completed-planner-section' : 'planner-section'
             }));
-            const tasks = combineUnique([tasksTitle, tasksDescription]);
+            const tasks = combineUnique([tasksTitle, tasksDescription, tasksSerie, tasksTeam, tasksGrade]);
             const missions = missionsName.data || [];
             const flashcards = combineUnique([flashWords, flashTranslations, flashStacks]);
             const reminders = remindersText.data || [];
