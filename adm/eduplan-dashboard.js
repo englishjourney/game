@@ -304,7 +304,7 @@ async function loadDashboard() {
         return;
     }
 
-    scheduleRecord = scheduleResult.data?.[0] || null;
+    scheduleRecord = scheduleResult.data || null;
     renderSchedule(scheduleRecord || {});
 }
 
