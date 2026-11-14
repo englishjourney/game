@@ -615,20 +615,21 @@ export async function loadRemindersSection() {
         let html = '';
         reminders.forEach(item => {
             html += `
-                <div style="background: var(--bg-card, #1e293b); border: 1px solid var(--border, #334155); padding: 15px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
+                <article id="reminder-card-${item.id}" class="admin-reminder-card">
+                    <div class="admin-reminder-content">
                         <strong style="color: #fff; display: block; margin-bottom: 4px; font-size: 1rem;">${item.remindMeTo}</strong>
                         <small style="color: var(--primary, #38bdf8);"><i class="fa-regular fa-clock"></i> ${item.date} às ${item.time}</small>
                     </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button onclick="window.editReminder('${item.id}', '${encodeURIComponent(item.remindMeTo)}', '${item.date}', '${item.time}')" style="background: #eab308; color: #000; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold;">Adiar / Editar</button>
-                        <button onclick="window.deleteReminder('${item.id}')" style="background: #ef4444; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">Excluir</button>
+                    <div class="admin-reminder-actions">
+                        <button class="btn-small btn-secondary" onclick="window.editReminder('${item.id}', '${encodeURIComponent(item.remindMeTo)}', '${item.date}', '${item.time}')">Adiar / Editar</button>
+                        <button class="btn-small btn-danger" onclick="window.deleteReminder('${item.id}')">Excluir</button>
                     </div>
-                </div>
+                </article>
             `;
         });
 
         container.innerHTML = html;
+        document.dispatchEvent(new CustomEvent('reminders-section:loaded'));
     } catch (err) {
         console.error('Erro ao buscar lembretes:', err);
         container.innerHTML = '<div style="color: #ef4444; text-align: center; padding: 20px;">Erro ao carregar lembretes.</div>';

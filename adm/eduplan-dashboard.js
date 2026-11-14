@@ -121,20 +121,20 @@ function displayLesson(rawValue) {
     return { label: value, vacant: false, empty: false };
 }
 
-function renderSlot(rawValue, slot) {
+function renderSlot(rawValue, slot, dayId, shiftId) {
     const lesson = displayLesson(rawValue);
     const classes = ['schedule-entry'];
     if (lesson.vacant) classes.push('schedule-entry-vacant');
     if (lesson.empty) classes.push('schedule-entry-empty');
-    return '<div class="' + classes.join(' ') + '">' +
+    return '<div id="schedule-slot-' + dayId + '-' + shiftId + '-' + slot.index + '" class="' + classes.join(' ') + '">' +
         '<span class="schedule-entry-index">' + slot.label + '</span>' +
         '<span class="schedule-entry-content"><strong>' + escapeHtml(lesson.label) + '</strong></span>' +
         '<strong class="schedule-entry-time">' + slot.time + '</strong>' +
     '</div>';
 }
 
-function renderBreak(time) {
-    return '<div class="schedule-entry schedule-entry-break">' +
+function renderBreak(time, dayId, shiftId) {
+    return '<div id="schedule-slot-' + dayId + '-' + shiftId + '-4" class="schedule-entry schedule-entry-break">' +
         '<span class="schedule-entry-index"><i class="fa-solid fa-mug-hot" aria-hidden="true"></i></span>' +
         '<span class="schedule-entry-label">Intervalo</span>' +
         '<strong class="schedule-entry-time">' + time + '</strong>' +
@@ -150,9 +150,9 @@ function renderShift(dayData, config, dayId, shiftId) {
             '<h4>' + config.label + '</h4>' +
         '</header>' +
         '<div class="schedule-period-list">' +
-            config.slots.slice(0, 4).map(slot => renderSlot(values[slot.index], slot)).join('') +
-            renderBreak(config.breakTime) +
-            config.slots.slice(4).map(slot => renderSlot(values[slot.index], slot)).join('') +
+            config.slots.slice(0, 4).map(slot => renderSlot(values[slot.index], slot, dayId, shiftId)).join('') +
+            renderBreak(config.breakTime, dayId, shiftId) +
+            config.slots.slice(4).map(slot => renderSlot(values[slot.index], slot, dayId, shiftId)).join('') +
         '</div>' +
     '</section>';
 }
@@ -172,11 +172,10 @@ function renderSchedule(data) {
 
     const dayCards = visibleDays.map(day => {
         const isOpen = day.id === firstOpenDayId;
-        const dateLabel = day.date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
         return '<article class="schedule-day-card ' + (isOpen ? 'is-open' : '') + '" data-day-card="' + day.id + '">' +
             '<button type="button" class="schedule-day-header" data-day-toggle="' + day.id + '" aria-expanded="' + String(isOpen) + '">' +
                 '<span class="schedule-day-mark"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span>' +
-                '<span class="schedule-day-title">' + day.label + ' <span>• ' + dateLabel + '</span></span>' +
+                '<span class="schedule-day-title">' + day.label + '</span>' +
                 '<span class="schedule-day-toggle-label">' + (isOpen ? 'Minimizar' : 'Maximizar') + '</span>' +
                 '<i class="fa-solid ' + (isOpen ? 'fa-chevron-up' : 'fa-chevron-down') + ' schedule-day-chevron" aria-hidden="true"></i>' +
             '</button>' +
@@ -323,50 +322,271 @@ function setupGlobalSearch() {
     if (!input || !resultsContainer || input.dataset.initialized === 'true') return;
     input.dataset.initialized = 'true';
 
-    input.addEventListener('input', async event => {
-        const query = event.target.value.trim();
-        if (query.length < 3) {
-            resultsContainer.classList.add('hidden');
+    let searchSequence = 0;
+    let searchDebounce = null;
+
+    const appendResultGroup = (label, items, idField, section, formatLabel) => {
+        if (!items.length) return '';
+        return '<div class="search-result-group">' +
+            '<div class="search-group-label">' + label + '</div>' +
+            items.map(item =>
+                '<button type="button" class="search-item search-result-item" role="option" data-search-result ' +
+                    'data-search-section="' + escapeHtml(typeof section === 'function' ? section(item) : section) + '" data-search-id="' + escapeHtml(item[idField]) + '">' +
+                    formatLabel(item) +
+                '</button>'
+            ).join('') +
+        '</div>';
+    };
+
+    const revealTargetAncestors = target => {
+        let ancestor = target.parentElement;
+        while (ancestor && ancestor !== document.body) {
+            if (ancestor.classList.contains('planner-section-content') && ancestor.classList.contains('hidden')) {
+                ancestor.classList.remove('hidden');
+                const toggle = ancestor.closest('.planner-section')?.querySelector('[data-toggle-planner-section]');
+                if (toggle) {
+                    toggle.textContent = 'Minimizar';
+                    toggle.setAttribute('aria-expanded', 'true');
+                }
+            }
+
+            if (ancestor.classList.contains('completed-class-panel') && ancestor.classList.contains('hidden')) {
+                const panelIndex = ancestor.dataset.completedPanel;
+                const tabsContainer = ancestor.closest('#completed-planner-container');
+                const tab = tabsContainer?.querySelector('[data-completed-tab="' + panelIndex + '"]');
+                if (tab) tab.click();
+                else ancestor.classList.remove('hidden');
+            }
+
+            if (ancestor.classList.contains('team-content') && ancestor.classList.contains('hidden')) {
+                ancestor.classList.remove('hidden');
+                const toggle = ancestor.previousElementSibling?.querySelector('.minimize-btn');
+                if (toggle) {
+                    toggle.textContent = 'Recolher';
+                    toggle.setAttribute('aria-expanded', 'true');
+                }
+            }
+
+            if (ancestor.classList.contains('flashcard-stack-content') && ancestor.hidden) {
+                ancestor.hidden = false;
+                const toggle = ancestor.previousElementSibling;
+                if (toggle?.matches('[data-flashcard-stack-toggle]')) {
+                    toggle.setAttribute('aria-expanded', 'true');
+                    const chevron = toggle.querySelector('.flashcard-stack-chevron');
+                    chevron?.classList.add('fa-chevron-up');
+                    chevron?.classList.remove('fa-chevron-down');
+                }
+            }
+
+            if (ancestor.classList.contains('schedule-day-content') && ancestor.hidden) {
+                ancestor.hidden = false;
+                const toggle = ancestor.previousElementSibling;
+                const card = ancestor.closest('[data-day-card]');
+                card?.classList.add('is-open');
+                if (toggle?.matches('[data-day-toggle]')) {
+                    toggle.setAttribute('aria-expanded', 'true');
+                    const label = toggle.querySelector('.schedule-day-toggle-label');
+                    if (label) label.textContent = 'Minimizar';
+                    const chevron = toggle.querySelector('.schedule-day-chevron');
+                    chevron?.classList.add('fa-chevron-up');
+                    chevron?.classList.remove('fa-chevron-down');
+                }
+            }
+
+            ancestor = ancestor.parentElement;
+        }
+    };
+
+    const highlightTarget = targetId => {
+        const target = document.getElementById(targetId);
+        if (!target) return false;
+        revealTargetAncestors(target);
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.classList.add('search-result-highlight');
+        window.setTimeout(() => target.classList.remove('search-result-highlight'), 2200);
+        return true;
+    };
+
+    const navigateToResult = button => {
+        const sectionId = button.dataset.searchSection;
+        const targetId = button.dataset.searchId;
+        const navButton = document.querySelector('.nav-btn[data-target="' + sectionId + '"]');
+        if (navButton) navButton.click();
+        resultsContainer.classList.add('hidden');
+        input.value = '';
+
+        if (sectionId === 'reminders-section') {
+            const onRemindersLoaded = () => highlightTarget(targetId);
+            document.addEventListener('reminders-section:loaded', onRemindersLoaded, { once: true });
+            window.setTimeout(() => {
+                document.removeEventListener('reminders-section:loaded', onRemindersLoaded);
+                highlightTarget(targetId);
+            }, 1500);
             return;
         }
 
-        resultsContainer.innerHTML = '<div class="search-item">Buscando...</div>';
-        resultsContainer.classList.remove('hidden');
+        if (sectionId === 'planner-section') {
+            const plannerSearch = document.getElementById('planner-search');
+            if (plannerSearch) {
+                plannerSearch.value = '';
+                plannerSearch.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
 
+        if (sectionId === 'dashboard-section') {
+            Promise.resolve(window.refreshEduPlanDashboard?.()).finally(() => {
+                window.setTimeout(() => highlightTarget(targetId), 90);
+            });
+            return;
+        }
+
+        window.setTimeout(() => highlightTarget(targetId), 140);
+    };
+
+    resultsContainer.addEventListener('click', event => {
+        const button = event.target.closest('[data-search-result]');
+        if (button) navigateToResult(button);
+    });
+
+    input.addEventListener('input', event => {
+        const query = event.target.value.trim();
+        const sequence = ++searchSequence;
+        if (query.length < 2) {
+            window.clearTimeout(searchDebounce);
+            resultsContainer.classList.add('hidden');
+            resultsContainer.innerHTML = '';
+            return;
+        }
+
+        window.clearTimeout(searchDebounce);
+        resultsContainer.innerHTML = '<div class="search-item search-loading"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Pesquisando em todo o painel...</div>';
+        resultsContainer.classList.remove('hidden');
+        searchDebounce = window.setTimeout(() => performGlobalSearch(query, sequence), 240);
+    });
+
+    async function performGlobalSearch(query, sequence) {
+        if (sequence !== searchSequence) return;
         try {
             const { data: authData, error: authError } = await supabase.auth.getUser();
             if (authError || !authData.user) throw new Error('Sessão de professor não encontrada.');
-            const [usersResult, plansResult] = await Promise.all([
-                supabase.from('users').select('name, username, grade').ilike('name', '%' + query + '%').limit(5),
-                supabase.from('planner').select('serie, team, activities').eq('owner', authData.user.id).ilike('activities', '%' + query + '%').limit(5)
+            const pattern = '%' + query + '%';
+            const [
+                usersName, usersLogin, usersGrade,
+                plannerRowsResult, taskRowsResult, scheduleResult, missionsName,
+                flashWords, flashTranslations, flashStacks,
+                remindersText
+            ] = await Promise.all([
+                supabase.from('users').select('id,name,username,grade').neq('username', 'micael.svg').ilike('name', pattern).limit(4),
+                supabase.from('users').select('id,name,username,grade').neq('username', 'micael.svg').ilike('username', pattern).limit(4),
+                supabase.from('users').select('id,name,username,grade').neq('username', 'micael.svg').ilike('grade', pattern).limit(4),
+                supabase.from('planner').select('id,date,day,time,serie,team,activities,skills,completed_at,tag,special').eq('owner', authData.user.id).order('id', { ascending: false }).range(0, 999),
+                supabase.from('tasks').select('id,title,description,grades,serie,team,deadline').eq('owner', authData.user.id).order('id', { ascending: false }).range(0, 999),
+                supabase.from('schedule').select('*').eq('owner', authData.user.id).maybeSingle(),
+                supabase.from('missions').select('id,mission_name,mission_score,mission_link').ilike('mission_name', pattern).limit(4),
+                supabase.from('flashcards').select('id,word,translation,stack').ilike('word', pattern).limit(4),
+                supabase.from('flashcards').select('id,word,translation,stack').ilike('translation', pattern).limit(4),
+                supabase.from('flashcards').select('id,word,translation,stack').ilike('stack', pattern).limit(4),
+                supabase.from('reminders').select('id,remindMeTo,date,time').ilike('remindMeTo', pattern).limit(4)
             ]);
 
-            let html = '';
-            if (usersResult.data?.length) {
-                html += '<div class="search-group-label">Alunos</div>';
-                html += usersResult.data.map(user => '<div class="search-item">' +
-                    escapeHtml(user.name) + ' (' + escapeHtml(user.username) + ') — ' + escapeHtml(user.grade || 'Sem turma') +
-                '</div>').join('');
-            }
-            if (plansResult.data?.length) {
-                html += '<div class="search-group-label">Planejamentos</div>';
-                html += plansResult.data.map(plan => '<div class="search-item">' +
-                    escapeHtml([plan.serie, plan.team].filter(Boolean).join('')) + ': ' +
-                    escapeHtml(String(plan.activities || '').slice(0, 70)) +
-                '</div>').join('');
-            }
-            resultsContainer.innerHTML = html || '<div class="search-item">Nenhum resultado encontrado.</div>';
-        } catch (error) {
-            console.error('Erro na pesquisa global:', error);
-            resultsContainer.innerHTML = '<div class="search-item">Não foi possível realizar a pesquisa.</div>';
-        }
-    });
+            if (sequence !== searchSequence) return;
+            const queryResults = [
+                usersName, usersLogin, usersGrade,
+                plannerRowsResult, taskRowsResult,
+                scheduleResult, missionsName, flashWords, flashTranslations, flashStacks, remindersText
+            ];
+            const failedQuery = queryResults.find(result => result?.error);
+            if (failedQuery) throw failedQuery.error;
 
-    document.addEventListener('click', event => {
-        if (!resultsContainer.contains(event.target) && event.target !== input) {
-            resultsContainer.classList.add('hidden');
+            const combineUnique = (results, key = 'id') => {
+                const map = new Map();
+                results.forEach(result => (result.data || []).forEach(item => map.set(String(item[key]), item)));
+                return Array.from(map.values()).slice(0, 5);
+            };
+            const users = combineUnique([usersName, usersLogin, usersGrade]);
+            const normalizedQuery = query.toLocaleLowerCase('pt-BR');
+            const plans = (plannerRowsResult.data || []).filter(plan =>
+                [plan.day, plan.date, plan.time, plan.serie, plan.team, plan.serie + plan.team, plan.activities, plan.skills, plan.tag, plan.special]
+                    .some(value => String(value ?? '').toLocaleLowerCase('pt-BR').includes(normalizedQuery))
+            ).slice(0, 5).map(plan => ({
+                ...plan,
+                section: plan.completed_at ? 'completed-planner-section' : 'planner-section'
+            }));
+            const tasks = (taskRowsResult.data || []).filter(task =>
+                [task.title, task.description, task.serie, task.team, (task.grades || []).join(' ')]
+                    .some(value => String(value ?? '').toLocaleLowerCase('pt-BR').includes(normalizedQuery))
+            ).slice(0, 5);
+            const missions = missionsName.data || [];
+            const flashcards = combineUnique([flashWords, flashTranslations, flashStacks]);
+            const reminders = remindersText.data || [];
+
+            const scheduleMatches = [];
+            const scheduleRow = scheduleResult.data;
+            const weekdayLabels = {
+                seg: 'Segunda-feira',
+                ter: 'Terça-feira',
+                qua: 'Quarta-feira',
+                qui: 'Quinta-feira',
+                sex: 'Sexta-feira'
+            };
+            const shiftLabels = { mat: 'Manhã', ves: 'Tarde' };
+            const slotLabels = ['1º', '2º', '3º', '4º', 'Intervalo', '5º', '6º'];
+            if (scheduleRow) {
+                Object.keys(weekdayLabels).forEach(dayId => {
+                    ['mat', 'ves'].forEach(shiftId => {
+                        const raw = String(scheduleRow[dayId + '_' + shiftId] || '');
+                        const values = raw.match(/\[([^\]]*)\]/g)?.map(item => item.slice(1, -1).trim()) || [];
+                        values.forEach((value, index) => {
+                            if (value.toLocaleLowerCase('pt-BR').includes(query.toLocaleLowerCase('pt-BR'))) {
+                                scheduleMatches.push({
+                                    id: 'schedule-slot-' + dayId + '-' + shiftId + '-' + index,
+                                    label: weekdayLabels[dayId] + ' • ' + shiftLabels[shiftId] + ' • ' + (slotLabels[index] || 'Horário'),
+                                    value
+                                });
+                            }
+                        });
+                    });
+                });
+            }
+
+            const pieces = [];
+            pieces.push(appendResultGroup('Aulas', scheduleMatches, 'id', 'dashboard-section', lesson =>
+                '<strong>' + escapeHtml(lesson.label) + '</strong>' +
+                '<span>' + escapeHtml(lesson.value) + '</span>'
+            ));
+            pieces.push(appendResultGroup('Trabalhos', tasks, 'id', 'tasks-section', task =>
+                '<strong>' + escapeHtml(task.title || 'Trabalho sem título') + '</strong>' +
+                '<span>' + escapeHtml((task.grades || []).join(', ') || [task.serie, task.team].filter(Boolean).join('') || 'Todas as turmas') + '</span>'
+            ));
+            pieces.push(appendResultGroup('Planejamentos', plans, 'id', plan => plan.section, plan =>
+                '<strong>' + escapeHtml([plan.serie, plan.team].filter(Boolean).join('') || 'Aula') + '</strong>' +
+                '<span>' + escapeHtml([plan.date, plan.time, String(plan.activities || '').replace(/<[^>]*>/g, ' ').slice(0, 70)].filter(Boolean).join(' • ')) + '</span>'
+            ));
+            pieces.push(appendResultGroup('Missões', missions, 'id', 'missions-section', mission =>
+                '<strong>' + escapeHtml(mission.mission_name || 'Missão') + '</strong>' +
+                '<span>' + escapeHtml('Pontuação: ' + (mission.mission_score ?? 0)) + '</span>'
+            ));
+            pieces.push(appendResultGroup('Alunos', users, 'id', 'users-section', user =>
+                '<strong>' + escapeHtml(user.name || user.username) + '</strong>' +
+                '<span>' + escapeHtml((user.username || '') + (user.grade ? ' • Turma ' + user.grade : '')) + '</span>'
+            ));
+            pieces.push(appendResultGroup('Flashcards', flashcards, 'id', 'flashcards-section', card =>
+                '<strong>' + escapeHtml(card.word || 'Flashcard') + '</strong>' +
+                '<span>' + escapeHtml([card.translation, card.stack].filter(Boolean).join(' • ')) + '</span>'
+            ));
+            pieces.push(appendResultGroup('Lembretes', reminders, 'id', 'reminders-section', reminder =>
+                '<strong>' + escapeHtml(reminder.remindMeTo || 'Lembrete') + '</strong>' +
+                '<span>' + escapeHtml([reminder.date, reminder.time].filter(Boolean).join(' • ')) + '</span>'
+            ));
+
+            const html = pieces.filter(Boolean).join('');
+            resultsContainer.innerHTML = html || '<div class="search-item search-empty">Nenhum resultado encontrado.</div>';
+        } catch (error) {
+            if (sequence !== searchSequence) return;
+            console.error('Erro na pesquisa global:', error);
+            resultsContainer.innerHTML = '<div class="search-item search-empty">Não foi possível realizar a pesquisa.</div>';
         }
-    });
+    }
 }
 
 function setupScheduleEditor() {

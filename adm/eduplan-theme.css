@@ -1876,3 +1876,342 @@ dialog .markdown-preview-label { color: #6c5b91; }
     color: #171717 !important;
     -webkit-text-stroke: .28px #fff;
 }
+
+
+/* Contrast refinements — tasks, students and completed lessons */
+#tasks-section .tasks-filters {
+    padding: 12px;
+    border: 1px solid #e4dcf1;
+    border-radius: 15px;
+    background: #f7f4fc;
+}
+#tasks-section .tasks-filter-button {
+    border: 1px solid #d8cbed;
+    background: #ece5f8;
+    color: #2a1a53 !important;
+}
+#tasks-section .tasks-filter-button.active {
+    border-color: #9272d1;
+    background: #d8caf1;
+    color: #211044 !important;
+}
+#tasks-section .tasks-filter-count {
+    border: 1px solid #c7b5e6;
+    border-radius: 7px;
+    background: #cbb9e9;
+    color: #24134f !important;
+    font-weight: 900;
+}
+#tasks-section .task-card {
+    border: 1px solid #e5def0 !important;
+    background: #fff !important;
+    color: #1d173d !important;
+}
+#tasks-section .task-card .data-card-info > p,
+#tasks-section .task-card .data-card-info > p > strong,
+#tasks-section .task-card .task-description,
+#tasks-section .task-card .task-grade-badge,
+#tasks-section .task-card .task-expired-label {
+    color: #211744 !important;
+}
+#tasks-section .task-card .data-card-info > p:first-child strong {
+    color: #17133b !important;
+    font-weight: 850;
+}
+#tasks-section .task-grade-badge {
+    border: 1px solid #c4b1e5 !important;
+    border-radius: 999px !important;
+    background: #e9e0f7 !important;
+    color: #24134f !important;
+    font-weight: 900;
+    text-shadow: none;
+}
+#tasks-section .task-card .task-description { color: #51496b !important; }
+#tasks-section .task-card .task-expired-label {
+    background: #ffe1e5 !important;
+    color: #9d1d38 !important;
+}
+
+/* Student groups now use the light EduPlan palette with strong readable values */
+#users-section .team-section {
+    border: 1px solid #e7e0f1;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 4px 14px rgba(54,35,99,.05);
+}
+#users-section .team-header {
+    background: linear-gradient(100deg, #f0eafd, #f7f3ff) !important;
+    color: #201744 !important;
+}
+#users-section .team-heading-label { color: #65558b !important; }
+#users-section .team-grade-badge {
+    border: 1px solid #c9b7e9;
+    background: #ded3f2;
+    color: #24134f !important;
+    text-shadow: none;
+}
+#users-section .team-student-count { color: #51466f !important; font-weight: 800; }
+#users-section .team-header .minimize-btn {
+    border: 1px solid #d8cbed;
+    background: #e9e1f7;
+    color: #35215f !important;
+}
+#users-section .team-content { background: #fff; }
+#users-section .users-table { color: #211744 !important; }
+#users-section .users-table thead,
+#users-section .users-table th { background: #f2edfa !important; }
+#users-section .users-table th {
+    color: #46336f !important;
+    font-weight: 850;
+}
+#users-section .users-table td,
+#users-section .users-table td:nth-child(2),
+#users-section .users-table td:nth-child(3),
+#users-section .users-table td:nth-child(4) {
+    color: #20183d !important;
+    font-weight: 650;
+}
+#users-section .users-table td small {
+    color: #45336c !important;
+    font-weight: 800;
+}
+#users-section .users-table td:first-child { color: #17113b !important; font-weight: 850; }
+#users-section .users-table tbody tr,
+#users-section .users-table tbody tr:nth-child(even) { background: #fff !important; }
+#users-section .users-table tbody tr:hover { background: #f5f1fc !important; }
+#users-section .users-table .editable-input {
+    border: 1px solid #ded5eb !important;
+    background: #fbfaff !important;
+    color: #211744 !important;
+}
+
+/* Completed lessons use the same strong foreground contrast as active planner cards */
+#completed-planner-section .planner-card,
+#completed-planner-section .planner-card .planner-card-info,
+#completed-planner-section .planner-card .planner-card-title,
+#completed-planner-section .planner-card .planner-card-meta,
+#completed-planner-section .planner-card .planner-card-meta span,
+#completed-planner-section .planner-card .planner-card-datetime,
+#completed-planner-section .planner-card .planner-card-datetime strong,
+#completed-planner-section .planner-card .planner-card-grade,
+#completed-planner-section .planner-card .planner-type-chip {
+    color: #211744 !important;
+}
+#completed-planner-section .planner-card {
+    border: 1px solid #e7e0f1 !important;
+    background: #fff !important;
+}
+#completed-planner-section .planner-card .planner-card-title { color: #17133b !important; font-weight: 850; }
+#completed-planner-section .planner-card .planner-card-grade,
+#completed-planner-section .planner-card .planner-card-datetime > strong,
+#completed-planner-section .planner-card .planner-type-chip {
+    border: 1px solid #ddd2ef !important;
+    background: #f0eafd !important;
+    color: #2a1857 !important;
+}
+#completed-planner-section .planner-card .planner-completed-date { color: #4d426b !important; }
+
+/* Flashcard categories span the workspace; each category can collapse independently */
+#flashcards-list.cards-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch;
+    width: 100%;
+    gap: 18px;
+}
+#flashcards-list .flashcard-stack-group {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #e7e0f1;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 4px 14px rgba(54,35,99,.05);
+    overflow: hidden;
+}
+#flashcards-list .flashcard-stack-title {
+    width: 100%;
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    padding: 12px 18px;
+    border: 0;
+    border-radius: 0;
+    background: linear-gradient(100deg, #f0eafd, #f7f3ff);
+    color: #21134f;
+    font: inherit;
+    font-weight: 850;
+    text-align: left;
+    cursor: pointer;
+}
+#flashcards-list .flashcard-stack-title:hover { background: #e9e0f8; }
+#flashcards-list .flashcard-stack-heading {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    flex: 1;
+    min-width: 0;
+}
+#flashcards-list .flashcard-stack-heading > i { color: #5b2bd2; }
+#flashcards-list .flashcard-stack-count {
+    margin-left: auto;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: #d9cff0;
+    color: #24134f;
+    font-size: .78rem;
+    font-weight: 850;
+}
+#flashcards-list .flashcard-stack-chevron { color: #352064; font-size: .85rem; }
+#flashcards-list .flashcard-stack-content { padding: 15px; }
+#flashcards-list .flashcard-stack-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    align-items: stretch;
+    gap: 13px;
+}
+#flashcards-list .flashcard-card {
+    min-width: 0;
+    width: 100%;
+    border: 1px solid #e7e0f1 !important;
+    background: #fff !important;
+    color: #211744 !important;
+}
+@media (max-width: 700px) {
+    #flashcards-list .flashcard-stack-grid { grid-template-columns: minmax(0,1fr); }
+    #flashcards-list .flashcard-stack-title { padding: 11px 13px; }
+    #flashcards-list .flashcard-stack-content { padding: 11px; }
+}
+
+/* Reminder editor: fixed viewport overlay, centered card and a persistent visible header */
+#modal-reminder-form:not(.hidden) {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 9000 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box;
+    width: 100vw;
+    height: 100dvh;
+    min-height: 0;
+    margin: 0;
+    padding: 22px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: rgba(28,21,52,.58);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+#modal-reminder-form .reminder-modal {
+    position: relative;
+    flex: 0 1 560px;
+    width: min(560px, calc(100vw - 44px));
+    max-width: 560px;
+    max-height: calc(100dvh - 44px);
+    height: auto;
+    margin: auto;
+    padding: 0 26px 24px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    box-sizing: border-box;
+    background: #fff;
+}
+#modal-reminder-form .edu-reminder-header {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    min-height: 112px;
+    margin: 0 -26px 20px;
+    background: linear-gradient(110deg, #f0eafd, #f7f3ff);
+    box-shadow: 0 5px 14px rgba(39,25,78,.06);
+}
+#modal-reminder-form .reminder-modal label { color: #463b66; }
+#modal-reminder-form .reminder-modal input,
+#modal-reminder-form .reminder-modal textarea {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
+    border: 1px solid #e3dcf0;
+    border-radius: 11px;
+    background: #fbfaff;
+    color: #201941;
+}
+#modal-reminder-form .reminder-modal-buttons { padding-top: 6px; }
+#modal-reminder-form .edu-modal-close { flex-shrink: 0; }
+@media (max-width: 600px) {
+    #modal-reminder-form:not(.hidden) { padding: 10px; }
+    #modal-reminder-form .reminder-modal {
+        width: calc(100vw - 20px);
+        max-height: calc(100dvh - 20px);
+        padding: 0 16px 18px;
+    }
+    #modal-reminder-form .edu-reminder-header { margin: 0 -16px 18px; }
+}
+
+/* Search: grouped, actionable results that route to the matching record */
+#search-results {
+    max-height: min(72vh, 620px);
+    overflow-y: auto;
+    padding: 7px;
+}
+.search-result-group { padding-bottom: 5px; }
+.search-group-label {
+    padding: 9px 11px 5px;
+    color: #6541b3;
+    font-size: .71rem;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.search-result-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    width: 100%;
+    min-height: 48px;
+    padding: 9px 11px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #241947;
+    text-align: left;
+    cursor: pointer;
+}
+.search-result-item strong { color: #211344; font-size: .85rem; font-weight: 850; }
+.search-result-item span { color: #6f6588; font-size: .74rem; line-height: 1.35; }
+.search-result-item:hover,
+.search-result-item:focus-visible { background: #f1ebfc; outline: none; }
+.search-loading,
+.search-empty { padding: 12px; color: #62577e; }
+.search-result-highlight {
+    outline: 3px solid rgba(113,70,213,.38) !important;
+    outline-offset: 3px;
+    box-shadow: 0 0 0 6px rgba(113,70,213,.08) !important;
+    transition: outline-color .2s ease, box-shadow .2s ease;
+}
+.admin-reminder-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 12px;
+    padding: 16px;
+    border: 1px solid #e7e0f1;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(54,35,99,.05);
+}
+.admin-reminder-content { min-width: 0; }
+.admin-reminder-content strong { color: #211744 !important; }
+.admin-reminder-content small { color: #65558a !important; }
+.admin-reminder-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 600px) {
+    .admin-reminder-card { align-items: stretch; flex-direction: column; }
+    .admin-reminder-actions > button { flex: 1; }
+}

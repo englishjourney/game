@@ -127,7 +127,7 @@
                 <button type="button" id="sidebar-toggle" class="mobile-menu-toggle sidebar-toggle" aria-label="Recolher menu lateral" aria-expanded="true" aria-controls="adm-navigation"><i class="fa-solid fa-bars"></i></button>
                 <div class="admin-global-search">
                     <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                    <input type="text" id="global-search" placeholder="Buscar planejamentos, turmas..." aria-label="Buscar no painel">
+                    <input type="text" id="global-search" placeholder="Buscar trabalhos, aulas, alunos, missões..." aria-label="Buscar trabalhos, aulas, planejamentos, missões, alunos, flashcards e lembretes">
                     <div id="search-results" class="hidden" role="listbox"></div>
                 </div>
             </div>
@@ -145,7 +145,13 @@
     <div id="reminder-chat-bubble" class="reminder-chat-bubble hidden" role="status" aria-live="polite"></div>
 </div>
 
-<!-- === MODAL: NOVO / EDITAR LEMBRETE === -->
+                <span class="header-divider" aria-hidden="true"></span>
+                <button type="button" id="btn-logout" class="btn-logout"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i> Sair</button>
+            </div>
+        </header>
+
+        <!-- Modal de lembretes fora do cabeçalho para usar a viewport como referência -->
+        <!-- === MODAL: NOVO / EDITAR LEMBRETE === -->
 <div id="modal-reminder-form" class="reminder-modal-overlay hidden">
     <div class="reminder-modal">
         <header class="edu-modal-header edu-reminder-header">
@@ -170,10 +176,7 @@
         </div>
     </div>
 </div>
-                <span class="header-divider" aria-hidden="true"></span>
-                <button type="button" id="btn-logout" class="btn-logout"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i> Sair</button>
-            </div>
-        </header>
+
         <button type="button" id="mobile-nav-backdrop" class="nav-backdrop" aria-label="Fechar menu"></button>
 
         <nav id="adm-navigation" aria-label="Navegação administrativa">

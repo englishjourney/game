@@ -279,7 +279,7 @@ function renderTaskCards(tasks) {
             ).join('') + '</div>'
             : '<p>Todas as turmas</p>';
         const description = task.description ? '<p class="task-description">' + escapeTaskHtml(task.description).replace(/\r?\n/g, '<br>') + '</p>' : '';
-        return '<article class="data-card task-card' + (expired ? ' is-expired' : '') + '">' +
+        return '<article id="task-card-' + escapeTaskHtml(task.id) + '" class="data-card task-card' + (expired ? ' is-expired' : '') + '">' +
             '<div class="data-card-info"><p><strong>' + escapeTaskHtml(task.title) + '</strong></p>' +
             target + '<p><strong>Prazo:</strong> ' + escapeTaskHtml(formatDeadline(task.deadline)) +
             (expired ? ' <span class="task-expired-label">PRAZO EXPIRADO</span>' : '') + '</p>' + description + '</div>' +
