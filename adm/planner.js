@@ -8,6 +8,7 @@ let mergeTargetItem = null;
 let mergeIsSaving = false;
 const selectedPlannerIds = new Set();
 let plannerSelectionMode = false;
+let pendingPlannerRescheduleItems = [];
 
 export function initPlanner() {
     setupCustomOptions();
@@ -18,6 +19,7 @@ export function initPlanner() {
     updatePlannerBulkToolbar();
     setupPlannerMerge();
     setupPlannerBulkActions();
+    setupPlannerSectionReschedule();
     setupActivitiesEditor();
     const detailsEditButton = document.getElementById('btn-edit-planner-from-details');
     if (detailsEditButton) detailsEditButton.addEventListener('click', () => {
@@ -86,27 +88,24 @@ export function initPlanner() {
                 return;
             }
 
-            const parseDateBR = (dStr) => {
-                const p = dStr.includes('/') ? dStr.split('/') : dStr.split('-');
-                return p[2].length === 4 ? new Date(`${p[2]}-${p[1]}-${p[0]}T12:00:00`) : new Date(`${p[0]}-${p[1]}-${p[2]}T12:00:00`);
-            };
-            const formatDateBR = (d) => `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
-            const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+            const start = parsePlannerDateBR(startDateStr);
+            const end = parsePlannerDateBR(endDateStr);
+            if (!start || !end) {
+                alert('Informe datas válidas no formato DD/MM/AAAA.');
+                return;
+            }
 
-            let start = parseDateBR(startDateStr);
-            let end = parseDateBR(endDateStr);
-            let inserts = [];
+            const inserts = [];
+            let current = incrementPlannerDate(start);
 
-            let current = new Date(start);
-            current.setDate(current.getDate() + 1);
-
-            while (current <= end) {
+            // Datas são comparadas e incrementadas como texto; não dependem de fuso horário.
+            while (current && current.iso <= end.iso) {
                 inserts.push({
-                    day: diasSemana[current.getDay()],
-                    date: formatDateBR(new Date(current)),
+                    day: current.weekday,
+                    date: current.formatted,
                     special: 3
                 });
-                current.setDate(current.getDate() + 1);
+                current = incrementPlannerDate(current);
             }
 
             if (inserts.length > 0) {
@@ -155,10 +154,22 @@ export function initPlanner() {
             return;
         }
         document.getElementById('plan-activities').setCustomValidity('');
+        const selectedDate = parsePlannerDateBR(document.getElementById('plan-date').value);
+        const dateInput = document.getElementById('plan-date');
+        if (!selectedDate) {
+            dateInput.setCustomValidity('Escolha uma data válida no calendário ou informe DD/MM/AAAA.');
+            dateInput.reportValidity();
+            dateInput.focus();
+            return;
+        }
+        dateInput.setCustomValidity('');
+        dateInput.value = selectedDate.formatted;
+        document.getElementById('plan-day').value = selectedDate.weekday;
+
         const gradeParts = splitPlannerGrade(document.getElementById('plan-grade').value);
         const planData = {
-            day: document.getElementById('plan-day').value,
-            date: document.getElementById('plan-date').value,
+            day: selectedDate.weekday,
+            date: selectedDate.formatted,
             time: document.getElementById('plan-time').value,
             serie: gradeParts.serie,
             team: gradeParts.team,
@@ -224,6 +235,9 @@ function resetPlannerForm() {
     }
     document.getElementById('plan-time').value = '';
     document.getElementById('plan-day').value = '';
+    document.getElementById('plan-date').value = '';
+    document.getElementById('plan-date-picker').value = '';
+    document.getElementById('plan-end-date-picker').value = '';
 }
 
 // --- LÓGICA DE GERENCIAMENTO DE DROPDOWNS CUSTOMIZADOS COM PROMPT ---
@@ -287,7 +301,89 @@ function setSelectValueWithCustom(selectId, value) {
     select.value = value;
 }
 
-// --- LÓGICA DO MÁSCARA E SELEÇÃO DE DATA POR CALENDÁRIO ---
+// --- DATAS DO PLANNER: TEXTO BRASILEIRO + CALENDÁRIO NATIVO ---
+const PLANNER_WEEKDAYS = [
+    'Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira',
+    'Quinta-feira', 'Sexta-feira', 'Sábado'
+];
+
+function parsePlannerDateBR(value) {
+    const match = String(value || '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!match) return null;
+
+    const day = Number(match[1]);
+    const month = Number(match[2]);
+    const year = Number(match[3]);
+    if (year < 1 || month < 1 || month > 12 || day < 1) return null;
+
+    const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+    const monthLengths = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if (day > monthLengths[month - 1]) return null;
+
+    // Algoritmo gregoriano sem Date(): evita deslocamentos por fuso horário.
+    const offsets = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
+    let adjustedYear = year;
+    if (month < 3) adjustedYear -= 1;
+    const weekdayIndex = (
+        adjustedYear +
+        Math.floor(adjustedYear / 4) -
+        Math.floor(adjustedYear / 100) +
+        Math.floor(adjustedYear / 400) +
+        offsets[month - 1] +
+        day
+    ) % 7;
+
+    const pad = number => String(number).padStart(2, '0');
+    return {
+        day,
+        month,
+        year,
+        iso: `${year}-${pad(month)}-${pad(day)}`,
+        formatted: `${pad(day)}/${pad(month)}/${year}`,
+        weekday: PLANNER_WEEKDAYS[weekdayIndex]
+    };
+}
+
+function plannerDateFromISO(value) {
+    const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return null;
+    return parsePlannerDateBR(`${match[3]}/${match[2]}/${match[1]}`);
+}
+
+function incrementPlannerDate(dateInfo) {
+    if (!dateInfo) return null;
+    const leapYear = dateInfo.year % 4 === 0 && (dateInfo.year % 100 !== 0 || dateInfo.year % 400 === 0);
+    const monthLengths = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    let day = dateInfo.day + 1;
+    let month = dateInfo.month;
+    let year = dateInfo.year;
+
+    if (day > monthLengths[month - 1]) {
+        day = 1;
+        month += 1;
+        if (month > 12) {
+            month = 1;
+            year += 1;
+        }
+    }
+    return parsePlannerDateBR(`${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`);
+}
+
+function setPlannerDateFields(value, fallbackDay = '') {
+    const dateInput = document.getElementById('plan-date');
+    const datePicker = document.getElementById('plan-date-picker');
+    const dayInput = document.getElementById('plan-day');
+    const parsed = parsePlannerDateBR(value);
+
+    if (dateInput) {
+        dateInput.value = parsed ? parsed.formatted : String(value || '');
+        dateInput.setCustomValidity('');
+    }
+    if (datePicker) datePicker.value = parsed ? parsed.iso : '';
+    if (dayInput) dayInput.value = parsed ? parsed.weekday : (fallbackDay || '');
+    return parsed;
+}
+
 function setupDatePickers() {
     setupDateInputAndPicker('plan-date', 'plan-date-picker');
     setupDateInputAndPicker('plan-end-date', 'plan-end-date-picker');
@@ -296,28 +392,56 @@ function setupDatePickers() {
 function setupDateInputAndPicker(inputId, pickerId) {
     const textInput = document.getElementById(inputId);
     const datePicker = document.getElementById(pickerId);
+    const isLessonDate = inputId === 'plan-date';
 
     if (textInput) {
         textInput.addEventListener('input', () => {
-            let v = textInput.value.replace(/\D/g, '');
-            if (v.length > 8) v = v.slice(0, 8);
-            if (v.length >= 5) {
-                textInput.value = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`;
-            } else if (v.length >= 3) {
-                textInput.value = `${v.slice(0, 2)}/${v.slice(2)}`;
+            let digits = textInput.value.replace(/\D/g, '');
+            if (digits.length > 8) digits = digits.slice(0, 8);
+            if (digits.length >= 5) {
+                textInput.value = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+            } else if (digits.length >= 3) {
+                textInput.value = `${digits.slice(0, 2)}/${digits.slice(2)}`;
             } else {
-                textInput.value = v;
+                textInput.value = digits;
             }
+
+            const parsed = parsePlannerDateBR(textInput.value);
+            if (datePicker) datePicker.value = parsed ? parsed.iso : '';
+            if (isLessonDate) {
+                const dayInput = document.getElementById('plan-day');
+                if (dayInput) dayInput.value = parsed ? parsed.weekday : '';
+            }
+            textInput.setCustomValidity(
+                digits.length === 8 && !parsed ? 'Data inválida. Confira dia, mês e ano.' : ''
+            );
         });
+
+        if (datePicker) {
+            // Clicar no próprio campo abre o calendário, mantendo a data do banco em texto.
+            textInput.addEventListener('click', () => {
+                const current = parsePlannerDateBR(textInput.value);
+                datePicker.value = current ? current.iso : '';
+                try {
+                    if (typeof datePicker.showPicker === 'function') datePicker.showPicker();
+                    else datePicker.click();
+                } catch {
+                    datePicker.focus();
+                    datePicker.click();
+                }
+            });
+        }
     }
 
     if (datePicker && textInput) {
         datePicker.addEventListener('change', () => {
-            if (datePicker.value) {
-                const parts = datePicker.value.split('-'); // YYYY-MM-DD
-                if (parts.length === 3) {
-                    textInput.value = `${parts[2]}/${parts[1]}/${parts[0]}`;
-                }
+            const parsed = plannerDateFromISO(datePicker.value);
+            if (!parsed) return;
+            textInput.value = parsed.formatted;
+            textInput.setCustomValidity('');
+            if (isLessonDate) {
+                const dayInput = document.getElementById('plan-day');
+                if (dayInput) dayInput.value = parsed.weekday;
             }
         });
     }
@@ -353,14 +477,14 @@ window.addPlanForDay = (day, date) => {
     ['cb-especial', 'cb-folga', 'cb-prova', 'cb-adaptado'].forEach(id => document.getElementById(id).checked = false);
 
     // Preenche o dia e a data fornecidos pela seção
-    document.getElementById('plan-day').value = day || '';
-    document.getElementById('plan-date').value = date || '';
+    const selectedDate = setPlannerDateFields(date, day || '');
+    const actualDay = selectedDate ? selectedDate.weekday : (day || '');
 
     // Aplica "Última turma" se o switcher estiver ligado
     applyLastTeamIfEnabled();
 
     window.updateRequiredFields();
-    document.getElementById('planner-modal-title').textContent = `Adicionar Aula - ${day} (${date})`;
+    document.getElementById('planner-modal-title').textContent = `Adicionar Aula - ${actualDay} (${date})`;
     document.getElementById('planner-modal').showModal();
 };
 
@@ -765,6 +889,75 @@ function normalizePlannerSearchValue(value) {
         .trim();
 }
 
+function setupPlannerSectionReschedule() {
+    const modal = document.getElementById('planner-reschedule-modal');
+    const form = document.getElementById('planner-reschedule-form');
+    const dateInput = document.getElementById('planner-reschedule-date');
+    const cancelButton = document.getElementById('btn-cancel-planner-reschedule');
+    const saveButton = document.getElementById('btn-confirm-planner-reschedule');
+    if (!modal || !form || !dateInput || !saveButton) return;
+
+    if (cancelButton) cancelButton.addEventListener('click', () => modal.close());
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const selectedDate = plannerDateFromISO(dateInput.value);
+        if (!selectedDate || !pendingPlannerRescheduleItems.length) {
+            dateInput.setCustomValidity('Escolha uma data válida.');
+            dateInput.reportValidity();
+            return;
+        }
+        dateInput.setCustomValidity('');
+
+        const ids = [...new Set(pendingPlannerRescheduleItems.map(item => item.id))];
+        saveButton.disabled = true;
+        saveButton.textContent = 'Salvando...';
+        try {
+            const { error } = await supabase
+                .from('planner')
+                .update({ date: selectedDate.formatted, day: selectedDate.weekday })
+                .in('id', ids)
+                .is('completed_at', null);
+
+            if (error) throw error;
+            modal.close();
+            pendingPlannerRescheduleItems = [];
+            await loadPlanners();
+        } catch (error) {
+            alert('Não foi possível remarcar a seção: ' + (error.message || error));
+        } finally {
+            saveButton.disabled = false;
+            saveButton.textContent = 'Aplicar nova data';
+        }
+    });
+    modal.addEventListener('close', () => {
+        pendingPlannerRescheduleItems = [];
+        dateInput.value = '';
+        dateInput.setCustomValidity('');
+    });
+}
+
+function openPlannerSectionReschedule(items) {
+    const modal = document.getElementById('planner-reschedule-modal');
+    const dateInput = document.getElementById('planner-reschedule-date');
+    const currentLabel = document.getElementById('planner-reschedule-current');
+    const countLabel = document.getElementById('planner-reschedule-count');
+    if (!modal || !dateInput || !items || !items.length) return;
+
+    pendingPlannerRescheduleItems = [...items];
+    const first = items[0];
+    const currentDate = parsePlannerDateBR(first.date);
+    dateInput.value = currentDate ? currentDate.iso : '';
+    if (currentLabel) {
+        currentLabel.textContent = currentDate
+            ? `Data atual: ${currentDate.formatted} (${currentDate.weekday})`
+            : 'Data atual não identificada';
+    }
+    if (countLabel) {
+        countLabel.textContent = `${items.length} aula(s) serão atualizadas. Horários, turmas e atividades serão mantidos.`;
+    }
+    if (!modal.open) modal.showModal();
+}
+
 function renderPlannerList() {
     const container = document.getElementById('planner-list');
     if (!container) return;
@@ -781,26 +974,46 @@ function renderPlannerList() {
         updatePlannerBulkToolbar();
         return;
     }
-    const timestamp = (dateStr,timeStr) => {
-        const parts = String(dateStr || '').split(/[/-]/);
-        if (parts.length !== 3) return 0;
-        const [year,month,day] = parts[0].length === 4 ? parts : [parts[2],parts[1],parts[0]];
-        return new Date(year + '/' + month + '/' + day + ' ' + (timeStr || '00:00')).getTime();
+    const timestamp = (dateStr, timeStr) => {
+        const dateInfo = parsePlannerDateBR(dateStr);
+        if (!dateInfo) return 0;
+        const timeMatch = String(timeStr || '00:00').match(/^(\d{1,2}):(\d{2})$/);
+        const minutes = timeMatch ? Number(timeMatch[1]) * 60 + Number(timeMatch[2]) : 0;
+        return (dateInfo.year * 10000 + dateInfo.month * 100 + dateInfo.day) * 1440 + minutes;
     };
-    const sorted = [...filteredData].sort((a,b) => timestamp(a.date,a.time) - timestamp(b.date,b.time));
-    const groups = sorted.reduce((acc,item) => {
-        const key = item.day ? item.day + ' - ' + item.date : item.date;
+    const sorted = [...filteredData].sort((a, b) => timestamp(a.date, a.time) - timestamp(b.date, b.time));
+    const groups = sorted.reduce((acc, item) => {
+        const dateInfo = parsePlannerDateBR(item.date);
+        // Agrupa pela data, não pelo texto antigo do dia, para evitar seções duplicadas.
+        const key = dateInfo ? dateInfo.formatted : (item.day || 'Sem dia') + ' - ' + (item.date || 'Sem data');
         (acc[key] ||= []).push(item);
         return acc;
     }, {});
-    container.innerHTML = Object.entries(groups).map(([title,items]) => {
-        const collapsed = localStorage.getItem('planner_state_' + title) === 'true';
+    const sectionEntries = Object.entries(groups);
+    container.innerHTML = sectionEntries.map(([key, items], sectionIndex) => {
         const first = items[0] || {};
+        const dateInfo = parsePlannerDateBR(first.date);
+        const sectionDay = dateInfo ? dateInfo.weekday : (first.day || '');
+        const sectionDate = dateInfo ? dateInfo.formatted : (first.date || 'Sem data');
+        const title = sectionDay ? sectionDay + ' - ' + sectionDate : sectionDate;
+        const collapsed = localStorage.getItem('planner_state_' + title) === 'true';
         return '<section class="planner-section"><h3 class="planner-section-title"><span>' + escapePlannerHtml(title) + '</span><div class="planner-section-heading-actions">' +
-            '<button class="btn-small btn-primary" onclick="window.addPlanForDay(\'' + escapePlannerHtml(first.day || '') + '\', \'' + escapePlannerHtml(first.date || '') + '\')">+ Nova aula</button>' +
-            '<button class="minimize-btn" onclick="window.togglePlannerSection(this, \'' + escapePlannerHtml(title) + '\')">' + (collapsed ? 'Maximizar' : 'Minimizar') + '</button></div></h3>' +
-            '<div class="planner-section-content ' + (collapsed ? 'hidden' : '') + '">' + items.map(item => renderPlannerCard(item,'active')).join('') + '</div></section>';
+            '<button type="button" class="btn-small btn-secondary planner-reschedule-button" data-reschedule-section="' + sectionIndex + '" title="Alterar a data de todas as aulas desta seção"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i> Remarcar</button>' +
+            '<button type="button" class="btn-small btn-primary" data-add-plan-day="' + escapePlannerHtml(sectionDay) + '" data-add-plan-date="' + escapePlannerHtml(sectionDate) + '">+ Nova aula</button>' +
+            '<button type="button" class="minimize-btn" data-toggle-planner-section data-section-title="' + escapePlannerHtml(title) + '">' + (collapsed ? 'Maximizar' : 'Minimizar') + '</button></div></h3>' +
+            '<div class="planner-section-content ' + (collapsed ? 'hidden' : '') + '">' + items.map(item => renderPlannerCard(item, 'active')).join('') + '</div></section>';
     }).join('');
+
+    container.querySelectorAll('[data-reschedule-section]').forEach(button => {
+        const group = sectionEntries[Number(button.dataset.rescheduleSection)];
+        button.addEventListener('click', () => openPlannerSectionReschedule(group ? group[1] : []));
+    });
+    container.querySelectorAll('[data-add-plan-day]').forEach(button => {
+        button.addEventListener('click', () => window.addPlanForDay(button.dataset.addPlanDay, button.dataset.addPlanDate));
+    });
+    container.querySelectorAll('[data-toggle-planner-section]').forEach(button => {
+        button.addEventListener('click', () => window.togglePlannerSection(button, button.dataset.sectionTitle));
+    });
     setupPlannerCardInteractions(container);
     updatePlannerBulkToolbar();
 }
@@ -1317,8 +1530,7 @@ window.editPlanner = (p) => {
     if (detailsModal && detailsModal.open) detailsModal.close();
     document.getElementById('plan-id').value = p.id;
     
-    setSelectValueWithCustom('plan-day', p.day || '');
-    document.getElementById('plan-date').value = p.date || '';
+    setPlannerDateFields(p.date || '', p.day || '');
     setSelectValueWithCustom('plan-time', p.time || '');
     setPlannerGradeSelect(p.serie, p.team);
 
