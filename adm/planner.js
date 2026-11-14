@@ -147,7 +147,6 @@ export function initPlanner() {
 
         const activitiesValue = document.getElementById('plan-activities').value;
         const activityTitleLine = activitiesValue.split(/\r?\n/, 1)[0] || '';
-        const activitiesRequired = document.getElementById('plan-activities').required;
         if (activitiesValue.trim() && !/^#\s+\S.*$/.test(activityTitleLine)) {
             const activitiesEditor = document.getElementById('plan-activities');
             activitiesEditor.setCustomValidity('A primeira linha precisa ser um título no formato # Título da aula.');
@@ -215,6 +214,8 @@ export function initPlanner() {
 // Helper para redefinir o formulário mantendo integridade
 function resetPlannerForm() {
     document.getElementById('planner-form').reset();
+    const activitiesEditor = document.getElementById('plan-activities');
+    if (activitiesEditor) activitiesEditor.setCustomValidity('');
     if (window.updatePlannerActivitiesPreview) window.updatePlannerActivitiesPreview();
     const gradeSelect = document.getElementById('plan-grade');
     if (gradeSelect) {
@@ -1321,6 +1322,7 @@ window.editPlanner = (p) => {
 
     document.getElementById('plan-skills').value = p.skills || '';
     document.getElementById('plan-activities').value = p.activities || '';
+    document.getElementById('plan-activities').setCustomValidity('');
     if (window.updatePlannerActivitiesPreview) window.updatePlannerActivitiesPreview();
     document.getElementById('plan-duration').value = p.duration || '';
     
