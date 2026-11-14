@@ -1,7 +1,7 @@
 import { supabase } from '../supabaseClient.js';
 
 export function initUsers() {
-    loadUsers();
+    const initialLoad = loadUsers();
 
     // Pesquisa Local em Usuários
     const searchInput = document.getElementById('users-search');
@@ -54,6 +54,7 @@ export function initUsers() {
             resultsContainer.classList.add('hidden');
         }
     });
+    return initialLoad;
 }
 
 async function loadUsers() {
