@@ -236,11 +236,17 @@ create policy "Students can read missions"
     to anon
     using (true);
 
-create policy "Authenticated users can read missions"
+create policy "Primary teacher can read missions"
     on public.missions
     for select
     to authenticated
-    using (true);
+    using (
+        exists (
+            select 1 from public.teachers as teacher
+            where teacher.id = (select auth.uid())
+              and teacher.is_primary = true
+        )
+    );
 
 create policy "Primary teacher manages missions"
     on public.missions
@@ -267,11 +273,17 @@ create policy "Students can read flashcards"
     to anon
     using (true);
 
-create policy "Authenticated users can read flashcards"
+create policy "Primary teacher can read flashcards"
     on public.flashcards
     for select
     to authenticated
-    using (true);
+    using (
+        exists (
+            select 1 from public.teachers as teacher
+            where teacher.id = (select auth.uid())
+              and teacher.is_primary = true
+        )
+    );
 
 create policy "Primary teacher manages flashcards"
     on public.flashcards
