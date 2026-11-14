@@ -1545,3 +1545,50 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     .planner-section-heading-actions { margin-top: 8px; }
     .planner-detail-title { grid-column: auto; }
 }
+
+
+/* Keep special lesson cards accented without inheriting the old solid fill on every child. */
+.planner-card.card-special-1 .planner-card-info,
+.planner-card.card-special-1 .planner-card-heading,
+.planner-card.card-special-1 .planner-card-title-wrap,
+.planner-card.card-special-1 .planner-card-title,
+.planner-card.card-special-1 .planner-card-datetime,
+.planner-card.card-special-1 .planner-card-meta,
+.planner-card.card-special-1 .planner-card-menu,
+.planner-card.card-special-2 .planner-card-info,
+.planner-card.card-special-2 .planner-card-heading,
+.planner-card.card-special-2 .planner-card-title-wrap,
+.planner-card.card-special-2 .planner-card-title,
+.planner-card.card-special-2 .planner-card-datetime,
+.planner-card.card-special-2 .planner-card-meta,
+.planner-card.card-special-2 .planner-card-menu,
+.planner-card.card-special-3 .planner-card-info,
+.planner-card.card-special-3 .planner-card-heading,
+.planner-card.card-special-3 .planner-card-title-wrap,
+.planner-card.card-special-3 .planner-card-title,
+.planner-card.card-special-3 .planner-card-datetime,
+.planner-card.card-special-3 .planner-card-meta,
+.planner-card.card-special-3 .planner-card-menu {
+    background-color: transparent !important;
+}
+.planner-card.card-special-1 .planner-card-datetime > span,
+.planner-card.card-special-1 .planner-card-datetime > strong,
+.planner-card.card-special-2 .planner-card-datetime > span,
+.planner-card.card-special-2 .planner-card-datetime > strong,
+.planner-card.card-special-3 .planner-card-datetime > span,
+.planner-card.card-special-3 .planner-card-datetime > strong {
+    background: rgba(4, 12, 24, .28) !important;
+    border-color: rgba(255,255,255,.14) !important;
+}
+.planner-card.card-special-1 .planner-options-trigger,
+.planner-card.card-special-2 .planner-options-trigger,
+.planner-card.card-special-3 .planner-options-trigger {
+    background: rgba(4, 12, 24, .28) !important;
+    border-color: rgba(255,255,255,.22) !important;
+    color: #fff !important;
+}
+.planner-card.card-special-1 .planner-card-meta > span,
+.planner-card.card-special-2 .planner-card-meta > span,
+.planner-card.card-special-3 .planner-card-meta > span {
+    background: transparent !important;
+}
