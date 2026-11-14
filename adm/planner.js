@@ -1732,7 +1732,7 @@ window.viewPlanner = id => {
         '</div>' +
         '<div class="planner-details-classification">' +
             '<div class="planner-detail-classification-card planner-detail-type special-type-' + special + '">' +
-                '<i class="fa-solid ' + typeIcons[special] + '" aria-hidden="true"></i>' +
+                '<i class="fa-solid ' + (typeIcons[special] || 'fa-graduation-cap') + '" aria-hidden="true"></i>' +
                 '<div><span>Tipo</span><strong>' + escapePlannerHtml(types[special] || 'Regular') + '</strong></div>' +
             '</div>' +
             '<div class="planner-detail-classification-card planner-detail-tag-card">' +
