@@ -379,10 +379,28 @@
                 <label class="full-width">Habilidades BNCC: <textarea id="plan-skills" rows="3"></textarea></label>
                 <label class="full-width activities-editor-field">Atividades:
                     <div id="activities-toolbar" class="activities-toolbar" aria-label="Formatação das atividades">
-                        <button type="button" data-format="heading" title="Título">H1</button><button type="button" data-format="bold" title="Negrito"><strong>B</strong></button><button type="button" data-format="italic" title="Itálico"><em>I</em></button><button type="button" data-format="bullet" title="Lista com marcadores">• Lista</button><button type="button" data-format="number" title="Lista numerada">1. Lista</button><button type="button" data-format="quote" title="Citação">❝</button><button type="button" data-format="code" title="Código">&lt;/&gt;</button><button type="button" data-format="divider" title="Divisor">―</button>
+                        <label class="activities-heading-level" for="activities-heading-level">
+                            Nível
+                            <select id="activities-heading-level" aria-label="Nível do título">
+                                <option value="1">H1 · Principal</option>
+                                <option value="2">H2</option>
+                                <option value="3">H3</option>
+                                <option value="4">H4</option>
+                                <option value="5">H5</option>
+                                <option value="6">H6</option>
+                            </select>
+                        </label>
+                        <button type="button" data-format="heading" title="Inserir título no nível escolhido"><i class="fa-solid fa-heading" aria-hidden="true"></i> Título</button>
+                        <button type="button" data-format="bold" title="Inserir marcadores de negrito"><strong>B</strong> Negrito</button>
+                        <button type="button" data-format="italic" title="Inserir marcadores de itálico"><i class="fa-solid fa-italic" aria-hidden="true"></i> Itálico</button>
+                        <button type="button" data-format="tag" title="Inserir marcadores de tag"><i class="fa-solid fa-tag" aria-hidden="true"></i> Tag</button>
+                        <button type="button" data-format="bullet" title="Lista com marcadores">• Lista</button>
+                        <button type="button" data-format="number" title="Lista numerada">1. Lista</button>
+                        <button type="button" data-format="quote" title="Citação">❝</button>
+                        <button type="button" data-format="divider" title="Divisor">―</button>
                     </div>
                     <textarea id="plan-activities" rows="5" required placeholder="# Título da aula&#10;&#10;Descreva as atividades e use os botões para formatar..."></textarea>
-                    <small class="activities-title-hint">A primeira linha deve conter o título neste formato: <strong># Título da aula</strong>.</small>
+                    <small class="activities-title-hint">O primeiro conteúdo deve ser um título principal <strong>H1 (# Título da aula)</strong>. Os títulos H2 a H6 são opcionais. Os botões inserem apenas os marcadores; digite o texto entre eles.</small>
                     <div class="markdown-preview-label">Pré-visualização</div><div id="plan-activities-preview" class="markdown-preview"></div>
                 </label>
             </div>
