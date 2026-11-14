@@ -14,8 +14,7 @@ export function initPlanner() {
     setupCustomOptions();
     setupDatePickers();
     setupLastTeamToggle();
-    loadPlanners();
-    loadCompletedPlanners();
+    const initialLoad = Promise.all([loadPlanners(), loadCompletedPlanners()]);
     updatePlannerBulkToolbar();
     setupPlannerMerge();
     setupPlannerBulkActions();
@@ -221,6 +220,7 @@ export function initPlanner() {
             });
         });
     }
+    return initialLoad;
 }
 
 // Helper para redefinir o formulário mantendo integridade
