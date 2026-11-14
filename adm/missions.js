@@ -2,7 +2,7 @@
 import { supabase } from '../supabaseClient.js';
 
 export function initMissions() {
-    loadMissions();
+    const initialLoad = loadMissions();
 
     // Botão de adicionar missão
     document.getElementById('btn-add-mission').addEventListener('click', () => {
@@ -41,6 +41,7 @@ export function initMissions() {
             loadMissions();
         }
     });
+    return initialLoad;
 }
 
 // Carregar lista de missões
