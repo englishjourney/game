@@ -13,27 +13,27 @@ const SHIFTS = {
         label: 'Manhã',
         icon: 'fa-sun',
         slots: [
-            { index: 0, label: '1º', time: '07:00 – 07:45' },
-            { index: 1, label: '2º', time: '07:45 – 08:30' },
-            { index: 2, label: '3º', time: '08:30 – 09:15' },
-            { index: 3, label: '4º', time: '09:15 – 10:00' },
-            { index: 5, label: '5º', time: '10:20 – 11:05' },
-            { index: 6, label: '6º', time: '11:05 – 11:50' }
+            { index: 0, label: '1º', time: '07:00 – 07:50' },
+            { index: 1, label: '2º', time: '07:50 – 08:30' },
+            { index: 2, label: '3º', time: '08:30 – 09:10' },
+            { index: 3, label: '4º', time: '09:10 – 09:50' },
+            { index: 5, label: '5º', time: '10:10 – 10:50' },
+            { index: 6, label: '6º', time: '10:50 – 11:30' }
         ],
-        breakTime: '10:00 – 10:20'
+        breakTime: '09:50 – 10:10'
     },
     ves: {
         label: 'Tarde',
         icon: 'fa-cloud-sun',
         slots: [
-            { index: 0, label: '1º', time: '13:00 – 13:45' },
-            { index: 1, label: '2º', time: '13:45 – 14:30' },
-            { index: 2, label: '3º', time: '14:30 – 15:15' },
-            { index: 3, label: '4º', time: '15:15 – 16:00' },
-            { index: 5, label: '5º', time: '16:20 – 17:05' },
-            { index: 6, label: '6º', time: '17:05 – 17:50' }
+            { index: 0, label: '1º', time: '13:00 – 13:50' },
+            { index: 1, label: '2º', time: '13:50 – 14:30' },
+            { index: 2, label: '3º', time: '14:30 – 15:10' },
+            { index: 3, label: '4º', time: '15:10 – 15:50' },
+            { index: 5, label: '5º', time: '16:10 – 16:50' },
+            { index: 6, label: '6º', time: '16:50 – 17:30' }
         ],
-        breakTime: '16:00 – 16:20'
+        breakTime: '15:50 – 16:10'
     }
 };
 
