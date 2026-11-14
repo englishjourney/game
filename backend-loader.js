@@ -174,7 +174,7 @@
   }
 
   function isAdminPage() {
-    return /(?:^|\\/)adm(?:\\/|$)/i.test(window.location.pathname);
+    return /(?:^|\/)adm(?:\/|$)/i.test(window.location.pathname);
   }
 
   function buildHighSchoolMarkup() {
