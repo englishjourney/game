@@ -204,49 +204,8 @@ function setupNavigation() {
 }
 
 async function setupDashboard() {
-    const searchInput = document.getElementById('global-search');
-    const resultsContainer = document.getElementById('search-results');
-
-    if (searchInput && resultsContainer) {
-        searchInput.addEventListener('input', async (e) => {
-            const query = e.target.value.trim();
-            if (query.length < 3) {
-                resultsContainer.classList.add('hidden');
-                return;
-            }
-
-            resultsContainer.innerHTML = '<div class="search-item">Buscando...</div>';
-            resultsContainer.classList.remove('hidden');
-
-            try {
-                const { data: users } = await supabase.from('users').select('name, username, grade').ilike('name', `%${query}%`).limit(3);
-                const { data: planners } = await supabase.from('planner').select('serie, team, activities').ilike('activities', `%${query}%`).limit(3);
-
-                let html = '';
-                if (users && users.length) {
-                    html += '<div style="padding: 5px 10px; color: var(--primary); font-size: 0.8em">Alunos</div>';
-                    users.forEach(u => html += `<div class="search-item">${u.name} (${u.username}) - ${u.grade || 'Sem turma'}</div>`);
-                }
-                if (planners && planners.length) {
-                    html += '<div style="padding: 5px 10px; color: var(--primary); font-size: 0.8em">Planejamentos</div>';
-                    planners.forEach(p => html += `<div class="search-item">${p.serie} ${p.team}: ${p.activities.substring(0,30)}...</div>`);
-                }
-
-                if (!html) html = '<div class="search-item">Nenhum resultado.</div>';
-                resultsContainer.innerHTML = html;
-            } catch (err) {
-                console.error(err);
-            }
-        });
-
-        document.addEventListener('click', (e) => {
-            if (e.target !== searchInput && e.target !== resultsContainer) {
-                resultsContainer.classList.add('hidden');
-            }
-        });
-    }
-
-    // Carrega em paralelo as aulas do dia e os horários semanais.
+    // A busca global é inicializada exclusivamente pelo módulo do dashboard EduPlan.
+    // Este trecho mantém somente a carga legada já existente do resumo do dia.
     await Promise.all([loadTodayPlans(), loadSchedule()]);
 }
 

@@ -499,7 +499,7 @@ window.togglePlannerSection = (btn, title) => {
     btn.setAttribute('aria-label', isHidden ? 'Expandir dia' : 'Recolher dia');
     btn.title = isHidden ? 'Expandir dia' : 'Recolher dia';
     btn.innerHTML = '<i class="fa-solid ' + (isHidden ? 'fa-chevron-down' : 'fa-chevron-up') + '" aria-hidden="true"></i>';
-    localStorage.setItem(`planner_state_v2_${title}`, String(isHidden));
+    localStorage.setItem(`planner_state_v3_${title}`, String(isHidden));
 };
 
 
@@ -885,6 +885,12 @@ function setupPlannerCardInteractions(container) {
         }
         card.addEventListener('click', event => {
             if (event.target.closest('button, a, input, label')) return;
+            const searchInput = document.getElementById('planner-search');
+            if (searchInput?.value.trim()) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                card.classList.add('search-result-highlight');
+                window.setTimeout(() => card.classList.remove('search-result-highlight'), 3000);
+            }
             window.viewPlanner(id);
         });
         card.addEventListener('keydown', event => {
@@ -1043,7 +1049,10 @@ function renderPlannerList() {
         const sectionDay = dateInfo ? dateInfo.weekday : (first.day || '');
         const sectionDate = dateInfo ? dateInfo.formatted : (first.date || 'Sem data');
         const title = sectionDay ? sectionDay + ' - ' + sectionDate : sectionDate;
-        const collapsed = localStorage.getItem('planner_state_v2_' + title) === 'true';
+        const savedState = localStorage.getItem('planner_state_v3_' + title);
+        const collapsed = query
+            ? false
+            : (savedState === null ? true : savedState === 'true');
         return '<section class="planner-section"><h3 class="planner-section-title"><span>' + escapePlannerHtml(title) + '</span><div class="planner-section-heading-actions">' +
             '<button type="button" class="btn-small btn-secondary planner-reschedule-button" data-reschedule-section="' + sectionIndex + '" title="Alterar a data de todas as aulas desta seção"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i> Remarcar</button>' +
             '<button type="button" class="btn-small btn-primary" data-add-plan-day="' + escapePlannerHtml(sectionDay) + '" data-add-plan-date="' + escapePlannerHtml(sectionDate) + '">+ Nova aula</button>' +

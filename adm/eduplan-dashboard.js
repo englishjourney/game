@@ -39,6 +39,8 @@ const SHIFTS = {
 
 let scheduleRecord = null;
 let dashboardInitialized = false;
+let scheduleAutoAdvanceTimer = null;
+const scheduleManualExpandedState = new Map();
 
 function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, character => ({
@@ -157,29 +159,102 @@ function renderShift(dayData, config, dayId, shiftId) {
     '</section>';
 }
 
+function hasActualScheduledLesson(value) {
+    const lesson = displayLesson(value);
+    return Boolean(String(value || '').trim()) &&
+        !lesson.empty &&
+        !lesson.vacant &&
+        !/intervalo/i.test(lesson.label);
+}
+
+function dayHasActualLessons(data, dayId) {
+    return ['mat', 'ves'].some(shiftId => {
+        const values = readScheduleValues(data[dayId + '_' + shiftId]);
+        return [0, 1, 2, 3, 5, 6].some(index => hasActualScheduledLesson(values[index]));
+    });
+}
+
+function getLastLessonEndMinutes(data, dayId) {
+    let lastEnd = null;
+    ['mat', 'ves'].forEach(shiftId => {
+        const values = readScheduleValues(data[dayId + '_' + shiftId]);
+        SHIFTS[shiftId].slots.forEach(slot => {
+            if (!hasActualScheduledLesson(values[slot.index])) return;
+            const endText = slot.time.split('–').pop().trim();
+            const [hours, minutes] = endText.split(':').map(Number);
+            const endMinutes = hours * 60 + minutes;
+            if (Number.isFinite(endMinutes) && (lastEnd === null || endMinutes > lastEnd)) {
+                lastEnd = endMinutes;
+            }
+        });
+    });
+    return lastEnd;
+}
+
+function getDefaultExpandedDayId(data, visibleDays, now) {
+    if (!visibleDays.length) return null;
+
+    const weekdayIndex = (now.getDay() + 6) % 7;
+    const currentDay = WEEKDAYS[weekdayIndex];
+    if (currentDay && weekdayIndex < WEEKDAYS.length) {
+        const currentIsVisible = visibleDays.some(day => day.id === currentDay.id);
+        const lastEnd = currentIsVisible ? getLastLessonEndMinutes(data, currentDay.id) : null;
+        const nowMinutes = now.getHours() * 60 + now.getMinutes();
+        if (currentIsVisible && (lastEnd === null || nowMinutes < lastEnd)) {
+            return currentDay.id;
+        }
+    }
+
+    const nextLessonDay = visibleDays.find(day =>
+        WEEKDAYS.findIndex(weekday => weekday.id === day.id) > weekdayIndex
+    );
+    return nextLessonDay?.id || visibleDays[0].id;
+}
+
+function scheduleAutomaticDayAdvance(data, visibleDays, preferredDayId, now) {
+    if (scheduleAutoAdvanceTimer) {
+        window.clearTimeout(scheduleAutoAdvanceTimer);
+        scheduleAutoAdvanceTimer = null;
+    }
+
+    const currentWeekdayIndex = (now.getDay() + 6) % 7;
+    const currentDay = WEEKDAYS[currentWeekdayIndex];
+    if (!currentDay || preferredDayId !== currentDay.id) return;
+
+    const lastEnd = getLastLessonEndMinutes(data, currentDay.id);
+    if (lastEnd === null) return;
+
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    if (nowMinutes >= lastEnd) return;
+
+    const nextAdvance = new Date(now);
+    nextAdvance.setHours(Math.floor(lastEnd / 60), lastEnd % 60, 1, 0);
+    const delay = Math.max(250, nextAdvance.getTime() - now.getTime());
+    scheduleAutoAdvanceTimer = window.setTimeout(() => {
+        renderSchedule(scheduleRecord || {});
+    }, delay);
+}
+
 function renderSchedule(data) {
     const container = document.getElementById('schedule-container');
     if (!container) return;
 
     const weekDates = getWeekDates();
-    const currentWeekday = (new Date().getDay() + 6) % 7;
-    const defaultOpenIndex = Math.min(currentWeekday, 4);
-
-    const visibleDays = weekDates.filter(day =>
-        shiftHasLessons(data, day.id, 'mat') || shiftHasLessons(data, day.id, 'ves')
-    );
-    const firstOpenDayId = visibleDays.find(day => day.id === weekDates[defaultOpenIndex]?.id)?.id || visibleDays[0]?.id;
+    const now = new Date();
+    const visibleDays = weekDates.filter(day => dayHasActualLessons(data, day.id));
+    const preferredOpenDayId = getDefaultExpandedDayId(data, visibleDays, now);
 
     const dayCards = visibleDays.map(day => {
-        const isOpen = day.id === firstOpenDayId;
-        return '<article class="schedule-day-card ' + (isOpen ? 'is-open' : '') + '" data-day-card="' + day.id + '">' +
-            '<button type="button" class="schedule-day-header" data-day-toggle="' + day.id + '" aria-expanded="' + String(isOpen) + '">' +
+        const isOpen = day.id === preferredOpenDayId;
+        const manualState = scheduleManualExpandedState.get(day.id);
+        const expanded = manualState === undefined ? isOpen : manualState;
+        return '<article class="schedule-day-card ' + (expanded ? 'is-open' : '') + '" data-day-card="' + day.id + '">' +
+            '<button type="button" class="schedule-day-header" data-day-toggle="' + day.id + '" aria-expanded="' + String(expanded) + '" aria-label="' + (expanded ? 'Recolher ' : 'Expandir ') + day.label + '" title="' + (expanded ? 'Recolher' : 'Expandir') + '">' +
                 '<span class="schedule-day-mark"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span>' +
                 '<span class="schedule-day-title">' + day.label + '</span>' +
-                '<span class="schedule-day-toggle-label">' + (isOpen ? 'Minimizar' : 'Maximizar') + '</span>' +
-                '<i class="fa-solid ' + (isOpen ? 'fa-chevron-up' : 'fa-chevron-down') + ' schedule-day-chevron" aria-hidden="true"></i>' +
+                '<i class="fa-solid ' + (expanded ? 'fa-chevron-up' : 'fa-chevron-down') + ' schedule-day-chevron" aria-hidden="true"></i>' +
             '</button>' +
-            '<div class="schedule-day-content" ' + (isOpen ? '' : 'hidden') + '>' +
+            '<div class="schedule-day-content" ' + (expanded ? '' : 'hidden') + '>' +
                 '<div class="schedule-shifts-grid">' +
                     renderShift(data, SHIFTS.mat, day.id, 'mat') +
                     renderShift(data, SHIFTS.ves, day.id, 'ves') +
@@ -188,21 +263,27 @@ function renderSchedule(data) {
         '</article>';
     });
 
-    container.innerHTML = '<div class="schedule-week-grid">' + dayCards.join('') + '</div>';
+    container.innerHTML = visibleDays.length
+        ? '<div class="schedule-week-grid">' + dayCards.join('') + '</div>'
+        : '<div class="empty-state">Nenhum horário de aula cadastrado.</div>';
 
     container.querySelectorAll('[data-day-toggle]').forEach(button => {
         button.addEventListener('click', () => {
             const card = button.closest('[data-day-card]');
             const content = card.querySelector('.schedule-day-content');
             const open = card.classList.toggle('is-open');
+            scheduleManualExpandedState.set(card.dataset.dayCard, open);
             content.hidden = !open;
             button.setAttribute('aria-expanded', String(open));
-            button.querySelector('.schedule-day-toggle-label').textContent = open ? 'Minimizar' : 'Maximizar';
+            button.setAttribute('aria-label', (open ? 'Recolher ' : 'Expandir ') + card.dataset.dayCard);
+            button.title = open ? 'Recolher' : 'Expandir';
             const chevron = button.querySelector('.schedule-day-chevron');
             chevron.classList.toggle('fa-chevron-up', open);
             chevron.classList.toggle('fa-chevron-down', !open);
         });
     });
+
+    scheduleAutomaticDayAdvance(data, visibleDays, preferredOpenDayId, now);
 }
 
 function renderSummary(plans) {
@@ -319,6 +400,7 @@ async function loadDashboard() {
 function setupGlobalSearch() {
     const input = document.getElementById('global-search');
     const resultsContainer = document.getElementById('search-results');
+    const loader = document.getElementById('global-search-loader');
     if (!input || !resultsContainer || input.dataset.initialized === 'true') return;
     input.dataset.initialized = 'true';
 
@@ -345,8 +427,10 @@ function setupGlobalSearch() {
                 ancestor.classList.remove('hidden');
                 const toggle = ancestor.closest('.planner-section')?.querySelector('[data-toggle-planner-section]');
                 if (toggle) {
-                    toggle.textContent = 'Minimizar';
+                    toggle.setAttribute('aria-label', 'Recolher dia');
                     toggle.setAttribute('aria-expanded', 'true');
+                    toggle.title = 'Recolher dia';
+                    toggle.innerHTML = '<i class="fa-solid fa-chevron-up" aria-hidden="true"></i>';
                 }
             }
 
@@ -362,8 +446,10 @@ function setupGlobalSearch() {
                 ancestor.classList.remove('hidden');
                 const toggle = ancestor.previousElementSibling?.querySelector('.minimize-btn');
                 if (toggle) {
-                    toggle.textContent = 'Recolher';
+                    toggle.setAttribute('aria-label', 'Recolher turma');
                     toggle.setAttribute('aria-expanded', 'true');
+                    toggle.title = 'Recolher turma';
+                    toggle.innerHTML = '<i class="fa-solid fa-chevron-up" aria-hidden="true"></i>';
                 }
             }
 
@@ -385,8 +471,8 @@ function setupGlobalSearch() {
                 card?.classList.add('is-open');
                 if (toggle?.matches('[data-day-toggle]')) {
                     toggle.setAttribute('aria-expanded', 'true');
-                    const label = toggle.querySelector('.schedule-day-toggle-label');
-                    if (label) label.textContent = 'Minimizar';
+                    toggle.setAttribute('aria-label', 'Recolher ' + (card?.dataset.dayCard || 'dia'));
+                    toggle.title = 'Recolher';
                     const chevron = toggle.querySelector('.schedule-day-chevron');
                     chevron?.classList.add('fa-chevron-up');
                     chevron?.classList.remove('fa-chevron-down');
@@ -403,7 +489,11 @@ function setupGlobalSearch() {
         revealTargetAncestors(target);
         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         target.classList.add('search-result-highlight');
-        window.setTimeout(() => target.classList.remove('search-result-highlight'), 2200);
+        if (target.id.startsWith('schedule-slot-')) {
+            const dayId = target.id.split('-')[2];
+            if (dayId) scheduleManualExpandedState.set(dayId, true);
+        }
+        window.setTimeout(() => target.classList.remove('search-result-highlight'), 3000);
         return true;
     };
 
@@ -453,15 +543,21 @@ function setupGlobalSearch() {
         const sequence = ++searchSequence;
         if (query.length < 2) {
             window.clearTimeout(searchDebounce);
+            loader?.classList.add('hidden');
             resultsContainer.classList.add('hidden');
             resultsContainer.innerHTML = '';
             return;
         }
 
         window.clearTimeout(searchDebounce);
-        resultsContainer.innerHTML = '<div class="search-item search-loading"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Pesquisando em todo o painel...</div>';
-        resultsContainer.classList.remove('hidden');
-        searchDebounce = window.setTimeout(() => performGlobalSearch(query, sequence), 240);
+        loader?.classList.add('hidden');
+        resultsContainer.classList.add('hidden');
+        resultsContainer.innerHTML = '';
+        searchDebounce = window.setTimeout(() => {
+            if (sequence !== searchSequence) return;
+            loader?.classList.remove('hidden');
+            performGlobalSearch(query, sequence);
+        }, 450);
     });
 
     async function performGlobalSearch(query, sequence) {
@@ -580,11 +676,16 @@ function setupGlobalSearch() {
             ));
 
             const html = pieces.filter(Boolean).join('');
+            if (sequence !== searchSequence) return;
+            loader?.classList.add('hidden');
             resultsContainer.innerHTML = html || '<div class="search-item search-empty">Nenhum resultado encontrado.</div>';
+            resultsContainer.classList.remove('hidden');
         } catch (error) {
             if (sequence !== searchSequence) return;
+            loader?.classList.add('hidden');
             console.error('Erro na pesquisa global:', error);
             resultsContainer.innerHTML = '<div class="search-item search-empty">Não foi possível realizar a pesquisa.</div>';
+            resultsContainer.classList.remove('hidden');
         }
     }
 }

@@ -143,12 +143,12 @@ async function loadFlashcards() {
     container.innerHTML = Array.from(stacks.entries()).map(([stackName, cards], index) => {
         const stackContentId = 'flashcard-stack-content-' + index;
         return '<section class="flashcard-stack-group" data-flashcard-stack="' + index + '">' +
-            '<button type="button" class="flashcard-stack-title" data-flashcard-stack-toggle aria-expanded="true" aria-controls="' + stackContentId + '">' +
+            '<button type="button" class="flashcard-stack-title" data-flashcard-stack-toggle aria-expanded="false" aria-controls="' + stackContentId + '">' +
                 '<span class="flashcard-stack-heading"><i class="fa-solid fa-layer-group" aria-hidden="true"></i>' + escapeFlashcardHtml(stackName) + '</span>' +
                 '<span class="flashcard-stack-count">' + cards.length + ' cartas</span>' +
-                '<i class="fa-solid fa-chevron-up flashcard-stack-chevron" aria-hidden="true"></i>' +
+                '<i class="fa-solid fa-chevron-down flashcard-stack-chevron" aria-hidden="true"></i>' +
             '</button>' +
-            '<div class="flashcard-stack-content" id="' + stackContentId + '">' +
+            '<div class="flashcard-stack-content" id="' + stackContentId + '" hidden>' +
             '<div class="flashcard-stack-grid">' +
                 cards.map(card =>
                     '<article id="flashcard-card-' + escapeFlashcardHtml(card.id) + '" class="data-card flashcard-card">' +
