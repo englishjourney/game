@@ -172,11 +172,10 @@ function renderSchedule(data) {
 
     const dayCards = visibleDays.map(day => {
         const isOpen = day.id === firstOpenDayId;
-        const dateLabel = day.date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
         return '<article class="schedule-day-card ' + (isOpen ? 'is-open' : '') + '" data-day-card="' + day.id + '">' +
             '<button type="button" class="schedule-day-header" data-day-toggle="' + day.id + '" aria-expanded="' + String(isOpen) + '">' +
                 '<span class="schedule-day-mark"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span>' +
-                '<span class="schedule-day-title">' + day.label + ' <span>• ' + dateLabel + '</span></span>' +
+                '<span class="schedule-day-title">' + day.label + '</span>' +
                 '<span class="schedule-day-toggle-label">' + (isOpen ? 'Minimizar' : 'Maximizar') + '</span>' +
                 '<i class="fa-solid ' + (isOpen ? 'fa-chevron-up' : 'fa-chevron-down') + ' schedule-day-chevron" aria-hidden="true"></i>' +
             '</button>' +
@@ -323,42 +322,147 @@ function setupGlobalSearch() {
     if (!input || !resultsContainer || input.dataset.initialized === 'true') return;
     input.dataset.initialized = 'true';
 
+    let searchSequence = 0;
+
+    const appendResultGroup = (label, items, idField, section, formatLabel) => {
+        if (!items.length) return '';
+        return '<div class="search-result-group">' +
+            '<div class="search-group-label">' + label + '</div>' +
+            items.map(item =>
+                '<button type="button" class="search-item search-result-item" role="option" data-search-result ' +
+                    'data-search-section="' + section + '" data-search-id="' + escapeHtml(item[idField]) + '">' +
+                    formatLabel(item) +
+                '</button>'
+            ).join('') +
+        '</div>';
+    };
+
+    const navigateToResult = button => {
+        const sectionId = button.dataset.searchSection;
+        const targetId = button.dataset.searchId;
+        const navButton = document.querySelector('.nav-btn[data-target="' + sectionId + '"]');
+        if (navButton) navButton.click();
+        resultsContainer.classList.add('hidden');
+        input.value = '';
+
+        if (sectionId === 'planner-section') {
+            const plannerSearch = document.getElementById('planner-search');
+            if (plannerSearch) {
+                plannerSearch.value = '';
+                plannerSearch.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+
+        window.setTimeout(() => {
+            const target = document.getElementById(targetId);
+            if (!target) return;
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            target.classList.add('search-result-highlight');
+            window.setTimeout(() => target.classList.remove('search-result-highlight'), 2200);
+        }, sectionId === 'reminders-section' ? 350 : 120);
+    };
+
+    resultsContainer.addEventListener('click', event => {
+        const button = event.target.closest('[data-search-result]');
+        if (button) navigateToResult(button);
+    });
+
     input.addEventListener('input', async event => {
         const query = event.target.value.trim();
-        if (query.length < 3) {
+        const sequence = ++searchSequence;
+        if (query.length < 2) {
             resultsContainer.classList.add('hidden');
+            resultsContainer.innerHTML = '';
             return;
         }
 
-        resultsContainer.innerHTML = '<div class="search-item">Buscando...</div>';
+        resultsContainer.innerHTML = '<div class="search-item search-loading"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Pesquisando em todo o painel...</div>';
         resultsContainer.classList.remove('hidden');
 
         try {
             const { data: authData, error: authError } = await supabase.auth.getUser();
             if (authError || !authData.user) throw new Error('Sessão de professor não encontrada.');
-            const [usersResult, plansResult] = await Promise.all([
-                supabase.from('users').select('name, username, grade').ilike('name', '%' + query + '%').limit(5),
-                supabase.from('planner').select('serie, team, activities').eq('owner', authData.user.id).ilike('activities', '%' + query + '%').limit(5)
+            const pattern = '%' + query + '%';
+            const [
+                usersName, usersLogin, usersGrade,
+                plansActivity, plansSkill, plansGrade, plansTeam,
+                tasksTitle, tasksDescription,
+                missionsName,
+                flashWords, flashTranslations, flashStacks,
+                remindersText
+            ] = await Promise.all([
+                supabase.from('users').select('id,name,username,grade').neq('username', 'micael.svg').ilike('name', pattern).limit(4),
+                supabase.from('users').select('id,name,username,grade').neq('username', 'micael.svg').ilike('username', pattern).limit(4),
+                supabase.from('users').select('id,name,username,grade').neq('username', 'micael.svg').ilike('grade', pattern).limit(4),
+                supabase.from('planner').select('id,date,day,time,serie,team,activities,completed_at').eq('owner', authData.user.id).ilike('activities', pattern).limit(4),
+                supabase.from('planner').select('id,date,day,time,serie,team,activities,completed_at').eq('owner', authData.user.id).ilike('skills', pattern).limit(4),
+                supabase.from('planner').select('id,date,day,time,serie,team,activities,completed_at').eq('owner', authData.user.id).ilike('serie', pattern).limit(4),
+                supabase.from('planner').select('id,date,day,time,serie,team,activities,completed_at').eq('owner', authData.user.id).ilike('team', pattern).limit(4),
+                supabase.from('tasks').select('id,title,description,grades,deadline').eq('owner', authData.user.id).ilike('title', pattern).limit(4),
+                supabase.from('tasks').select('id,title,description,grades,deadline').eq('owner', authData.user.id).ilike('description', pattern).limit(4),
+                supabase.from('missions').select('id,mission_name,mission_score,mission_link').ilike('mission_name', pattern).limit(4),
+                supabase.from('flashcards').select('id,word,translation,stack').ilike('word', pattern).limit(4),
+                supabase.from('flashcards').select('id,word,translation,stack').ilike('translation', pattern).limit(4),
+                supabase.from('flashcards').select('id,word,translation,stack').ilike('stack', pattern).limit(4),
+                supabase.from('reminders').select('id,remindMeTo,date,time').ilike('remindMeTo', pattern).limit(4)
             ]);
 
-            let html = '';
-            if (usersResult.data?.length) {
-                html += '<div class="search-group-label">Alunos</div>';
-                html += usersResult.data.map(user => '<div class="search-item">' +
-                    escapeHtml(user.name) + ' (' + escapeHtml(user.username) + ') — ' + escapeHtml(user.grade || 'Sem turma') +
-                '</div>').join('');
-            }
-            if (plansResult.data?.length) {
-                html += '<div class="search-group-label">Planejamentos</div>';
-                html += plansResult.data.map(plan => '<div class="search-item">' +
-                    escapeHtml([plan.serie, plan.team].filter(Boolean).join('')) + ': ' +
-                    escapeHtml(String(plan.activities || '').slice(0, 70)) +
-                '</div>').join('');
-            }
-            resultsContainer.innerHTML = html || '<div class="search-item">Nenhum resultado encontrado.</div>';
+            if (sequence !== searchSequence) return;
+            const combineUnique = (results, key = 'id') => {
+                const map = new Map();
+                results.forEach(result => (result.data || []).forEach(item => map.set(String(item[key]), item)));
+                return Array.from(map.values()).slice(0, 5);
+            };
+            const users = combineUnique([usersName, usersLogin, usersGrade]);
+            const plans = combineUnique([plansActivity, plansSkill, plansGrade, plansTeam]).map(plan => ({
+                ...plan,
+                section: plan.completed_at ? 'completed-planner-section' : 'planner-section'
+            }));
+            const tasks = combineUnique([tasksTitle, tasksDescription]);
+            const missions = missionsName.data || [];
+            const flashcards = combineUnique([flashWords, flashTranslations, flashStacks]);
+            const reminders = remindersText.data || [];
+
+            const pieces = [];
+            pieces.push(appendResultGroup('Trabalhos', tasks, 'id', 'tasks-section', task =>
+                '<strong>' + escapeHtml(task.title || 'Trabalho sem título') + '</strong>' +
+                '<span>' + escapeHtml((task.grades || []).join(', ') || 'Todas as turmas') + '</span>'
+            ));
+            pieces.push(appendResultGroup('Planejamentos', plans, 'id', null, plan =>
+                '<strong>' + escapeHtml([plan.serie, plan.team].filter(Boolean).join('') || 'Aula') + '</strong>' +
+                '<span>' + escapeHtml([plan.date, plan.time, String(plan.activities || '').replace(/<[^>]*>/g, ' ').slice(0, 70)].filter(Boolean).join(' • ')) + '</span>'
+            ).replace(/data-search-section="null"/g, 'data-search-section="' + (plans[0]?.section || 'planner-section') + '"'));
+            pieces.push(appendResultGroup('Missões', missions, 'id', 'missions-section', mission =>
+                '<strong>' + escapeHtml(mission.mission_name || 'Missão') + '</strong>' +
+                '<span>' + escapeHtml('Pontuação: ' + (mission.mission_score ?? 0)) + '</span>'
+            ));
+            pieces.push(appendResultGroup('Alunos', users, 'id', 'users-section', user =>
+                '<strong>' + escapeHtml(user.name || user.username) + '</strong>' +
+                '<span>' + escapeHtml((user.username || '') + (user.grade ? ' • Turma ' + user.grade : '')) + '</span>'
+            ));
+            pieces.push(appendResultGroup('Flashcards', flashcards, 'id', 'flashcards-section', card =>
+                '<strong>' + escapeHtml(card.word || 'Flashcard') + '</strong>' +
+                '<span>' + escapeHtml([card.translation, card.stack].filter(Boolean).join(' • ')) + '</span>'
+            ));
+            pieces.push(appendResultGroup('Lembretes', reminders, 'id', 'reminders-section', reminder =>
+                '<strong>' + escapeHtml(reminder.remindMeTo || 'Lembrete') + '</strong>' +
+                '<span>' + escapeHtml([reminder.date, reminder.time].filter(Boolean).join(' • ')) + '</span>'
+            ));
+
+            const planButtons = resultsContainer.querySelectorAll('[data-search-result][data-search-section]');
+            // Reescreve os resultados de planejamento para encaminhar aulas concluídas à guia correta.
+            const html = pieces.filter(Boolean).join('');
+            resultsContainer.innerHTML = html || '<div class="search-item search-empty">Nenhum resultado encontrado.</div>';
+            plans.forEach(plan => {
+                const result = resultsContainer.querySelector('[data-search-id="' + String(plan.id) + '"][data-search-section]');
+                if (result && result.closest('.search-result-group')?.querySelector('.search-group-label')?.textContent === 'Planejamentos') {
+                    result.dataset.searchSection = plan.section;
+                }
+            });
         } catch (error) {
+            if (sequence !== searchSequence) return;
             console.error('Erro na pesquisa global:', error);
-            resultsContainer.innerHTML = '<div class="search-item">Não foi possível realizar a pesquisa.</div>';
+            resultsContainer.innerHTML = '<div class="search-item search-empty">Não foi possível realizar a pesquisa.</div>';
         }
     });
 
