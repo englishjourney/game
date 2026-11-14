@@ -1507,3 +1507,46 @@ dialog .markdown-preview-label { color: #6c5b91; }
     .planner-details-grid { grid-template-columns: minmax(0,1fr); }
     .detail-mini-card.planner-detail-tag { grid-column: span 1; }
 }
+
+
+/* Specificity bridge for legacy form selectors retained by the existing planner UI */
+#planner-modal {
+    width: min(94vw, 900px);
+    max-width: 900px;
+    background: #fff;
+    color: #19143b;
+}
+#planner-modal h3,
+#planner-bulk-merge-modal h3 { color: #21134f !important; }
+#planner-modal .form-grid { gap: 18px 16px; }
+#planner-modal .form-grid label { color: #463b66 !important; font-weight: 750; }
+#planner-modal .form-grid input,
+#planner-modal .form-grid textarea,
+#planner-modal .form-grid select {
+    border: 1px solid #e3dcf0 !important;
+    border-radius: 11px !important;
+    background: #fbfaff !important;
+    color: #201941 !important;
+    color-scheme: light;
+}
+#planner-modal .form-grid input:focus,
+#planner-modal .form-grid textarea:focus,
+#planner-modal .form-grid select:focus {
+    border-color: #9879e3 !important;
+    box-shadow: 0 0 0 3px rgba(110, 68, 211, .11) !important;
+}
+#planner-modal .activities-toolbar { background: #f3effb !important; }
+#planner-modal .activities-toolbar button { color: #514274 !important; }
+#planner-modal .activities-toolbar button:hover { color: #4c22bd !important; background: #e8defb !important; }
+#planner-bulk-merge-modal label,
+#planner-bulk-merge-modal p { color: #51496e; }
+#planner-bulk-merge-modal select,
+#planner-reschedule-modal input[type="date"] {
+    border: 1px solid #e3dcf0;
+    border-radius: 11px;
+    background: #fbfaff;
+    color: #201941;
+    color-scheme: light;
+}
+#planner-reschedule-modal .planner-reschedule-date-label { color: #463b66; }
+#planner-reschedule-modal .planner-reschedule-heading h3 { color: #21134f !important; }
