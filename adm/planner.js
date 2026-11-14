@@ -699,6 +699,7 @@ function renderPlannerCard(p, mode = 'active') {
         '<div class="data-card-info planner-card-info"><div class="planner-card-heading"><div class="planner-card-title-wrap">' + specialLabel +
             '<h3 class="planner-card-title">' + escapePlannerHtml(getPlannerTitle(p)) + '</h3></div>' + actions + '</div>' +
             '<div class="planner-card-datetime">' +
+                (isCompleted ? '<span class="planner-completed-date"><i class="fa-regular fa-calendar" aria-hidden="true"></i> ' + escapePlannerHtml((p.day ? p.day + ' · ' : '') + (p.date || 'Sem data')) + '</span>' : '') +
                 '<strong><i class="fa-regular fa-clock" aria-hidden="true"></i> ' + escapePlannerHtml(p.time || 'Horário não definido') + '</strong>' +
             '</div>' +
             '<div class="planner-card-meta">' +
