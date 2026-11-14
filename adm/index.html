@@ -4,7 +4,7 @@
     <script src="../backend-loader.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prof. Mica - Planejamentos</title>
+    <title>EduPlan | Painel do Professor</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="eduplan-theme.css">
@@ -81,6 +81,12 @@
                         <label><input type="checkbox" name="teacher-subject" value="Química"> Química</label>
                         <label><input type="checkbox" name="teacher-subject" value="Artes"> Artes</label>
                         <label><input type="checkbox" name="teacher-subject" value="Educação Física"> Educação Física</label>
+                        <label><input type="checkbox" name="teacher-subject" value="Educação digital"> Educação digital</label>
+                        <label><input type="checkbox" name="teacher-subject" value="Projeto de vida"> Projeto de vida</label>
+                        <label><input type="checkbox" name="teacher-subject" value="Filosofia"> Filosofia</label>
+                        <label><input type="checkbox" name="teacher-subject" value="Sociologia"> Sociologia</label>
+                        <label><input type="checkbox" name="teacher-subject" value="Produção textual"> Produção textual</label>
+                        <label><input type="checkbox" name="teacher-subject" value="Biologia"> Biologia</label>
                     </div>
                     <p id="register-error" class="auth-message" role="alert"></p>
                     <button type="submit" class="auth-primary-button">Criar conta <i class="fa-solid fa-user-plus"></i></button>
@@ -118,7 +124,7 @@
     <div id="adm-panel" class="hidden">
         <header>
             <div class="admin-header-brand">
-                <button type="button" id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Abrir menu" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
+                <button type="button" id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Recolher menu" aria-expanded="true" title="Recolher ou abrir menu"><i class="fa-solid fa-angles-left" aria-hidden="true"></i></button>
                 <div class="admin-global-search">
                     <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                     <input type="text" id="global-search" placeholder="Buscar planejamentos, turmas..." aria-label="Buscar no painel">
@@ -161,6 +167,10 @@
     </div>
 </div>
             </div>
+                <button type="button" id="btn-logout" class="btn-logout" title="Sair da conta">
+                    <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                    <span>Sair</span>
+                </button>
         </header>
         <button type="button" id="mobile-nav-backdrop" class="nav-backdrop" aria-label="Fechar menu"></button>
 
