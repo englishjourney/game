@@ -259,104 +259,146 @@ async function loadTodayPlans() {
 async function loadSchedule() {
     const container = document.getElementById('schedule-container');
     if (!container) return;
-    
-    container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted);">Carregando horários semanais...</div>';
+
+    container.innerHTML = '<div class="schedule-loading"><i class="fa-solid fa-circle-notch fa-spin"></i> Carregando horários semanais...</div>';
+
+    const shiftConfig = {
+        mat: {
+            name: 'Manhã',
+            icon: 'fa-sun',
+            slots: [
+                { label: '1º horário', time: '07:00' },
+                { label: '2º horário', time: '07:50' },
+                { label: '3º horário', time: '08:30' },
+                { label: '4º horário', time: '09:10' },
+                { label: 'Intervalo', time: '09:50', interval: true },
+                { label: '5º horário', time: '10:10' },
+                { label: '6º horário', time: '10:50' }
+            ]
+        },
+        ves: {
+            name: 'Tarde',
+            icon: 'fa-cloud-sun',
+            slots: [
+                { label: '1º horário', time: '13:00' },
+                { label: '2º horário', time: '13:50' },
+                { label: '3º horário', time: '14:30' },
+                { label: '4º horário', time: '15:10' },
+                { label: 'Intervalo', time: '15:50', interval: true },
+                { label: '5º horário', time: '16:10' },
+                { label: '6º horário', time: '16:50' }
+            ]
+        }
+    };
+
+    const splitScheduleItems = value => String(value || '')
+        .split(',')
+        .map(item => item.replace(/[\[\]]/g, '').trim())
+        .filter(Boolean);
+
+    const renderScheduleEntry = (rawValue, slot) => {
+        if (slot.interval) {
+            return '<div class="schedule-entry schedule-entry-break">' +
+                '<span class="schedule-entry-index"><i class="fa-solid fa-mug-hot" aria-hidden="true"></i></span>' +
+                '<span class="schedule-entry-label">Intervalo</span>' +
+                '<strong class="schedule-entry-time">' + slot.time + '</strong>' +
+            '</div>';
+        }
+
+        const value = String(rawValue || '').trim();
+        if (!value) {
+            return '<div class="schedule-entry schedule-entry-empty">' +
+                '<span class="schedule-entry-index">' + slot.label.replace('º horário', 'º') + '</span>' +
+                '<span class="schedule-entry-content"><strong>Sem aula cadastrada</strong></span>' +
+                '<strong class="schedule-entry-time">' + slot.time + '</strong>' +
+            '</div>';
+        }
+
+        const isVacant = /vago/i.test(value);
+        const gradeMatch = value.match(/\b(1|2|3|6|7|8|9)\s*([ABC])\b/i);
+        const yearMatch = value.match(/\b([1-3])\s*ano\b/i);
+        const gradeLabel = gradeMatch
+            ? (gradeMatch[1] + gradeMatch[2]).toUpperCase()
+            : (yearMatch ? yearMatch[1] + 'º ano' : '');
+        let subjectLabel = value;
+        if (gradeMatch) subjectLabel = value.replace(gradeMatch[0], '').replace(/[-–—|]+/g, ' ').trim();
+        else if (yearMatch) subjectLabel = value.replace(yearMatch[0], '').replace(/[-–—|]+/g, ' ').trim();
+        if (!subjectLabel) subjectLabel = isVacant ? 'Horário livre' : value;
+
+        return '<div class="schedule-entry ' + (isVacant ? 'schedule-entry-vacant' : '') + '">' +
+            '<span class="schedule-entry-index">' + slot.label.replace('º horário', 'º') + '</span>' +
+            '<span class="schedule-entry-content">' +
+                '<strong>' + escapeDashboardHtml(subjectLabel) + '</strong>' +
+                (gradeLabel ? '<span class="schedule-grade-badge">' + escapeDashboardHtml(gradeLabel) + '</span>' : '') +
+                (isVacant ? '<span class="schedule-entry-status">Vago</span>' : '') +
+            '</span>' +
+            '<strong class="schedule-entry-time">' + slot.time + '</strong>' +
+        '</div>';
+    };
+
+    const renderShift = (value, config, shiftKey) => {
+        const entries = splitScheduleItems(value);
+        const hasData = entries.length > 0;
+        return '<section class="schedule-shift schedule-shift-' + shiftKey + '">' +
+            '<header class="schedule-shift-header">' +
+                '<span class="schedule-shift-icon"><i class="fa-solid ' + config.icon + '" aria-hidden="true"></i></span>' +
+                '<div><h4>' + config.name + '</h4><small>' + (hasData ? 'Grade de aulas' : 'Sem horários cadastrados') + '</small></div>' +
+            '</header>' +
+            '<div class="schedule-period-list">' +
+                config.slots.map((slot, index) => renderScheduleEntry(entries[index], slot)).join('') +
+            '</div>' +
+        '</section>';
+    };
 
     try {
         const { data: rows, error } = await supabase.from('schedule').select('*');
-        
         if (error) throw error;
-        
-        if (!rows || rows.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 20px;">Nenhum horário encontrado na tabela "schedule".</div>';
+
+        if (!rows || !rows.length) {
+            container.innerHTML = '<div class="empty-state">Nenhum horário encontrado na tabela de horários.</div>';
             return;
         }
 
-        // Pega a linha preenchida ou a primeira linha da tabela
-        const data = rows.find(r => r.seg_mat || r.seg_ves || r.ter_mat || r.ter_ves || r.qua_mat || r.qua_ves) || rows[0];
+        const data = rows.find(row =>
+            row.seg_mat || row.seg_ves || row.ter_mat || row.ter_ves ||
+            row.qua_mat || row.qua_ves || row.qui_mat || row.qui_ves ||
+            row.sex_mat || row.sex_ves
+        ) || rows[0];
 
-        const dias = [
-            { id: 'seg', nome: 'Segunda-Feira' },
-            { id: 'ter', nome: 'Terça-Feira' },
-            { id: 'qua', nome: 'Quarta-Feira' },
-            { id: 'qui', nome: 'Quinta-Feira' },
-            { id: 'sex', nome: 'Sexta-Feira' }
+        const days = [
+            { id: 'seg', name: 'Segunda-feira' },
+            { id: 'ter', name: 'Terça-feira' },
+            { id: 'qua', name: 'Quarta-feira' },
+            { id: 'qui', name: 'Quinta-feira' },
+            { id: 'sex', name: 'Sexta-feira' }
         ];
 
-        let html = '';
-        
-        dias.forEach(dia => {
-            const mat = data[`${dia.id}_mat`];
-            const ves = data[`${dia.id}_ves`];
+        const dayCards = days.map(day => {
+            const morning = data[day.id + '_mat'];
+            const afternoon = data[day.id + '_ves'];
+            if (!morning && !afternoon) return '';
 
-            // Se o dia inteiro estiver totalmente vazio, pula
-            if (!mat && !ves) return;
+            return '<article class="schedule-day-card">' +
+                '<header class="schedule-day-header">' +
+                    '<span class="schedule-day-mark"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span>' +
+                    '<h3>' + day.name + '</h3>' +
+                '</header>' +
+                '<div class="schedule-shifts-grid">' +
+                    renderShift(morning, shiftConfig.mat, 'morning') +
+                    renderShift(afternoon, shiftConfig.ves, 'afternoon') +
+                '</div>' +
+            '</article>';
+        }).filter(Boolean);
 
-            // Card principal do dia da semana
-            html += `<div class="schedule-card" style="margin-bottom: 25px; border: 1px solid var(--border); padding: 20px; border-radius: 10px; background: var(--bg-card); box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <h3 style="text-align: center; border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-bottom: 20px; color: var(--primary); font-size: 1.4rem;">${dia.nome}</h3>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">`;
-
-            const renderTurno = (turnoStr, turnoNome) => {
-                let turnoHtml = `<div style="background: var(--bg-dark); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column;">
-                    <strong style="display: block; margin-bottom: 12px; text-align: center; color: var(--primary); font-size: 1.1rem; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 6px;">${turnoNome}</strong>`;
-
-                // Se a coluna estiver totalmente vazia, exibe "Sem horários"
-                if (!turnoStr || turnoStr.trim() === '') {
-                    turnoHtml += `<div style="text-align: center; padding: 20px; color: #888; font-style: italic; margin: auto;">Sem horários</div></div>`;
-                    return turnoHtml;
-                }
-                
-                // Quebra o texto por vírgulas e remove colchetes e espaços extras
-                const items = turnoStr.split(',').map(item => item.replace(/[\[\]]/g, '').trim()).filter(item => item !== '');
-
-                if (items.length === 0) {
-                    turnoHtml += `<div style="text-align: center; padding: 20px; color: #888; font-style: italic; margin: auto;">Sem horários</div></div>`;
-                    return turnoHtml;
-                }
-
-                turnoHtml += `<ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">`;
-
-                items.forEach(text => {
-                    let bg = 'rgba(255, 255, 255, 0.05)';
-                    let color = 'white';
-                    let borderColor = 'rgba(255,255,255,0.1)';
-
-                    const lowerText = text.toLowerCase();
-                    if (lowerText.includes('vago')) {
-                        bg = '#eab308'; // Amarelo
-                        color = '#000';
-                        borderColor = '#ca8a04';
-                    } else if (lowerText.includes('intervalo')) {
-                        bg = '#ef4444'; // Vermelho
-                        color = '#fff';
-                        borderColor = '#b91c1c';
-                    }
-
-                    turnoHtml += `<li style="background-color: ${bg}; color: ${color}; padding: 10px; border-radius: 6px; text-align: center; font-weight: 500; border: 1px solid ${borderColor};">${text}</li>`;
-                });
-
-                turnoHtml += `</ul></div>`;
-                return turnoHtml;
-            };
-
-            // Renderiza as seções Matutino e Vespertino lado a lado
-            html += renderTurno(mat, 'Matutino');
-            html += renderTurno(ves, 'Vespertino');
-            
-            html += `</div></div>`;
-        });
-
-        if (!html) {
-            container.innerHTML = '<div style="text-align: center; padding: 20px;">Nenhum dia da semana cadastrado possui horários preenchidos.</div>';
+        if (!dayCards.length) {
+            container.innerHTML = '<div class="empty-state">Nenhum dia da semana cadastrado possui horários preenchidos.</div>';
             return;
         }
 
-        container.innerHTML = html;
-    } catch (err) {
-        console.error("Erro ao carregar horários do schedule:", err);
-        container.innerHTML = '<div style="color: #ef4444; padding: 20px; text-align: center;">Erro ao carregar os horários. Verifique a conexão com o Supabase e a tabela "schedule".</div>';
+        container.innerHTML = '<div class="schedule-week-grid">' + dayCards.join('') + '</div>';
+    } catch (error) {
+        console.error('Erro ao carregar horários do schedule:', error);
+        container.innerHTML = '<div class="empty-state schedule-error">Não foi possível carregar os horários. Verifique a conexão com o Supabase e a tabela de horários.</div>';
     }
 }
 // Um único aviso discreto junto ao sino; a verificação periódica ocorre a cada 30 minutos.
