@@ -1563,3 +1563,12 @@ dialog .markdown-preview-label { color: #6c5b91; }
     border: 0;
     padding: 0;
 }
+
+
+/* Contagem explícita para diferenciar registros carregados de filtros visuais */
+.planner-results-count {
+    margin: 0 0 12px;
+    color: #73688f;
+    font-size: .82rem;
+    font-weight: 650;
+}

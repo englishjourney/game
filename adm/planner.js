@@ -201,9 +201,10 @@ export function initPlanner() {
         }
     });
 
-    // Pesquisa no Planner: filtra diretamente os cartões exibidos.
+    // A guia sempre abre sem um filtro antigo restaurado pelo navegador.
     const searchInput = document.getElementById('planner-search');
     if (searchInput) {
+        searchInput.value = '';
         searchInput.addEventListener('input', () => {
             renderPlannerList();
         });
@@ -495,7 +496,7 @@ window.togglePlannerSection = (btn, title) => {
     const contentDiv = btn.closest('.planner-section-title').nextElementSibling;
     const isHidden = contentDiv.classList.toggle('hidden');
     btn.textContent = isHidden ? 'Maximizar' : 'Minimizar';
-    localStorage.setItem(`planner_state_${title}`, isHidden);
+    localStorage.setItem(`planner_state_v2_${title}`, isHidden);
 };
 
 
@@ -997,6 +998,12 @@ function renderPlannerList() {
         const text = [item.day, item.date, item.time, item.duration, item.serie, item.team, item.activities, item.skills, item.tag, getPlannerTitle(item), labels[item.special] || ''].join(' ');
         return normalizePlannerSearchValue(text).includes(query);
     });
+    const resultCount = document.getElementById('planner-results-count');
+    if (resultCount) {
+        resultCount.textContent = query
+            ? 'Exibindo ' + filteredData.length + ' de ' + allActivePlannerItems.length + ' planejamentos ativos.'
+            : allActivePlannerItems.length + (allActivePlannerItems.length === 1 ? ' planejamento ativo.' : ' planejamentos ativos.');
+    }
     if (!filteredData.length) {
         container.innerHTML = allActivePlannerItems.length ? '<div class="empty-state">Nenhum planejamento corresponde à pesquisa.</div>' : '<div class="empty-state">Nenhuma aula planejada.</div>';
         updatePlannerBulkToolbar();
@@ -1024,7 +1031,7 @@ function renderPlannerList() {
         const sectionDay = dateInfo ? dateInfo.weekday : (first.day || '');
         const sectionDate = dateInfo ? dateInfo.formatted : (first.date || 'Sem data');
         const title = sectionDay ? sectionDay + ' - ' + sectionDate : sectionDate;
-        const collapsed = localStorage.getItem('planner_state_' + title) === 'true';
+        const collapsed = localStorage.getItem('planner_state_v2_' + title) === 'true';
         return '<section class="planner-section"><h3 class="planner-section-title"><span>' + escapePlannerHtml(title) + '</span><div class="planner-section-heading-actions">' +
             '<button type="button" class="btn-small btn-secondary planner-reschedule-button" data-reschedule-section="' + sectionIndex + '" title="Alterar a data de todas as aulas desta seção"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i> Remarcar</button>' +
             '<button type="button" class="btn-small btn-primary" data-add-plan-day="' + escapePlannerHtml(sectionDay) + '" data-add-plan-date="' + escapePlannerHtml(sectionDate) + '">+ Nova aula</button>' +
@@ -1045,48 +1052,78 @@ function renderPlannerList() {
     setupPlannerCardInteractions(container);
     updatePlannerBulkToolbar();
 }
+async function fetchTeacherPlannerRows(completed) {
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user?.id) {
+        throw new Error('Sua sessão expirou. Entre novamente para visualizar seus planejamentos.');
+    }
+
+    const pageSize = 500;
+    const rows = [];
+    for (let offset = 0; ; offset += pageSize) {
+        let query = supabase
+            .from('planner')
+            .select('*')
+            .eq('owner', authData.user.id);
+
+        query = completed
+            ? query.not('completed_at', 'is', null)
+                .order('completed_at', { ascending: false })
+                .order('id', { ascending: false })
+            : query.is('completed_at', null)
+                .order('id', { ascending: false });
+
+        const { data, error } = await query.range(offset, offset + pageSize - 1);
+        if (error) throw error;
+
+        const page = data || [];
+        rows.push(...page);
+        if (page.length < pageSize) break;
+    }
+    return rows;
+}
+
 async function loadPlanners() {
     const container = document.getElementById('planner-list');
     if (!container) return;
-    container.innerHTML = 'Carregando...';
+    container.innerHTML = '<div class="empty-state">Carregando seus planejamentos...</div>';
 
-    const { data, error } = await supabase
-        .from('planner')
-        .select('*')
-        .is('completed_at', null)
-        .order('id', { ascending: false });
-
-    if (error) {
-        console.error('Erro ao carregar aulas planejadas:', error);
-        container.innerHTML = 'Erro ao carregar planos.';
+    try {
+        allActivePlannerItems = await fetchTeacherPlannerRows(false);
+    } catch (error) {
+        console.error('Erro ao carregar aulas planejadas do professor:', error);
+        container.innerHTML = '<div class="empty-state">Não foi possível carregar seus planejamentos: ' + escapePlannerHtml(error.message) + '</div>';
+        const count = document.getElementById('planner-results-count');
+        if (count) count.textContent = 'Não foi possível consultar os planejamentos.';
         return;
     }
 
-    allActivePlannerItems = data || [];
     const activeIds = new Set(allActivePlannerItems.map(item => String(item.id)));
     [...selectedPlannerIds].forEach(id => { if (!activeIds.has(id)) selectedPlannerIds.delete(id); });
     allActivePlannerItems.forEach(item => plannerItemsById.set(String(item.id), item));
 
-    // A pesquisa atual é preservada após salvar, excluir, concluir ou mover uma aula.
     renderPlannerList();
 }
 
 async function loadCompletedPlanners() {
     const container = document.getElementById('completed-planner-container');
     if (!container) return;
-    container.innerHTML = '<div class="empty-state">Carregando aulas passadas...</div>';
+    container.innerHTML = '<div class="empty-state">Carregando suas aulas passadas...</div>';
 
-    const { data, error } = await supabase
-        .from('planner')
-        .select('*')
-        .not('completed_at', 'is', null)
-        .order('completed_at', { ascending: false });
-
-    if (error) {
-        console.error('Erro ao carregar aulas concluídas:', error);
-        container.innerHTML = '<div class="empty-state">Erro ao carregar aulas passadas.</div>';
+    let data;
+    try {
+        data = await fetchTeacherPlannerRows(true);
+    } catch (error) {
+        console.error('Erro ao carregar aulas concluídas do professor:', error);
+        container.innerHTML = '<div class="empty-state">Não foi possível carregar suas aulas passadas: ' + escapePlannerHtml(error.message) + '</div>';
+        const count = document.getElementById('completed-planner-count');
+        if (count) count.textContent = 'Não foi possível consultar as aulas passadas.';
         return;
     }
+
+    const count = document.getElementById('completed-planner-count');
+    if (count) count.textContent = data.length + (data.length === 1 ? ' aula concluída' : ' aulas concluídas');
+
     if (!data || !data.length) {
         container.innerHTML = '<div class="empty-state">Nenhuma aula concluída até o momento.</div>';
         return;
