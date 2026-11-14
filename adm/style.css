@@ -2648,3 +2648,110 @@ dialog .merge-modal-header h3 {
     .activities-heading-level { flex: 1 1 100%; justify-content: space-between; }
     .activities-heading-level select { flex: 1; }
 }
+
+
+/* Planner cards: menus sempre acima dos cartões vizinhos */
+.planner-card {
+    isolation: auto;
+    overflow: visible !important;
+}
+.planner-card:hover,
+.planner-card:focus-within,
+.planner-card:has(.planner-options-trigger[aria-expanded="true"]) {
+    z-index: 80 !important;
+}
+.planner-card-menu {
+    position: relative;
+    z-index: 120 !important;
+}
+.planner-actions-menu {
+    z-index: 9999 !important;
+    pointer-events: auto;
+}
+.planner-card.card-adapted {
+    overflow: visible !important;
+}
+
+/* Turma ao lado do título: mesma escala tipográfica, cor secundária */
+.planner-card-title-line {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 9px;
+    min-width: 0;
+}
+.planner-card-title-line .planner-card-title {
+    min-width: 0;
+    flex: 0 1 auto;
+}
+.planner-card-title-line .planner-card-grade {
+    display: inline-flex !important;
+    flex: 0 0 auto;
+    align-items: baseline;
+    gap: 5px !important;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent !important;
+    color: #9eafc3 !important;
+    font-size: 1.12rem;
+    line-height: 1.35;
+    font-weight: 750;
+    letter-spacing: -.018em;
+    white-space: nowrap;
+}
+.planner-card-title-line .planner-card-grade i {
+    color: #8099b4 !important;
+    font-size: .88em;
+}
+.planner-card-title-line .planner-card-grade strong {
+    color: inherit !important;
+    font-size: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+}
+.planner-card-meta > .planner-card-grade { display: none !important; }
+
+/* Paleta mais variada, mas discreta: acentos por tipo de aula e metadado */
+.planner-card {
+    --card-accent: #65b9d8;
+    border-top-color: color-mix(in srgb, var(--card-accent) 38%, #263a50);
+    background: linear-gradient(145deg, #17283c 0%, #122238 58%, #18263a 100%);
+}
+.planner-card:not(.card-adapted):not(.card-special-1):not(.card-special-2):not(.card-special-3):nth-child(4n+2) {
+    --card-accent: #8e83d8;
+    background: linear-gradient(145deg, #20243b 0%, #17243a 60%, #19263a 100%);
+}
+.planner-card:not(.card-adapted):not(.card-special-1):not(.card-special-2):not(.card-special-3):nth-child(4n+3) {
+    --card-accent: #62b9a5;
+    background: linear-gradient(145deg, #172f37 0%, #15283a 62%, #17263a 100%);
+}
+.planner-card:not(.card-adapted):not(.card-special-1):not(.card-special-2):not(.card-special-3):nth-child(4n) {
+    --card-accent: #d39b63;
+    background: linear-gradient(145deg, #332b25 0%, #20283a 68%, #18263a 100%);
+}
+.planner-card:not(.card-adapted) .planner-options-trigger:hover,
+.planner-card:not(.card-adapted) .planner-options-trigger[aria-expanded="true"] {
+    border-color: color-mix(in srgb, var(--card-accent) 65%, white);
+    background: color-mix(in srgb, var(--card-accent) 17%, transparent);
+}
+.planner-card-meta > span:not(.planner-card-grade) {
+    padding: 4px 8px;
+    border: 1px solid rgba(151,174,198,.12);
+    border-radius: 8px;
+    background: rgba(5,14,26,.2);
+}
+.planner-card-meta > span:nth-child(1) i { color: #82b9df; }
+.planner-card-meta > span:nth-child(2) i { color: #b3a0e8; }
+.planner-card.card-special-1 { --card-accent: #e7bd69; }
+.planner-card.card-special-2 { --card-accent: #70c6a6; }
+.planner-card.card-special-3 { --card-accent: #e58b9c; }
+.planner-card.card-adapted { --card-accent: #b99aeb; }
+@media (max-width: 560px) {
+    .planner-card-title-line { gap: 6px; }
+    .planner-card-title-line .planner-card-grade,
+    .planner-card-title-line .planner-card-title { font-size: 1rem; }
+    .planner-card-actions-menu { right: 0; }
+}
