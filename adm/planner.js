@@ -1689,7 +1689,7 @@ window.viewPlanner = id => {
             '<h4><i class="fa-solid fa-list-check" aria-hidden="true"></i> Habilidades (BNCC e Competências)</h4>' +
             '<div class="planner-markdown-content">' +
                 (p.skills
-                    ? String(p.skills).split(/[,;\\n]+/).map(skill => skill.trim()).filter(Boolean).map(skill => '<span class="planner-skill-chip">' + escapePlannerHtml(skill) + '</span>').join('')
+                    ? String(p.skills).split(/[,;\n]+/).map(skill => skill.trim()).filter(Boolean).map(skill => '<span class="planner-skill-chip">' + escapePlannerHtml(skill) + '</span>').join('')
                     : '<p>Não informado</p>') +
             '</div>' +
         '</article>' +
