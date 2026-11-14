@@ -208,7 +208,10 @@
             <!-- PLANNER SECTION -->
             <section id="planner-section" class="content-section hidden">
                 <div class="section-header planner-main-header">
-                    <h2>Aulas Planejadas</h2>
+                    <div class="planner-heading-copy">
+                        <h2>Planejamentos</h2>
+                        <p>Organize e visualize suas aulas por dia.</p>
+                    </div>
                     <div class="planner-header-controls">
                         <div class="search-bar planner-search-wrap">
                             <input type="text" id="planner-search" placeholder="Pesquisar por data, hora, turma ou atividade..." aria-label="Pesquisar planejamentos">
@@ -260,7 +263,7 @@
 
             <!-- TASKS SECTION -->
             <section id="tasks-section" class="content-section hidden">
-                <div class="section-header"><h2>Trabalhos pendentes</h2><button id="btn-add-task" class="btn-primary">+ Novo trabalho</button></div>
+                <div class="section-header"><h2>Trabalhos pendentes</h2><button id="btn-add-task" class="btn-primary"><i class="fa-solid fa-plus" aria-hidden="true"></i> Novo trabalho</button></div>
                 <div id="tasks-filters" class="tasks-filters" role="group" aria-label="Filtrar trabalhos por turma"></div>
                 <div id="tasks-list" class="cards-container"><!-- Preenchido via JS --></div>
             </section>
@@ -281,7 +284,7 @@
             <section id="missions-section" class="content-section hidden">
                  <div class="section-header">
                     <h2>Missões</h2>
-                    <button id="btn-add-mission" class="btn-primary">+ Nova Missão</button>
+                    <button id="btn-add-mission" class="btn-primary"><i class="fa-solid fa-plus" aria-hidden="true"></i> Nova Missão</button>
                 </div>
                 <div id="missions-list" class="cards-container">
                     <!-- Preenchido via JS -->
@@ -292,7 +295,7 @@
             <section id="flashcards-section" class="content-section hidden">
                 <div class="section-header">
                     <h2>Gerenciamento de Flashcards</h2>
-                    <button id="btn-add-flashcard" class="btn-primary">+ Novo Flashcard</button>
+                    <button id="btn-add-flashcard" class="btn-primary"><i class="fa-solid fa-plus" aria-hidden="true"></i> Novo Flashcard</button>
                 </div>
                 <div id="flashcards-list" class="cards-container">
                     <!-- Preenchido via JS -->
@@ -504,7 +507,7 @@
                         <button type="button" data-format="tag" title="Inserir marcadores de tag"><i class="fa-solid fa-tag" aria-hidden="true"></i> Tag</button>
                         <button type="button" data-format="bullet" title="Lista com marcadores">• Lista</button>
                         <button type="button" data-format="number" title="Lista numerada">1. Lista</button>
-                        <button type="button" data-format="quote" title="Citação">❝</button>
+                        <button type="button" data-format="quote" title="Citação"><i class="fa-solid fa-quote-right" aria-hidden="true"></i></button>
                         <button type="button" data-format="divider" title="Divisor">―</button>
                     </div>
                     <textarea id="plan-activities" rows="5" required placeholder="# Título da aula&#10;&#10;Descreva as atividades e use os botões para formatar..."></textarea>
