@@ -489,14 +489,17 @@ window.addPlanForDay = (day, date) => {
     document.getElementById('planner-modal').showModal();
 };
 
-// Minimizar/Maximizar salvando no cache
+// Recolher/expandir cada dia, preservando o estado salvo pelo professor.
 window.togglePlannerSection = (btn, title) => {
-    // CORREÇÃO: O closest acha o elemento pai h3 inteiro, 
-    // e o nextElementSibling pega a caixa de conteúdo logo abaixo dele.
-    const contentDiv = btn.closest('.planner-section-title').nextElementSibling;
+    const contentDiv = btn.closest('.planner-section-title')?.nextElementSibling;
+    if (!contentDiv) return;
+
     const isHidden = contentDiv.classList.toggle('hidden');
-    btn.textContent = isHidden ? 'Maximizar' : 'Minimizar';
-    localStorage.setItem(`planner_state_v2_${title}`, isHidden);
+    btn.setAttribute('aria-expanded', String(!isHidden));
+    btn.setAttribute('aria-label', isHidden ? 'Expandir dia' : 'Recolher dia');
+    btn.title = isHidden ? 'Expandir dia' : 'Recolher dia';
+    btn.innerHTML = '<i class="fa-solid ' + (isHidden ? 'fa-chevron-down' : 'fa-chevron-up') + '" aria-hidden="true"></i>';
+    localStorage.setItem(`planner_state_v2_${title}`, String(isHidden));
 };
 
 
@@ -808,7 +811,7 @@ function renderPlannerCard(p, mode = 'active') {
         ? '<label class="planner-card-select" title="Selecionar este planejamento"><input type="checkbox" class="planner-select-checkbox" data-plan-select="' + escapePlannerHtml(p.id) + '"' + (selectedPlannerIds.has(String(p.id)) ? ' checked' : '') + '><span></span></label>'
         : '';
     const actions = isCompleted
-        ? '<div class="planner-card-menu"><button type="button" class="planner-options-trigger" aria-label="Opções da aula" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical"></i></button><div class="planner-actions-menu hidden"><button type="button" data-planner-action="delete-completed"><i class="fa-solid fa-trash"></i> Excluir do histórico</button></div></div>'
+        ? '<div class="planner-card-menu"><button type="button" class="planner-completed-delete" data-planner-action="delete-completed" aria-label="Excluir aula passada" title="Excluir aula passada"><i class="fa-solid fa-trash" aria-hidden="true"></i></button></div>'
         : '<div class="planner-card-menu"><button type="button" class="planner-options-trigger" aria-label="Opções da aula" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical"></i></button><div class="planner-actions-menu hidden">' +
             '<button type="button" data-planner-action="edit"><i class="fa-solid fa-pen"></i> Editar</button>' +
             '<button type="button" data-planner-action="merge"><i class="fa-solid fa-object-group"></i> Mesclar</button>' +
@@ -846,6 +849,15 @@ function setupPlannerCardInteractions(container) {
             card.classList.toggle('planner-card-selected', checkbox.checked);
             updatePlannerBulkToolbar();
         });
+        const completedDeleteButton = card.querySelector('.planner-completed-delete');
+        if (completedDeleteButton) {
+            completedDeleteButton.addEventListener('click', event => {
+                event.preventDefault();
+                event.stopPropagation();
+                window.deleteCompletedPlanner(id);
+            });
+        }
+
         const optionsButton = card.querySelector('.planner-options-trigger');
         const actionsMenu = card.querySelector('.planner-actions-menu');
         if (optionsButton && actionsMenu) {
@@ -1035,7 +1047,7 @@ function renderPlannerList() {
         return '<section class="planner-section"><h3 class="planner-section-title"><span>' + escapePlannerHtml(title) + '</span><div class="planner-section-heading-actions">' +
             '<button type="button" class="btn-small btn-secondary planner-reschedule-button" data-reschedule-section="' + sectionIndex + '" title="Alterar a data de todas as aulas desta seção"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i> Remarcar</button>' +
             '<button type="button" class="btn-small btn-primary" data-add-plan-day="' + escapePlannerHtml(sectionDay) + '" data-add-plan-date="' + escapePlannerHtml(sectionDate) + '">+ Nova aula</button>' +
-            '<button type="button" class="minimize-btn" data-toggle-planner-section data-section-title="' + escapePlannerHtml(title) + '">' + (collapsed ? 'Maximizar' : 'Minimizar') + '</button></div></h3>' +
+            '<button type="button" class="minimize-btn planner-section-toggle" data-toggle-planner-section data-section-title="' + escapePlannerHtml(title) + '" aria-label="' + (collapsed ? 'Expandir dia' : 'Recolher dia') + '" aria-expanded="' + String(!collapsed) + '" title="' + (collapsed ? 'Expandir dia' : 'Recolher dia') + '"><i class="fa-solid ' + (collapsed ? 'fa-chevron-down' : 'fa-chevron-up') + '" aria-hidden="true"></i></button></div></h3>' +
             '<div class="planner-section-content ' + (collapsed ? 'hidden' : '') + '">' + items.map(item => renderPlannerCard(item, 'active')).join('') + '</div></section>';
     }).join('');
 
