@@ -1674,7 +1674,7 @@ function renderPlannerMarkdown(value) {
             continue;
         }
 
-        if (/^\s*([-*_])\1\1+\s*$/.test(line)) {
+        if (/^\s*(?:-{3,}|_{3,}|\*{3})\s*$/.test(line)) {
             output.push('<hr>');
             index++;
             continue;
