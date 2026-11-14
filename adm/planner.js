@@ -145,10 +145,10 @@ export function initPlanner() {
                              document.getElementById('cb-prova').checked ? 3 : 0;
 
         const activitiesValue = document.getElementById('plan-activities').value;
-        const activityTitleLine = activitiesValue.split(/\r?\n/, 1)[0] || '';
-        if (activitiesValue.trim() && !/^#\s+\S.*$/.test(activityTitleLine)) {
+        const activityTitleLine = activitiesValue.replace(/\r/g, '').split('\n').find(line => line.trim()) || '';
+        if (activitiesValue.trim() && !/^#(?!#)[ \t]+\S.*$/.test(activityTitleLine)) {
             const activitiesEditor = document.getElementById('plan-activities');
-            activitiesEditor.setCustomValidity('A primeira linha precisa ser um título no formato # Título da aula.');
+            activitiesEditor.setCustomValidity('O primeiro conteúdo precisa ser um título principal H1 no formato # Título da aula.');
             activitiesEditor.reportValidity();
             activitiesEditor.focus();
             return;
@@ -1630,6 +1630,12 @@ function escapePlannerHtml(value) {
 function renderPlannerInlineMarkdown(value) {
     let html = escapePlannerHtml(value);
     const mark = String.fromCharCode(96);
+
+    // Tag sintática customizada: <tag>. Tags vazias ou incompletas continuam
+    // aparecendo como texto literal até o usuário escrever seu conteúdo.
+    html = html.replace(/&lt;([A-Za-z][A-Za-z0-9_-]{0,30})&gt;/g,
+        '<span class="activity-inline-tag">$1</span>');
+
     html = html.replace(new RegExp(mark + '([^' + mark + ']+)' + mark, 'g'), '<code>$1</code>');
     html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -1638,13 +1644,21 @@ function renderPlannerInlineMarkdown(value) {
     return html;
 }
 
+function plannerHasPrimaryHeading(value) {
+    const firstContentLine = String(value == null ? '' : value)
+        .replace(/\r/g, '')
+        .split('\n')
+        .find(line => line.trim()) || '';
+    return /^#(?!#)[ \t]+\S.*$/.test(firstContentLine);
+}
+
 function renderPlannerMarkdown(value) {
     const lines = String(value == null ? '' : value).replace(/\r/g, '').split('\n');
     const output = [];
     let index = 0;
 
-    // Every parsing branch must consume at least one line. In particular, an
-    // empty heading such as "## " is valid while the user is still typing.
+    // Cada ramo consome ao menos uma linha. Sintaxe incompleta permanece
+    // literal até haver conteúdo suficiente para formar Markdown válido.
     while (index < lines.length) {
         const line = lines[index];
         if (!line.trim()) {
@@ -1653,7 +1667,7 @@ function renderPlannerMarkdown(value) {
         }
 
         const heading = line.match(/^(#{1,6})[ \t]+(.*)$/);
-        if (heading) {
+        if (heading && heading[2].trim()) {
             const level = heading[1].length;
             output.push('<h' + level + '>' + renderPlannerInlineMarkdown(heading[2]) + '</h' + level + '>');
             index++;
@@ -1689,7 +1703,8 @@ function renderPlannerMarkdown(value) {
         if (/^\s*>\s?/.test(line)) {
             const quote = [];
             while (index < lines.length && /^\s*>\s?/.test(lines[index])) {
-                quote.push(renderPlannerInlineMarkdown(lines[index].replace(/^\s*>\s?/, '')));
+                const quoteText = lines[index].replace(/^\s*>\s?/, '');
+                quote.push(renderPlannerInlineMarkdown(quoteText));
                 index++;
             }
             output.push('<blockquote>' + quote.join('<br>') + '</blockquote>');
@@ -1699,7 +1714,8 @@ function renderPlannerMarkdown(value) {
         const paragraph = [];
         while (index < lines.length && lines[index].trim()) {
             const currentLine = lines[index];
-            const beginsBlock = /^(#{1,6})[ \t]+/.test(currentLine)
+            const headingLine = currentLine.match(/^(#{1,6})[ \t]+(.*)$/);
+            const beginsBlock = (headingLine && headingLine[2].trim())
                 || /^\s*[-*+]\s+/.test(currentLine)
                 || /^\s*\d+[.)]\s+/.test(currentLine)
                 || /^\s*>\s?/.test(currentLine)
@@ -1709,8 +1725,7 @@ function renderPlannerMarkdown(value) {
             index++;
         }
 
-        // Defensive fallback: malformed or future Markdown syntax must never
-        // leave the parser stuck on the same line.
+        // Plain text and incomplete markers remain visible and safe.
         if (paragraph.length) {
             output.push('<p>' + paragraph.join('<br>') + '</p>');
         } else {
@@ -1726,61 +1741,87 @@ function setupActivitiesEditor() {
     const editor = document.getElementById('plan-activities');
     const preview = document.getElementById('plan-activities-preview');
     const toolbar = document.getElementById('activities-toolbar');
+    const headingLevel = document.getElementById('activities-heading-level');
     if (!editor || !preview || !toolbar) return;
 
     const updatePreview = () => {
-        preview.innerHTML = editor.value.trim() ? renderPlannerMarkdown(editor.value)
+        preview.innerHTML = editor.value.length
+            ? renderPlannerMarkdown(editor.value)
             : '<span class="preview-placeholder">A pré-visualização aparecerá aqui.</span>';
     };
     window.updatePlannerActivitiesPreview = updatePreview;
 
+    const updateTitleValidity = () => {
+        if (plannerHasPrimaryHeading(editor.value) || (!editor.required && !editor.value.trim())) {
+            editor.setCustomValidity('');
+        }
+    };
+
     toolbar.addEventListener('click', event => {
         const button = event.target.closest('[data-format]');
         if (!button) return;
+
         const format = button.dataset.format;
         const start = editor.selectionStart;
         const end = editor.selectionEnd;
         const selected = editor.value.slice(start, end);
-        let before = '';
-        let after = '';
-        let inserted = selected;
 
-        if (format === 'bold') { before = '**'; after = '**'; inserted = selected || 'texto em negrito'; }
-        else if (format === 'italic') { before = '*'; after = '*'; inserted = selected || 'texto em itálico'; }
-        else if (format === 'code') { before = String.fromCharCode(96); after = before; inserted = selected || 'código'; }
-        else if (format === 'divider') { before = '\n---\n'; inserted = ''; }
-
-        if (['heading', 'bullet', 'number', 'quote'].includes(format)) {
+        if (format === 'heading' || format === 'bullet' || format === 'number' || format === 'quote') {
             const lineStart = editor.value.lastIndexOf('\n', Math.max(0, start - 1)) + 1;
             const lineEnd = editor.value.indexOf('\n', end);
             const actualEnd = lineEnd === -1 ? editor.value.length : lineEnd;
             const block = editor.value.slice(lineStart, actualEnd);
-            const prefix = format === 'heading' ? '# ' : format === 'bullet' ? '- ' : format === 'number' ? '1. ' : '> ';
-            const replacement = block.split('\n').map(line => prefix + line.replace(/^(#{1,6}[ \t]+|[-*+][ \t]+|\d+[.)][ \t]+|>[ \t]?)/, '')).join('\n');
+
+            let prefix;
+            if (format === 'heading') {
+                const level = Math.min(6, Math.max(1, Number(headingLevel && headingLevel.value) || 1));
+                prefix = '#'.repeat(level) + ' ';
+            } else {
+                prefix = format === 'bullet' ? '- ' : format === 'number' ? '1. ' : '> ';
+            }
+
+            const replacement = block.split('\n')
+                .map(line => prefix + line.replace(/^(#{1,6}[ \t]+|[-*+][ \t]+|\d+[.)][ \t]+|>[ \t]?)/, ''))
+                .join('\n');
             editor.value = editor.value.slice(0, lineStart) + replacement + editor.value.slice(actualEnd);
             editor.focus();
 
-            // Leave the caret after the heading marker when starting from an
-            // empty line, instead of selecting "## " and replacing it on type.
             const contentStart = lineStart + prefix.length;
             if (!block.trim()) {
+                // Só insere a sintaxe; o usuário escreve o texto depois.
                 editor.setSelectionRange(contentStart, contentStart);
             } else {
                 editor.setSelectionRange(contentStart, lineStart + replacement.length);
             }
         } else {
-            editor.value = editor.value.slice(0, start) + before + inserted + after + editor.value.slice(end);
+            let before = '';
+            let after = '';
+            if (format === 'bold') { before = '**'; after = '**'; }
+            else if (format === 'italic') { before = '*'; after = '*'; }
+            else if (format === 'tag') { before = '<'; after = '>'; }
+            else if (format === 'divider') {
+                before = editor.value.slice(0, start) && !editor.value.slice(0, start).endsWith('\n') ? '\n---\n' : '---\n';
+                after = '';
+            }
+
+            editor.value = editor.value.slice(0, start) + before + selected + after + editor.value.slice(end);
             editor.focus();
-            const cursorStart = start + before.length;
-            editor.setSelectionRange(cursorStart, cursorStart + inserted.length);
+
+            if (selected) {
+                editor.setSelectionRange(start + before.length, start + before.length + selected.length);
+            } else {
+                // Sem seleção, deixa o cursor entre os marcadores vazios.
+                const cursor = start + before.length;
+                editor.setSelectionRange(cursor, cursor);
+            }
         }
-        const firstLine = editor.value.split(/\r?\n/, 1)[0] || '';
-        if (/^#\s+\S.*$/.test(firstLine) || (!editor.required && !editor.value.trim())) editor.setCustomValidity('');
+
+        updateTitleValidity();
         updatePreview();
     });
+
     editor.addEventListener('input', () => {
-        const firstLine = editor.value.split(/\r?\n/, 1)[0] || '';
-        if (/^#\s+\S.*$/.test(firstLine) || (!editor.required && !editor.value.trim())) editor.setCustomValidity('');
+        updateTitleValidity();
         updatePreview();
     });
     updatePreview();
