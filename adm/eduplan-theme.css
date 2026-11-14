@@ -1750,6 +1750,10 @@ dialog .markdown-preview-label { color: #6c5b91; }
     display: block;
     width: 100%;
     padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
 }
 .planner-detail-section > h4 {
     display: flex;
