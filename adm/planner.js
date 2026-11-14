@@ -911,9 +911,28 @@ function setupPlannerSectionReschedule() {
         dateInput.setCustomValidity('');
 
         const ids = [...new Set(pendingPlannerRescheduleItems.map(item => item.id))];
+        const sourceDateKeys = new Set(pendingPlannerRescheduleItems.map(item => plannerDateKey(item.date)));
+        if (sourceDateKeys.size === 1 && sourceDateKeys.has(plannerDateKey(selectedDate.formatted))) {
+            modal.close();
+            pendingPlannerRescheduleItems = [];
+            return;
+        }
         saveButton.disabled = true;
         saveButton.textContent = 'Salvando...';
         try {
+            const { data: destinationPlans, error: fetchError } = await supabase
+                .from('planner')
+                .select('*')
+                .is('completed_at', null);
+            if (fetchError) throw fetchError;
+
+            const destinationMarkers = getPlannerDateMarkers(destinationPlans || [], selectedDate.formatted);
+            if (destinationMarkers.blocked.length) {
+                alert(getPlannerBlockedDayMessage(selectedDate.formatted, destinationMarkers));
+                return;
+            }
+            if (!confirmPlannerSpecialDestination(destinationMarkers)) return;
+
             const { error } = await supabase
                 .from('planner')
                 .update({ date: selectedDate.formatted, day: selectedDate.weekday })
@@ -1259,46 +1278,137 @@ function plannerDateKey(value) {
     const [year,month,day] = parts[0].length === 4 ? parts : [parts[2],parts[1],parts[0]];
     return Number(year)*10000 + Number(month)*100 + Number(day);
 }
+
+function getPlannerDateMarkers(plans, dateValue) {
+    const dateKey = plannerDateKey(dateValue);
+    if (!dateKey) return { blocked: [], special: null };
+
+    const sameDay = (plans || []).filter(item => plannerDateKey(item.date) === dateKey);
+    const blocked = sameDay.filter(item => Number(item.special) === 2 || Number(item.special) === 3);
+    const special = sameDay.find(item => Number(item.special) === 1) || null;
+    return { blocked, special };
+}
+
+function getPlannerBlockedDayMessage(dateValue, markers) {
+    const types = [...new Set((markers.blocked || []).map(item =>
+        Number(item.special) === 2 ? 'Folga' : 'Prova'
+    ))];
+    return 'O dia ' + dateValue + ' está marcado como ' + types.join(' e ') +
+        ' e não pode receber planejamentos adiados, adiantados ou remarcados.';
+}
+
+function confirmPlannerSpecialDestination(markers) {
+    if (!markers || !markers.special) return true;
+    const title = getPlannerTitle(markers.special) || 'Sem título';
+    return confirm('Este dia possui um plano marcado como especial com o título "' +
+        title + '", realmente deseja mover para lá?');
+}
 async function executePlannerBulkShift(action) {
     const ids = [...selectedPlannerIds];
     if (!ids.length) return;
     const label = action === 'defer' ? 'adiar' : 'adiantar';
     if (!confirm('Deseja ' + label + ' ' + ids.length + ' aula(s)? Cada uma ocupará um horário compatível e ainda livre da mesma turma.')) return;
+
     const { data, error } = await supabase.from('planner').select('*').is('completed_at', null);
     if (error) { alert('Não foi possível carregar os planejamentos: ' + error.message); return; }
+
     const plans = data || [];
     const selectedSet = new Set(ids);
-    const selected = plans.filter(item => selectedSet.has(String(item.id))).sort((a,b) => parsePlannerDateTime(a.date,a.time)-parsePlannerDateTime(b.date,b.time));
+    const selected = plans.filter(item => selectedSet.has(String(item.id)))
+        .sort((a, b) => parsePlannerDateTime(a.date, a.time) - parsePlannerDateTime(b.date, b.time));
     const remaining = plans.filter(item => !selectedSet.has(String(item.id)));
     const used = new Set();
     const currentDate = new Date();
-    const todayKey = currentDate.getFullYear()*10000 + (currentDate.getMonth()+1)*100 + currentDate.getDate();
+    const todayKey = currentDate.getFullYear() * 10000 + (currentDate.getMonth() + 1) * 100 + currentDate.getDate();
     const now = Date.now();
-    let moved = 0;
+    const plannedMoves = [];
     const skipped = [];
+    const blockedDestinations = new Map();
+    const specialDestinations = new Map();
+
     for (const source of selected) {
-        const sourceTime = parsePlannerDateTime(source.date,source.time);
+        const sourceTime = parsePlannerDateTime(source.date, source.time);
         const sourceKey = plannerDateKey(source.date);
-        if (!Number.isFinite(sourceTime) || !source.serie || !source.team) { skipped.push(getPlannerTitle(source)); continue; }
-        const sameClass = item => normalizePlannerClassValue(item.serie) === normalizePlannerClassValue(source.serie)
-            && normalizePlannerClassValue(item.team) === normalizePlannerClassValue(source.team);
-        const possible = remaining.filter(item => sameClass(item) && !used.has(String(item.id)))
-            .map(item => ({item,time:parsePlannerDateTime(item.date,item.time),key:plannerDateKey(item.date)}))
+        if (!Number.isFinite(sourceTime) || !source.serie || !source.team) {
+            skipped.push(getPlannerTitle(source));
+            continue;
+        }
+
+        const sameClass = item =>
+            normalizePlannerClassValue(item.serie) === normalizePlannerClassValue(source.serie) &&
+            normalizePlannerClassValue(item.team) === normalizePlannerClassValue(source.team);
+
+        const possible = remaining
+            .filter(item => sameClass(item) && !used.has(String(item.id)))
+            .map(item => ({ item, time: parsePlannerDateTime(item.date, item.time), key: plannerDateKey(item.date) }))
             .filter(entry => Number.isFinite(entry.time) && (action === 'defer'
                 ? entry.key > todayKey && entry.key > sourceKey && entry.time > sourceTime
                 : entry.key >= todayKey && entry.key !== sourceKey && entry.time >= now && entry.time < sourceTime))
-            .sort((a,b) => a.time-b.time);
-        const target = possible[0] && possible[0].item;
-        if (!target) { skipped.push(getPlannerTitle(source)); continue; }
+            .sort((a, b) => a.time - b.time);
+
+        let chosen = null;
+        for (const candidate of possible) {
+            const markers = getPlannerDateMarkers(plans, candidate.item.date);
+            if (markers.blocked.length) {
+                blockedDestinations.set(candidate.key, {
+                    date: candidate.item.date,
+                    markers
+                });
+                continue;
+            }
+            chosen = { ...candidate, markers };
+            break;
+        }
+
+        if (!chosen) {
+            skipped.push(getPlannerTitle(source));
+            continue;
+        }
+
+        const target = chosen.item;
         const tag = (action === 'defer' ? 'Adiada do dia ' : 'Adiantada do dia ') + getPlannerOriginalDate(source);
-        const { error: updateError } = await supabase.from('planner').update({date:target.date,day:target.day,time:target.time,tag})
-            .eq('id',source.id).is('completed_at',null);
-        if (updateError) skipped.push(getPlannerTitle(source));
-        else { moved++; used.add(String(target.id)); }
+        plannedMoves.push({ source, target, tag });
+        used.add(String(target.id));
+
+        if (chosen.markers.special) {
+            specialDestinations.set(chosen.key, {
+                date: target.date,
+                title: getPlannerTitle(chosen.markers.special) || 'Sem título'
+            });
+        }
     }
+
+    if (specialDestinations.size) {
+        const warnings = [...specialDestinations.values()].map(item =>
+            'Este dia possui um plano marcado como especial com o título "' + item.title +
+            '", realmente deseja mover para lá?\nData: ' + item.date
+        );
+        if (!confirm(warnings.join('\n\n'))) return;
+    }
+
+    let moved = 0;
+    for (const move of plannedMoves) {
+        const { error: updateError } = await supabase.from('planner')
+            .update({
+                date: move.target.date,
+                day: move.target.day,
+                time: move.target.time,
+                tag: move.tag
+            })
+            .eq('id', move.source.id)
+            .is('completed_at', null);
+        if (updateError) skipped.push(getPlannerTitle(move.source));
+        else moved++;
+    }
+
     clearPlannerSelection(true);
     await loadPlanners();
-    alert(moved + ' aula(s) movimentada(s).' + (skipped.length ? ' Não foi possível: ' + skipped.join(', ') + '.' : ''));
+    const blockedSummary = blockedDestinations.size
+        ? ' Dias ignorados por Folga/Prova: ' + [...blockedDestinations.values()].map(item => item.date).join(', ') + '.'
+        : '';
+    alert(moved + ' aula(s) movimentada(s).' +
+        (skipped.length ? ' Não foi possível: ' + skipped.join(', ') + '.' : '') +
+        blockedSummary);
 }
 async function runPlannerBulkAction(action) {
     const ids = [...selectedPlannerIds];
@@ -1381,7 +1491,7 @@ window.deferPlanner = async (id) => {
 
         // Busca a próxima aula da mesma série e turma, excluindo esta aula.
         // O destino precisa estar em uma data estritamente posterior à data de hoje.
-        const next = plans
+        const candidates = plans
             .filter(item => String(item.id) !== String(id) && sameSeriesAndTeam(item))
             .map(item => ({ item, timestamp: parseDateTime(item.date, item.time), dateKey: getDateKey(item.date) }))
             .filter(entry =>
@@ -1390,14 +1500,30 @@ window.deferPlanner = async (id) => {
                 entry.dateKey > getDateKey(selected.date) &&
                 entry.timestamp > selectedTimestamp
             )
-            .sort((a, b) => a.timestamp - b.timestamp)[0];
+            .sort((a, b) => a.timestamp - b.timestamp);
+
+        const blockedDestinations = new Map();
+        const next = candidates.find(entry => {
+            const markers = getPlannerDateMarkers(plans, entry.item.date);
+            if (markers.blocked.length) {
+                blockedDestinations.set(entry.dateKey, { date: entry.item.date, markers });
+                return false;
+            }
+            return true;
+        });
 
         if (!next) {
-            alert('Não encontrei uma próxima aula futura para esta mesma série e turma. O adiamento só pode ser feito para uma data posterior a hoje.');
+            if (blockedDestinations.size) {
+                const dates = [...blockedDestinations.values()].map(item => item.date).join(', ');
+                alert('As próximas datas encontradas (' + dates + ') estão marcadas como Folga ou Prova e não podem receber planejamentos. Não foi encontrado outro destino disponível.');
+            } else {
+                alert('Não encontrei uma próxima aula futura para esta mesma série e turma. O adiamento só pode ser feito para uma data posterior a hoje.');
+            }
             return;
         }
 
         const target = next.item;
+        if (!confirmPlannerSpecialDestination(getPlannerDateMarkers(plans, target.date))) return;
         const confirmation = confirm(
             `Adiar esta aula de ${selected.date} às ${selected.time || 'horário não definido'} para a próxima aula de ${selected.serie || ''}ª série, turma ${selected.team || ''}, em ${target.date} às ${target.time || 'horário não definido'}?\n\nAs duas aulas ficarão agendadas para o mesmo dia e horário.`
         );
@@ -1471,7 +1597,7 @@ window.advancePlanner = async (id) => {
 
         // Entre as aulas futuras da mesma turma que acontecem antes da aula selecionada,
         // escolhe a mais próxima de agora (a primeira na ordem cronológica).
-        const nextUpcoming = plans
+        const candidates = plans
             .filter(item => String(item.id) !== String(id) && sameSeriesAndTeam(item))
             .map(item => ({ item, timestamp: parseDateTime(item.date, item.time), dateKey: getDateKey(item.date) }))
             .filter(entry =>
@@ -1481,14 +1607,30 @@ window.advancePlanner = async (id) => {
                 entry.timestamp >= now &&
                 entry.timestamp < selectedTimestamp
             )
-            .sort((a, b) => a.timestamp - b.timestamp)[0];
+            .sort((a, b) => a.timestamp - b.timestamp);
+
+        const blockedDestinations = new Map();
+        const nextUpcoming = candidates.find(entry => {
+            const markers = getPlannerDateMarkers(plans, entry.item.date);
+            if (markers.blocked.length) {
+                blockedDestinations.set(entry.dateKey, { date: entry.item.date, markers });
+                return false;
+            }
+            return true;
+        });
 
         if (!nextUpcoming) {
-            alert('Não encontrei uma próxima aula futura desta mesma série e turma antes da data selecionada. A antecipação não pode levar a aula para uma data passada nem adiantar para depois da aula original.');
+            if (blockedDestinations.size) {
+                const dates = [...blockedDestinations.values()].map(item => item.date).join(', ');
+                alert('As próximas datas encontradas (' + dates + ') estão marcadas como Folga ou Prova e não podem receber planejamentos. Não foi encontrado outro destino disponível.');
+            } else {
+                alert('Não encontrei uma próxima aula futura desta mesma série e turma antes da data selecionada. A antecipação não pode levar a aula para uma data passada nem adiantar para depois da aula original.');
+            }
             return;
         }
 
         const target = nextUpcoming.item;
+        if (!confirmPlannerSpecialDestination(getPlannerDateMarkers(plans, target.date))) return;
         const confirmation = confirm(
             'Adiantar esta aula de ' + selected.date + ' às ' + (selected.time || 'horário não definido') +
             ' para a próxima aula de ' + (selected.serie || '') + 'ª série, turma ' + (selected.team || '') +
