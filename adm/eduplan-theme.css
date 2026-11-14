@@ -1550,3 +1550,16 @@ dialog .markdown-preview-label { color: #6c5b91; }
 }
 #planner-reschedule-modal .planner-reschedule-date-label { color: #463b66; }
 #planner-reschedule-modal .planner-reschedule-heading h3 { color: #21134f !important; }
+
+#modal-reminder-form:not(.hidden) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(28, 21, 52, .52);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+#modal-reminder-form .edu-reminder-header .edu-modal-heading-copy h3 {
+    border: 0;
+    padding: 0;
+}
