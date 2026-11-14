@@ -148,7 +148,7 @@ export function initPlanner() {
         const activitiesValue = document.getElementById('plan-activities').value;
         const activityTitleLine = activitiesValue.split(/\r?\n/, 1)[0] || '';
         const activitiesRequired = document.getElementById('plan-activities').required;
-        if (activitiesRequired && !/^#\s+\S.*$/.test(activityTitleLine)) {
+        if (activitiesValue.trim() && !/^#\s+\S.*$/.test(activityTitleLine)) {
             const activitiesEditor = document.getElementById('plan-activities');
             activitiesEditor.setCustomValidity('A primeira linha precisa ser um título no formato # Título da aula.');
             activitiesEditor.reportValidity();
@@ -1531,7 +1531,7 @@ function setupActivitiesEditor() {
             const lineEnd = editor.value.indexOf('\n', end);
             const actualEnd = lineEnd === -1 ? editor.value.length : lineEnd;
             const block = editor.value.slice(lineStart, actualEnd);
-            const prefix = format === 'heading' ? '## ' : format === 'bullet' ? '- ' : format === 'number' ? '1. ' : '> ';
+            const prefix = format === 'heading' ? '# ' : format === 'bullet' ? '- ' : format === 'number' ? '1. ' : '> ';
             const replacement = block.split('\n').map(line => prefix + line.replace(/^(#{1,6}[ \t]+|[-*+][ \t]+|\d+[.)][ \t]+|>[ \t]?)/, '')).join('\n');
             editor.value = editor.value.slice(0, lineStart) + replacement + editor.value.slice(actualEnd);
             editor.focus();
@@ -1554,7 +1554,7 @@ function setupActivitiesEditor() {
     });
     editor.addEventListener('input', () => {
         const firstLine = editor.value.split(/\r?\n/, 1)[0] || '';
-        if (!editor.required || /^#\s+\S.*$/.test(firstLine)) editor.setCustomValidity('');
+        if (/^#\s+\S.*$/.test(firstLine) || (!editor.required && !editor.value.trim())) editor.setCustomValidity('');
         updatePreview();
     });
     updatePreview();
