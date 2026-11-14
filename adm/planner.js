@@ -1442,7 +1442,7 @@ function getPlannerOriginalDate(item) {
 // Adia uma aula para a próxima aula futura da mesma série e turma.
 window.deferPlanner = async (id) => {
     try {
-        const { data, error } = await supabase.from('planner').select('*');
+        const { data, error } = await supabase.from('planner').select('*').is('completed_at', null);
         if (error) throw error;
 
         const plans = data || [];
@@ -1547,7 +1547,7 @@ window.deferPlanner = async (id) => {
 // Antecipa uma aula para a próxima aula futura da mesma série e turma, em ordem cronológica.
 window.advancePlanner = async (id) => {
     try {
-        const { data, error } = await supabase.from('planner').select('*');
+        const { data, error } = await supabase.from('planner').select('*').is('completed_at', null);
         if (error) throw error;
 
         const plans = data || [];
