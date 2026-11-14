@@ -7,31 +7,129 @@
     <title>Prof. Mica - Planejamentos</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="eduplan-theme.css">
 </head>
 <body>
-    <!-- TELA DE LOGIN ADM -->
-    <div id="login-container">
-        <form id="login-form">
-            <h2>Acesso Administrativo</h2>
-            <input type="password" id="adm-password" placeholder="Senha do micael.svg" required>
-            <button type="submit">Entrar</button>
-            <div id="login-error"></div>
-        </form>
+    <!-- Acesso do professor: senha geral, login e cadastro -->
+    <div id="login-container" class="auth-screen">
+        <div class="auth-card">
+            <div class="auth-brand">
+                <span class="auth-brand-mark"><i class="fa-solid fa-book-open"></i><i class="fa-solid fa-graduation-cap"></i></span>
+                <span>Edu<span>Plan</span></span>
+            </div>
+
+            <section id="gate-step" class="auth-stage">
+                <p class="auth-eyebrow">Área administrativa</p>
+                <h2>Acesso restrito</h2>
+                <p class="auth-description">Informe a senha geral para acessar o painel de professores.</p>
+                <form id="gate-form">
+                    <label for="gate-password">Senha geral</label>
+                    <div class="auth-input-wrap"><i class="fa-solid fa-lock"></i><input type="password" id="gate-password" autocomplete="current-password" placeholder="Digite a senha geral" required></div>
+                    <button type="submit" class="auth-primary-button">Continuar <i class="fa-solid fa-arrow-right"></i></button>
+                    <p id="gate-error" class="auth-message" role="alert"></p>
+                </form>
+            </section>
+
+            <section id="login-step" class="auth-stage hidden">
+                <p class="auth-eyebrow">Bem-vindo ao EduPlan</p>
+                <h2>Entrar na sua conta</h2>
+                <p class="auth-description">Use o e-mail e a senha cadastrados para continuar.</p>
+                <form id="login-form">
+                    <label for="login-email">E-mail</label>
+                    <div class="auth-input-wrap"><i class="fa-regular fa-envelope"></i><input type="email" id="login-email" autocomplete="username" placeholder="professor@exemplo.com" required></div>
+                    <label for="login-password">Senha</label>
+                    <div class="auth-input-wrap"><i class="fa-solid fa-lock"></i><input type="password" id="login-password" autocomplete="current-password" placeholder="Sua senha" required></div>
+                    <button type="submit" class="auth-primary-button">Entrar <i class="fa-solid fa-arrow-right-to-bracket"></i></button>
+                </form>
+                <div class="auth-links"><button type="button" id="forgot-password-button">Esqueceu a senha?</button><button type="button" id="create-account-button">Criar conta</button></div>
+                <p id="login-error" class="auth-message" role="alert"></p>
+                <p id="auth-feedback" class="auth-message" role="status"></p>
+            </section>
+
+            <section id="register-step" class="auth-stage hidden">
+                <p class="auth-eyebrow">Novo professor</p>
+                <h2>Criar conta</h2>
+                <p class="auth-description">Preencha seus dados, escolha um avatar e selecione as disciplinas que ensina.</p>
+                <form id="register-form">
+                    <label for="register-name">Nome do professor</label>
+                    <div class="auth-input-wrap"><i class="fa-regular fa-user"></i><input type="text" id="register-name" autocomplete="name" minlength="2" placeholder="Seu nome" required></div>
+                    <label for="register-email">E-mail</label>
+                    <div class="auth-input-wrap"><i class="fa-regular fa-envelope"></i><input type="email" id="register-email" autocomplete="email" placeholder="professor@exemplo.com" required></div>
+                    <label for="register-password">Senha</label>
+                    <div class="auth-input-wrap"><i class="fa-solid fa-lock"></i><input type="password" id="register-password" autocomplete="new-password" minlength="8" placeholder="Mínimo de 8 caracteres" required></div>
+
+                    <label>Avatar do perfil</label>
+                    <div class="avatar-picker" role="group" aria-label="Escolha seu avatar">
+                        <button type="button" class="avatar-option selected" data-avatar-key="violet-book" aria-pressed="true" title="Livro"><i class="fa-solid fa-book-open"></i></button>
+                        <button type="button" class="avatar-option" data-avatar-key="blue-graduation" aria-pressed="false" title="Formatura"><i class="fa-solid fa-graduation-cap"></i></button>
+                        <button type="button" class="avatar-option" data-avatar-key="teal-user" aria-pressed="false" title="Professor"><i class="fa-solid fa-user-astronaut"></i></button>
+                        <button type="button" class="avatar-option" data-avatar-key="orange-atom" aria-pressed="false" title="Ciências"><i class="fa-solid fa-atom"></i></button>
+                        <button type="button" class="avatar-option" data-avatar-key="pink-palette" aria-pressed="false" title="Artes"><i class="fa-solid fa-palette"></i></button>
+                        <button type="button" class="avatar-option" data-avatar-key="indigo-globe" aria-pressed="false" title="Idiomas"><i class="fa-solid fa-earth-americas"></i></button>
+                    </div>
+                    <input type="hidden" id="register-avatar-key" value="violet-book">
+
+                    <label>Disciplinas que ensina</label>
+                    <div class="subject-picker">
+                        <label><input type="checkbox" name="teacher-subject" value="Inglês"> Inglês</label>
+                        <label><input type="checkbox" name="teacher-subject" value="Português"> Português</label>
+                        <label><input type="checkbox" name="teacher-subject" value="Matemática"> Matemática</label>
+                        <label><input type="checkbox" name="teacher-subject" value="História"> História</label>
+                        <label><input type="checkbox" name="teacher-subject" value="Geografia"> Geografia</label>
+                        <label><input type="checkbox" name="teacher-subject" value="Ciências"> Ciências</label>
+                        <label><input type="checkbox" name="teacher-subject" value="Física"> Física</label>
+                        <label><input type="checkbox" name="teacher-subject" value="Química"> Química</label>
+                        <label><input type="checkbox" name="teacher-subject" value="Artes"> Artes</label>
+                        <label><input type="checkbox" name="teacher-subject" value="Educação Física"> Educação Física</label>
+                    </div>
+                    <p id="register-error" class="auth-message" role="alert"></p>
+                    <button type="submit" class="auth-primary-button">Criar conta <i class="fa-solid fa-user-plus"></i></button>
+                </form>
+                <div class="auth-links"><button type="button" id="back-to-login-from-register">Voltar ao login</button></div>
+            </section>
+
+            <section id="password-recovery-step" class="auth-stage hidden">
+                <p class="auth-eyebrow">Recuperação de acesso</p>
+                <h2>Esqueceu a senha?</h2>
+                <p class="auth-description">Enviaremos um link de recuperação para o e-mail informado.</p>
+                <form id="password-recovery-form">
+                    <label for="recovery-email">E-mail</label>
+                    <div class="auth-input-wrap"><i class="fa-regular fa-envelope"></i><input type="email" id="recovery-email" required placeholder="professor@exemplo.com"></div>
+                    <button type="submit" class="auth-primary-button">Enviar link <i class="fa-regular fa-paper-plane"></i></button>
+                </form>
+                <div class="auth-links"><button type="button" id="back-to-login-from-recovery">Voltar ao login</button></div>
+                <p id="recovery-feedback" class="auth-message" role="status"></p>
+            </section>
+
+            <section id="password-update-step" class="auth-stage hidden">
+                <p class="auth-eyebrow">Nova senha</p>
+                <h2>Redefinir senha</h2>
+                <form id="password-update-form">
+                    <label for="new-password">Nova senha</label>
+                    <div class="auth-input-wrap"><i class="fa-solid fa-lock"></i><input type="password" id="new-password" minlength="8" required placeholder="Mínimo de 8 caracteres"></div>
+                    <button type="submit" class="auth-primary-button">Salvar nova senha <i class="fa-solid fa-check"></i></button>
+                </form>
+                <p id="password-update-feedback" class="auth-message" role="status"></p>
+            </section>
+        </div>
     </div>
 
     <!-- PAINEL ADM (Oculto inicialmente) -->
     <div id="adm-panel" class="hidden">
         <header>
             <div class="admin-header-brand">
-                <button type="button" id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Abrir menu">☰</button>
-                <h1>Prof. Mica - Planejamentos</h1>
+                <button type="button" id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Abrir menu" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
+                <div class="admin-global-search">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <input type="text" id="global-search" placeholder="Buscar planejamentos, turmas..." aria-label="Buscar no painel">
+                    <div id="search-results" class="hidden" role="listbox"></div>
+                </div>
             </div>
             <div class="header-controls">
-                <button id="btn-logout" class="btn-danger">Sair</button>
                 <!-- === BOTÃO COM DROPDOWN NO CABEÇALHO === -->
 <div class="reminders-wrapper" style="position: relative; display: inline-block; margin-right: 10px;">
-    <button id="btn-reminders" class="nav-btn" title="Reminders" style="position: relative; background: transparent; border: none; cursor: pointer; padding: 8px 12px;">
-        <i class="fa-solid fa-bell" style="color: white; font-size: 1.2rem;"></i>
+    <button id="btn-reminders" class="nav-btn header-reminders-button" title="Lembretes" aria-label="Lembretes" style="position: relative; background: transparent; border: none; cursor: pointer; padding: 8px 12px;">
+        <i class="fa-regular fa-bell" aria-hidden="true"></i>
         <span id="reminders-badge" class="reminders-badge hidden"></span>
     </button>
     <div id="reminders-dropdown" class="reminders-dropdown hidden">
@@ -67,40 +165,53 @@
         <button type="button" id="mobile-nav-backdrop" class="nav-backdrop" aria-label="Fechar menu"></button>
 
         <nav id="adm-navigation" aria-label="Navegação administrativa">
-            <div class="mobile-nav-heading"><strong>Menu</strong><button type="button" id="mobile-menu-close" aria-label="Fechar menu">×</button></div>
-            <button class="nav-btn active" data-target="dashboard-section">Dashboard</button>
-            <button class="nav-btn" data-target="planner-section">Planejamentos</button>
-            <button class="nav-btn" data-target="completed-planner-section">Aulas passadas</button>
-            <button class="nav-btn" data-target="tasks-section">Tasks</button>
-            <button class="nav-btn" data-target="users-section">Usuários</button>
-            <button class="nav-btn" data-target="missions-section">Missões</button>
-            <button class="nav-btn" data-target="flashcards-section">Flashcards</button>
-            <button class="nav-btn hidden" data-target="reminders-section" aria-hidden="true" tabindex="-1">Lembretes</button>
-            <button id="btn-yuki-planner" title="Yuki Planner" onclick="window.open('https://englishjourney.github.io/game/adm/yukiplanner/index.html', '_blank')" style="background: transparent; color: var(--text-muted); border: none; padding: 10px 15px; cursor: pointer; font-size: 1rem; border-bottom: 2px solid transparent;">
-                <i class="fa-solid fa-robot" style="font-size: 1.2rem; display: inline-block; width: auto; height: auto;"></i>
-            </button>
+            <div class="sidebar-brand">
+                <span class="sidebar-brand-mark"><i class="fa-solid fa-book-open"></i><i class="fa-solid fa-graduation-cap"></i></span>
+                <span>Edu<span>Plan</span></span>
+            </div>
+            <div class="mobile-nav-heading"><strong>Menu</strong><button type="button" id="mobile-menu-close" aria-label="Fechar menu"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="sidebar-nav-group">
+                <button class="nav-btn active" data-target="dashboard-section"><i class="fa-regular fa-calendar-days"></i><span>Dashboard</span></button>
+                <button class="nav-btn" data-target="planner-section"><i class="fa-solid fa-book-open"></i><span>Planejamentos</span></button>
+                <button class="nav-btn" data-target="users-section"><i class="fa-solid fa-user-group"></i><span>Alunos</span></button>
+                <button class="nav-btn" data-target="tasks-section"><i class="fa-regular fa-clipboard"></i><span>Trabalhos</span></button>
+                <button class="nav-btn" data-target="completed-planner-section"><i class="fa-solid fa-clock-rotate-left"></i><span>Aulas passadas</span></button>
+                <button class="nav-btn" data-target="missions-section"><i class="fa-solid fa-trophy"></i><span>Missões</span></button>
+                <button class="nav-btn" data-target="flashcards-section"><i class="fa-regular fa-clone"></i><span>Flashcards</span></button>
+                <button class="nav-btn hidden" data-target="reminders-section" aria-hidden="true" tabindex="-1"><i class="fa-regular fa-bell"></i><span>Lembretes</span></button>
+            </div>
+            <div class="sidebar-bottom">
+                <button id="btn-yuki-planner" title="Yuki Planner" onclick="window.open('https://englishjourney.github.io/game/adm/yukiplanner/index.html', '_blank')">
+                    <i class="fa-solid fa-robot" aria-hidden="true"></i><span>Yuki Planner</span>
+                </button>
+                <div id="teacher-profile" class="teacher-profile"></div>
+            </div>
         </nav>
 
         <main>
             <!-- DASHBOARD SECTION -->
             <section id="dashboard-section" class="content-section active">
-                <div class="section-header" style="flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between;">
-                    <h2>Horários Semanais</h2>
-                    <div class="search-bar" style="margin-bottom: 0; flex: 1; max-width: 350px; position: relative;">
-                        <input type="text" id="global-search" placeholder="Pesquisar alunos ou planejamentos..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-dark); color: white;">
-                        <div id="search-results" class="hidden" style="position: absolute; top: 100%; left: 0; width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; margin-top: 5px; max-height: 300px; overflow-y: auto; z-index: 20;"></div>
+                <div class="dashboard-page-heading">
+                    <div>
+                        <h2>Dashboard</h2>
+                        <p>Resumo da sua semana e visão geral das aulas.</p>
                     </div>
                 </div>
                 <div id="today-plans-container" aria-live="polite"></div>
-                <div id="schedule-container" style="margin-top: 20px;">
-                    <!-- Preenchido dinamicamente via JS -->
+                <div class="weekly-schedule-heading">
+                    <h3><i class="fa-regular fa-calendar-days" aria-hidden="true"></i> Cronograma da Semana</h3>
+                    <button type="button" id="btn-edit-schedule" class="btn-primary"><i class="fa-solid fa-pen" aria-hidden="true"></i> Editar horários</button>
                 </div>
+                <div id="schedule-container" aria-live="polite"></div>
             </section>
 
             <!-- PLANNER SECTION -->
             <section id="planner-section" class="content-section hidden">
                 <div class="section-header planner-main-header">
-                    <h2>Aulas Planejadas</h2>
+                    <div class="planner-heading-copy">
+                        <h2>Planejamentos</h2>
+                        <p>Organize e visualize suas aulas por dia.</p>
+                    </div>
                     <div class="planner-header-controls">
                         <div class="search-bar planner-search-wrap">
                             <input type="text" id="planner-search" placeholder="Pesquisar por data, hora, turma ou atividade..." aria-label="Pesquisar planejamentos">
@@ -152,7 +263,7 @@
 
             <!-- TASKS SECTION -->
             <section id="tasks-section" class="content-section hidden">
-                <div class="section-header"><h2>Trabalhos pendentes</h2><button id="btn-add-task" class="btn-primary">+ Novo trabalho</button></div>
+                <div class="section-header"><h2>Trabalhos pendentes</h2><button id="btn-add-task" class="btn-primary"><i class="fa-solid fa-plus" aria-hidden="true"></i> Novo trabalho</button></div>
                 <div id="tasks-filters" class="tasks-filters" role="group" aria-label="Filtrar trabalhos por turma"></div>
                 <div id="tasks-list" class="cards-container"><!-- Preenchido via JS --></div>
             </section>
@@ -173,7 +284,7 @@
             <section id="missions-section" class="content-section hidden">
                  <div class="section-header">
                     <h2>Missões</h2>
-                    <button id="btn-add-mission" class="btn-primary">+ Nova Missão</button>
+                    <button id="btn-add-mission" class="btn-primary"><i class="fa-solid fa-plus" aria-hidden="true"></i> Nova Missão</button>
                 </div>
                 <div id="missions-list" class="cards-container">
                     <!-- Preenchido via JS -->
@@ -184,7 +295,7 @@
             <section id="flashcards-section" class="content-section hidden">
                 <div class="section-header">
                     <h2>Gerenciamento de Flashcards</h2>
-                    <button id="btn-add-flashcard" class="btn-primary">+ Novo Flashcard</button>
+                    <button id="btn-add-flashcard" class="btn-primary"><i class="fa-solid fa-plus" aria-hidden="true"></i> Novo Flashcard</button>
                 </div>
                 <div id="flashcards-list" class="cards-container">
                     <!-- Preenchido via JS -->
@@ -396,7 +507,7 @@
                         <button type="button" data-format="tag" title="Inserir marcadores de tag"><i class="fa-solid fa-tag" aria-hidden="true"></i> Tag</button>
                         <button type="button" data-format="bullet" title="Lista com marcadores">• Lista</button>
                         <button type="button" data-format="number" title="Lista numerada">1. Lista</button>
-                        <button type="button" data-format="quote" title="Citação">❝</button>
+                        <button type="button" data-format="quote" title="Citação"><i class="fa-solid fa-quote-right" aria-hidden="true"></i></button>
                         <button type="button" data-format="divider" title="Divisor">―</button>
                     </div>
                     <textarea id="plan-activities" rows="5" required placeholder="# Título da aula&#10;&#10;Descreva as atividades e use os botões para formatar..."></textarea>
@@ -472,7 +583,30 @@
         </form>
     </dialog>
 
+    <!-- MODAL: EDIÇÃO DOS HORÁRIOS SEMANAIS -->
+    <dialog id="schedule-editor-modal" class="schedule-editor-dialog">
+        <form id="schedule-editor-form">
+            <div class="schedule-editor-heading">
+                <div>
+                    <h3>Editar horários</h3>
+                    <p>Organize as aulas da manhã e da tarde para cada dia da semana.</p>
+                </div>
+                <button type="button" id="btn-cancel-schedule-editor" class="icon-close-button" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="schedule-editor-fields" class="schedule-editor-fields"></div>
+            <div class="modal-actions schedule-editor-actions">
+                <button type="button" id="btn-cancel-schedule-editor-footer" class="btn-secondary">Cancelar</button>
+                <button type="submit" class="btn-primary"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Salvar horários</button>
+            </div>
+        </form>
+    </dialog>
+
     <!-- Ponto de entrada do JS -->
     <script type="module" src="main.js"></script>
+    <script>
+        document.getElementById('btn-cancel-schedule-editor-footer')?.addEventListener('click', () => {
+            document.getElementById('schedule-editor-modal')?.close();
+        });
+    </script>
 </body>
 </html>
