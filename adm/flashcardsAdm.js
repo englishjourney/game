@@ -1,13 +1,19 @@
 // flashcardsAdm.js
 import { supabase } from '../supabaseClient.js';
 
+function escapeFlashcardHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[character]);
+}
+
 export function initFlashcardsAdm() {
     const flashcardsList = document.getElementById('flashcards-list');
     const btnAddFlashcard = document.getElementById('btn-add-flashcard');
     const flashcardModal = document.getElementById('flashcard-modal');
     const flashcardForm = document.getElementById('flashcard-form');
-    
-    if (!flashcardsList) return;
+
+    if (!flashcardsList || !btnAddFlashcard || !flashcardModal || !flashcardForm) return;
 
     loadFlashcards();
 
@@ -18,105 +24,114 @@ export function initFlashcardsAdm() {
         flashcardModal.showModal();
     });
 
-    flashcardForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
+    flashcardForm.addEventListener('submit', async event => {
+        event.preventDefault();
+
         const id = document.getElementById('flashcard-id').value;
-        const word = document.getElementById('fc-word').value;
-        const translation = document.getElementById('fc-translation').value;
-        const audio_link = document.getElementById('fc-audio').value;
-        const stack = document.getElementById('fc-stack').value;
+        const payload = {
+            word: document.getElementById('fc-word').value.trim(),
+            translation: document.getElementById('fc-translation').value.trim(),
+            audio_link: document.getElementById('fc-audio').value.trim(),
+            stack: document.getElementById('fc-stack').value.trim()
+        };
 
-        const payload = { word, translation, audio_link, stack };
+        const result = id
+            ? await supabase.from('flashcards').update(payload).eq('id', id)
+            : await supabase.from('flashcards').insert([payload]);
 
-        if (id) {
-            const { error } = await supabase.from('flashcards').update(payload).eq('id', id);
-            if (error) alert('Erro ao atualizar: ' + error.message);
-        } else {
-            const { error } = await supabase.from('flashcards').insert([payload]);
-            if (error) alert('Erro ao criar: ' + error.message);
+        if (result.error) {
+            alert('Não foi possível salvar o flashcard: ' + result.error.message);
+            return;
         }
 
         flashcardModal.close();
-        loadFlashcards();
+        await loadFlashcards();
     });
 }
 
 async function loadFlashcards() {
     const container = document.getElementById('flashcards-list');
-    container.innerHTML = 'Carregando flashcards...';
+    if (!container) return;
+    container.innerHTML = '<p class="empty-state">Carregando flashcards...</p>';
 
-    const { data, error } = await supabase.from('flashcards').select('*').order('stack', { ascending: true });
+    const { data, error } = await supabase
+        .from('flashcards')
+        .select('*')
+        .order('stack', { ascending: true });
 
     if (error) {
-        container.innerHTML = 'Erro ao carregar flashcards.';
+        container.innerHTML = '<p class="empty-state">Erro ao carregar flashcards.</p>';
         return;
     }
 
     if (!data || data.length === 0) {
-        container.innerHTML = '<p>Nenhum flashcard cadastrado.</p>';
+        container.innerHTML = '<p class="empty-state">Nenhum flashcard cadastrado.</p>';
         return;
     }
 
-    // Agrupar os flashcards por stack
-    const stacks = {};
-    data.forEach(fc => {
-        const stackName = fc.stack || 'Geral';
-        if (!stacks[stackName]) {
-            stacks[stackName] = [];
-        }
-        stacks[stackName].push(fc);
+    const stacks = new Map();
+    data.forEach(card => {
+        const stackName = card.stack || 'Geral';
+        if (!stacks.has(stackName)) stacks.set(stackName, []);
+        stacks.get(stackName).push(card);
     });
 
-    let html = '';
-    for (const [stackName, cards] of Object.entries(stacks)) {
-        html += `
-            <div class="stack-group" style="margin-bottom: 25px; width: 100%;">
-                <h3 style="border-bottom: 2px solid #ddd; padding-bottom: 5px; margin-bottom: 15px; color: var(--primary, #333);">
-                    📚 Stack: ${stackName} (${cards.length} cartas)
-                </h3>
-        `;
+    container.innerHTML = Array.from(stacks.entries()).map(([stackName, cards]) =>
+        '<section class="flashcard-stack-group">' +
+            '<h3 class="flashcard-stack-title"><i class="fa-solid fa-layer-group" aria-hidden="true"></i>' +
+                escapeFlashcardHtml(stackName) +
+                '<span class="flashcard-stack-count">' + cards.length + ' cartas</span>' +
+            '</h3>' +
+            '<div class="flashcard-stack-grid">' +
+                cards.map(card =>
+                    '<article class="data-card flashcard-card">' +
+                        '<div class="flashcard-card-content">' +
+                            '<strong>' + escapeFlashcardHtml(card.word) + '</strong>' +
+                            '<p>' + escapeFlashcardHtml(card.translation) + '</p>' +
+                            '<small><i class="fa-solid fa-volume-high" aria-hidden="true"></i>' +
+                                'Áudio: ' + escapeFlashcardHtml(card.audio_link || 'Nenhum') +
+                            '</small>' +
+                        '</div>' +
+                        '<div class="data-card-actions">' +
+                            '<button type="button" class="btn-small btn-secondary btn-edit-fc" data-id="' + escapeFlashcardHtml(card.id) +
+                                '" data-word="' + escapeFlashcardHtml(card.word) +
+                                '" data-translation="' + escapeFlashcardHtml(card.translation) +
+                                '" data-audio="' + escapeFlashcardHtml(card.audio_link || '') +
+                                '" data-stack="' + escapeFlashcardHtml(card.stack || '') + '">' +
+                                '<i class="fa-solid fa-pen" aria-hidden="true"></i> Editar</button>' +
+                            '<button type="button" class="btn-small btn-danger btn-delete-fc" data-id="' + escapeFlashcardHtml(card.id) + '">' +
+                                '<i class="fa-solid fa-trash" aria-hidden="true"></i> Excluir</button>' +
+                        '</div>' +
+                    '</article>'
+                ).join('') +
+            '</div>' +
+        '</section>'
+    ).join('');
 
-        cards.forEach(fc => {
-            html += `
-                <div class="card-item" style="border: 1px solid #334155; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; background: #1e293b; color: #ffffff;">
-                    <div>
-                        <strong>Palavra:</strong> ${fc.word} | <strong>Tradução:</strong> ${fc.translation} <br>
-                        <small style="color: #cbd5e1;">Áudio: ${fc.audio_link || 'Nenhum'}</small>
-                    </div>
-                    <div>
-                        <button class="btn-secondary btn-edit-fc" data-id="${fc.id}" data-word="${fc.word}" data-translation="${fc.translation}" data-audio="${fc.audio_link || ''}" data-stack="${fc.stack || ''}">Editar</button>
-                        <button class="btn-danger btn-delete-fc" data-id="${fc.id}">Excluir</button>
-                    </div>
-                </div>
-            `;
-        });
-
-        html += `</div>`;
-    }
-
-    container.innerHTML = html;
-
-    // Ações de editar e excluir
-    container.querySelectorAll('.btn-edit-fc').forEach(btn => {
-        btn.addEventListener('click', () => {
+    container.querySelectorAll('.btn-edit-fc').forEach(button => {
+        button.addEventListener('click', () => {
             document.getElementById('flashcard-modal-title').textContent = 'Editar Flashcard';
-            document.getElementById('flashcard-id').value = btn.dataset.id;
-            document.getElementById('fc-word').value = btn.dataset.word;
-            document.getElementById('fc-translation').value = btn.dataset.translation;
-            document.getElementById('fc-audio').value = btn.dataset.audio;
-            document.getElementById('fc-stack').value = btn.dataset.stack;
-            document.getElementById('flashcard-modal').showModal();
+            document.getElementById('flashcard-id').value = button.dataset.id;
+            document.getElementById('fc-word').value = button.dataset.word;
+            document.getElementById('fc-translation').value = button.dataset.translation;
+            document.getElementById('fc-audio').value = button.dataset.audio;
+            document.getElementById('fc-stack').value = button.dataset.stack;
+            flashcardModal.showModal();
         });
     });
 
-    container.querySelectorAll('.btn-delete-fc').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            if (confirm('Deseja realmente excluir este flashcard?')) {
-                const { error } = await supabase.from('flashcards').delete().eq('id', btn.dataset.id);
-                if (error) alert('Erro ao excluir: ' + error.message);
-                else loadFlashcards();
+    container.querySelectorAll('.btn-delete-fc').forEach(button => {
+        button.addEventListener('click', async () => {
+            if (!confirm('Deseja realmente excluir este flashcard?')) return;
+            const { error: deleteError } = await supabase
+                .from('flashcards')
+                .delete()
+                .eq('id', button.dataset.id);
+            if (deleteError) {
+                alert('Erro ao excluir: ' + deleteError.message);
+                return;
             }
+            await loadFlashcards();
         });
     });
 }
