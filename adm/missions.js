@@ -61,16 +61,15 @@ async function loadMissions() {
     }
 
     container.innerHTML = data.map(m => `
-        <div class="data-card" style="${m.done ? 'border-left: 4px solid var(--success);' : m.fail ? 'border-left: 4px solid var(--danger);' : ''}">
+        <article id="mission-card-${m.id}" class="data-card mission-card">
             <div class="data-card-info">
                 <p><strong>${m.mission_name}</strong></p>
-                <p>Score: ${m.mission_score} | Link: ${m.mission_link || 'Nenhum'}</p>
-                <p>Status: ${m.done ? '<span style="color:var(--success)">Concluída</span>' : m.fail ? '<span style="color:var(--danger)">Falhou</span>' : 'Pendente'}</p>
+                <p>Pontuação: ${m.mission_score} | Link: ${m.mission_link || 'Nenhum'}</p>
             </div>
             <div class="data-card-actions">
                 <button class="btn-small btn-secondary" onclick='window.editMission(${JSON.stringify(m).replace(/'/g, "&#39;")})'>Editar</button>
             </div>
-        </div>
+        </article>
     `).join('');
 }
 
