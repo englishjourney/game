@@ -6,6 +6,8 @@ let selectedPlannerItem = null;
 let mergeSourceItem = null;
 let mergeTargetItem = null;
 let mergeIsSaving = false;
+const selectedPlannerIds = new Set();
+let plannerSelectionMode = false;
 
 export function initPlanner() {
     setupCustomOptions();
@@ -13,7 +15,9 @@ export function initPlanner() {
     setupLastTeamToggle();
     loadPlanners();
     loadCompletedPlanners();
+    updatePlannerBulkToolbar();
     setupPlannerMerge();
+    setupPlannerBulkActions();
     setupActivitiesEditor();
     const detailsEditButton = document.getElementById('btn-edit-planner-from-details');
     if (detailsEditButton) detailsEditButton.addEventListener('click', () => {
@@ -28,8 +32,7 @@ export function initPlanner() {
         const isPrv = document.getElementById('cb-prova').checked;
         
         document.getElementById('plan-time').required = !(isEsp || isFlg || isPrv);
-        document.getElementById('plan-serie').required = !(isEsp || isFlg || isPrv);
-        document.getElementById('plan-team').required = !(isEsp || isFlg || isPrv);
+        document.getElementById('plan-grade').required = !(isEsp || isFlg || isPrv);
         document.getElementById('plan-activities').required = !(isFlg || isPrv);
         document.getElementById('plan-end-date').required = isPrv;
         
@@ -140,23 +143,36 @@ export function initPlanner() {
                              document.getElementById('cb-folga').checked ? 2 :
                              document.getElementById('cb-prova').checked ? 3 : 0;
 
+        const activitiesValue = document.getElementById('plan-activities').value;
+        const activityTitleLine = activitiesValue.split(/\r?\n/, 1)[0] || '';
+        const activitiesRequired = document.getElementById('plan-activities').required;
+        if (activitiesRequired && !/^#\s+\S.*$/.test(activityTitleLine)) {
+            const activitiesEditor = document.getElementById('plan-activities');
+            activitiesEditor.setCustomValidity('A primeira linha precisa ser um título no formato # Título da aula.');
+            activitiesEditor.reportValidity();
+            activitiesEditor.focus();
+            return;
+        }
+        document.getElementById('plan-activities').setCustomValidity('');
+        const gradeParts = splitPlannerGrade(document.getElementById('plan-grade').value);
         const planData = {
             day: document.getElementById('plan-day').value,
             date: document.getElementById('plan-date').value,
             time: document.getElementById('plan-time').value,
-            serie: document.getElementById('plan-serie').value,
-            team: document.getElementById('plan-team').value,
+            serie: gradeParts.serie,
+            team: gradeParts.team,
             skills: document.getElementById('plan-skills').value,
-            activities: document.getElementById('plan-activities').value,
+            activities: activitiesValue,
             duration: document.getElementById('plan-duration').value,
             special: specialValue
         };
 
         // Salvar última turma no cache se o toggle estiver ativo
         const isLastTeamEnabled = localStorage.getItem('planner_last_team_enabled') === 'true';
-        if (isLastTeamEnabled) {
-            if (planData.serie && planData.serie !== '__ADD_NEW__') localStorage.setItem('planner_last_serie', planData.serie);
-            if (planData.team && planData.team !== '__ADD_NEW__') localStorage.setItem('planner_last_team', planData.team);
+        if (isLastTeamEnabled && document.getElementById('plan-grade').value) {
+            localStorage.setItem('planner_last_grade', document.getElementById('plan-grade').value);
+            localStorage.removeItem('planner_last_serie');
+            localStorage.removeItem('planner_last_team');
         }
 
         let result;
@@ -198,20 +214,19 @@ export function initPlanner() {
 function resetPlannerForm() {
     document.getElementById('planner-form').reset();
     if (window.updatePlannerActivitiesPreview) window.updatePlannerActivitiesPreview();
-    document.getElementById('plan-serie').value = '';
-    document.getElementById('plan-team').value = '';
+    const gradeSelect = document.getElementById('plan-grade');
+    if (gradeSelect) {
+        [...gradeSelect.options].filter(option => option.dataset.legacyGrade === 'true').forEach(option => option.remove());
+        gradeSelect.value = '';
+    }
     document.getElementById('plan-time').value = '';
     document.getElementById('plan-day').value = '';
 }
 
 // --- LÓGICA DE GERENCIAMENTO DE DROPDOWNS CUSTOMIZADOS COM PROMPT ---
 function setupCustomOptions() {
-    loadCustomOptionsForSelect('plan-serie', 'planner_custom_series');
-    loadCustomOptionsForSelect('plan-team', 'planner_custom_teams');
+    // A turma agora usa uma lista fixa em um único seletor.
     loadCustomOptionsForSelect('plan-time', 'planner_custom_times');
-
-    setupCustomAddListener('plan-serie', 'planner_custom_series', 'Série');
-    setupCustomAddListener('plan-team', 'planner_custom_teams', 'Turma');
     setupCustomAddListener('plan-time', 'planner_custom_times', 'Hora');
 }
 
@@ -234,33 +249,19 @@ function loadCustomOptionsForSelect(selectId, storageKey) {
 function setupCustomAddListener(selectId, storageKey, labelName) {
     const select = document.getElementById(selectId);
     if (!select) return;
-
     select.addEventListener('change', () => {
-        if (select.value === '__ADD_NEW__') {
-            const newVal = prompt(`Digite o novo valor para ${labelName}:`);
-            if (newVal && newVal.trim() !== '') {
-                const cleanVal = newVal.trim();
-                setSelectValueWithCustom(selectId, cleanVal);
-
-                const customItems = JSON.parse(localStorage.getItem(storageKey) || '[]');
-                if (!customItems.includes(cleanVal)) {
-                    customItems.push(cleanVal);
-                    localStorage.setItem(storageKey, JSON.stringify(customItems));
-                }
-
-                // Salva se "Última turma" estiver ativo
-                if ((selectId === 'plan-serie' || selectId === 'plan-team') && localStorage.getItem('planner_last_team_enabled') === 'true') {
-                    if (selectId === 'plan-serie') localStorage.setItem('planner_last_serie', cleanVal);
-                    if (selectId === 'plan-team') localStorage.setItem('planner_last_team', cleanVal);
-                }
-            } else {
-                select.value = '';
-            }
-        } else {
-            if ((selectId === 'plan-serie' || selectId === 'plan-team') && localStorage.getItem('planner_last_team_enabled') === 'true') {
-                if (selectId === 'plan-serie') localStorage.setItem('planner_last_serie', select.value);
-                if (selectId === 'plan-team') localStorage.setItem('planner_last_team', select.value);
-            }
+        if (select.value !== '__ADD_NEW__') return;
+        const newVal = prompt('Digite o novo valor para ' + labelName + ':');
+        if (!newVal || !newVal.trim()) {
+            select.value = '';
+            return;
+        }
+        const cleanVal = newVal.trim();
+        setSelectValueWithCustom(selectId, cleanVal);
+        const customItems = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        if (!customItems.includes(cleanVal)) {
+            customItems.push(cleanVal);
+            localStorage.setItem(storageKey, JSON.stringify(customItems));
         }
     });
 }
@@ -323,15 +324,11 @@ function setupDateInputAndPicker(inputId, pickerId) {
 function setupLastTeamToggle() {
     const toggle = document.getElementById('last-team-toggle');
     if (!toggle) return;
-
-    const isEnabled = localStorage.getItem('planner_last_team_enabled') === 'true';
-    toggle.checked = isEnabled;
-
+    toggle.checked = localStorage.getItem('planner_last_team_enabled') === 'true';
     toggle.addEventListener('change', () => {
-        if (toggle.checked) {
-            localStorage.setItem('planner_last_team_enabled', 'true');
-        } else {
-            localStorage.setItem('planner_last_team_enabled', 'false');
+        localStorage.setItem('planner_last_team_enabled', toggle.checked ? 'true' : 'false');
+        if (!toggle.checked) {
+            localStorage.removeItem('planner_last_grade');
             localStorage.removeItem('planner_last_serie');
             localStorage.removeItem('planner_last_team');
         }
@@ -339,13 +336,11 @@ function setupLastTeamToggle() {
 }
 
 function applyLastTeamIfEnabled() {
-    const isEnabled = localStorage.getItem('planner_last_team_enabled') === 'true';
-    if (isEnabled) {
-        const lastSerie = localStorage.getItem('planner_last_serie');
-        const lastTeam = localStorage.getItem('planner_last_team');
-        if (lastSerie) setSelectValueWithCustom('plan-serie', lastSerie);
-        if (lastTeam) setSelectValueWithCustom('plan-team', lastTeam);
-    }
+    if (localStorage.getItem('planner_last_team_enabled') !== 'true') return;
+    let grade = localStorage.getItem('planner_last_grade') || '';
+    if (!grade) grade = (localStorage.getItem('planner_last_serie') || '') + (localStorage.getItem('planner_last_team') || '');
+    const select = document.getElementById('plan-grade');
+    if (select && [...select.options].some(option => option.value === grade)) select.value = grade;
 }
 
 // --- LÓGICA DE ABRIR "+ NOVA AULA" DIRETO DA SEÇÃO DO DIA ---
@@ -381,6 +376,40 @@ function normalizePlannerClassValue(value) {
     return String(value == null ? '' : value).trim().toLocaleLowerCase('pt-BR');
 }
 
+function splitPlannerGrade(value) {
+    const match = String(value || '').trim().toUpperCase().match(/^(\d{1,2})([A-Z])$/);
+    return match ? { serie: match[1], team: match[2] } : { serie: '', team: '' };
+}
+function formatPlannerGrade(item) {
+    return (String(item && item.serie || '').trim() + String(item && item.team || '').trim()).toUpperCase();
+}
+function setPlannerGradeSelect(serie, team) {
+    const select = document.getElementById('plan-grade');
+    if (!select) return;
+    const grade = (String(serie || '').trim() + String(team || '').trim()).toUpperCase();
+    [...select.options].filter(option => option.dataset.legacyGrade === 'true').forEach(option => option.remove());
+    if (grade && ![...select.options].some(option => option.value === grade)) {
+        const legacy = document.createElement('option');
+        legacy.value = grade;
+        legacy.textContent = grade + ' (registro existente)';
+        legacy.dataset.legacyGrade = 'true';
+        select.appendChild(legacy);
+    }
+    select.value = grade;
+}
+function getPlannerTitle(item) {
+    const lines = String(item && item.activities || '').replace(/\r/g, '').split('\n');
+    const firstLine = lines.find(line => line.trim()) || '';
+    const heading = firstLine.match(/^#\s+(.+?)\s*$/);
+    let title = heading ? heading[1] : firstLine.replace(/^#{1,6}\s*/, '');
+    title = title.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/~~(.*?)~~/g, '$1').trim();
+    if (title) return title.length > 110 ? title.slice(0, 107) + '…' : title;
+    if (item && item.special == 2) return 'Folga';
+    if (item && item.special == 3) return 'Prova';
+    if (item && item.special == 4) return 'Aula adaptada';
+    return 'Aula sem título';
+}
+
 function renderMergePreviewCard(item, label) {
     if (!item) {
         return '<div class="merge-empty-card"><i class="fa-regular fa-square-plus"></i><p>Selecione uma aula para receber as atividades</p><button type="button" class="btn-primary" id="btn-open-merge-picker">Selecionar aula</button></div>';
@@ -390,7 +419,7 @@ function renderMergePreviewCard(item, label) {
         '<div class="merge-preview-card-label">' + escapePlannerHtml(label) + '</div>' +
         '<h4>' + escapePlannerHtml(item.day || 'Aula') + ' — ' + escapePlannerHtml(item.date || 'Sem data') + '</h4>' +
         '<p><strong>Horário:</strong> ' + escapePlannerHtml(item.time || 'Não informado') + '</p>' +
-        '<p><strong>Turma:</strong> ' + escapePlannerHtml(item.serie || '') + ' ' + escapePlannerHtml(item.team || '') + '</p>' +
+        '<p><strong>Turma:</strong> ' + escapePlannerHtml(formatPlannerGrade(item) || 'Não informada') + '</p>' +
         '<p><strong>Duração:</strong> ' + escapePlannerHtml(item.duration || 'Não informada') + '</p>' +
         '<div class="merge-preview-activities"><strong>Atividades:</strong>' +
             (item.activities ? renderPlannerMarkdown(item.activities) : '<p class="merge-no-activities">Sem atividades cadastradas.</p>') +
@@ -402,7 +431,7 @@ function renderMergeCandidateCard(item) {
     return '<article class="merge-option-card">' +
         '<div class="merge-option-info">' +
             '<strong>' + escapePlannerHtml(item.day || 'Aula') + ' — ' + escapePlannerHtml(item.date || 'Sem data') + '</strong>' +
-            '<span>' + escapePlannerHtml(item.time || 'Sem horário') + ' · ' + escapePlannerHtml(item.serie || '') + ' ' + escapePlannerHtml(item.team || '') + '</span>' +
+            '<span>' + escapePlannerHtml(item.time || 'Sem horário') + ' · ' + escapePlannerHtml(formatPlannerGrade(item) || 'Sem turma') + '</span>' +
             '<div class="merge-option-activities">' + (item.activities ? renderPlannerMarkdown(item.activities) : '<em>Sem atividades cadastradas.</em>') + '</div>' +
         '</div><button type="button" class="btn-primary" data-merge-select="' + escapePlannerHtml(item.id) + '">Selecionar</button>' +
     '</article>';
@@ -641,52 +670,88 @@ window.showPlannerMergePicker = async () => {
 
 function renderPlannerCard(p, mode = 'active') {
     const cardClass = p.special == 4 ? 'card-adapted' :
-        (p.special == 1 ? 'card-special-1' : (p.special == 2 ? 'card-special-2' :
-        (p.special == 3 ? 'card-special-3' : '')));
-    const titleHtml = p.special == 4
-        ? '<p class="adapted-label"><i class="fa-solid fa-puzzle-piece" aria-hidden="true"></i> <strong>ADAPTADO</strong></p>'
-        : (p.special == 2
-            ? '<p class="planner-special-label"><strong>FOLGA</strong></p>'
-            : (p.special == 3 ? '<p class="planner-special-label"><strong>PROVA</strong></p>' : ''));
-    const actions = mode === 'completed'
-        ? '<button class="btn-small btn-danger" onclick="window.deleteCompletedPlanner(\'' + p.id + '\')">Excluir</button>'
-        : '<button class="btn-small btn-secondary" onclick=\'window.editPlanner(' + JSON.stringify(p).replace(/'/g, "&#39;") + ')\'>Editar</button>' +
-          '<button class="btn-small btn-postpone" onclick="window.deferPlanner(\'' + p.id + '\')" title="Mover esta aula para a data e hora da próxima aula">Adiar</button>' +
-          '<button class="btn-small btn-advance" onclick="window.advancePlanner(\'' + p.id + '\')" title="Trazer esta aula para a próxima data futura da turma">Adiantar</button>' +
-          '<button class="btn-small btn-complete" onclick="window.completePlanner(\'' + p.id + '\')" title="Mover esta aula para Aulas passadas">Concluída</button>' +
-          '<button class="btn-small btn-danger" onclick="window.deletePlanner(\'' + p.id + '\')" title="Excluir definitivamente este planejamento">Excluir</button>' +
-          '<button class="btn-small btn-merge" onclick="window.openPlannerMerge(\'' + p.id + '\')" title="Unir esta aula a qualquer outro planejamento ativo">Merge</button>';
-
-    return '<div class="data-card ' + cardClass + ' ' + (mode === 'completed' ? 'completed-card' : '') + '"' +
-        ' id="plan-card-' + p.id + '" data-plan-id="' + p.id + '" role="button" tabindex="0" aria-label="Ver detalhes da aula">' +
-        '<div class="data-card-info">' +
-            '<p><strong>' + escapePlannerHtml(p.day || '') + ' - ' + escapePlannerHtml(p.date || '') +
-            (p.time ? ' (' + escapePlannerHtml(p.time) + ')' : '') + '</strong>' +
-            (p.duration ? ' | Duração: ' + escapePlannerHtml(p.duration) : '') + '</p>' +
-            titleHtml +
-            (p.tag ? '<p class="planner-card-tag"><strong>Tag:</strong> ' + escapePlannerHtml(p.tag) + '</p>' : '') +
-            (p.serie || p.team ? '<p><strong>Turma:</strong> ' + escapePlannerHtml(p.serie || '') + ' ' + escapePlannerHtml(p.team || '') + '</p>' : '') +
-            (p.activities ? '<div class="planner-card-activities"><strong>Atividades:</strong>' + renderPlannerMarkdown(p.activities) + '</div>' : '') +
-            (p.skills ? '<p><strong>BNCC:</strong> ' + escapePlannerHtml(p.skills) + '</p>' : '') +
-            (mode === 'completed' && p.completed_at ? '<p class="completed-at"><i class="fa-solid fa-circle-check"></i> Concluída em ' + new Date(p.completed_at).toLocaleString('pt-BR') + '</p>' : '') +
-        '</div>' + (actions ? '<div class="data-card-actions">' + actions + '</div>' : '') + '</div>';
+        (p.special == 1 ? 'card-special-1' : (p.special == 2 ? 'card-special-2' : (p.special == 3 ? 'card-special-3' : '')));
+    const grade = formatPlannerGrade(p);
+    const specialLabel = p.special == 4
+        ? '<span class="planner-type-chip adapted-chip"><i class="fa-solid fa-puzzle-piece"></i> Adaptado</span>'
+        : (p.special == 1 ? '<span class="planner-type-chip">Especial</span>' : (p.special == 2 ? '<span class="planner-type-chip">Folga</span>' : (p.special == 3 ? '<span class="planner-type-chip">Prova</span>' : '')));
+    const isCompleted = mode === 'completed';
+    const selectionControl = !isCompleted && plannerSelectionMode
+        ? '<label class="planner-card-select" title="Selecionar este planejamento"><input type="checkbox" class="planner-select-checkbox" data-plan-select="' + escapePlannerHtml(p.id) + '"' + (selectedPlannerIds.has(String(p.id)) ? ' checked' : '') + '><span></span></label>'
+        : '';
+    const actions = isCompleted
+        ? '<div class="planner-card-menu"><button type="button" class="planner-options-trigger" aria-label="Opções da aula" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical"></i></button><div class="planner-actions-menu hidden"><button type="button" data-planner-action="delete-completed"><i class="fa-solid fa-trash"></i> Excluir do histórico</button></div></div>'
+        : '<div class="planner-card-menu"><button type="button" class="planner-options-trigger" aria-label="Opções da aula" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical"></i></button><div class="planner-actions-menu hidden">' +
+            '<button type="button" data-planner-action="edit"><i class="fa-solid fa-pen"></i> Editar</button>' +
+            '<button type="button" data-planner-action="merge"><i class="fa-solid fa-object-group"></i> Mesclar</button>' +
+            '<button type="button" data-planner-action="defer"><i class="fa-solid fa-clock"></i> Adiar</button>' +
+            '<button type="button" data-planner-action="advance"><i class="fa-solid fa-forward"></i> Adiantar</button>' +
+            '<button type="button" data-planner-action="complete"><i class="fa-solid fa-check"></i> Concluída</button>' +
+            '<button type="button" data-planner-action="delete" class="danger-action"><i class="fa-solid fa-trash"></i> Excluir</button>' +
+          '</div></div>';
+    return '<article class="data-card planner-card ' + cardClass + (isCompleted ? ' completed-card' : '') +
+        (selectedPlannerIds.has(String(p.id)) && !isCompleted ? ' planner-card-selected' : '') + '"' +
+        ' id="plan-card-' + escapePlannerHtml(p.id) + '" data-plan-id="' + escapePlannerHtml(p.id) + '" role="button" tabindex="0" aria-label="Ver detalhes: ' + escapePlannerHtml(getPlannerTitle(p)) + '">' +
+        selectionControl +
+        '<div class="data-card-info planner-card-info"><div class="planner-card-heading"><div class="planner-card-title-wrap">' + specialLabel +
+            '<h3 class="planner-card-title">' + escapePlannerHtml(getPlannerTitle(p)) + '</h3></div>' + actions + '</div>' +
+            '<div class="planner-card-datetime"><span><i class="fa-regular fa-calendar"></i> ' + escapePlannerHtml((p.day ? p.day + ' · ' : '') + (p.date || 'Sem data')) + '</span>' +
+            (p.time ? '<strong><i class="fa-regular fa-clock"></i> ' + escapePlannerHtml(p.time) + '</strong>' : '') + '</div>' +
+            '<div class="planner-card-meta">' +
+            (grade ? '<span><i class="fa-solid fa-users"></i> ' + escapePlannerHtml(grade) + '</span>' : '') +
+            (p.duration ? '<span><i class="fa-regular fa-hourglass-half"></i> ' + escapePlannerHtml(p.duration) + '</span>' : '') +
+            (p.tag ? '<span class="planner-card-tag"><i class="fa-solid fa-arrows-rotate"></i> ' + escapePlannerHtml(p.tag) + '</span>' : '') +
+            (isCompleted && p.completed_at ? '<span class="completed-at"><i class="fa-solid fa-circle-check"></i> Concluída em ' + new Date(p.completed_at).toLocaleString('pt-BR') + '</span>' : '') +
+            '</div></div></article>';
 }
-
 function setupPlannerCardInteractions(container) {
     container.querySelectorAll('.data-card[data-plan-id]').forEach(card => {
+        const id = String(card.dataset.planId);
+        const checkbox = card.querySelector('.planner-select-checkbox');
+        if (checkbox) checkbox.addEventListener('change', () => {
+            if (checkbox.checked) selectedPlannerIds.add(id);
+            else selectedPlannerIds.delete(id);
+            card.classList.toggle('planner-card-selected', checkbox.checked);
+            updatePlannerBulkToolbar();
+        });
+        const optionsButton = card.querySelector('.planner-options-trigger');
+        const actionsMenu = card.querySelector('.planner-actions-menu');
+        if (optionsButton && actionsMenu) {
+            optionsButton.addEventListener('click', event => {
+                event.stopPropagation();
+                const open = actionsMenu.classList.contains('hidden');
+                container.querySelectorAll('.planner-actions-menu').forEach(menu => menu.classList.add('hidden'));
+                container.querySelectorAll('.planner-options-trigger').forEach(button => button.setAttribute('aria-expanded', 'false'));
+                actionsMenu.classList.toggle('hidden', !open);
+                optionsButton.setAttribute('aria-expanded', String(open));
+            });
+            actionsMenu.querySelectorAll('[data-planner-action]').forEach(button => button.addEventListener('click', event => {
+                event.stopPropagation();
+                actionsMenu.classList.add('hidden');
+                optionsButton.setAttribute('aria-expanded', 'false');
+                const item = plannerItemsById.get(id) || allActivePlannerItems.find(plan => String(plan.id) === id);
+                if (button.dataset.plannerAction === 'edit' && item) window.editPlanner(item);
+                else if (button.dataset.plannerAction === 'merge') window.openPlannerMerge(id);
+                else if (button.dataset.plannerAction === 'defer') window.deferPlanner(id);
+                else if (button.dataset.plannerAction === 'advance') window.advancePlanner(id);
+                else if (button.dataset.plannerAction === 'complete') window.completePlanner(id);
+                else if (button.dataset.plannerAction === 'delete') window.deletePlanner(id);
+                else if (button.dataset.plannerAction === 'delete-completed') window.deleteCompletedPlanner(id);
+            }));
+        }
         card.addEventListener('click', event => {
-            if (event.target.closest('button, a')) return;
-            window.viewPlanner(card.dataset.planId);
+            if (event.target.closest('button, a, input, label')) return;
+            window.viewPlanner(id);
         });
         card.addEventListener('keydown', event => {
+            if (event.target !== card) return;
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                window.viewPlanner(card.dataset.planId);
+                window.viewPlanner(id);
             }
         });
     });
 }
-
 function normalizePlannerSearchValue(value) {
     return String(value == null ? '' : value)
         .normalize('NFD')
@@ -698,85 +763,42 @@ function normalizePlannerSearchValue(value) {
 function renderPlannerList() {
     const container = document.getElementById('planner-list');
     if (!container) return;
-
     const searchInput = document.getElementById('planner-search');
     const query = normalizePlannerSearchValue(searchInput ? searchInput.value : '');
-
     const filteredData = allActivePlannerItems.filter(item => {
         if (!query) return true;
-
-        const specialLabels = {
-            1: 'especial',
-            2: 'folga',
-            3: 'prova',
-            4: 'adaptado'
-        };
-
-        const searchableText = [
-            item.day,
-            item.date,
-            item.time,
-            item.duration,
-            item.serie,
-            item.team,
-            item.activities,
-            item.skills,
-            item.tag,
-            specialLabels[item.special] || ''
-        ].join(' ');
-
-        return normalizePlannerSearchValue(searchableText).includes(query);
+        const labels = { 1: 'especial', 2: 'folga', 3: 'prova', 4: 'adaptado' };
+        const text = [item.day, item.date, item.time, item.duration, item.serie, item.team, item.activities, item.skills, item.tag, getPlannerTitle(item), labels[item.special] || ''].join(' ');
+        return normalizePlannerSearchValue(text).includes(query);
     });
-
     if (!filteredData.length) {
-        container.innerHTML = allActivePlannerItems.length
-            ? '<div class="empty-state">Nenhum planejamento corresponde à pesquisa.</div>'
-            : '<div class="empty-state">Nenhuma aula planejada.</div>';
+        container.innerHTML = allActivePlannerItems.length ? '<div class="empty-state">Nenhum planejamento corresponde à pesquisa.</div>' : '<div class="empty-state">Nenhuma aula planejada.</div>';
+        updatePlannerBulkToolbar();
         return;
     }
-
-    const parseDateTime = (dateStr, timeStr) => {
-        if (!dateStr) return 0;
-        const parts = String(dateStr).split(/[/-]/);
+    const timestamp = (dateStr,timeStr) => {
+        const parts = String(dateStr || '').split(/[/-]/);
         if (parts.length !== 3) return 0;
-        const [year, month, day] = parts[0].length === 4
-            ? parts
-            : [parts[2], parts[1], parts[0]];
+        const [year,month,day] = parts[0].length === 4 ? parts : [parts[2],parts[1],parts[0]];
         return new Date(year + '/' + month + '/' + day + ' ' + (timeStr || '00:00')).getTime();
     };
-
-    const sortedData = [...filteredData].sort((a, b) =>
-        parseDateTime(a.date, a.time) - parseDateTime(b.date, b.time)
-    );
-
-    const groups = sortedData.reduce((acc, item) => {
-        const title = item.day ? item.day + ' - ' + item.date : item.date;
-        if (!acc[title]) acc[title] = [];
-        acc[title].push(item);
+    const sorted = [...filteredData].sort((a,b) => timestamp(a.date,a.time) - timestamp(b.date,b.time));
+    const groups = sorted.reduce((acc,item) => {
+        const key = item.day ? item.day + ' - ' + item.date : item.date;
+        (acc[key] ||= []).push(item);
         return acc;
     }, {});
-
-    container.innerHTML = Object.entries(groups).map(([title, items]) => {
-        const isHidden = localStorage.getItem('planner_state_' + title) === 'true';
-        const displayClass = isHidden ? 'hidden' : '';
-        const btnText = isHidden ? 'Maximizar' : 'Minimizar';
-        const firstItem = items[0] || {};
-
-        return '<div class="planner-section">' +
-            '<h3 class="planner-section-title"><span>' + escapePlannerHtml(title) + '</span>' +
-                '<div class="planner-section-heading-actions">' +
-                    '<button class="btn-small btn-primary" onclick="window.addPlanForDay(\'' + escapePlannerHtml(firstItem.day || '') + '\', \'' + escapePlannerHtml(firstItem.date || '') + '\')">+ Nova aula</button>' +
-                    '<button class="minimize-btn" onclick="window.togglePlannerSection(this, \'' + escapePlannerHtml(title) + '\')">' + btnText + '</button>' +
-                '</div>' +
-            '</h3>' +
-            '<div class="planner-section-content ' + displayClass + '">' +
-                items.map(item => renderPlannerCard(item, 'active')).join('') +
-            '</div></div>';
+    container.innerHTML = Object.entries(groups).map(([title,items]) => {
+        const collapsed = localStorage.getItem('planner_state_' + title) === 'true';
+        const first = items[0] || {};
+        return '<section class="planner-section"><h3 class="planner-section-title"><span>' + escapePlannerHtml(title) + '</span><div class="planner-section-heading-actions">' +
+            '<button class="btn-small btn-primary" onclick="window.addPlanForDay(\'' + escapePlannerHtml(first.day || '') + '\', \'' + escapePlannerHtml(first.date || '') + '\')">+ Nova aula</button>' +
+            '<button class="minimize-btn" onclick="window.togglePlannerSection(this, \'' + escapePlannerHtml(title) + '\')">' + (collapsed ? 'Maximizar' : 'Minimizar') + '</button></div></h3>' +
+            '<div class="planner-section-content ' + (collapsed ? 'hidden' : '') + '">' + items.map(item => renderPlannerCard(item,'active')).join('') + '</div></section>';
     }).join('');
-
     setupPlannerCardInteractions(container);
+    updatePlannerBulkToolbar();
 }
-
 async function loadPlanners() {
     const container = document.getElementById('planner-list');
     if (!container) return;
@@ -795,9 +817,9 @@ async function loadPlanners() {
     }
 
     allActivePlannerItems = data || [];
-    allActivePlannerItems.forEach(item => {
-        plannerItemsById.set(String(item.id), item);
-    });
+    const activeIds = new Set(allActivePlannerItems.map(item => String(item.id)));
+    [...selectedPlannerIds].forEach(id => { if (!activeIds.has(id)) selectedPlannerIds.delete(id); });
+    allActivePlannerItems.forEach(item => plannerItemsById.set(String(item.id), item));
 
     // A pesquisa atual é preservada após salvar, excluir, concluir ou mover uma aula.
     renderPlannerList();
@@ -871,6 +893,201 @@ async function loadCompletedPlanners() {
     });
 
     setupPlannerCardInteractions(container);
+}
+
+
+// Seleção e ações em lote dos planejamentos
+function updatePlannerBulkToolbar() {
+    const toggle = document.getElementById('btn-toggle-plan-selection');
+    const menuButton = document.getElementById('btn-planner-bulk-menu');
+    const menu = document.getElementById('planner-bulk-menu');
+    const count = document.getElementById('planner-selected-count');
+    if (toggle) {
+        toggle.innerHTML = plannerSelectionMode ? '<i class="fa-solid fa-xmark"></i> Cancelar seleção' : '<i class="fa-regular fa-square-check"></i> Selecionar';
+        toggle.classList.toggle('selection-active', plannerSelectionMode);
+    }
+    if (menuButton) {
+        menuButton.classList.toggle('hidden', !plannerSelectionMode);
+        menuButton.disabled = selectedPlannerIds.size === 0;
+        menuButton.setAttribute('aria-expanded', String(!!menu && !menu.classList.contains('hidden')));
+    }
+    if (count) count.textContent = String(selectedPlannerIds.size);
+    const mergeAction = menu && menu.querySelector('[data-bulk-action="merge"]');
+    if (mergeAction) mergeAction.disabled = selectedPlannerIds.size < 2;
+}
+function clearPlannerSelection(exitMode = true) {
+    selectedPlannerIds.clear();
+    if (exitMode) plannerSelectionMode = false;
+    const menu = document.getElementById('planner-bulk-menu');
+    const button = document.getElementById('btn-planner-bulk-menu');
+    if (menu) menu.classList.add('hidden');
+    if (button) button.setAttribute('aria-expanded', 'false');
+}
+function setupPlannerBulkActions() {
+    const toggle = document.getElementById('btn-toggle-plan-selection');
+    const menuButton = document.getElementById('btn-planner-bulk-menu');
+    const menu = document.getElementById('planner-bulk-menu');
+    const modal = document.getElementById('planner-bulk-merge-modal');
+    const close = () => { if (modal && modal.open) modal.close(); };
+    if (toggle) toggle.addEventListener('click', () => {
+        plannerSelectionMode = !plannerSelectionMode;
+        if (!plannerSelectionMode) clearPlannerSelection(false);
+        renderPlannerList();
+    });
+    if (menuButton && menu) menuButton.addEventListener('click', event => {
+        event.stopPropagation();
+        if (menuButton.disabled) return;
+        const open = menu.classList.contains('hidden');
+        menu.classList.toggle('hidden', !open);
+        menuButton.setAttribute('aria-expanded', String(open));
+    });
+    if (menu) menu.addEventListener('click', event => {
+        const action = event.target.closest('[data-bulk-action]');
+        if (!action || action.disabled) return;
+        menu.classList.add('hidden');
+        if (menuButton) menuButton.setAttribute('aria-expanded', 'false');
+        runPlannerBulkAction(action.dataset.bulkAction);
+    });
+    document.addEventListener('click', event => {
+        if (menu && !event.target.closest('.planner-bulk-menu-wrap')) {
+            menu.classList.add('hidden');
+            if (menuButton) menuButton.setAttribute('aria-expanded', 'false');
+        }
+    });
+    const closeButton = document.getElementById('btn-close-planner-bulk-merge');
+    const cancelButton = document.getElementById('btn-cancel-planner-bulk-merge');
+    const confirmButton = document.getElementById('btn-confirm-planner-bulk-merge');
+    if (closeButton) closeButton.addEventListener('click', close);
+    if (cancelButton) cancelButton.addEventListener('click', close);
+    if (confirmButton) confirmButton.addEventListener('click', executePlannerBulkMerge);
+}
+function openPlannerBulkMergeDialog() {
+    const items = allActivePlannerItems.filter(item => selectedPlannerIds.has(String(item.id)));
+    if (items.length < 2) { alert('Selecione pelo menos duas aulas para mesclar.'); return; }
+    const select = document.getElementById('planner-bulk-merge-target');
+    const summary = document.getElementById('planner-bulk-merge-summary');
+    const modal = document.getElementById('planner-bulk-merge-modal');
+    select.innerHTML = items.map(item => {
+        const label = getPlannerTitle(item) + ' — ' + (item.date || 'Sem data') + ' · ' + (item.time || 'Sem horário') + ' · ' + (formatPlannerGrade(item) || 'Sem turma');
+        return '<option value="' + escapePlannerHtml(item.id) + '">' + escapePlannerHtml(label) + '</option>';
+    }).join('');
+    summary.textContent = (items.length - 1) + ' aula(s) de origem serão adicionadas ao destino escolhido e removidas da lista ativa.';
+    if (!modal.open) modal.showModal();
+}
+async function executePlannerBulkMerge() {
+    const ids = [...selectedPlannerIds];
+    const targetId = String(document.getElementById('planner-bulk-merge-target').value || '');
+    const button = document.getElementById('btn-confirm-planner-bulk-merge');
+    const modal = document.getElementById('planner-bulk-merge-modal');
+    if (ids.length < 2 || !ids.includes(targetId)) return;
+    if (!confirm('Mesclar ' + (ids.length - 1) + ' aula(s) na aula de destino escolhida? As aulas de origem serão removidas após a cópia das atividades.')) return;
+    button.disabled = true;
+    button.textContent = 'Mesclando...';
+    try {
+        const { data, error } = await supabase.from('planner').select('*').in('id', ids).is('completed_at', null);
+        if (error) throw error;
+        const items = data || [];
+        if (items.length !== ids.length) throw new Error('Uma ou mais aulas selecionadas não estão mais disponíveis.');
+        const target = items.find(item => String(item.id) === targetId);
+        const sources = items.filter(item => String(item.id) !== targetId);
+        const emptySource = sources.find(item => !String(item.activities || '').trim());
+        if (emptySource) throw new Error('A aula "' + getPlannerTitle(emptySource) + '" não possui atividades. Ela não será removida para evitar perda de dados.');
+        const merged = [String(target.activities || '').trim()].concat(sources.map(item => String(item.activities).trim())).filter(Boolean).join('\n\n---\n\n');
+        let update = supabase.from('planner').update({ activities: merged }).eq('id', targetId).is('completed_at', null);
+        update = target.activities == null ? update.is('activities', null) : update.eq('activities', target.activities);
+        const { data: updated, error: updateError } = await update.select('id').maybeSingle();
+        if (updateError) throw updateError;
+        if (!updated) throw new Error('A aula de destino foi alterada durante a operação. Nenhuma aula de origem foi removida.');
+        const failures = [];
+        for (const source of sources) {
+            const { data: deleted, error: deleteError } = await supabase.from('planner').delete()
+                .eq('id', source.id).is('completed_at', null).eq('activities', source.activities).select('id').maybeSingle();
+            if (deleteError || !deleted) failures.push(getPlannerTitle(source));
+        }
+        if (modal.open) modal.close();
+        clearPlannerSelection(true);
+        await loadPlanners();
+        if (failures.length) alert('As atividades foram copiadas, mas estas aulas permaneceram ativas: ' + failures.join(', ') + '. Verifique possíveis duplicatas.');
+        else alert('Mesclagem concluída. Os dados do destino foram preservados.');
+    } catch (error) {
+        console.error('Erro na mesclagem em lote:', error);
+        alert('Não foi possível mesclar as aulas: ' + (error.message || 'erro inesperado'));
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Mesclar aulas';
+    }
+}
+function parsePlannerDateTime(dateStr, timeStr) {
+    const parts = String(dateStr || '').split(/[/-]/);
+    if (parts.length !== 3) return NaN;
+    const [year,month,day] = parts[0].length === 4 ? parts : [parts[2],parts[1],parts[0]];
+    const time = /^\d{2}:\d{2}$/.test(String(timeStr || '')) ? timeStr : '00:00';
+    const [hours,minutes] = time.split(':').map(Number);
+    const date = new Date(Number(year),Number(month)-1,Number(day),hours,minutes);
+    return Number.isNaN(date.getTime()) ? NaN : date.getTime();
+}
+function plannerDateKey(value) {
+    const parts = String(value || '').split(/[/-]/);
+    if (parts.length !== 3) return 0;
+    const [year,month,day] = parts[0].length === 4 ? parts : [parts[2],parts[1],parts[0]];
+    return Number(year)*10000 + Number(month)*100 + Number(day);
+}
+async function executePlannerBulkShift(action) {
+    const ids = [...selectedPlannerIds];
+    if (!ids.length) return;
+    const label = action === 'defer' ? 'adiar' : 'adiantar';
+    if (!confirm('Deseja ' + label + ' ' + ids.length + ' aula(s)? Cada uma ocupará um horário compatível e ainda livre da mesma turma.')) return;
+    const { data, error } = await supabase.from('planner').select('*').is('completed_at', null);
+    if (error) { alert('Não foi possível carregar os planejamentos: ' + error.message); return; }
+    const plans = data || [];
+    const selectedSet = new Set(ids);
+    const selected = plans.filter(item => selectedSet.has(String(item.id))).sort((a,b) => parsePlannerDateTime(a.date,a.time)-parsePlannerDateTime(b.date,b.time));
+    const remaining = plans.filter(item => !selectedSet.has(String(item.id)));
+    const used = new Set();
+    const currentDate = new Date();
+    const todayKey = currentDate.getFullYear()*10000 + (currentDate.getMonth()+1)*100 + currentDate.getDate();
+    const now = Date.now();
+    let moved = 0;
+    const skipped = [];
+    for (const source of selected) {
+        const sourceTime = parsePlannerDateTime(source.date,source.time);
+        const sourceKey = plannerDateKey(source.date);
+        if (!Number.isFinite(sourceTime) || !source.serie || !source.team) { skipped.push(getPlannerTitle(source)); continue; }
+        const sameClass = item => normalizePlannerClassValue(item.serie) === normalizePlannerClassValue(source.serie)
+            && normalizePlannerClassValue(item.team) === normalizePlannerClassValue(source.team);
+        const possible = remaining.filter(item => sameClass(item) && !used.has(String(item.id)))
+            .map(item => ({item,time:parsePlannerDateTime(item.date,item.time),key:plannerDateKey(item.date)}))
+            .filter(entry => Number.isFinite(entry.time) && (action === 'defer'
+                ? entry.key > todayKey && entry.key > sourceKey && entry.time > sourceTime
+                : entry.key >= todayKey && entry.key !== sourceKey && entry.time >= now && entry.time < sourceTime))
+            .sort((a,b) => a.time-b.time);
+        const target = possible[0] && possible[0].item;
+        if (!target) { skipped.push(getPlannerTitle(source)); continue; }
+        const tag = (action === 'defer' ? 'Adiada do dia ' : 'Adiantada do dia ') + getPlannerOriginalDate(source);
+        const { error: updateError } = await supabase.from('planner').update({date:target.date,day:target.day,time:target.time,tag})
+            .eq('id',source.id).is('completed_at',null);
+        if (updateError) skipped.push(getPlannerTitle(source));
+        else { moved++; used.add(String(target.id)); }
+    }
+    clearPlannerSelection(true);
+    await loadPlanners();
+    alert(moved + ' aula(s) movimentada(s).' + (skipped.length ? ' Não foi possível: ' + skipped.join(', ') + '.' : ''));
+}
+async function runPlannerBulkAction(action) {
+    const ids = [...selectedPlannerIds];
+    if (!ids.length) return;
+    if (action === 'merge') { openPlannerBulkMergeDialog(); return; }
+    if (action === 'delete') {
+        if (!confirm('Excluir definitivamente ' + ids.length + ' planejamento(s) selecionado(s)? Esta ação não pode ser desfeita.')) return;
+        const { data, error } = await supabase.from('planner').delete().in('id',ids).is('completed_at',null).select('id');
+        if (error) { alert('Erro ao excluir: ' + error.message); return; }
+        (data || []).forEach(item => plannerItemsById.delete(String(item.id)));
+        clearPlannerSelection(true);
+        await loadPlanners();
+        alert((data || []).length + ' planejamento(s) excluído(s).');
+        return;
+    }
+    if (action === 'defer' || action === 'advance') await executePlannerBulkShift(action);
 }
 
 // Recupera a data de origem da aula. Se ela já foi movida, mantém a data registrada na tag.
@@ -1072,21 +1289,21 @@ window.viewPlanner = id => {
     const p = plannerItemsById.get(String(id));
     if (!p) return;
     selectedPlannerItem = p;
-    const typeLabels = { 0: 'Aula regular', 1: 'Aula especial', 2: 'Folga', 3: 'Prova', 4: 'Aula adaptada' };
+    const types = { 0: 'Aula regular', 1: 'Aula especial', 2: 'Folga', 3: 'Prova', 4: 'Aula adaptada' };
     const fields = [
-        { label: 'Dia', value: p.day || 'Não informado' },
         { label: 'Data', value: p.date || 'Não informada' },
         { label: 'Horário', value: p.time || 'Não informado' },
-        { label: 'Série', value: p.serie || 'Não informada' },
-        { label: 'Turma', value: p.team || 'Não informada' },
+        { label: 'Dia da semana', value: p.day || 'Não informado' },
+        { label: 'Turma', value: formatPlannerGrade(p) || 'Não informada' },
         { label: 'Duração', value: p.duration || 'Não informada' },
-        { label: 'Tipo', value: typeLabels[p.special] || 'Aula regular' },
+        { label: 'Tipo', value: types[p.special] || 'Aula regular' },
         { label: 'Tag', value: p.tag || 'Nenhuma' }
     ];
     const grid = document.getElementById('planner-details-grid');
-    grid.innerHTML = fields.map(field => '<article class="detail-mini-card"><h4>' + escapePlannerHtml(field.label) + '</h4><p>' + escapePlannerHtml(field.value) + '</p></article>').join('') +
+    grid.innerHTML = '<article class="detail-mini-card full-width planner-detail-title"><h4>Título da aula</h4><h2>' + escapePlannerHtml(getPlannerTitle(p)) + '</h2></article>' +
+        fields.map(field => '<article class="detail-mini-card"><h4>' + escapePlannerHtml(field.label) + '</h4><p>' + escapePlannerHtml(field.value) + '</p></article>').join('') +
         '<article class="detail-mini-card full-width"><h4>Habilidades BNCC</h4><div class="planner-markdown-content">' + (p.skills ? renderPlannerMarkdown(p.skills) : '<p>Não informado</p>') + '</div></article>' +
-        '<article class="detail-mini-card full-width"><h4>Atividades</h4><div class="planner-markdown-content">' + (p.activities ? renderPlannerMarkdown(p.activities) : '<p>Não informado</p>') + '</div></article>';
+        '<article class="detail-mini-card full-width planner-detail-activities"><h4>Atividades</h4><div class="planner-markdown-content">' + (p.activities ? renderPlannerMarkdown(p.activities) : '<p>Não informado</p>') + '</div></article>';
     document.getElementById('planner-details-modal').showModal();
 };
 
@@ -1098,8 +1315,7 @@ window.editPlanner = (p) => {
     setSelectValueWithCustom('plan-day', p.day || '');
     document.getElementById('plan-date').value = p.date || '';
     setSelectValueWithCustom('plan-time', p.time || '');
-    setSelectValueWithCustom('plan-serie', p.serie || '');
-    setSelectValueWithCustom('plan-team', p.team || '');
+    setPlannerGradeSelect(p.serie, p.team);
 
     document.getElementById('plan-skills').value = p.skills || '';
     document.getElementById('plan-activities').value = p.activities || '';
