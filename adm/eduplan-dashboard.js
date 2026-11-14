@@ -330,7 +330,7 @@ function setupGlobalSearch() {
             '<div class="search-group-label">' + label + '</div>' +
             items.map(item =>
                 '<button type="button" class="search-item search-result-item" role="option" data-search-result ' +
-                    'data-search-section="' + section + '" data-search-id="' + escapeHtml(item[idField]) + '">' +
+                    'data-search-section="' + escapeHtml(typeof section === 'function' ? section(item) : section) + '" data-search-id="' + escapeHtml(item[idField]) + '">' +
                     formatLabel(item) +
                 '</button>'
             ).join('') +
@@ -428,10 +428,10 @@ function setupGlobalSearch() {
                 '<strong>' + escapeHtml(task.title || 'Trabalho sem título') + '</strong>' +
                 '<span>' + escapeHtml((task.grades || []).join(', ') || 'Todas as turmas') + '</span>'
             ));
-            pieces.push(appendResultGroup('Planejamentos', plans, 'id', null, plan =>
+            pieces.push(appendResultGroup('Planejamentos', plans, 'id', plan => plan.section, plan =>
                 '<strong>' + escapeHtml([plan.serie, plan.team].filter(Boolean).join('') || 'Aula') + '</strong>' +
                 '<span>' + escapeHtml([plan.date, plan.time, String(plan.activities || '').replace(/<[^>]*>/g, ' ').slice(0, 70)].filter(Boolean).join(' • ')) + '</span>'
-            ).replace(/data-search-section="null"/g, 'data-search-section="' + (plans[0]?.section || 'planner-section') + '"'));
+            ));
             pieces.push(appendResultGroup('Missões', missions, 'id', 'missions-section', mission =>
                 '<strong>' + escapeHtml(mission.mission_name || 'Missão') + '</strong>' +
                 '<span>' + escapeHtml('Pontuação: ' + (mission.mission_score ?? 0)) + '</span>'
@@ -449,16 +449,8 @@ function setupGlobalSearch() {
                 '<span>' + escapeHtml([reminder.date, reminder.time].filter(Boolean).join(' • ')) + '</span>'
             ));
 
-            const planButtons = resultsContainer.querySelectorAll('[data-search-result][data-search-section]');
-            // Reescreve os resultados de planejamento para encaminhar aulas concluídas à guia correta.
             const html = pieces.filter(Boolean).join('');
             resultsContainer.innerHTML = html || '<div class="search-item search-empty">Nenhum resultado encontrado.</div>';
-            plans.forEach(plan => {
-                const result = resultsContainer.querySelector('[data-search-id="' + String(plan.id) + '"][data-search-section]');
-                if (result && result.closest('.search-result-group')?.querySelector('.search-group-label')?.textContent === 'Planejamentos') {
-                    result.dataset.searchSection = plan.section;
-                }
-            });
         } catch (error) {
             if (sequence !== searchSequence) return;
             console.error('Erro na pesquisa global:', error);
