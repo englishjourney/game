@@ -1050,7 +1050,9 @@ function renderPlannerList() {
         const sectionDate = dateInfo ? dateInfo.formatted : (first.date || 'Sem data');
         const title = sectionDay ? sectionDay + ' - ' + sectionDate : sectionDate;
         const savedState = localStorage.getItem('planner_state_v3_' + title);
-        const collapsed = savedState === null ? true : savedState === 'true';
+        const collapsed = query
+            ? false
+            : (savedState === null ? true : savedState === 'true');
         return '<section class="planner-section"><h3 class="planner-section-title"><span>' + escapePlannerHtml(title) + '</span><div class="planner-section-heading-actions">' +
             '<button type="button" class="btn-small btn-secondary planner-reschedule-button" data-reschedule-section="' + sectionIndex + '" title="Alterar a data de todas as aulas desta seção"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i> Remarcar</button>' +
             '<button type="button" class="btn-small btn-primary" data-add-plan-day="' + escapePlannerHtml(sectionDay) + '" data-add-plan-date="' + escapePlannerHtml(sectionDate) + '">+ Nova aula</button>' +
