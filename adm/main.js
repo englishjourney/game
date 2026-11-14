@@ -230,7 +230,7 @@ async function loadTodayPlans() {
                 return '<article class="today-plan-item">' +
                     '<span class="today-plan-time">' + escapeDashboardHtml(item.time || '—') + '</span>' +
                     '<div class="today-plan-details">' +
-                        '<strong>' + escapeDashboardHtml(turma) + '</strong>' +
+                        '<span class="today-plan-grade">' + escapeDashboardHtml(turma) + '</span>' +
                         (specialLabel ? '<span class="today-plan-type">' + escapeDashboardHtml(specialLabel) + '</span>' : '') +
                         '<div class="today-plan-activities"><small>Atividades</small><p>' + activities + '</p></div>' +
                     '</div>' +
