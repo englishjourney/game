@@ -281,6 +281,25 @@
         </div>
     </dialog>
 
+    <!-- MODAL: REMARCAR TODA A SEÇÃO DO PLANNER -->
+    <dialog id="planner-reschedule-modal" class="planner-reschedule-dialog">
+        <form id="planner-reschedule-form">
+            <div class="planner-reschedule-heading">
+                <h3>Remarcar seção</h3>
+                <p>Escolha a nova data para todas as aulas desta seção.</p>
+            </div>
+            <p id="planner-reschedule-current" class="planner-reschedule-current"></p>
+            <p id="planner-reschedule-count" class="planner-reschedule-count"></p>
+            <label class="planner-reschedule-date-label" for="planner-reschedule-date">Nova data:
+                <input type="date" id="planner-reschedule-date" required>
+            </label>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" id="btn-cancel-planner-reschedule">Cancelar</button>
+                <button type="submit" class="btn-primary" id="btn-confirm-planner-reschedule">Aplicar nova data</button>
+            </div>
+        </form>
+    </dialog>
+
     <!-- MODAL PLANNER -->
     <dialog id="planner-modal">
         <form id="planner-form">
@@ -306,16 +325,8 @@
                     <progress id="replicar-progress" value="0" max="100" class="hidden" style="width: 100%; margin-top: 5px;"></progress>
                 </label>
                 
-                <label>Dia da Semana: 
-                    <select id="plan-day" required>
-                        <option value="">Selecione...</option>
-                        <option value="Segunda-feira">Segunda-feira</option>
-                        <option value="Terça-feira">Terça-feira</option>
-                        <option value="Quarta-feira">Quarta-feira</option>
-                        <option value="Quinta-feira">Quinta-feira</option>
-                        <option value="Sexta-feira">Sexta-feira</option>
-                        <option value="Sábado">Sábado</option>
-                    </select>
+                <label>Dia da semana (automático):
+                    <input type="text" id="plan-day" required readonly placeholder="Definido pela data" aria-readonly="true">
                 </label>
 
                 <label>Data: 
