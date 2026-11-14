@@ -629,6 +629,7 @@ export async function loadRemindersSection() {
         });
 
         container.innerHTML = html;
+        document.dispatchEvent(new CustomEvent('reminders-section:loaded'));
     } catch (err) {
         console.error('Erro ao buscar lembretes:', err);
         container.innerHTML = '<div style="color: #ef4444; text-align: center; padding: 20px;">Erro ao carregar lembretes.</div>';
