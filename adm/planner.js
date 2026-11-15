@@ -167,13 +167,12 @@ export function initPlanner() {
         dateInput.value = selectedDate.formatted;
         document.getElementById('plan-day').value = selectedDate.weekday;
 
-        const gradeParts = splitPlannerGrade(document.getElementById('plan-grade').value);
+        const grade = String(document.getElementById('plan-grade').value || '').trim().toUpperCase();
         const planData = {
             day: selectedDate.weekday,
             date: selectedDate.formatted,
             time: document.getElementById('plan-time').value,
-            serie: gradeParts.serie,
-            team: gradeParts.team,
+            grade,
             skills: document.getElementById('plan-skills').value,
             activities: activitiesValue,
             duration: document.getElementById('plan-duration').value,
@@ -509,17 +508,13 @@ function normalizePlannerClassValue(value) {
     return String(value == null ? '' : value).trim().toLocaleLowerCase('pt-BR');
 }
 
-function splitPlannerGrade(value) {
-    const match = String(value || '').trim().toUpperCase().match(/^(\d{1,2})([A-Z])$/);
-    return match ? { serie: match[1], team: match[2] } : { serie: '', team: '' };
-}
 function formatPlannerGrade(item) {
-    return (String(item && item.serie || '').trim() + String(item && item.team || '').trim()).toUpperCase();
+    return String(item && item.grade || '').trim().toUpperCase();
 }
-function setPlannerGradeSelect(serie, team) {
+function setPlannerGradeSelect(value) {
     const select = document.getElementById('plan-grade');
     if (!select) return;
-    const grade = (String(serie || '').trim() + String(team || '').trim()).toUpperCase();
+    const grade = String(value || '').trim().toUpperCase();
     [...select.options].filter(option => option.dataset.legacyGrade === 'true').forEach(option => option.remove());
     if (grade && ![...select.options].some(option => option.value === grade)) {
         const legacy = document.createElement('option');
@@ -1015,7 +1010,7 @@ function renderPlannerList() {
     const filteredData = allActivePlannerItems.filter(item => {
         if (!query) return true;
         const labels = { 1: 'especial', 2: 'folga', 3: 'prova', 4: 'adaptado' };
-        const text = [item.day, item.date, item.time, item.duration, item.serie, item.team, item.activities, item.skills, item.tag, getPlannerTitle(item), labels[item.special] || ''].join(' ');
+        const text = [item.day, item.date, item.time, item.duration, item.grade, item.activities, item.skills, item.tag, getPlannerTitle(item), labels[item.special] || ''].join(' ');
         return normalizePlannerSearchValue(text).includes(query);
     });
     const resultCount = document.getElementById('planner-results-count');
@@ -1154,11 +1149,9 @@ async function loadCompletedPlanners() {
 
     const groups = new Map();
     data.forEach(item => {
-        const serie = String(item.serie || '').trim();
-        const team = String(item.team || '').trim();
-        const key = serie + '::' + team;
-        const label = serie && team ? 'Turma ' + serie + team :
-            (serie ? 'Série ' + serie : (team ? 'Turma ' + team : 'Sem turma'));
+        const grade = String(item.grade || '').trim().toUpperCase();
+        const key = grade || '__sem_turma__';
+        const label = grade ? 'Turma ' + grade : 'Sem turma';
         if (!groups.has(key)) groups.set(key, { label, items: [] });
         groups.get(key).items.push(item);
         plannerItemsById.set(String(item.id), item);
@@ -1389,14 +1382,13 @@ async function executePlannerBulkShift(action) {
     for (const source of selected) {
         const sourceTime = parsePlannerDateTime(source.date, source.time);
         const sourceKey = plannerDateKey(source.date);
-        if (!Number.isFinite(sourceTime) || !source.serie || !source.team) {
+        if (!Number.isFinite(sourceTime) || !source.grade) {
             skipped.push(getPlannerTitle(source));
             continue;
         }
 
         const sameClass = item =>
-            normalizePlannerClassValue(item.serie) === normalizePlannerClassValue(source.serie) &&
-            normalizePlannerClassValue(item.team) === normalizePlannerClassValue(source.team);
+            normalizePlannerClassValue(item.grade) === normalizePlannerClassValue(source.grade);
 
         const possible = remaining
             .filter(item => sameClass(item) && !used.has(String(item.id)))
@@ -1759,12 +1751,11 @@ async function movePlannerToMatchingLesson(id, action) {
 
         const todayKey = plannerDateKey(todayInfo.formatted);
         const sourceKey = plannerDateKey(selected.date);
-        const sameSeriesAndTeam = item =>
-            normalizePlannerClassValue(item.serie) === normalizePlannerClassValue(selected.serie) &&
-            normalizePlannerClassValue(item.team) === normalizePlannerClassValue(selected.team);
+        const sameGrade = item =>
+            normalizePlannerClassValue(item.grade) === normalizePlannerClassValue(selected.grade);
 
         const candidates = plans
-            .filter(item => String(item.id) !== String(id) && sameSeriesAndTeam(item))
+            .filter(item => String(item.id) !== String(id) && sameGrade(item))
             .map(item => ({
                 item,
                 timestamp: parsePlannerMoveDateTime(item.date, item.time),
@@ -1908,7 +1899,7 @@ window.editPlanner = (p) => {
     
     setPlannerDateFields(p.date || '', p.day || '');
     setSelectValueWithCustom('plan-time', p.time || '');
-    setPlannerGradeSelect(p.serie, p.team);
+    setPlannerGradeSelect(p.grade);
 
     document.getElementById('plan-skills').value = p.skills || '';
     document.getElementById('plan-activities').value = p.activities || '';
@@ -1967,9 +1958,9 @@ window.deleteCompletedPlanner = async id => {
 
 window.deletePlanner = async id => {
     const item = plannerItemsById.get(String(id));
-    const classLabel = item
-        ? [item.serie ? item.serie + 'ª série' : '', item.team ? 'turma ' + item.team : ''].filter(Boolean).join(' ')
-        : 'este planejamento';
+    const classLabel = item && item.grade
+        ? 'Turma ' + String(item.grade).trim().toUpperCase()
+        : '';
     const dateLabel = item ? ' de ' + (item.date || 'data não informada') : '';
 
     if (!confirm('Excluir definitivamente o planejamento' + dateLabel + (classLabel ? ' (' + classLabel + ')' : '') + '?\n\nEle não será movido para Aulas passadas. Esta ação não pode ser desfeita.')) return;
