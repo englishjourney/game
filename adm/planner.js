@@ -9,10 +9,12 @@ let mergeIsSaving = false;
 const selectedPlannerIds = new Set();
 let plannerSelectionMode = false;
 let pendingPlannerRescheduleItems = [];
+let pendingSinglePlannerMove = null;
 
 export function initPlanner() {
     setupCustomOptions();
     setupDatePickers();
+    setupSinglePlannerMoveDatePicker();
     setupLastTeamToggle();
     const initialLoad = Promise.all([loadPlanners(), loadCompletedPlanners()]);
     updatePlannerBulkToolbar();
@@ -1497,115 +1499,242 @@ function getPlannerOriginalDate(item) {
     return `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
 }
 
-// Adia uma aula para a próxima aula futura da mesma série e turma.
-window.deferPlanner = async (id) => {
-    try {
-        const { data, error } = await supabase.from('planner').select('*').is('completed_at', null);
-        if (error) throw error;
+function getPlannerLocalTodayInfo() {
+    const now = new Date();
+    const pad = value => String(value).padStart(2, '0');
+    return parsePlannerDateBR(
+        pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear()
+    );
+}
 
-        const plans = data || [];
-        const selected = plans.find(item => String(item.id) === String(id));
-        if (!selected) {
-            alert('Não foi possível encontrar esta aula.');
+function getPlannerPreviousDate(dateInfo) {
+    if (!dateInfo) return null;
+    const previous = new Date(dateInfo.year, dateInfo.month - 1, dateInfo.day - 1);
+    const pad = value => String(value).padStart(2, '0');
+    return parsePlannerDateBR(
+        pad(previous.getDate()) + '/' + pad(previous.getMonth() + 1) + '/' + previous.getFullYear()
+    );
+}
+
+function parsePlannerMoveDateTime(dateValue, timeValue) {
+    const dateInfo = parsePlannerDateBR(dateValue) || plannerDateFromISO(dateValue);
+    if (!dateInfo) return NaN;
+    const time = /^\d{2}:\d{2}$/.test(String(timeValue || '')) ? timeValue : '00:00';
+    const [hours, minutes] = time.split(':').map(Number);
+    return new Date(dateInfo.year, dateInfo.month - 1, dateInfo.day, hours, minutes).getTime();
+}
+
+function setupSinglePlannerMoveDatePicker() {
+    const modal = document.getElementById('planner-single-move-modal');
+    const form = document.getElementById('planner-single-move-form');
+    const dateInput = document.getElementById('planner-single-move-date');
+    const cancelButton = document.getElementById('btn-cancel-single-planner-move');
+    const submitButton = document.getElementById('btn-confirm-single-planner-move');
+    const errorMessage = document.getElementById('planner-single-move-error');
+
+    if (!modal || !form || !dateInput || !cancelButton || !submitButton) return;
+
+    cancelButton.addEventListener('click', () => {
+        pendingSinglePlannerMove = null;
+        modal.close();
+    });
+
+    dateInput.addEventListener('change', () => {
+        if (errorMessage) errorMessage.textContent = '';
+        dateInput.setCustomValidity('');
+    });
+
+    modal.addEventListener('cancel', () => {
+        pendingSinglePlannerMove = null;
+    });
+
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const pending = pendingSinglePlannerMove;
+        if (!pending) {
+            modal.close();
             return;
         }
 
-        const parseDateTime = (dateStr, timeStr) => {
-            if (!dateStr) return NaN;
-            const parts = String(dateStr).split(/[/-]/);
-            if (parts.length !== 3) return NaN;
-            let year, month, day;
-            if (parts[0].length === 4) [year, month, day] = parts;
-            else [day, month, year] = parts;
+        const { action, selected, plans } = pending;
+        const chosenDate = plannerDateFromISO(dateInput.value);
+        const todayInfo = getPlannerLocalTodayInfo();
+        const todayKey = todayInfo ? plannerDateKey(todayInfo.formatted) : 0;
+        const sourceKey = plannerDateKey(selected.date);
+        const chosenKey = chosenDate ? plannerDateKey(chosenDate.formatted) : 0;
+        const now = Date.now();
+        const selectedTimestamp = parsePlannerMoveDateTime(selected.date, selected.time);
+        const targetTimestamp = chosenDate
+            ? parsePlannerMoveDateTime(chosenDate.formatted, selected.time)
+            : NaN;
 
-            const time = /^\d{2}:\d{2}$/.test(String(timeStr || '')) ? timeStr : '00:00';
-            const [hours, minutes] = time.split(':').map(Number);
-            const date = new Date(Number(year), Number(month) - 1, Number(day), hours, minutes);
-            return Number.isNaN(date.getTime()) ? NaN : date.getTime();
+        const showError = message => {
+            if (errorMessage) errorMessage.textContent = message;
+            dateInput.setCustomValidity(message);
+            dateInput.reportValidity();
         };
 
-        const getDateKey = (dateStr) => {
-            if (!dateStr) return '';
-            const parts = String(dateStr).split(/[/-]/);
-            if (parts.length !== 3) return '';
-            const [year, month, day] = parts[0].length === 4
-                ? parts
-                : [parts[2], parts[1], parts[0]];
-            return Number(year) * 10000 + Number(month) * 100 + Number(day);
-        };
-
-        const today = new Date();
-        const todayKey = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-        const selectedTimestamp = parseDateTime(selected.date, selected.time);
-        if (!Number.isFinite(selectedTimestamp)) {
-            alert('Esta aula não possui uma data válida para adiamento.');
+        if (!chosenDate || !Number.isFinite(targetTimestamp)) {
+            showError('Escolha uma data válida no calendário.');
             return;
         }
 
-        const normalize = value => String(value ?? '').trim().toLocaleLowerCase('pt-BR');
-        const sameSeriesAndTeam = item =>
-            normalize(item.serie) === normalize(selected.serie) &&
-            normalize(item.team) === normalize(selected.team);
-
-        // Busca a próxima aula da mesma série e turma, excluindo esta aula.
-        // O destino precisa estar em uma data estritamente posterior à data de hoje.
-        const candidates = plans
-            .filter(item => String(item.id) !== String(id) && sameSeriesAndTeam(item))
-            .map(item => ({ item, timestamp: parseDateTime(item.date, item.time), dateKey: getDateKey(item.date) }))
-            .filter(entry =>
-                Number.isFinite(entry.timestamp) &&
-                entry.dateKey > todayKey &&
-                entry.dateKey > getDateKey(selected.date) &&
-                entry.timestamp > selectedTimestamp
-            )
-            .sort((a, b) => a.timestamp - b.timestamp);
-
-        const blockedDestinations = new Map();
-        const next = candidates.find(entry => {
-            const markers = getPlannerDateMarkers(plans, entry.item.date);
-            if (markers.blocked.length) {
-                blockedDestinations.set(entry.dateKey, { date: entry.item.date, markers });
-                return false;
+        if (action === 'defer') {
+            if (chosenKey <= todayKey || chosenKey <= sourceKey) {
+                showError('Para adiar, escolha uma data posterior à data de hoje e à data original da aula.');
+                return;
             }
-            return true;
-        });
-
-        if (!next) {
-            if (blockedDestinations.size) {
-                const dates = [...blockedDestinations.values()].map(item => item.date).join(', ');
-                alert('As próximas datas encontradas (' + dates + ') estão marcadas como Folga ou Prova e não podem receber planejamentos. Não foi encontrado outro destino disponível.');
-            } else {
-                alert('Não encontrei uma próxima aula futura para esta mesma série e turma. O adiamento só pode ser feito para uma data posterior a hoje.');
+        } else {
+            if (
+                chosenKey < todayKey ||
+                chosenKey >= sourceKey ||
+                targetTimestamp < now ||
+                targetTimestamp >= selectedTimestamp
+            ) {
+                showError('Para adiantar, escolha uma data válida a partir de hoje, anterior à aula original e cujo horário ainda não tenha passado.');
+                return;
             }
+        }
+
+        const markers = getPlannerDateMarkers(plans, chosenDate.formatted);
+        if (markers.blocked.length) {
+            showError(getPlannerBlockedDayMessage(chosenDate.formatted, markers));
             return;
         }
 
-        const target = next.item;
-        if (!confirmPlannerSpecialDestination(getPlannerDateMarkers(plans, target.date))) return;
+        if (!confirmPlannerSpecialDestination(markers)) return;
+
+        const actionLabel = action === 'defer' ? 'adiar' : 'adiantar';
+        const targetTimeLabel = selected.time || 'horário não definido';
         const confirmation = confirm(
-            `Adiar esta aula de ${selected.date} às ${selected.time || 'horário não definido'} para a próxima aula de ${selected.serie || ''}ª série, turma ${selected.team || ''}, em ${target.date} às ${target.time || 'horário não definido'}?\n\nAs duas aulas ficarão agendadas para o mesmo dia e horário.`
+            'Confirma ' + actionLabel + ' esta aula de ' + selected.date +
+            ' para ' + chosenDate.formatted + ' às ' + targetTimeLabel +
+            '? O horário original será mantido.'
         );
         if (!confirmation) return;
 
-        const { error: updateError } = await supabase
-            .from('planner')
-            .update({ date: target.date, day: target.day, time: target.time, tag: `Adiada do dia ${getPlannerOriginalDate(selected)}` })
-            .eq('id', id);
+        submitButton.disabled = true;
+        try {
+            const updateData = {
+                date: chosenDate.formatted,
+                day: chosenDate.weekday,
+                time: selected.time || null,
+                tag: (action === 'defer' ? 'Adiada do dia ' : 'Adiantada do dia ') +
+                    getPlannerOriginalDate(selected)
+            };
+            const { error } = await supabase
+                .from('planner')
+                .update(updateData)
+                .eq('id', selected.id)
+                .is('completed_at', null);
 
-        if (updateError) throw updateError;
+            if (error) throw error;
 
-        await loadPlanners();
-        alert(`Aula adiada para ${target.day || ''} ${target.date} às ${target.time || 'horário não definido'}.`);
-    } catch (error) {
-        console.error('Erro ao adiar aula:', error);
-        alert('Não foi possível adiar a aula: ' + (error.message || 'erro inesperado'));
+            pendingSinglePlannerMove = null;
+            modal.close();
+            await loadPlanners();
+            alert('Aula ' + (action === 'defer' ? 'adiada' : 'adiantada') +
+                ' para ' + chosenDate.weekday + ' ' + chosenDate.formatted +
+                ' às ' + targetTimeLabel + '.');
+        } catch (error) {
+            console.error('Erro ao mover aula para a data escolhida:', error);
+            showError('Não foi possível salvar a nova data: ' + (error.message || 'erro inesperado'));
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+}
+
+function openSinglePlannerMoveCalendar(action, selected, plans, blockedDestinations = []) {
+    const modal = document.getElementById('planner-single-move-modal');
+    const dateInput = document.getElementById('planner-single-move-date');
+    const title = document.getElementById('planner-single-move-title');
+    const description = document.getElementById('planner-single-move-description');
+    const currentLabel = document.getElementById('planner-single-move-current');
+    const hint = document.getElementById('planner-single-move-hint');
+    const errorMessage = document.getElementById('planner-single-move-error');
+    const submitButton = document.getElementById('btn-confirm-single-planner-move');
+
+    if (!modal || !dateInput || !title || !description || !currentLabel || !hint || !submitButton) {
+        alert('Não foi possível abrir o calendário para escolher uma nova data.');
+        return;
     }
-};
 
-// Antecipa uma aula para a próxima aula futura da mesma série e turma, em ordem cronológica.
-window.advancePlanner = async (id) => {
+    const todayInfo = getPlannerLocalTodayInfo();
+    const sourceInfo = parsePlannerDateBR(selected.date);
+    if (!todayInfo || !sourceInfo) {
+        alert('Não foi possível abrir o calendário porque a data original desta aula é inválida.');
+        return;
+    }
+
+    const todayKey = plannerDateKey(todayInfo.formatted);
+    const sourceKey = plannerDateKey(sourceInfo.formatted);
+    let minInfo = todayInfo;
+    let maxInfo = null;
+
+    if (action === 'defer') {
+        const tomorrowInfo = incrementPlannerDate(todayInfo);
+        const dayAfterSource = incrementPlannerDate(sourceInfo);
+        minInfo = plannerDateKey(sourceInfo.formatted) >= todayKey
+            ? dayAfterSource
+            : tomorrowInfo;
+    } else {
+        maxInfo = getPlannerPreviousDate(sourceInfo);
+        const todayAtOriginalTime = parsePlannerMoveDateTime(todayInfo.formatted, selected.time);
+        if (todayAtOriginalTime < Date.now()) {
+            minInfo = incrementPlannerDate(todayInfo);
+        }
+    }
+
+    const rangeAvailable = Boolean(minInfo) &&
+        (action === 'defer' || (maxInfo && plannerDateKey(minInfo.formatted) <= plannerDateKey(maxInfo.formatted)));
+
+    pendingSinglePlannerMove = { action, selected, plans };
+    dateInput.value = '';
+    dateInput.disabled = !rangeAvailable;
+    dateInput.required = rangeAvailable;
+    dateInput.removeAttribute('max');
+    dateInput.removeAttribute('min');
+
+    if (rangeAvailable) {
+        dateInput.min = minInfo.iso;
+        if (maxInfo) dateInput.max = maxInfo.iso;
+    }
+
+    title.textContent = action === 'defer' ? 'Escolher data para adiar' : 'Escolher data para adiantar';
+    description.textContent = action === 'defer'
+        ? 'Não foi encontrada uma próxima aula compatível. Escolha uma nova data posterior à aula original.'
+        : 'Não foi encontrada uma aula compatível para antecipação. Escolha uma data anterior à aula original, sem voltar para uma data passada.';
+    currentLabel.textContent = 'Aula: ' + getPlannerTitle(selected) + ' · Turma ' +
+        (formatPlannerGrade(selected) || 'não informada') + ' · ' +
+        selected.date + ' às ' + (selected.time || 'horário não definido');
+
+    const blockedDates = [...new Set((blockedDestinations || []).map(item => item.date))];
+    hint.textContent = blockedDates.length
+        ? 'As datas compatíveis encontradas estavam bloqueadas por Folga ou Prova (' +
+            blockedDates.join(', ') + '). Escolha outra data no calendário.'
+        : 'O horário original (' + (selected.time || 'não definido') +
+            ') será mantido. Datas marcadas como Folga ou Prova não podem receber esta aula.';
+
+    if (!rangeAvailable) {
+        hint.textContent = action === 'advance'
+            ? 'Não existe uma data disponível dentro das regras atuais para antecipar esta aula. Você pode cancelar.'
+            : 'Não foi possível determinar um intervalo válido para esta aula. Você pode cancelar.';
+    }
+
+    if (errorMessage) errorMessage.textContent = '';
+    dateInput.setCustomValidity('');
+    submitButton.disabled = !rangeAvailable;
+
+    if (!modal.open) modal.showModal();
+}
+
+async function movePlannerToMatchingLesson(id, action) {
     try {
-        const { data, error } = await supabase.from('planner').select('*').is('completed_at', null);
+        const { data, error } = await supabase
+            .from('planner')
+            .select('*')
+            .is('completed_at', null);
         if (error) throw error;
 
         const plans = data || [];
@@ -1615,102 +1744,97 @@ window.advancePlanner = async (id) => {
             return;
         }
 
-        const parseDateTime = (dateStr, timeStr) => {
-            if (!dateStr) return NaN;
-            const parts = String(dateStr).split(/[/-]/);
-            if (parts.length !== 3) return NaN;
-            let year, month, day;
-            if (parts[0].length === 4) [year, month, day] = parts;
-            else [day, month, year] = parts;
-
-            const time = /^\d{2}:\d{2}$/.test(String(timeStr || '')) ? timeStr : '00:00';
-            const [hours, minutes] = time.split(':').map(Number);
-            const date = new Date(Number(year), Number(month) - 1, Number(day), hours, minutes);
-            return Number.isNaN(date.getTime()) ? NaN : date.getTime();
-        };
-
-        const getDateKey = (dateStr) => {
-            if (!dateStr) return 0;
-            const parts = String(dateStr).split(/[/-]/);
-            if (parts.length !== 3) return 0;
-            const [year, month, day] = parts[0].length === 4
-                ? parts
-                : [parts[2], parts[1], parts[0]];
-            return Number(year) * 10000 + Number(month) * 100 + Number(day);
-        };
-
-        const now = Date.now();
-        const today = new Date();
-        const todayKey = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-        const selectedTimestamp = parseDateTime(selected.date, selected.time);
+        const selectedTimestamp = parsePlannerMoveDateTime(selected.date, selected.time);
         if (!Number.isFinite(selectedTimestamp)) {
-            alert('Esta aula não possui uma data válida para antecipação.');
+            alert('Esta aula não possui uma data válida para ' +
+                (action === 'defer' ? 'adiamento.' : 'antecipação.'));
             return;
         }
 
-        const normalize = value => String(value ?? '').trim().toLocaleLowerCase('pt-BR');
-        const sameSeriesAndTeam = item =>
-            normalize(item.serie) === normalize(selected.serie) &&
-            normalize(item.team) === normalize(selected.team);
+        const todayInfo = getPlannerLocalTodayInfo();
+        if (!todayInfo) {
+            alert('Não foi possível determinar a data de hoje.');
+            return;
+        }
 
-        // Entre as aulas futuras da mesma turma que acontecem antes da aula selecionada,
-        // escolhe a mais próxima de agora (a primeira na ordem cronológica).
+        const todayKey = plannerDateKey(todayInfo.formatted);
+        const sourceKey = plannerDateKey(selected.date);
+        const sameSeriesAndTeam = item =>
+            normalizePlannerClassValue(item.serie) === normalizePlannerClassValue(selected.serie) &&
+            normalizePlannerClassValue(item.team) === normalizePlannerClassValue(selected.team);
+
         const candidates = plans
             .filter(item => String(item.id) !== String(id) && sameSeriesAndTeam(item))
-            .map(item => ({ item, timestamp: parseDateTime(item.date, item.time), dateKey: getDateKey(item.date) }))
-            .filter(entry =>
-                Number.isFinite(entry.timestamp) &&
-                entry.dateKey >= todayKey &&
-                entry.dateKey !== getDateKey(selected.date) &&
-                entry.timestamp >= now &&
-                entry.timestamp < selectedTimestamp
-            )
+            .map(item => ({
+                item,
+                timestamp: parsePlannerMoveDateTime(item.date, item.time),
+                dateKey: plannerDateKey(item.date)
+            }))
+            .filter(entry => Number.isFinite(entry.timestamp) && (
+                action === 'defer'
+                    ? entry.dateKey > todayKey && entry.dateKey > sourceKey && entry.timestamp > selectedTimestamp
+                    : entry.dateKey >= todayKey &&
+                        entry.dateKey !== sourceKey &&
+                        entry.timestamp >= Date.now() &&
+                        entry.timestamp < selectedTimestamp
+            ))
             .sort((a, b) => a.timestamp - b.timestamp);
 
-        const blockedDestinations = new Map();
-        const nextUpcoming = candidates.find(entry => {
+        const blockedDestinations = [];
+        const targetEntry = candidates.find(entry => {
             const markers = getPlannerDateMarkers(plans, entry.item.date);
             if (markers.blocked.length) {
-                blockedDestinations.set(entry.dateKey, { date: entry.item.date, markers });
+                blockedDestinations.push({ date: entry.item.date, markers });
                 return false;
             }
             return true;
         });
 
-        if (!nextUpcoming) {
-            if (blockedDestinations.size) {
-                const dates = [...blockedDestinations.values()].map(item => item.date).join(', ');
-                alert('As próximas datas encontradas (' + dates + ') estão marcadas como Folga ou Prova e não podem receber planejamentos. Não foi encontrado outro destino disponível.');
-            } else {
-                alert('Não encontrei uma próxima aula futura desta mesma série e turma antes da data selecionada. A antecipação não pode levar a aula para uma data passada nem adiantar para depois da aula original.');
-            }
+        if (!targetEntry) {
+            openSinglePlannerMoveCalendar(action, selected, plans, blockedDestinations);
             return;
         }
 
-        const target = nextUpcoming.item;
+        const target = targetEntry.item;
         if (!confirmPlannerSpecialDestination(getPlannerDateMarkers(plans, target.date))) return;
+
+        const actionLabel = action === 'defer' ? 'Adiar' : 'Adiantar';
         const confirmation = confirm(
-            'Adiantar esta aula de ' + selected.date + ' às ' + (selected.time || 'horário não definido') +
-            ' para a próxima aula de ' + (selected.serie || '') + 'ª série, turma ' + (selected.team || '') +
-            ', em ' + target.date + ' às ' + (target.time || 'horário não definido') +
+            actionLabel + ' esta aula de ' + selected.date + ' às ' +
+            (selected.time || 'horário não definido') + ' para a próxima aula da turma ' +
+            (formatPlannerGrade(selected) || 'não informada') + ', em ' + target.date +
+            ' às ' + (target.time || 'horário não definido') +
             '?\n\nAs duas aulas ficarão agendadas para o mesmo dia e horário.'
         );
         if (!confirmation) return;
 
         const { error: updateError } = await supabase
             .from('planner')
-            .update({ date: target.date, day: target.day, time: target.time, tag: `Adiantada do dia ${getPlannerOriginalDate(selected)}` })
-            .eq('id', id);
+            .update({
+                date: target.date,
+                day: target.day,
+                time: target.time,
+                tag: (action === 'defer' ? 'Adiada do dia ' : 'Adiantada do dia ') +
+                    getPlannerOriginalDate(selected)
+            })
+            .eq('id', id)
+            .is('completed_at', null);
 
         if (updateError) throw updateError;
 
         await loadPlanners();
-        alert('Aula adiantada para ' + (target.day || '') + ' ' + target.date + ' às ' + (target.time || 'horário não definido') + '.');
+        alert('Aula ' + (action === 'defer' ? 'adiada' : 'adiantada') +
+            ' para ' + (target.day || '') + ' ' + target.date +
+            ' às ' + (target.time || 'horário não definido') + '.');
     } catch (error) {
-        console.error('Erro ao adiantar aula:', error);
-        alert('Não foi possível adiantar a aula: ' + (error.message || 'erro inesperado'));
+        console.error('Erro ao mover aula:', error);
+        alert('Não foi possível ' + (action === 'defer' ? 'adiar' : 'adiantar') +
+            ' a aula: ' + (error.message || 'erro inesperado'));
     }
-};
+}
+
+window.deferPlanner = async id => movePlannerToMatchingLesson(id, 'defer');
+window.advancePlanner = async id => movePlannerToMatchingLesson(id, 'advance');
 
 window.viewPlanner = id => {
     const p = plannerItemsById.get(String(id));
