@@ -1661,7 +1661,7 @@ function openSinglePlannerMoveCalendar(action, selected, plans, blockedDestinati
     }
 
     const todayInfo = getPlannerLocalTodayInfo();
-    const sourceInfo = parsePlannerDateBR(selected.date);
+    const sourceInfo = parsePlannerDateBR(selected.date) || plannerDateFromISO(selected.date);
     if (!todayInfo || !sourceInfo) {
         alert('Não foi possível abrir o calendário porque a data original desta aula é inválida.');
         return;
