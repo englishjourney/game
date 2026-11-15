@@ -45,6 +45,7 @@ export function initTasks() {
         const taskData = {
             title: document.getElementById('task-title').value.trim(),
             description: document.getElementById('task-description').value.trim(),
+            grade: selectedGrades.length === 1 ? selectedGrades[0] : null,
             grades: selectedGrades,
             deadline: new Date(localDeadline).toISOString()
         };
@@ -141,13 +142,13 @@ async function loadTaskGrades() {
 }
 
 function getTaskGrades(task) {
-    if (Array.isArray(task?.grades)) {
-        return Array.from(new Set(task.grades.map(grade => String(grade || '').trim().toUpperCase()).filter(Boolean)));
-    }
+    const grades = Array.isArray(task?.grades)
+        ? Array.from(new Set(task.grades.map(grade => String(grade || '').trim().toUpperCase()).filter(Boolean)))
+        : [];
+    if (grades.length) return grades;
 
-    const serie = String(task?.serie || '').trim();
-    const team = String(task?.team || '').trim().toUpperCase();
-    return serie && team ? [serie + team] : [];
+    const grade = String(task?.grade || '').trim().toUpperCase();
+    return grade ? [grade] : [];
 }
 
 function renderTaskGradeOptions() {
