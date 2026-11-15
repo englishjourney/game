@@ -302,7 +302,7 @@ function renderSummary(plans) {
     const weekPlans = dated.filter(plan => plan.parsedDate >= weekStart && plan.parsedDate < weekEnd);
 
     const activeClasses = new Set(weekPlans.map(plan => {
-        const grade = [plan.serie, plan.team].filter(Boolean).join('');
+        const grade = String(plan.grade || '').trim().toUpperCase();
         return grade || null;
     }).filter(Boolean));
 
@@ -319,7 +319,7 @@ function renderSummary(plans) {
         ? upcoming.lessonDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
         : '—';
     const upcomingClass = upcoming
-        ? [upcoming.serie, upcoming.team].filter(Boolean).join('') || 'Aula planejada'
+        ? String(upcoming.grade || '').trim().toUpperCase() || 'Aula planejada'
         : 'Nenhuma aula futura';
 
     const cards = [
@@ -376,7 +376,7 @@ async function loadDashboard() {
     }
 
     const [plannerResult, scheduleResult] = await Promise.all([
-        supabase.from('planner').select('date,time,serie,team,completed_at').eq('owner', authData.user.id).is('completed_at', null),
+        supabase.from('planner').select('date,time,grade,completed_at').eq('owner', authData.user.id).is('completed_at', null),
         supabase.from('schedule').select('*').eq('owner', authData.user.id).maybeSingle()
     ]);
 
@@ -575,8 +575,8 @@ function setupGlobalSearch() {
                 supabase.from('users').select('id,name,username,grade').neq('username', 'micael.svg').ilike('name', pattern).limit(4),
                 supabase.from('users').select('id,name,username,grade').neq('username', 'micael.svg').ilike('username', pattern).limit(4),
                 supabase.from('users').select('id,name,username,grade').neq('username', 'micael.svg').ilike('grade', pattern).limit(4),
-                supabase.from('planner').select('id,date,day,time,serie,team,activities,skills,completed_at,tag,special').eq('owner', authData.user.id).order('id', { ascending: false }).range(0, 999),
-                supabase.from('tasks').select('id,title,description,grades,serie,team,deadline').eq('owner', authData.user.id).order('id', { ascending: false }).range(0, 999),
+                supabase.from('planner').select('id,date,day,time,grade,activities,skills,completed_at,tag,special').eq('owner', authData.user.id).order('id', { ascending: false }).range(0, 999),
+                supabase.from('tasks').select('id,title,description,grade,grades,deadline').eq('owner', authData.user.id).order('id', { ascending: false }).range(0, 999),
                 supabase.from('schedule').select('*').eq('owner', authData.user.id).maybeSingle(),
                 supabase.from('missions').select('id,mission_name,mission_score,mission_link').ilike('mission_name', pattern).limit(4),
                 supabase.from('flashcards').select('id,word,translation,stack').ilike('word', pattern).limit(4),
@@ -602,14 +602,14 @@ function setupGlobalSearch() {
             const users = combineUnique([usersName, usersLogin, usersGrade]);
             const normalizedQuery = query.toLocaleLowerCase('pt-BR');
             const plans = (plannerRowsResult.data || []).filter(plan =>
-                [plan.day, plan.date, plan.time, plan.serie, plan.team, plan.serie + plan.team, plan.activities, plan.skills, plan.tag, plan.special]
+                [plan.day, plan.date, plan.time, plan.grade, plan.activities, plan.skills, plan.tag, plan.special]
                     .some(value => String(value ?? '').toLocaleLowerCase('pt-BR').includes(normalizedQuery))
             ).slice(0, 5).map(plan => ({
                 ...plan,
                 section: plan.completed_at ? 'completed-planner-section' : 'planner-section'
             }));
             const tasks = (taskRowsResult.data || []).filter(task =>
-                [task.title, task.description, task.serie, task.team, (task.grades || []).join(' ')]
+                [task.title, task.description, task.grade, (task.grades || []).join(' ')]
                     .some(value => String(value ?? '').toLocaleLowerCase('pt-BR').includes(normalizedQuery))
             ).slice(0, 5);
             const missions = missionsName.data || [];
@@ -652,10 +652,10 @@ function setupGlobalSearch() {
             ));
             pieces.push(appendResultGroup('Trabalhos', tasks, 'id', 'tasks-section', task =>
                 '<strong>' + escapeHtml(task.title || 'Trabalho sem título') + '</strong>' +
-                '<span>' + escapeHtml((task.grades || []).join(', ') || [task.serie, task.team].filter(Boolean).join('') || 'Todas as turmas') + '</span>'
+                '<span>' + escapeHtml((task.grades || []).join(', ') || task.grade || 'Todas as turmas') + '</span>'
             ));
             pieces.push(appendResultGroup('Planejamentos', plans, 'id', plan => plan.section, plan =>
-                '<strong>' + escapeHtml([plan.serie, plan.team].filter(Boolean).join('') || 'Aula') + '</strong>' +
+                '<strong>' + escapeHtml(plan.grade || 'Aula') + '</strong>' +
                 '<span>' + escapeHtml([plan.date, plan.time, String(plan.activities || '').replace(/<[^>]*>/g, ' ').slice(0, 70)].filter(Boolean).join(' • ')) + '</span>'
             ));
             pieces.push(appendResultGroup('Missões', missions, 'id', 'missions-section', mission =>
