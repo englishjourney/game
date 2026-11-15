@@ -13,7 +13,7 @@ self.addEventListener('message', (event) => {
         const aulasDeHoje = event.data.aulas;
         
         if (aulasDeHoje && aulasDeHoje.length > 0) {
-            let corpoNotificacao = aulasDeHoje.map(a => `• ${a.time} - ${a.serie}${a.team}: ${a.activities.substring(0, 40)}...`).join('\n');
+            let corpoNotificacao = aulasDeHoje.map(a => `• ${a.time} - ${a.grade || 'Sem turma'}: ${String(a.activities || '').substring(0, 40)}...`).join('\n');
             
             self.registration.showNotification("📅 Suas Aulas de Hoje", {
                 body: corpoNotificacao,
