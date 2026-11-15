@@ -32,14 +32,19 @@ function verificarESalvarAulasNoCache(swRegistration) {
 
     if (!cacheAulas) {
         const dadosExemplo = [
-            { date: "06/10/2026", time: "07:00", serie: "9", team: "B", activities: "Leitura do Capítulo 3 e gramática." },
-            { date: "06/10/2026", time: "08:30", serie: "7", team: "A", activities: "Introdução ao vocabulário de saúde." }
+            { date: "06/10/2026", time: "07:00", grade: "9B", activities: "Leitura do Capítulo 3 e gramática." },
+            { date: "06/10/2026", time: "08:30", grade: "7A", activities: "Introdução ao vocabulário de saúde." }
         ];
         localStorage.setItem('yuki_planejamento_semana', JSON.stringify(dadosExemplo));
         cacheAulas = JSON.stringify(dadosExemplo);
     }
 
-    const aulas = JSON.parse(cacheAulas);
+    const aulas = (Array.isArray(JSON.parse(cacheAulas)) ? JSON.parse(cacheAulas) : []).map(aula => {
+        const grade = String(aula.grade || [aula.serie, aula.team].filter(Boolean).join('') || '').trim().toUpperCase();
+        const { serie, team, ...aulaAtualizada } = aula;
+        return { ...aulaAtualizada, grade };
+    });
+    localStorage.setItem('yuki_planejamento_semana', JSON.stringify(aulas));
     const hojeStr = new Date().toLocaleDateString('pt-BR');
 
     const aulasDeHoje = aulas.filter(a => a.date === hojeStr);
@@ -258,7 +263,7 @@ async function loadTodayPlans() {
 
         const { data, error } = await supabase
             .from('planner')
-            .select('date, time, serie, team, activities, special, tag')
+            .select('date, time, grade, activities, special, tag')
             .eq('owner', authData.user.id)
             .is('completed_at', null);
 
@@ -286,9 +291,7 @@ async function loadTodayPlans() {
 
         const plansHtml = plansForToday.length
             ? plansForToday.map(item => {
-                const turma = item.serie && item.team
-                    ? 'Turma ' + item.serie + item.team
-                    : (item.serie ? 'Série ' + item.serie : (item.team ? 'Turma ' + item.team : 'Sem turma'));
+                const turma = item.grade ? 'Turma ' + item.grade : 'Sem turma';
                 const specialLabels = {
                     1: 'Aula especial',
                     2: 'Folga',
@@ -762,7 +765,7 @@ async function checkRemindersStatus(options = {}) {
         if (authError || !authData.user) throw new Error('Sessão de professor não encontrada.');
         const [remindersResult, tasksResult] = await Promise.all([
             supabase.from('reminders').select('id, remindMeTo, date, time'),
-            supabase.from('tasks').select('id, title, serie, team, deadline').eq('owner', authData.user.id)
+            supabase.from('tasks').select('id, title, deadline').eq('owner', authData.user.id)
         ]);
         if (remindersResult.error) throw remindersResult.error;
         if (tasksResult.error) console.warn('Não foi possível consultar os prazos dos trabalhos:', tasksResult.error);
