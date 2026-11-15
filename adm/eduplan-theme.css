@@ -1550,6 +1550,29 @@ dialog .markdown-preview-label { color: #6c5b91; }
 }
 #planner-reschedule-modal .planner-reschedule-date-label { color: #463b66; }
 #planner-reschedule-modal .planner-reschedule-heading h3 { color: #21134f !important; }
+#planner-single-move-modal input[type="date"] {
+    border: 1px solid #e3dcf0;
+    border-radius: 11px;
+    background: #fbfaff;
+    color: #201941;
+    color-scheme: light;
+}
+#planner-single-move-modal .planner-reschedule-date-label { color: #463b66; }
+#planner-single-move-modal .planner-reschedule-heading h3 { color: #21134f !important; }
+#planner-single-move-modal .planner-single-move-error {
+    min-height: 0;
+    margin-top: 10px;
+    color: #b42345;
+    font-size: .82rem;
+    font-weight: 650;
+}
+#planner-single-move-modal .planner-single-move-error:empty { display: none; }
+#planner-single-move-modal button:disabled {
+    opacity: .48;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
 
 #modal-reminder-form:not(.hidden) {
     display: flex;
