@@ -437,6 +437,30 @@
         </form>
     </dialog>
 
+    <!-- MODAL: ESCOLHER DATA MANUAL PARA ADIAR / ADIANTAR UMA AULA -->
+    <dialog id="planner-single-move-modal" class="planner-reschedule-dialog planner-single-move-dialog">
+        <form id="planner-single-move-form">
+            <div class="planner-reschedule-heading edu-modal-header">
+                <span class="edu-modal-mark"><i class="fa-solid fa-calendar-day" aria-hidden="true"></i></span>
+                <span class="edu-modal-heading-copy">
+                    <small>PLANEJAMENTOS</small>
+                    <h3 id="planner-single-move-title">Escolher nova data</h3>
+                    <p id="planner-single-move-description">Escolha uma data no calendário.</p>
+                </span>
+            </div>
+            <p id="planner-single-move-current" class="planner-reschedule-current"></p>
+            <p id="planner-single-move-hint" class="planner-reschedule-count"></p>
+            <label class="planner-reschedule-date-label" for="planner-single-move-date">Nova data:
+                <input type="date" id="planner-single-move-date" required>
+            </label>
+            <p id="planner-single-move-error" class="planner-single-move-error" role="alert" aria-live="polite"></p>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" id="btn-cancel-single-planner-move">Cancelar</button>
+                <button type="submit" class="btn-primary" id="btn-confirm-single-planner-move">Aplicar nova data</button>
+            </div>
+        </form>
+    </dialog>
+
     <!-- MODAL PLANNER -->
     <dialog id="planner-modal" class="edu-form-dialog edu-planner-form-dialog">
         <form id="planner-form">
