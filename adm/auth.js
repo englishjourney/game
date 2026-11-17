@@ -1,14 +1,40 @@
 import { supabase } from '../supabaseClient.js';
 import { showAdmPanel } from './main.js';
+import { getDefaultTeacherAvatarKey, getTeacherAvatarOptions } from './teacher-avatars.js';
 
-const AVATAR_KEYS = new Set([
-    'violet-book',
-    'blue-graduation',
-    'teal-user',
-    'orange-atom',
-    'pink-palette',
-    'indigo-globe'
-]);
+
+function renderRegisterAvatarPicker() {
+    const picker = document.getElementById('register-avatar-picker');
+    const avatarInput = document.getElementById('register-avatar-key');
+    if (!picker || !avatarInput) return;
+
+    const subjects = Array.from(document.querySelectorAll('input[name="teacher-subject"]:checked'))
+        .map(input => input.value);
+    const options = getTeacherAvatarOptions(subjects);
+    const selectedKey = options.some(option => option.key === avatarInput.value)
+        ? avatarInput.value
+        : (options[0]?.key || '');
+
+    avatarInput.value = selectedKey;
+    if (!options.length) {
+        picker.innerHTML = '<p class="avatar-picker-empty">Selecione uma ou mais disciplinas para ver os avatares disponíveis.</p>';
+        return;
+    }
+
+    picker.innerHTML = options.map(option => {
+        const image = option.file
+            ? '<img src="./avatars/' + option.file + '" alt="" loading="lazy" onerror="this.remove();this.parentElement.querySelector(\'.avatar-option-fallback\').hidden=false;">'
+            : '';
+        return '<button type="button" class="avatar-option' + (option.key === selectedKey ? ' selected' : '') + '" ' +
+            'data-avatar-key="' + option.key + '" aria-pressed="' + String(option.key === selectedKey) + '" title="' + option.subject + '">' +
+                '<span class="avatar-option-visual" style="--avatar-option-bg:' + option.background + '">' +
+                    image +
+                    '<i class="fa-solid ' + option.icon + ' avatar-option-fallback"' + (option.file ? ' hidden' : '') + ' aria-hidden="true"></i>' +
+                '</span>' +
+                '<span class="avatar-option-label">' + option.subject + '</span>' +
+            '</button>';
+    }).join('');
+}
 
 function showStage(stageId) {
     document.querySelectorAll('.auth-stage').forEach(stage => stage.classList.add('hidden'));
@@ -124,9 +150,13 @@ export async function initAuth() {
         const displayName = document.getElementById('register-name').value.trim();
         const email = document.getElementById('register-email').value.trim();
         const password = document.getElementById('register-password').value;
-        const avatarKey = document.getElementById('register-avatar-key').value;
+        const selectedAvatarKey = document.getElementById('register-avatar-key').value;
         const subjects = Array.from(registerForm.querySelectorAll('input[name="teacher-subject"]:checked'))
             .map(input => input.value);
+        const availableAvatars = getTeacherAvatarOptions(subjects);
+        const avatarKey = availableAvatars.some(option => option.key === selectedAvatarKey)
+            ? selectedAvatarKey
+            : getDefaultTeacherAvatarKey(subjects);
         const gateToken = sessionStorage.getItem('eduplan_admin_gate_token');
 
         if (!gateToken) {
@@ -138,8 +168,8 @@ export async function initAuth() {
             setMessage('register-error', 'Selecione ao menos uma disciplina.', true);
             return;
         }
-        if (!AVATAR_KEYS.has(avatarKey)) {
-            setMessage('register-error', 'Selecione um dos avatares disponíveis.', true);
+        if (!availableAvatars.some(option => option.key === avatarKey)) {
+            setMessage('register-error', 'Escolha um avatar correspondente a uma das disciplinas selecionadas.', true);
             return;
         }
 
@@ -167,12 +197,8 @@ export async function initAuth() {
 
             sessionStorage.removeItem('eduplan_admin_gate_token');
             registerForm.reset();
-            document.getElementById('register-avatar-key').value = 'violet-book';
-            document.querySelectorAll('.avatar-option').forEach(option => {
-                const selected = option.dataset.avatarKey === 'violet-book';
-                option.classList.toggle('selected', selected);
-                option.setAttribute('aria-pressed', String(selected));
-            });
+            document.getElementById('register-avatar-key').value = '';
+            renderRegisterAvatarPicker();
 
             if (data.session) {
                 if (!await showLoggedInTeacher()) {
@@ -244,16 +270,22 @@ export async function initAuth() {
     document.getElementById('back-to-login-from-register')?.addEventListener('click', () => showStage('login-step'));
     document.getElementById('back-to-login-from-recovery')?.addEventListener('click', () => showStage('login-step'));
 
-    document.querySelectorAll('.avatar-option').forEach(option => {
-        option.addEventListener('click', () => {
-            document.getElementById('register-avatar-key').value = option.dataset.avatarKey;
-            document.querySelectorAll('.avatar-option').forEach(item => {
-                const selected = item === option;
-                item.classList.toggle('selected', selected);
-                item.setAttribute('aria-pressed', String(selected));
-            });
+    const registerAvatarPicker = document.getElementById('register-avatar-picker');
+    registerAvatarPicker?.addEventListener('click', event => {
+        const option = event.target.closest('.avatar-option[data-avatar-key]');
+        if (!option) return;
+        document.getElementById('register-avatar-key').value = option.dataset.avatarKey;
+        registerAvatarPicker.querySelectorAll('.avatar-option').forEach(item => {
+            const selected = item === option;
+            item.classList.toggle('selected', selected);
+            item.setAttribute('aria-pressed', String(selected));
         });
     });
+
+    registerForm.querySelectorAll('input[name="teacher-subject"]').forEach(input => {
+        input.addEventListener('change', renderRegisterAvatarPicker);
+    });
+    renderRegisterAvatarPicker();
 
     supabase.auth.onAuthStateChange(event => {
         if (event === 'PASSWORD_RECOVERY') {
