@@ -198,7 +198,11 @@ function setupNavigation() {
         menu.classList.toggle('mobile-open', open);
         backdrop.classList.toggle('is-visible', open);
         backdrop.setAttribute('aria-hidden', String(!open));
-        if (menuToggle) menuToggle.setAttribute('aria-expanded', String(open));
+        if (menuToggle) {
+            menuToggle.setAttribute('aria-expanded', String(open));
+            menuToggle.setAttribute('aria-label', open ? 'Fechar menu de navegação' : 'Abrir menu de navegação');
+            menuToggle.innerHTML = '<i class="fa-solid fa-bars" aria-hidden="true"></i>';
+        }
         document.body.classList.toggle('mobile-nav-active', open);
     };
     const isMobileLayout = () => window.matchMedia('(max-width: 920px)').matches;
@@ -206,8 +210,12 @@ function setupNavigation() {
         document.getElementById('adm-panel')?.classList.toggle('sidebar-collapsed', collapsed);
         if (menuToggle) {
             menuToggle.setAttribute('aria-expanded', String(!collapsed));
-            menuToggle.setAttribute('aria-label', collapsed ? 'Expandir menu lateral' : 'Recolher menu lateral');
-            menuToggle.innerHTML = '<i class="fa-solid ' + (collapsed ? 'fa-bars' : 'fa-angles-left') + '" aria-hidden="true"></i>';
+            menuToggle.setAttribute('aria-label', isMobileLayout()
+                ? 'Abrir menu de navegação'
+                : (collapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'));
+            menuToggle.innerHTML = '<i class="fa-solid ' +
+                (isMobileLayout() ? 'fa-bars' : (collapsed ? 'fa-bars' : 'fa-angles-left')) +
+                '" aria-hidden="true"></i>';
         }
     };
     if (menuToggle) menuToggle.addEventListener('click', () => {
@@ -217,7 +225,10 @@ function setupNavigation() {
             setSidebarCollapsed(!document.getElementById('adm-panel')?.classList.contains('sidebar-collapsed'));
         }
     });
-    if (menuToggle) menuToggle.innerHTML = '<i class="fa-solid fa-angles-left" aria-hidden="true"></i>';
+    if (menuToggle) {
+        menuToggle.innerHTML = '<i class="fa-solid ' + (isMobileLayout() ? 'fa-bars' : 'fa-angles-left') + '" aria-hidden="true"></i>';
+        menuToggle.setAttribute('aria-label', isMobileLayout() ? 'Abrir menu de navegação' : 'Recolher menu lateral');
+    }
     window.addEventListener('resize', () => {
         if (!isMobileLayout()) setMobileNav(false);
     });
