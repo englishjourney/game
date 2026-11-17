@@ -3365,3 +3365,27 @@ dialog .markdown-preview-label { color: #6c5b91; }
         min-width: 0;
     }
 }
+
+
+/* Yuki Planner is reserved for English teachers for now. */
+.yuki-planner-status {
+    display: block;
+    margin: 2px 0 0;
+    padding: 0 18px;
+    color: #d7c8ff;
+    font-size: .76rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+.yuki-planner-status[hidden] { display: none !important; }
+#adm-panel.sidebar-collapsed .yuki-planner-status {
+    padding: 0 2px;
+    text-align: center;
+    font-size: .62rem;
+    overflow-wrap: anywhere;
+}
+@media (max-width: 920px) {
+    #adm-panel nav#adm-navigation .yuki-planner-status {
+        color: #e1d5ff !important;
+    }
+}
