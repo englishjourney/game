@@ -59,15 +59,10 @@
                     <div class="auth-input-wrap"><i class="fa-solid fa-lock"></i><input type="password" id="register-password" autocomplete="new-password" minlength="8" placeholder="Mínimo de 8 caracteres" required></div>
 
                     <label>Avatar do perfil</label>
-                    <div class="avatar-picker" role="group" aria-label="Escolha seu avatar">
-                        <button type="button" class="avatar-option selected" data-avatar-key="violet-book" aria-pressed="true" title="Livro"><i class="fa-solid fa-book-open"></i></button>
-                        <button type="button" class="avatar-option" data-avatar-key="blue-graduation" aria-pressed="false" title="Formatura"><i class="fa-solid fa-graduation-cap"></i></button>
-                        <button type="button" class="avatar-option" data-avatar-key="teal-user" aria-pressed="false" title="Professor"><i class="fa-solid fa-user-astronaut"></i></button>
-                        <button type="button" class="avatar-option" data-avatar-key="orange-atom" aria-pressed="false" title="Ciências"><i class="fa-solid fa-atom"></i></button>
-                        <button type="button" class="avatar-option" data-avatar-key="pink-palette" aria-pressed="false" title="Artes"><i class="fa-solid fa-palette"></i></button>
-                        <button type="button" class="avatar-option" data-avatar-key="indigo-globe" aria-pressed="false" title="Idiomas"><i class="fa-solid fa-earth-americas"></i></button>
+                    <div id="register-avatar-picker" class="avatar-picker" role="group" aria-label="Escolha um avatar de uma das disciplinas selecionadas">
+                        <p class="avatar-picker-empty">Selecione uma ou mais disciplinas para ver os avatares disponíveis.</p>
                     </div>
-                    <input type="hidden" id="register-avatar-key" value="violet-book">
+                    <input type="hidden" id="register-avatar-key" value="">
 
                     <label>Disciplinas que ensina</label>
                     <div class="subject-picker">
@@ -203,6 +198,22 @@
                 <div id="teacher-profile" class="teacher-profile"></div>
             </div>
         </nav>
+
+        <div id="teacher-avatar-modal" class="teacher-avatar-modal hidden" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="teacher-avatar-title">
+            <section class="teacher-avatar-dialog">
+                <header class="teacher-avatar-dialog-header">
+                    <div>
+                        <h2 id="teacher-avatar-title">Foto de perfil</h2>
+                        <p>Escolha um avatar entre as disciplinas da sua conta.</p>
+                    </div>
+                    <button type="button" id="teacher-avatar-close" class="teacher-avatar-dialog-close" aria-label="Fechar janela">
+                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    </button>
+                </header>
+                <div id="teacher-avatar-options" class="teacher-avatar-options"></div>
+                <p id="teacher-avatar-message" class="teacher-avatar-message" role="status"></p>
+            </section>
+        </div>
 
         <main>
             <!-- DASHBOARD SECTION -->
