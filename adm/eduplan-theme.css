@@ -3061,3 +3061,34 @@ dialog .markdown-preview-label { color: #6c5b91; }
         outline-offset: 2px;
     }
 }
+
+
+/* Reduce the vertical gap between the planner title and its toolbar. */
+#planner-section .planner-main-header {
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+#planner-section .planner-heading-copy {
+    flex: 0 1 auto;
+}
+#planner-section .planner-heading-copy p {
+    margin-top: 3px;
+}
+#planner-section .planner-header-controls {
+    flex: 1 1 520px;
+}
+@media (max-width: 760px) {
+    #planner-section .planner-main-header {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 7px;
+        margin-bottom: 14px;
+    }
+    #planner-section .planner-heading-copy p {
+        margin-top: 2px;
+    }
+    #planner-section .planner-header-controls {
+        margin-top: 0;
+    }
+}
