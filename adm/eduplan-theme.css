@@ -2665,3 +2665,261 @@ dialog .markdown-preview-label { color: #6c5b91; }
         min-width: 0;
     }
 }
+
+
+/* Mobile header: hamburger, expandable search, notifications and logout stay on one row. */
+@media (max-width: 680px) {
+    #adm-panel > header {
+        display: grid !important;
+        grid-template-columns: 40px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 9px 12px !important;
+        overflow: visible !important;
+    }
+    #adm-panel > header .admin-header-brand {
+        display: contents !important;
+    }
+    #adm-panel > header #sidebar-toggle {
+        grid-column: 1;
+        grid-row: 1;
+        display: inline-flex !important;
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
+        padding: 0;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #d9cdec;
+        border-radius: 11px;
+        background: #f1ebfb;
+        color: #42217f;
+        font-size: 1.15rem;
+    }
+    #adm-panel > header .admin-global-search {
+        grid-column: 2;
+        grid-row: 1;
+        display: flex;
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+        height: 42px;
+        margin: 0;
+        padding: 0 10px;
+        box-sizing: border-box;
+        border: 1px solid #ded5ed;
+        border-radius: 12px;
+        background: #fff;
+        color: #342653;
+    }
+    #adm-panel > header .admin-global-search input {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+        padding: 0 7px;
+        font-size: 16px;
+    }
+    #adm-panel > header .admin-global-search > i {
+        flex: 0 0 auto;
+        font-size: .9rem;
+    }
+    #adm-panel > header .header-controls {
+        grid-column: 3;
+        grid-row: 1;
+        position: relative !important;
+        top: auto !important;
+        right: auto !important;
+        display: flex;
+        width: auto;
+        min-width: 0;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+        margin: 0;
+    }
+    #adm-panel > header .reminders-wrapper {
+        position: static !important;
+        display: inline-flex !important;
+        flex: 0 0 36px;
+        width: 36px;
+        height: 40px;
+        align-items: center;
+        justify-content: center;
+        margin: 0 !important;
+    }
+    #adm-panel > header #btn-reminders {
+        display: inline-flex;
+        width: 36px;
+        min-width: 36px;
+        height: 40px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 !important;
+        border: 1px solid #ded5ed !important;
+        border-radius: 11px;
+        background: #f7f3fc !important;
+        color: #4d2b88 !important;
+        font-size: 1.12rem;
+    }
+    #adm-panel > header .reminders-badge {
+        top: 5px;
+        right: 4px;
+    }
+    #adm-panel > header .header-divider { display: none !important; }
+    #adm-panel > header #btn-logout {
+        display: inline-flex;
+        flex: 0 0 auto;
+        min-width: 0;
+        min-height: 40px;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 0 10px !important;
+        border-radius: 11px;
+        white-space: nowrap;
+        font-size: .8rem;
+    }
+    #adm-panel > header #search-results {
+        left: 0;
+        right: auto;
+        width: 100%;
+        max-width: none;
+        z-index: 4600;
+    }
+    /* Anchor the reminder menu to the viewport, not to the narrow bell wrapper. */
+    #adm-panel > header #reminders-dropdown {
+        position: fixed !important;
+        top: calc(env(safe-area-inset-top) + 60px) !important;
+        right: 12px !important;
+        left: auto !important;
+        width: min(230px, calc(100vw - 24px));
+        min-width: 0;
+        max-width: calc(100vw - 24px);
+        z-index: 10020 !important;
+        border: 1px solid #d9cdec;
+        border-radius: 13px;
+        background: #fff !important;
+        box-shadow: 0 18px 42px rgba(35, 22, 65, .22);
+    }
+    #adm-panel > header #reminders-dropdown .dropdown-item {
+        min-height: 46px;
+        padding: 11px 14px;
+        background: #fff !important;
+        color: #281b48 !important;
+        font-weight: 700;
+    }
+    #adm-panel > header #reminders-dropdown .dropdown-item i {
+        width: 20px;
+        color: #633bb0 !important;
+    }
+    #adm-panel > header #reminders-dropdown .dropdown-item:hover {
+        background: #f0eafb !important;
+        color: #29164e !important;
+    }
+}
+@media (max-width: 360px) {
+    #adm-panel > header {
+        grid-template-columns: 36px minmax(0, 1fr) auto;
+        gap: 6px;
+        padding-right: 8px !important;
+        padding-left: 8px !important;
+    }
+    #adm-panel > header #sidebar-toggle {
+        width: 36px;
+        min-width: 36px;
+        height: 38px;
+    }
+    #adm-panel > header .reminders-wrapper,
+    #adm-panel > header #btn-reminders {
+        flex-basis: 33px;
+        width: 33px;
+        min-width: 33px;
+        height: 38px;
+    }
+    #adm-panel > header .header-controls { gap: 5px; }
+    #adm-panel > header #btn-logout {
+        min-height: 38px;
+        padding: 0 8px !important;
+        font-size: .76rem;
+    }
+}
+
+/* High-contrast mobile navigation: force the dark sidebar palette over legacy mobile rules. */
+@media (max-width: 920px) {
+    #adm-panel nav#adm-navigation {
+        background:
+            radial-gradient(circle at 14% 100%, rgba(108, 77, 171, .25), transparent 30%),
+            linear-gradient(180deg, #241e39 0%, #171326 100%) !important;
+        color: #f8f5ff !important;
+        border-right: 1px solid #40345f !important;
+        box-shadow: 14px 0 36px rgba(13, 8, 27, .42) !important;
+    }
+    #adm-panel nav#adm-navigation .sidebar-brand {
+        color: #fff !important;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, .28);
+    }
+    #adm-panel nav#adm-navigation .sidebar-brand > span:last-child {
+        color: #fff !important;
+    }
+    #adm-panel nav#adm-navigation .sidebar-brand > span:last-child > span {
+        color: #c2a7ff !important;
+    }
+    #adm-panel nav#adm-navigation .sidebar-brand-mark {
+        color: #a78bfa !important;
+    }
+    #adm-panel nav#adm-navigation .sidebar-brand-mark .fa-book-open {
+        color: #a78bfa !important;
+    }
+    #adm-panel nav#adm-navigation .sidebar-brand-mark .fa-graduation-cap {
+        color: #9bd5ff !important;
+    }
+    #adm-panel nav#adm-navigation .sidebar-nav-group .nav-btn,
+    #adm-panel nav#adm-navigation .nav-btn {
+        background-color: transparent !important;
+        color: #f4efff !important;
+        border-color: transparent;
+    }
+    #adm-panel nav#adm-navigation .sidebar-nav-group .nav-btn > i,
+    #adm-panel nav#adm-navigation .nav-btn > i {
+        color: #d0c1ff !important;
+    }
+    #adm-panel nav#adm-navigation .sidebar-nav-group .nav-btn:hover,
+    #adm-panel nav#adm-navigation .nav-btn:hover {
+        background: rgba(164, 137, 225, .2) !important;
+        color: #fff !important;
+    }
+    #adm-panel nav#adm-navigation .sidebar-nav-group .nav-btn.active,
+    #adm-panel nav#adm-navigation .nav-btn.active {
+        background: linear-gradient(110deg, rgba(132, 96, 210, .58), rgba(89, 64, 151, .48)) !important;
+        color: #fff !important;
+        box-shadow: inset 0 0 0 1px rgba(216, 200, 255, .2);
+    }
+    #adm-panel nav#adm-navigation .nav-btn.active > i { color: #fff !important; }
+    #adm-panel nav#adm-navigation .mobile-nav-heading {
+        color: #fff !important;
+        border-bottom: 1px solid rgba(220, 209, 255, .18);
+    }
+    #adm-panel nav#adm-navigation .mobile-nav-heading strong {
+        color: #fff !important;
+    }
+    #adm-panel nav#adm-navigation .mobile-nav-heading button {
+        background: #35294f !important;
+        color: #fff !important;
+        border: 1px solid rgba(220, 209, 255, .2);
+    }
+    #adm-panel nav#adm-navigation #btn-yuki-planner {
+        background: transparent !important;
+        color: #e8ddff !important;
+    }
+    #adm-panel nav#adm-navigation #btn-yuki-planner i {
+        color: #cbb7ff !important;
+    }
+    #adm-panel nav#adm-navigation .teacher-profile {
+        color: #fff !important;
+        border-top-color: rgba(220, 209, 255, .2) !important;
+    }
+    #adm-panel nav#adm-navigation .teacher-profile-copy strong { color: #fff !important; }
+    #adm-panel nav#adm-navigation .teacher-profile-copy small { color: #c8bddf !important; }
+}
