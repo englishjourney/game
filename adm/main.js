@@ -58,6 +58,51 @@ function verificarESalvarAulasNoCache(swRegistration) {
     }
 }
 
+
+let yukiPlannerMessageTimer = null;
+
+function teacherHasEnglish(teacher) {
+    const subjects = Array.isArray(teacher?.subjects)
+        ? teacher.subjects
+        : (teacher?.subjects ? [teacher.subjects] : []);
+
+    return subjects.some(subject =>
+        String(subject || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim()
+            .toLowerCase() === 'ingles'
+    );
+}
+
+function setupYukiPlannerAccess() {
+    const button = document.getElementById('btn-yuki-planner');
+    const message = document.getElementById('yuki-planner-status');
+    if (!button || button.dataset.accessHandlerInitialized === 'true') return;
+
+    button.dataset.accessHandlerInitialized = 'true';
+    button.addEventListener('click', event => {
+        event.preventDefault();
+
+        if (teacherHasEnglish(window.currentTeacher)) {
+            if (message) {
+                message.hidden = true;
+                message.textContent = '';
+            }
+            window.open('https://englishjourney.github.io/game/adm/yukiplanner/index.html', '_blank', 'noopener');
+            return;
+        }
+
+        if (!message) return;
+        message.textContent = 'Em breve...';
+        message.hidden = false;
+        if (yukiPlannerMessageTimer) clearTimeout(yukiPlannerMessageTimer);
+        yukiPlannerMessageTimer = setTimeout(() => {
+            message.hidden = true;
+        }, 2800);
+    });
+}
+
 let initializedTeacherId = null;
 
 export async function showAdmPanel() {
@@ -84,6 +129,7 @@ export async function showAdmPanel() {
         }
 
         window.currentTeacher = teacher;
+        setupYukiPlannerAccess();
         document.getElementById('login-container').classList.add('hidden');
         document.getElementById('adm-panel').classList.remove('hidden');
 
