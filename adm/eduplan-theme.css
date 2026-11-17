@@ -2668,7 +2668,7 @@ dialog .markdown-preview-label { color: #6c5b91; }
 
 
 /* Mobile header: hamburger, expandable search, notifications and logout stay on one row. */
-@media (max-width: 680px) {
+@media (max-width: 760px) {
     #adm-panel > header {
         display: grid !important;
         grid-template-columns: 40px minmax(0, 1fr) auto;
