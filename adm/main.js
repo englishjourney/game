@@ -1,6 +1,6 @@
 import { initAuth, logout } from './auth.js';
 import { initEduPlanDashboard } from './eduplan-dashboard.js';
-import { initPlanner } from './planner.js';
+import { initPlanner } from './planner.js?v=multi-copy-20261117';
 import { initUsers } from './users.js';
 import { initMissions } from './missions.js';
 import { initFlashcardsAdm } from './flashcardsAdm.js';
