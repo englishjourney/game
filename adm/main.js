@@ -6,6 +6,7 @@ import { initMissions } from './missions.js';
 import { initFlashcardsAdm } from './flashcardsAdm.js';
 import { initTasks } from './tasks.js';
 import { supabase } from '../supabaseClient.js';
+import { getTeacherAvatar, getTeacherAvatarOptions } from './teacher-avatars.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. REGISTRA O SERVICE WORKER NA PASTA ADM
@@ -86,23 +87,7 @@ export async function showAdmPanel() {
         document.getElementById('login-container').classList.add('hidden');
         document.getElementById('adm-panel').classList.remove('hidden');
 
-        const avatarIcons = {
-            'violet-book': 'fa-book-open',
-            'blue-graduation': 'fa-graduation-cap',
-            'teal-user': 'fa-user-astronaut',
-            'orange-atom': 'fa-atom',
-            'pink-palette': 'fa-palette',
-            'indigo-globe': 'fa-earth-americas'
-        };
-        const profile = document.getElementById('teacher-profile');
-        if (profile) {
-            profile.innerHTML =
-                '<span class="teacher-avatar avatar-' + (avatarIcons[teacher.avatar_key] ? teacher.avatar_key : 'violet-book') + '">' +
-                    '<i class="fa-solid ' + (avatarIcons[teacher.avatar_key] || 'fa-book-open') + '" aria-hidden="true"></i>' +
-                '</span>' +
-                '<span class="teacher-profile-copy"><strong>' + escapeAdminHtml(teacher.display_name) + '</strong>' +
-                    '<small>' + escapeAdminHtml((teacher.subjects || []).join(', ')) + '</small></span>';
-        }
+        renderTeacherProfile(teacher);
 
         const missionsNav = document.querySelector('.nav-btn[data-target="missions-section"]');
         const flashcardsNav = document.querySelector('.nav-btn[data-target="flashcards-section"]');
@@ -154,6 +139,157 @@ export async function showAdmPanel() {
     } finally {
         finishPanelLoad?.();
     }
+}
+
+
+function createTeacherAvatarVisual(option, className) {
+    const visual = document.createElement('span');
+    visual.className = className;
+    visual.style.backgroundColor = option.background;
+
+    const appendFallbackIcon = () => {
+        const icon = document.createElement('i');
+        icon.className = 'fa-solid ' + option.icon;
+        icon.setAttribute('aria-hidden', 'true');
+        visual.appendChild(icon);
+    };
+
+    if (option.file) {
+        const image = document.createElement('img');
+        image.src = './avatars/' + option.file;
+        image.alt = '';
+        image.loading = 'lazy';
+        image.addEventListener('error', () => {
+            image.remove();
+            appendFallbackIcon();
+        }, { once: true });
+        visual.appendChild(image);
+    } else {
+        appendFallbackIcon();
+    }
+
+    return visual;
+}
+
+function closeTeacherAvatarModal() {
+    const modal = document.getElementById('teacher-avatar-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+function setupTeacherAvatarModal() {
+    const modal = document.getElementById('teacher-avatar-modal');
+    const optionsContainer = document.getElementById('teacher-avatar-options');
+    const closeButton = document.getElementById('teacher-avatar-close');
+    if (!modal || !optionsContainer || modal.dataset.initialized === 'true') return;
+
+    modal.dataset.initialized = 'true';
+    closeButton?.addEventListener('click', closeTeacherAvatarModal);
+    modal.addEventListener('click', event => {
+        if (event.target === modal) closeTeacherAvatarModal();
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+            closeTeacherAvatarModal();
+        }
+    });
+
+    optionsContainer.addEventListener('click', async event => {
+        const button = event.target.closest('[data-teacher-avatar-key]');
+        if (!button || button.disabled) return;
+
+        const teacher = window.currentTeacher;
+        const avatarKey = button.dataset.teacherAvatarKey;
+        if (!teacher || !avatarKey) return;
+        if (teacher.avatar_key === avatarKey) {
+            closeTeacherAvatarModal();
+            return;
+        }
+
+        const message = document.getElementById('teacher-avatar-message');
+        optionsContainer.querySelectorAll('button').forEach(item => { item.disabled = true; });
+        if (message) message.textContent = 'Salvando foto de perfil...';
+
+        try {
+            const { data, error } = await supabase
+                .from('teachers')
+                .update({ avatar_key: avatarKey })
+                .eq('id', teacher.id)
+                .select('avatar_key')
+                .single();
+
+            if (error) throw error;
+            teacher.avatar_key = data.avatar_key;
+            window.currentTeacher = teacher;
+            renderTeacherProfile(teacher);
+            closeTeacherAvatarModal();
+        } catch (error) {
+            console.error('Erro ao atualizar avatar do professor:', error);
+            if (message) message.textContent = 'Não foi possível salvar a foto. Tente novamente.';
+            optionsContainer.querySelectorAll('button').forEach(item => { item.disabled = false; });
+        }
+    });
+}
+
+function openTeacherAvatarModal(teacher) {
+    const modal = document.getElementById('teacher-avatar-modal');
+    const optionsContainer = document.getElementById('teacher-avatar-options');
+    const message = document.getElementById('teacher-avatar-message');
+    if (!modal || !optionsContainer) return;
+
+    setupTeacherAvatarModal();
+    optionsContainer.replaceChildren();
+
+    getTeacherAvatarOptions(teacher.subjects).forEach(option => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'teacher-avatar-choice';
+        button.dataset.teacherAvatarKey = option.key;
+        button.setAttribute('aria-pressed', String(teacher.avatar_key === option.key));
+        button.title = option.subject;
+
+        button.appendChild(createTeacherAvatarVisual(option, 'teacher-avatar-choice-visual'));
+        const label = document.createElement('span');
+        label.textContent = option.subject;
+        button.appendChild(label);
+        optionsContainer.appendChild(button);
+    });
+
+    if (message) message.textContent = 'Escolha uma das disciplinas vinculadas à sua conta.';
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    optionsContainer.querySelector('button')?.focus();
+}
+
+function renderTeacherProfile(teacher) {
+    const profile = document.getElementById('teacher-profile');
+    if (!profile) return;
+
+    const avatar = getTeacherAvatar(teacher.avatar_key);
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'teacher-avatar-trigger';
+    trigger.title = 'Clique para alterar sua foto de perfil';
+    trigger.setAttribute('aria-label', 'Alterar foto de perfil');
+    trigger.appendChild(createTeacherAvatarVisual(avatar, 'teacher-avatar'));
+
+    const camera = document.createElement('span');
+    camera.className = 'teacher-avatar-edit';
+    camera.innerHTML = '<i class="fa-solid fa-camera" aria-hidden="true"></i>';
+    trigger.appendChild(camera);
+    trigger.addEventListener('click', () => openTeacherAvatarModal(teacher));
+
+    const copy = document.createElement('span');
+    copy.className = 'teacher-profile-copy';
+    const name = document.createElement('strong');
+    name.textContent = teacher.display_name || 'Professor';
+    const subjects = document.createElement('small');
+    subjects.textContent = (teacher.subjects || []).join(', ');
+    copy.append(name, subjects);
+
+    profile.replaceChildren(trigger, copy);
+    setupTeacherAvatarModal();
 }
 
 function escapeAdminHtml(value) {
