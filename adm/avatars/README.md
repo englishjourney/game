@@ -8,7 +8,7 @@ Coloque nesta pasta os arquivos JPEG com estes nomes exatos:
 - `text.jpeg`
 - `science.jpeg`
 - `biology.jpeg`
-- `chemestry.jpeg`
+- `chemistry.jpeg`
 - `physics.jpeg`
 - `history.jpeg`
 - `geography.jpeg`
