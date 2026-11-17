@@ -230,7 +230,17 @@ function setupNavigation() {
         menuToggle.setAttribute('aria-label', isMobileLayout() ? 'Abrir menu de navegação' : 'Recolher menu lateral');
     }
     window.addEventListener('resize', () => {
-        if (!isMobileLayout()) setMobileNav(false);
+        const mobile = isMobileLayout();
+        if (menuToggle) {
+            const collapsed = document.getElementById('adm-panel')?.classList.contains('sidebar-collapsed');
+            menuToggle.innerHTML = '<i class="fa-solid ' +
+                (mobile ? 'fa-bars' : (collapsed ? 'fa-bars' : 'fa-angles-left')) +
+                '" aria-hidden="true"></i>';
+            menuToggle.setAttribute('aria-label', mobile
+                ? 'Abrir menu de navegação'
+                : (collapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'));
+        }
+        if (!mobile) setMobileNav(false);
     });
     if (menuClose) menuClose.addEventListener('click', () => setMobileNav(false));
     if (backdrop) backdrop.addEventListener('click', () => setMobileNav(false));
