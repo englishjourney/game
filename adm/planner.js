@@ -10,6 +10,8 @@ const selectedPlannerIds = new Set();
 let plannerSelectionMode = false;
 let pendingPlannerRescheduleItems = [];
 let pendingSinglePlannerMove = null;
+let pendingPlannerDuplicateItem = null;
+let plannerCopyTargetSequence = 0;
 
 export function initPlanner() {
     setupCustomOptions();
@@ -22,6 +24,7 @@ export function initPlanner() {
     setupPlannerBulkActions();
     setupPlannerSectionReschedule();
     setupActivitiesEditor();
+    setupPlannerDuplication();
     const detailsEditButton = document.getElementById('btn-edit-planner-from-details');
     if (detailsEditButton) detailsEditButton.addEventListener('click', () => {
         if (!selectedPlannerItem) return;
@@ -188,16 +191,40 @@ export function initPlanner() {
         }
 
         let result;
+        let copyTargets = [];
+        if (!id) {
+            const collectedCopies = collectPlannerCopyTargets(grade);
+            if (collectedCopies.error) {
+                alert(collectedCopies.error);
+                return;
+            }
+            copyTargets = collectedCopies.targets;
+        }
+
         if (id) {
             result = await supabase.from('planner').update(planData).eq('id', id);
         } else {
-            result = await supabase.from('planner').insert([planData]);
+            const rowsToInsert = [
+                planData,
+                ...copyTargets.map(target => ({
+                    ...planData,
+                    day: target.day,
+                    date: target.date,
+                    time: target.time,
+                    grade: target.grade
+                }))
+            ];
+            result = await supabase.from('planner').insert(rowsToInsert);
         }
 
         if (result.error) alert('Erro ao salvar: ' + result.error.message);
         else {
             document.getElementById('planner-modal').close();
-            loadPlanners();
+            await loadPlanners();
+            if (!id && copyTargets.length) {
+                alert('Planejamento salvo com ' + copyTargets.length +
+                    ' cópia(s) para outra(s) turma(s).');
+            }
         }
     });
 
@@ -240,6 +267,9 @@ function resetPlannerForm() {
     document.getElementById('plan-date').value = '';
     document.getElementById('plan-date-picker').value = '';
     document.getElementById('plan-end-date-picker').value = '';
+    resetPlannerCopyTargets();
+    const copyToggle = document.getElementById('btn-toggle-planner-copies');
+    if (copyToggle) copyToggle.hidden = false;
 }
 
 // --- LÓGICA DE GERENCIAMENTO DE DROPDOWNS CUSTOMIZADOS COM PROMPT ---
@@ -796,6 +826,270 @@ window.showPlannerMergePicker = async () => {
     });
 };
 
+
+function setupPlannerDuplication() {
+    const sameButton = document.getElementById('btn-duplicate-same');
+    const changeButton = document.getElementById('btn-duplicate-change');
+    const saveButton = document.getElementById('btn-duplicate-save');
+    const cancelButton = document.getElementById('btn-duplicate-cancel');
+    const cancelTopButton = document.getElementById('btn-duplicate-cancel-top');
+    const toggleCopiesButton = document.getElementById('btn-toggle-planner-copies');
+    const addCopyButton = document.getElementById('btn-add-planner-copy-target');
+    const duplicateModal = document.getElementById('planner-duplicate-modal');
+
+    if (sameButton && sameButton.dataset.initialized !== 'true') {
+        sameButton.dataset.initialized = 'true';
+        sameButton.addEventListener('click', () => createPlannerCardDuplicate(true));
+    }
+    if (changeButton && changeButton.dataset.initialized !== 'true') {
+        changeButton.dataset.initialized = 'true';
+        changeButton.addEventListener('click', () => {
+            const fields = document.getElementById('planner-duplicate-fields');
+            const initialActions = document.getElementById('planner-duplicate-initial-actions');
+            const customActions = document.getElementById('planner-duplicate-custom-actions');
+            const grade = document.getElementById('planner-duplicate-grade');
+            const date = document.getElementById('planner-duplicate-date');
+            const time = document.getElementById('planner-duplicate-time');
+            const source = pendingPlannerDuplicateItem;
+            if (!source) return;
+
+            setSelectValueWithCustom('planner-duplicate-grade', source.grade || '');
+            setSelectValueWithCustom('planner-duplicate-time', source.time || '');
+            const parsedDate = parsePlannerDateBR(source.date);
+            if (date) date.value = parsedDate ? parsedDate.iso : '';
+            if (grade) grade.setCustomValidity('');
+            if (time) time.setCustomValidity('');
+            fields?.classList.remove('hidden');
+            initialActions?.classList.add('hidden');
+            customActions?.classList.remove('hidden');
+        });
+    }
+    if (saveButton && saveButton.dataset.initialized !== 'true') {
+        saveButton.dataset.initialized = 'true';
+        saveButton.addEventListener('click', () => createPlannerCardDuplicate(false));
+    }
+    if (cancelButton && cancelButton.dataset.initialized !== 'true') {
+        cancelButton.dataset.initialized = 'true';
+        cancelButton.addEventListener('click', () => {
+            duplicateModal?.close();
+            pendingPlannerDuplicateItem = null;
+        });
+    }
+    if (cancelTopButton && cancelTopButton.dataset.initialized !== 'true') {
+        cancelTopButton.dataset.initialized = 'true';
+        cancelTopButton.addEventListener('click', () => {
+            duplicateModal?.close();
+            pendingPlannerDuplicateItem = null;
+        });
+    }
+    if (toggleCopiesButton && toggleCopiesButton.dataset.initialized !== 'true') {
+        toggleCopiesButton.dataset.initialized = 'true';
+        toggleCopiesButton.addEventListener('click', () => {
+            const section = document.getElementById('planner-copy-targets-section');
+            const container = document.getElementById('planner-copy-targets');
+            if (!section || !container) return;
+            section.classList.remove('hidden');
+            toggleCopiesButton.hidden = true;
+            if (!container.children.length) appendPlannerCopyTargetCard();
+        });
+    }
+    if (addCopyButton && addCopyButton.dataset.initialized !== 'true') {
+        addCopyButton.dataset.initialized = 'true';
+        addCopyButton.addEventListener('click', () => appendPlannerCopyTargetCard());
+    }
+}
+
+function resetPlannerCopyTargets() {
+    const container = document.getElementById('planner-copy-targets');
+    const section = document.getElementById('planner-copy-targets-section');
+    if (container) container.replaceChildren();
+    if (section) section.classList.add('hidden');
+    plannerCopyTargetSequence = 0;
+}
+
+function appendPlannerCopyTargetCard(prefill = {}) {
+    const container = document.getElementById('planner-copy-targets');
+    const gradeSource = document.getElementById('plan-grade');
+    const timeSource = document.getElementById('plan-time');
+    if (!container || !gradeSource || !timeSource) return;
+
+    const card = document.createElement('article');
+    card.className = 'planner-copy-target-card';
+    card.dataset.copyTargetCard = 'true';
+
+    const heading = document.createElement('div');
+    heading.className = 'planner-copy-target-heading';
+    const title = document.createElement('strong');
+    title.textContent = 'Turma adicional ' + (++plannerCopyTargetSequence);
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'planner-copy-remove';
+    removeButton.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i><span>Remover</span>';
+    removeButton.addEventListener('click', () => card.remove());
+    heading.append(title, removeButton);
+
+    const fields = document.createElement('div');
+    fields.className = 'planner-copy-target-fields';
+
+    const gradeLabel = document.createElement('label');
+    gradeLabel.className = 'planner-copy-field';
+    const gradeCaption = document.createElement('span');
+    gradeCaption.textContent = 'Turma';
+    const gradeSelect = gradeSource.cloneNode(true);
+    gradeSelect.removeAttribute('id');
+    gradeSelect.className = 'planner-copy-grade';
+    gradeSelect.required = true;
+    if (prefill.grade && !Array.from(gradeSelect.options).some(option => option.value === prefill.grade)) {
+        const legacyOption = document.createElement('option');
+        legacyOption.value = prefill.grade;
+        legacyOption.textContent = prefill.grade;
+        gradeSelect.appendChild(legacyOption);
+    }
+    gradeSelect.value = prefill.grade || '';
+    gradeLabel.append(gradeCaption, gradeSelect);
+
+    const dateLabel = document.createElement('label');
+    dateLabel.className = 'planner-copy-field';
+    const dateCaption = document.createElement('span');
+    dateCaption.textContent = 'Data';
+    const dateInput = document.createElement('input');
+    dateInput.type = 'date';
+    dateInput.className = 'planner-copy-date';
+    dateInput.required = true;
+    dateInput.value = prefill.date
+        ? (parsePlannerDateBR(prefill.date)?.iso || '')
+        : '';
+    dateLabel.append(dateCaption, dateInput);
+
+    const timeLabel = document.createElement('label');
+    timeLabel.className = 'planner-copy-field';
+    const timeCaption = document.createElement('span');
+    timeCaption.textContent = 'Horário';
+    const timeSelect = timeSource.cloneNode(true);
+    timeSelect.removeAttribute('id');
+    timeSelect.className = 'planner-copy-time';
+    timeSelect.querySelector('option[value="__ADD_NEW__"]')?.remove();
+    timeSelect.required = true;
+    timeSelect.value = prefill.time || '';
+    timeLabel.append(timeCaption, timeSelect);
+
+    fields.append(gradeLabel, dateLabel, timeLabel);
+    card.append(heading, fields);
+    container.appendChild(card);
+}
+
+function collectPlannerCopyTargets(mainGrade) {
+    const cards = Array.from(document.querySelectorAll('#planner-copy-targets [data-copy-target-card]'));
+    const targets = [];
+    const seenGrades = new Set([String(mainGrade || '').trim().toUpperCase()]);
+
+    for (let index = 0; index < cards.length; index++) {
+        const card = cards[index];
+        const grade = String(card.querySelector('.planner-copy-grade')?.value || '').trim().toUpperCase();
+        const dateInfo = plannerDateFromISO(card.querySelector('.planner-copy-date')?.value || '');
+        const time = String(card.querySelector('.planner-copy-time')?.value || '').trim();
+
+        if (!grade || !dateInfo || !time) {
+            return { error: 'Preencha turma, data e horário da cópia ' + (index + 1) + '.' };
+        }
+        if (seenGrades.has(grade)) {
+            return { error: 'Cada cópia deve ser destinada a uma turma diferente da aula principal e das demais cópias.' };
+        }
+        seenGrades.add(grade);
+        targets.push({
+            grade,
+            date: dateInfo.formatted,
+            day: dateInfo.weekday,
+            time
+        });
+    }
+
+    return { targets };
+}
+
+function openPlannerDuplicateModal(item) {
+    const modal = document.getElementById('planner-duplicate-modal');
+    const fields = document.getElementById('planner-duplicate-fields');
+    const initialActions = document.getElementById('planner-duplicate-initial-actions');
+    const customActions = document.getElementById('planner-duplicate-custom-actions');
+    const grade = document.getElementById('planner-duplicate-grade');
+    const date = document.getElementById('planner-duplicate-date');
+    const time = document.getElementById('planner-duplicate-time');
+    const status = document.getElementById('planner-duplicate-status');
+    if (!modal || !item) return;
+
+    pendingPlannerDuplicateItem = item;
+    if (grade) {
+        grade.innerHTML = document.getElementById('plan-grade')?.innerHTML || '';
+        setSelectValueWithCustom('planner-duplicate-grade', item.grade || '');
+    }
+    if (time) {
+        time.innerHTML = document.getElementById('plan-time')?.innerHTML || '';
+        setSelectValueWithCustom('planner-duplicate-time', item.time || '');
+    }
+    const parsedDate = parsePlannerDateBR(item.date);
+    if (date) date.value = parsedDate ? parsedDate.iso : '';
+    fields?.classList.add('hidden');
+    initialActions?.classList.remove('hidden');
+    customActions?.classList.add('hidden');
+    if (status) status.textContent = '';
+    modal.showModal();
+}
+
+async function createPlannerCardDuplicate(keepOriginalSchedule) {
+    const item = pendingPlannerDuplicateItem;
+    const modal = document.getElementById('planner-duplicate-modal');
+    const status = document.getElementById('planner-duplicate-status');
+    const sameButton = document.getElementById('btn-duplicate-same');
+    const changeButton = document.getElementById('btn-duplicate-change');
+    const saveButton = document.getElementById('btn-duplicate-save');
+    if (!item) return;
+
+    let grade = String(item.grade || formatPlannerGrade(item) || '').trim().toUpperCase();
+    let time = String(item.time || '').trim();
+    let dateInfo = parsePlannerDateBR(item.date);
+
+    if (!keepOriginalSchedule) {
+        grade = String(document.getElementById('planner-duplicate-grade')?.value || '').trim().toUpperCase();
+        time = String(document.getElementById('planner-duplicate-time')?.value || '').trim();
+        dateInfo = plannerDateFromISO(document.getElementById('planner-duplicate-date')?.value || '');
+        if (!grade || !time || !dateInfo) {
+            if (status) status.textContent = 'Selecione uma turma, uma data e um horário válidos.';
+            return;
+        }
+    }
+
+    const buttons = [sameButton, changeButton, saveButton].filter(Boolean);
+    buttons.forEach(button => { button.disabled = true; });
+    if (status) status.textContent = 'Criando cópia...';
+
+    const copyData = {
+        day: dateInfo ? dateInfo.weekday : (item.day || ''),
+        date: dateInfo ? dateInfo.formatted : (item.date || ''),
+        time,
+        grade,
+        skills: item.skills || '',
+        activities: item.activities || '',
+        duration: item.duration || '',
+        special: item.special ?? 0,
+        tag: item.tag ?? null
+    };
+
+    try {
+        const { error } = await supabase.from('planner').insert([copyData]);
+        if (error) throw error;
+        modal?.close();
+        pendingPlannerDuplicateItem = null;
+        await loadPlanners();
+        alert('Planejamento duplicado com sucesso.');
+    } catch (error) {
+        console.error('Erro ao duplicar planejamento:', error);
+        if (status) status.textContent = 'Não foi possível duplicar: ' + (error.message || 'erro inesperado');
+    } finally {
+        buttons.forEach(button => { button.disabled = false; });
+    }
+}
+
 function renderPlannerCard(p, mode = 'active') {
     const cardClass = p.special == 4 ? 'card-adapted' :
         (p.special == 1 ? 'card-special-1' : (p.special == 2 ? 'card-special-2' : (p.special == 3 ? 'card-special-3' : '')));
@@ -811,6 +1105,7 @@ function renderPlannerCard(p, mode = 'active') {
         ? '<div class="planner-card-menu"><button type="button" class="planner-completed-delete" data-planner-action="delete-completed" aria-label="Excluir aula passada" title="Excluir aula passada"><i class="fa-solid fa-trash" aria-hidden="true"></i></button></div>'
         : '<div class="planner-card-menu"><button type="button" class="planner-options-trigger" aria-label="Opções da aula" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical"></i></button><div class="planner-actions-menu hidden">' +
             '<button type="button" data-planner-action="edit"><i class="fa-solid fa-pen"></i> Editar</button>' +
+            '<button type="button" data-planner-action="duplicate"><i class="fa-regular fa-copy"></i> Duplicar planner</button>' +
             '<button type="button" data-planner-action="merge"><i class="fa-solid fa-object-group"></i> Mesclar</button>' +
             '<button type="button" data-planner-action="defer"><i class="fa-solid fa-clock"></i> Adiar</button>' +
             '<button type="button" data-planner-action="advance"><i class="fa-solid fa-forward"></i> Adiantar</button>' +
@@ -872,6 +1167,7 @@ function setupPlannerCardInteractions(container) {
                 optionsButton.setAttribute('aria-expanded', 'false');
                 const item = plannerItemsById.get(id) || allActivePlannerItems.find(plan => String(plan.id) === id);
                 if (button.dataset.plannerAction === 'edit' && item) window.editPlanner(item);
+                else if (button.dataset.plannerAction === 'duplicate' && item) openPlannerDuplicateModal(item);
                 else if (button.dataset.plannerAction === 'merge') window.openPlannerMerge(id);
                 else if (button.dataset.plannerAction === 'defer') window.deferPlanner(id);
                 else if (button.dataset.plannerAction === 'advance') window.advancePlanner(id);
@@ -1893,6 +2189,9 @@ window.viewPlanner = id => {
 };
 
 window.editPlanner = (p) => {
+    resetPlannerCopyTargets();
+    const copyToggle = document.getElementById('btn-toggle-planner-copies');
+    if (copyToggle) copyToggle.hidden = true;
     const detailsModal = document.getElementById('planner-details-modal');
     if (detailsModal && detailsModal.open) detailsModal.close();
     document.getElementById('plan-id').value = p.id;
