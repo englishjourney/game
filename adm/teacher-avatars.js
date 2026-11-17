@@ -5,7 +5,7 @@ export const TEACHER_AVATARS = Object.freeze([
     { key: 'text', subject: 'Produção textual', file: 'text.jpeg', icon: 'fa-pen-nib', background: '#ffedd5' },
     { key: 'science', subject: 'Ciências', file: 'science.jpeg', icon: 'fa-flask', background: '#dcfce7' },
     { key: 'biology', subject: 'Biologia', file: 'biology.jpeg', icon: 'fa-dna', background: '#d1fae5' },
-    { key: 'chemestry', subject: 'Química', file: 'chemestry.jpeg', icon: 'fa-atom', background: '#fef3c7' },
+    { key: 'chemistry', subject: 'Química', file: 'chemistry.jpeg', icon: 'fa-atom', background: '#fef3c7' },
     { key: 'physics', subject: 'Física', file: 'physics.jpeg', icon: 'fa-magnet', background: '#e0f2fe' },
     { key: 'history', subject: 'História', file: 'history.jpeg', icon: 'fa-landmark', background: '#fef2f2' },
     { key: 'geography', subject: 'Geografia', file: 'geography.jpeg', icon: 'fa-earth-americas', background: '#e0e7ff' },
