@@ -7,7 +7,7 @@
     <title>EduPlan | Painel do Professor</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="eduplan-theme.css?v=sidebar-stacked-yuki-gate-20261117">
+    <link rel="stylesheet" href="eduplan-theme.css?v=planner-duplication-20261117">
 </head>
 <body>
     <!-- Acesso do professor: senha geral, login e cadastro -->
@@ -610,7 +610,7 @@
 
     <!-- MODAL: DUPLICAR PLANEJAMENTO EXISTENTE -->
     <dialog id="planner-duplicate-modal" class="planner-duplicate-dialog">
-        <form method="dialog" class="planner-duplicate-form">
+        <div class="planner-duplicate-form">
             <header class="edu-modal-header">
                 <span class="edu-modal-mark"><i class="fa-regular fa-copy" aria-hidden="true"></i></span>
                 <span class="edu-modal-heading-copy">
@@ -645,7 +645,7 @@
                     <button type="button" id="btn-duplicate-save" class="btn-primary">Criar cópia</button>
                 </div>
             </div>
-        </form>
+        </div>
     </dialog>
 
     <!-- MODAL: DETALHES DA AULA -->
