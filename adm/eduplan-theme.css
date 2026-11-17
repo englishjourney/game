@@ -2923,3 +2923,141 @@ dialog .markdown-preview-label { color: #6c5b91; }
     #adm-panel nav#adm-navigation .teacher-profile-copy strong { color: #fff !important; }
     #adm-panel nav#adm-navigation .teacher-profile-copy small { color: #c8bddf !important; }
 }
+
+
+/* Planner toolbar: keep search, selection and new-lesson actions compact on mobile. */
+#planner-section .planner-search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    padding: 0 12px;
+    box-sizing: border-box;
+}
+#planner-section .planner-search-wrap > i {
+    flex: 0 0 auto;
+    color: #76659b;
+    font-size: .95rem;
+}
+#planner-section .planner-search-wrap input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    border: 0 !important;
+    outline: 0;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+@media (max-width: 760px) {
+    #planner-section .planner-header-controls {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        align-items: center;
+        gap: 7px;
+        width: 100%;
+        min-width: 0;
+    }
+    #planner-section .planner-search-wrap {
+        grid-column: 1;
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+        height: 40px;
+        margin: 0;
+    }
+    #planner-section .planner-search-wrap input {
+        min-height: 36px;
+        padding: 6px 0;
+        font-size: .78rem;
+    }
+    #planner-section .planner-search-wrap input::placeholder {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    #planner-section .planner-bulk-actions {
+        grid-column: 2;
+        display: flex !important;
+        width: auto;
+        min-width: 0;
+        align-items: center;
+        gap: 0;
+    }
+    #planner-section .planner-bulk-actions > #btn-toggle-plan-selection,
+    #planner-section .planner-bulk-menu-wrap > button,
+    #planner-section .planner-header-controls > #btn-add-plan {
+        display: inline-flex;
+        flex: 0 0 auto;
+        width: auto !important;
+        min-width: 0;
+        min-height: 40px;
+        height: 40px;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 0 9px !important;
+        border-radius: 10px;
+        white-space: nowrap;
+        font-size: .72rem !important;
+        line-height: 1;
+    }
+    #planner-section .planner-header-controls > #btn-add-plan {
+        grid-column: 3;
+        margin: 0;
+    }
+    #planner-section .planner-bulk-menu-wrap { position: relative; }
+}
+@media (max-width: 390px) {
+    #planner-section .planner-header-controls { gap: 5px; }
+    #planner-section .planner-search-wrap { padding: 0 8px; gap: 6px; }
+    #planner-section .planner-search-wrap input { font-size: .72rem; }
+    #planner-section .planner-bulk-actions > #btn-toggle-plan-selection,
+    #planner-section .planner-bulk-menu-wrap > button,
+    #planner-section .planner-header-controls > #btn-add-plan {
+        gap: 4px;
+        padding: 0 7px !important;
+        font-size: .68rem !important;
+    }
+}
+
+/* The mobile menu close control is a standalone blue rounded square. */
+@media (max-width: 920px) {
+    #adm-panel nav#adm-navigation .mobile-nav-heading {
+        position: relative;
+        top: auto;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        min-height: 0;
+        margin: 0;
+        padding: 0 0 12px;
+        border: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    #adm-panel nav#adm-navigation .mobile-nav-heading > strong {
+        display: none;
+    }
+    #adm-panel nav#adm-navigation .mobile-nav-heading button#mobile-menu-close {
+        display: inline-flex;
+        flex: 0 0 38px;
+        width: 38px;
+        min-width: 38px;
+        height: 38px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 !important;
+        border: 2px solid #fff !important;
+        border-radius: 11px;
+        background: #2475d8 !important;
+        color: #fff !important;
+        font-size: 1.05rem;
+        line-height: 1;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, .2);
+    }
+    #adm-panel nav#adm-navigation .mobile-nav-heading button#mobile-menu-close:hover,
+    #adm-panel nav#adm-navigation .mobile-nav-heading button#mobile-menu-close:focus-visible {
+        background: #155db8 !important;
+        outline: 2px solid rgba(255,255,255,.45);
+        outline-offset: 2px;
+    }
+}
