@@ -554,6 +554,24 @@
                     </select>
                 </label>
 
+                <div class="full-width planner-copy-controls">
+                    <button type="button" id="btn-toggle-planner-copies" class="btn-secondary planner-copy-toggle">
+                        <i class="fa-regular fa-copy" aria-hidden="true"></i> Duplicar para outra turma
+                    </button>
+                    <section id="planner-copy-targets-section" class="planner-copy-targets hidden">
+                        <div class="planner-copy-targets-heading">
+                            <div>
+                                <strong>Turmas que receberão a cópia</strong>
+                                <p>Adicione uma caixinha para cada turma, com sua própria data e horário. Os demais dados da aula serão iguais.</p>
+                            </div>
+                        </div>
+                        <div id="planner-copy-targets" class="planner-copy-targets-list"></div>
+                        <button type="button" id="btn-add-planner-copy-target" class="btn-secondary planner-copy-add">
+                            <i class="fa-solid fa-plus" aria-hidden="true"></i> Adicionar outra turma
+                        </button>
+                    </section>
+                </div>
+
                 <label>Duração: <input type="text" id="plan-duration"></label>
                 <label class="full-width">Habilidades BNCC: <textarea id="plan-skills" rows="3"></textarea></label>
                 <label class="full-width activities-editor-field">Atividades:
@@ -586,6 +604,46 @@
             <div class="modal-actions">
                 <button type="submit" class="btn-primary">Salvar</button>
                 <button type="button" class="btn-secondary" onclick="document.getElementById('planner-modal').close()">Cancelar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- MODAL: DUPLICAR PLANEJAMENTO EXISTENTE -->
+    <dialog id="planner-duplicate-modal" class="planner-duplicate-dialog">
+        <form method="dialog" class="planner-duplicate-form">
+            <header class="edu-modal-header">
+                <span class="edu-modal-mark"><i class="fa-regular fa-copy" aria-hidden="true"></i></span>
+                <span class="edu-modal-heading-copy">
+                    <small>PLANEJAMENTOS</small>
+                    <h3>Duplicar planner</h3>
+                    <p>Crie uma cópia mantendo os dados pedagógicos desta aula.</p>
+                </span>
+                <button type="button" class="edu-modal-close" aria-label="Fechar" id="btn-duplicate-cancel-top">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </header>
+            <div class="planner-duplicate-body">
+                <p id="planner-duplicate-question">Deseja manter este planejamento para a mesma data e a mesma turma?</p>
+                <div id="planner-duplicate-fields" class="planner-duplicate-fields hidden">
+                    <label>Turma
+                        <select id="planner-duplicate-grade" required></select>
+                    </label>
+                    <label>Data
+                        <input type="date" id="planner-duplicate-date" required>
+                    </label>
+                    <label>Horário
+                        <select id="planner-duplicate-time" required></select>
+                    </label>
+                </div>
+                <p id="planner-duplicate-status" class="planner-duplicate-status" role="status" aria-live="polite"></p>
+                <div id="planner-duplicate-initial-actions" class="modal-actions">
+                    <button type="button" id="btn-duplicate-same" class="btn-primary">Sim, manter data e turma</button>
+                    <button type="button" id="btn-duplicate-change" class="btn-secondary">Não, escolher outra</button>
+                </div>
+                <div id="planner-duplicate-custom-actions" class="modal-actions hidden">
+                    <button type="button" id="btn-duplicate-cancel" class="btn-secondary">Cancelar</button>
+                    <button type="button" id="btn-duplicate-save" class="btn-primary">Criar cópia</button>
+                </div>
             </div>
         </form>
     </dialog>
