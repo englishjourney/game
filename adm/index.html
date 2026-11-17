@@ -7,7 +7,7 @@
     <title>EduPlan | Painel do Professor</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="eduplan-theme.css?v=sidebar-stacked-20261117">
+    <link rel="stylesheet" href="eduplan-theme.css?v=sidebar-stacked-yuki-gate-20261117">
 </head>
 <body>
     <!-- Acesso do professor: senha geral, login e cadastro -->
@@ -192,9 +192,10 @@
                 <button class="nav-btn hidden" data-target="reminders-section" aria-hidden="true" tabindex="-1"><i class="fa-regular fa-bell"></i><span>Lembretes</span></button>
             </div>
             <div class="sidebar-bottom">
-                <button id="btn-yuki-planner" title="Yuki Planner" onclick="window.open('https://englishjourney.github.io/game/adm/yukiplanner/index.html', '_blank')">
+                <button id="btn-yuki-planner" type="button" title="Yuki Planner" aria-describedby="yuki-planner-status">
                     <i class="fa-solid fa-robot" aria-hidden="true"></i><span>Yuki Planner</span>
                 </button>
+                <span id="yuki-planner-status" class="yuki-planner-status" role="status" aria-live="polite" hidden></span>
                 <div id="teacher-profile" class="teacher-profile"></div>
             </div>
         </nav>
@@ -688,7 +689,7 @@
     </dialog>
 
     <!-- Ponto de entrada do JS -->
-    <script type="module" src="main.js"></script>
+    <script type="module" src="main.js?v=yuki-subject-gate-20261117"></script>
     <script>
         document.getElementById('btn-cancel-schedule-editor-footer')?.addEventListener('click', () => {
             document.getElementById('schedule-editor-modal')?.close();
