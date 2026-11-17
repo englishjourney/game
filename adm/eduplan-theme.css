@@ -2554,3 +2554,114 @@ dialog .markdown-preview-label { color: #6c5b91; }
     background: #fff0a8 !important;
     color: #241947 !important;
 }
+
+
+/* EduPlan — student grades are scoped to the subjects assigned to the teacher. */
+#users-section .users-subject-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin: 0 0 18px;
+    padding: 14px 17px;
+    border: 1px solid #e5dcf2;
+    border-radius: 15px;
+    background: linear-gradient(110deg, #f4efff, #fbf9ff 72%);
+    box-shadow: 0 4px 13px rgba(54, 35, 99, .045);
+}
+#users-section .users-subject-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+#users-section .users-subject-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #e6dcfa;
+    color: #5530a9;
+    font-size: 1rem;
+}
+#users-section .users-subject-copy {
+    display: grid;
+    gap: 3px;
+}
+#users-section .users-subject-copy strong {
+    color: #241747;
+    font-size: .93rem;
+    font-weight: 850;
+}
+#users-section .users-subject-copy small {
+    color: #72658d;
+    font-size: .76rem;
+}
+#users-section .users-subject-select-wrap {
+    display: grid;
+    gap: 5px;
+    min-width: min(220px, 100%);
+    color: #55466f;
+    font-size: .72rem;
+    font-weight: 800;
+}
+#users-section .users-subject-select-wrap select {
+    min-width: 210px;
+    min-height: 40px;
+    padding: 8px 34px 8px 11px;
+    border: 1px solid #d9cdec;
+    border-radius: 10px;
+    background: #fff;
+    color: #241747;
+    font-size: .86rem;
+    font-weight: 750;
+}
+#users-section .users-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+}
+#users-section .users-table {
+    min-width: 1080px;
+}
+#users-section .users-table .student-quarter-grade {
+    width: 76px;
+    min-width: 76px;
+    padding: 5px 6px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+#users-section .users-table .save-success {
+    border-color: #159a71 !important;
+    background: #159a71 !important;
+    color: #fff !important;
+}
+#users-section .users-loading,
+#users-section .users-load-error {
+    padding: 15px 17px;
+    border: 1px solid #e7e0f1;
+    border-radius: 12px;
+    background: #fff;
+    color: #53466f;
+}
+#users-section .users-load-error {
+    border-color: #f1cbd3;
+    background: #fff6f7;
+    color: #9c2844;
+}
+@media (max-width: 600px) {
+    #users-section .users-subject-control {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 12px;
+    }
+    #users-section .users-subject-select-wrap,
+    #users-section .users-subject-select-wrap select {
+        width: 100%;
+        min-width: 0;
+    }
+}
