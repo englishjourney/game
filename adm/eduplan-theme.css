@@ -3307,3 +3307,61 @@ dialog .markdown-preview-label { color: #6c5b91; }
     .avatar-picker { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .avatar-option-visual { width: 58px; height: 58px; }
 }
+
+
+/* Desktop sidebar: keep Yuki Planner and the teacher profile stacked
+   directly below the navigation links instead of being pushed sideways. */
+@media (min-width: 921px) {
+    #adm-panel nav#adm-navigation {
+        display: flex !important;
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    #adm-panel nav#adm-navigation .sidebar-nav-group {
+        display: flex;
+        flex: 0 0 auto;
+        flex-direction: column !important;
+        align-items: stretch;
+        width: 100%;
+        min-width: 0;
+    }
+
+    #adm-panel nav#adm-navigation .sidebar-bottom {
+        display: flex;
+        flex: 0 0 auto;
+        flex-direction: column;
+        align-self: stretch;
+        width: 100%;
+        min-width: 0;
+        margin: 22px 0 0;
+        padding: 14px 0 0;
+        box-sizing: border-box;
+    }
+
+    #adm-panel nav#adm-navigation #btn-yuki-planner {
+        display: flex;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        align-self: stretch;
+        justify-content: flex-start;
+        box-sizing: border-box;
+    }
+
+    #adm-panel nav#adm-navigation .teacher-profile {
+        display: flex;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    #adm-panel nav#adm-navigation .teacher-profile-copy {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+}
