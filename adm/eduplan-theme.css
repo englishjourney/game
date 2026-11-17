@@ -3389,3 +3389,95 @@ dialog .markdown-preview-label { color: #6c5b91; }
         color: #e1d5ff !important;
     }
 }
+
+
+/* Multi-class copies inside the new-planner form. */
+.planner-copy-controls { display: grid; gap: 12px; }
+.planner-copy-toggle,
+.planner-copy-add { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: fit-content; }
+.planner-copy-targets {
+    display: grid;
+    gap: 13px;
+    padding: 16px;
+    border: 1px solid #ded5ee;
+    border-radius: 16px;
+    background: #f8f5ff;
+}
+.planner-copy-targets-heading strong { color: #2b1b55; font-size: .94rem; }
+.planner-copy-targets-heading p { margin: 4px 0 0; color: #766b91; font-size: .78rem; line-height: 1.45; }
+.planner-copy-targets-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 245px), 1fr)); gap: 10px; }
+.planner-copy-target-card {
+    display: grid;
+    gap: 11px;
+    min-width: 0;
+    padding: 13px;
+    border: 1px solid #e1d9ef;
+    border-radius: 13px;
+    background: #fff;
+    box-shadow: 0 3px 12px rgba(56, 35, 96, .06);
+}
+.planner-copy-target-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.planner-copy-target-heading strong { color: #382268; font-size: .82rem; }
+.planner-copy-remove {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 8px;
+    border: 1px solid #f0d6df;
+    border-radius: 8px;
+    background: #fff6f8;
+    color: #a53c5d;
+    font-size: .7rem;
+    font-weight: 750;
+}
+.planner-copy-target-fields { display: grid; grid-template-columns: 1fr; gap: 9px; }
+.planner-copy-field { display: grid; gap: 5px; min-width: 0; color: #53466f; font-size: .76rem; font-weight: 750; }
+.planner-copy-field select,
+.planner-copy-field input {
+    width: 100%;
+    min-width: 0;
+    min-height: 38px;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border: 1px solid #ded6eb;
+    border-radius: 9px;
+    background: #fff;
+    color: #261b45;
+}
+.planner-copy-target-card .planner-copy-field select:focus,
+.planner-copy-target-card .planner-copy-field input:focus {
+    outline: none;
+    border-color: #9875dd;
+    box-shadow: 0 0 0 3px rgba(125, 82, 200, .12);
+}
+.planner-copy-add { justify-self: start; min-height: 36px; font-size: .78rem; }
+
+.planner-duplicate-dialog { width: min(92vw, 560px); max-width: 560px; padding: 0; }
+.planner-duplicate-dialog form { padding: 0; }
+.planner-duplicate-dialog .edu-modal-header { margin: 0; }
+.planner-duplicate-body { display: grid; gap: 17px; padding: 22px 26px 25px; }
+.planner-duplicate-body > p:first-child { margin: 0; color: #3d315a; font-size: .96rem; font-weight: 800; line-height: 1.5; }
+.planner-duplicate-fields { display: grid; gap: 12px; }
+.planner-duplicate-fields label { display: grid; gap: 6px; color: #51466c; font-size: .8rem; font-weight: 750; }
+.planner-duplicate-fields input,
+.planner-duplicate-fields select {
+    width: 100%;
+    min-height: 42px;
+    box-sizing: border-box;
+    padding: 8px 11px;
+    border: 1px solid #ded6eb;
+    border-radius: 9px;
+    background: #fff;
+    color: #261b45;
+}
+.planner-duplicate-status { min-height: 1em; margin: 0; color: #6b5397; font-size: .8rem; }
+.planner-duplicate-body .modal-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; margin: 0; }
+.planner-duplicate-body .modal-actions button { min-height: 40px; }
+@media (max-width: 560px) {
+    .planner-copy-targets { padding: 12px; }
+    .planner-copy-toggle,
+    .planner-copy-add { width: 100%; }
+    .planner-duplicate-body { padding: 18px 16px 20px; }
+    .planner-duplicate-body .modal-actions { flex-direction: column; }
+    .planner-duplicate-body .modal-actions button { width: 100%; }
+}
