@@ -1,27 +1,30 @@
 begin;
 
--- Troca os antigos ícones genéricos pelos avatares correspondentes às disciplinas.
+-- Usa a primeira disciplina selecionada pelo professor como avatar inicial.
 alter table public.teachers
     drop constraint if exists teachers_avatar_key_check;
 
+alter table public.teachers
+    drop constraint if exists teachers_avatar_key_subject_images_check;
+
 update public.teachers
-set avatar_key = case
-    when 'Inglês' = any(subjects) then 'english'
-    when 'Português' = any(subjects) then 'portuguese'
-    when 'Matemática' = any(subjects) then 'math'
-    when 'Produção textual' = any(subjects) then 'text'
-    when 'Ciências' = any(subjects) then 'science'
-    when 'Biologia' = any(subjects) then 'biology'
-    when 'Química' = any(subjects) then 'chemestry'
-    when 'Física' = any(subjects) then 'physics'
-    when 'História' = any(subjects) then 'history'
-    when 'Geografia' = any(subjects) then 'geography'
-    when 'Educação digital' = any(subjects) then 'digital'
-    when 'Artes' = any(subjects) then 'art'
-    when 'Filosofia' = any(subjects) then 'philosophy'
-    when 'Sociologia' = any(subjects) then 'sociology'
-    when 'Educação Física' = any(subjects) then 'physical'
-    when 'Projeto de vida' = any(subjects) then 'project-life'
+set avatar_key = case subjects[1]
+    when 'Inglês' then 'english'
+    when 'Português' then 'portuguese'
+    when 'Matemática' then 'math'
+    when 'Produção textual' then 'text'
+    when 'Ciências' then 'science'
+    when 'Biologia' then 'biology'
+    when 'Química' then 'chemestry'
+    when 'Física' then 'physics'
+    when 'História' then 'history'
+    when 'Geografia' then 'geography'
+    when 'Educação digital' then 'digital'
+    when 'Artes' then 'art'
+    when 'Filosofia' then 'philosophy'
+    when 'Sociologia' then 'sociology'
+    when 'Educação Física' then 'physical'
+    when 'Projeto de vida' then 'project-life'
     else 'violet-book'
 end;
 
@@ -33,7 +36,8 @@ alter table public.teachers
         'philosophy', 'sociology', 'physical', 'project-life', 'violet-book'
     ));
 
--- O trigger de criação de contas também precisa aceitar as novas chaves de avatar.
+-- Mantém intactas as regras atuais de criação de professores e só amplia
+-- a lista de chaves de avatar aceitas.
 create or replace function public.create_teacher_from_auth_user()
 returns trigger
 language plpgsql
@@ -98,7 +102,6 @@ begin
     values (new.id, lower(new.email), v_display_name, v_avatar_key, v_subjects, v_is_primary);
 
     if v_is_primary then
-        update public.schedule set owner = new.id where owner is null;
         update public.planner set owner = new.id where owner is null;
         update public.tasks set owner = new.id where owner is null;
     end if;
