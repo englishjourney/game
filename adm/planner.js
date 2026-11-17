@@ -1025,6 +1025,7 @@ function openPlannerDuplicateModal(item) {
     }
     if (time) {
         time.innerHTML = document.getElementById('plan-time')?.innerHTML || '';
+        time.querySelector('option[value="__ADD_NEW__"]')?.remove();
         setSelectValueWithCustom('planner-duplicate-time', item.time || '');
     }
     const parsedDate = parsePlannerDateBR(item.date);
