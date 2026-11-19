@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#58cc02">
+    <meta name="description" content="Learn money and shopping vocabulary, ask about prices and understand a simple checkout conversation with Artie.">
+    <title>Prices | EnglishJourney</title>
+    <link rel="stylesheet" href="./components/mission.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+.ej-price-match-card {
+    margin: 18px 0;
+    padding: 18px;
+    border: 1px solid #e3eaf2;
+    border-radius: 18px;
+    background: #fbfdff;
+    text-align: center;
+}
+.ej-price-match-image {
+    display: grid;
+    place-items: center;
+    min-height: 170px;
+    margin: 0 auto 14px;
+    padding: 8px;
+    border: 1px solid #e7eef5;
+    border-radius: 16px;
+    background: linear-gradient(145deg, #f7fbff, #fff);
+}
+.ej-price-match-image svg {
+    display: block;
+    width: min(100%, 330px);
+    height: 155px;
+}
+.ej-price-match-options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 15px 0 8px;
+}
+.ej-match-option {
+    min-height: 58px;
+    padding: 10px 8px;
+    border: 2px solid #dce7ef;
+    border-bottom-width: 4px;
+    border-radius: 13px;
+    background: #fff;
+    color: #243044;
+    font: inherit;
+    font-size: .95rem;
+    font-weight: 900;
+    cursor: pointer;
+    transition: transform .15s ease, border-color .15s ease, background .15s ease;
+}
+.ej-match-option:hover:not(:disabled) { transform: translateY(-2px); border-color: #91c9e5; }
+.ej-match-option:disabled { cursor: default; opacity: 1; }
+.ej-match-option.is-correct { border-color: #58cc02; background: #efffe6; color: #287c0b; }
+.ej-match-option.is-wrong { border-color: #f3a1a1; background: #fff1f1; color: #b42318; }
+.ej-price-feedback {
+    min-height: 42px;
+    margin: 10px 0 0;
+    color: #52657a;
+    font-size: .87rem;
+    font-weight: 800;
+    line-height: 1.45;
+}
+.ej-price-feedback:empty { min-height: 0; }
+.ej-price-word-progress {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 12px 0;
+}
+.ej-price-word-progress span {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #dce7ef;
+}
+.ej-price-word-progress span.is-done { background: #58cc02; }
+.ej-price-word-progress span.is-current { background: #168fd1; transform: scale(1.25); }
+.ej-phrase-group {
+    margin: 18px 0 24px;
+}
+.ej-phrase-group h2 {
+    margin: 0 0 10px;
+    color: #243044;
+    font-size: 1.02rem;
+    font-weight: 1000;
+}
+.ej-price-phrase {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 8px 0;
+    padding: 13px 14px;
+    border: 1px solid #e2eaf2;
+    border-radius: 14px;
+    background: #fff;
+}
+.ej-price-phrase strong { display: block; color: #243044; font-size: .97rem; font-weight: 950; }
+.ej-price-phrase small { display: block; margin-top: 4px; color: #718096; font-size: .8rem; font-weight: 700; }
+.ej-price-phrase .ej-audio-button { flex: 0 0 38px; }
+.ej-price-example {
+    margin: 15px 0;
+    padding: 14px;
+    border: 1px solid #ccebb9;
+    border-radius: 15px;
+    background: #f5fff0;
+}
+.ej-price-example strong { color: #287c0b; }
+.ej-price-example p { margin: 5px 0 0; color: #526b49; font-size: .86rem; line-height: 1.5; }
+.ej-price-video {
+    width: min(100%, 350px);
+    margin: 14px auto 18px;
+    overflow: hidden;
+    border: 1px solid #dce7ef;
+    border-radius: 17px;
+    background: #101820;
+    box-shadow: 0 5px 18px rgba(31, 48, 68, .12);
+    aspect-ratio: 9 / 16;
+}
+.ej-price-video iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+.ej-video-caption {
+    margin: 0 auto 12px;
+    color: #718096;
+    font-size: .78rem;
+    font-weight: 800;
+    text-align: center;
+}
+.ej-price-question-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 9px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #eef8ff;
+    color: #2477a7;
+    font-size: .68rem;
+    font-weight: 1000;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+}
+.ej-price-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+    margin: 17px 0;
+}
+.ej-price-summary-item {
+    padding: 12px 8px;
+    border: 1px solid #e4eaf1;
+    border-radius: 14px;
+    background: #fbfdff;
+    text-align: center;
+}
+.ej-price-summary-item strong { display: block; color: #1689c6; font-size: 1.05rem; font-weight: 1000; }
+.ej-price-summary-item span { display: block; margin-top: 3px; color: #718096; font-size: .7rem; font-weight: 850; }
+.ej-price-quiz-options { grid-template-columns: 1fr; }
+.ej-price-quiz-options .ej-answer-option { text-align: left; }
+.ej-score-summary .ej-summary-item { flex: 1; }
+@media (max-width: 650px) {
+    .ej-price-match-card { padding: 12px; }
+    .ej-price-match-image { min-height: 145px; }
+    .ej-price-match-image svg { height: 135px; }
+    .ej-price-match-options { gap: 7px; }
+    .ej-match-option { min-height: 54px; padding: 9px 5px; font-size: .83rem; overflow-wrap: anywhere; }
+    .ej-price-phrase { padding: 11px; }
+    .ej-price-phrase strong { font-size: .88rem; }
+    .ej-price-summary-grid { gap: 6px; }
+    .ej-price-summary-item { padding: 10px 4px; }
+    .ej-price-summary-item strong { font-size: .95rem; }
+    .ej-price-summary-item span { font-size: .64rem; }
+}
+@media (max-width: 370px) {
+    .ej-price-match-options { grid-template-columns: 1fr; }
+    .ej-price-video { width: min(100%, 300px); }
+}
+    </style>
+</head>
+<body>
+    <div id="mission-app"></div>
+    <script type="module">
+import {
+    getCachedMissionSession,
+    loginMissionUser,
+    loadMissionSettings,
+    recordMissionResult
+} from "./components/config.js";
+import {
+    mountMissionLayout,
+    setMissionUser,
+    setMissionReward,
+    setMissionProgress,
+    setArtie,
+    setMissionContent,
+    showMissionDialog
+} from "./components/layout.js";
+import { playGoogleTTS } from "./components/tts.js";
+import { playAnswerSound } from "./components/feedback.js";
+
+const MISSION_NAME = "Prices";
+const MISSION_NUMBER = "04";
+const TOTAL_QUESTIONS = 21;
+const DEFAULT_REQUIRED_SCORE = 80;
+
+const vocabulary = [
+    { term: "Penny", icon: "penny", distractors: ["January", "Fish"], meaning: "Uma moeda de um centavo, especialmente no inglês americano." },
+    { term: "Coin", icon: "coin", distractors: ["Monday", "Moon"], meaning: "Moeda: uma peça de dinheiro feita de metal." },
+    { term: "Money", icon: "money", distractors: ["Tuesday", "Ball"], meaning: "Dinheiro em geral: aquilo que usamos para comprar e pagar." },
+    { term: "Cash", icon: "cash", distractors: ["April", "Thirteen"], meaning: "Dinheiro em espécie: notas e moedas, não cartão." },
+    { term: "Cash out", icon: "cashout", distractors: ["Friday", "January"], meaning: "Retirar ou receber o dinheiro disponível. A expressão normalmente é escrita em duas palavras: cash out." },
+    { term: "Credit card", icon: "credit", distractors: ["Fish", "August"], meaning: "Cartão de crédito: você compra agora e paga a fatura depois." },
+    { term: "Debit card", icon: "debit", distractors: ["Monday", "Moon"], meaning: "Cartão de débito: o valor é descontado da conta bancária." },
+    { term: "Gift card", icon: "gift", distractors: ["Twelve", "Tuesday"], meaning: "Cartão-presente: tem um valor para usar em uma loja ou serviço." },
+    { term: "Voucher", icon: "voucher", distractors: ["Ball", "March"], meaning: "Vale ou cupom que pode dar desconto ou permitir o uso de um serviço." },
+    { term: "Pay", icon: "pay", distractors: ["January", "Fish"], meaning: "Pagar: entregar dinheiro ou usar um meio de pagamento." },
+    { term: "Payment", icon: "payment", distractors: ["Monday", "Eight"], meaning: "Pagamento: o ato ou a quantia usada para pagar algo." },
+    { term: "Currency", icon: "currency", distractors: ["April", "Moon"], meaning: "Moeda oficial de um país, como dollar, real ou euro." }
+];
+
+const priceQuestions = [
+    {
+        section: "ASKING ABOUT PRICES",
+        prompt: "You want to ask the price of an item. Which question can you use?",
+        options: ["How much is it?", "How are you?", "What day is it?"],
+        answer: "How much is it?",
+        explanation: "How much is it? significa “Quanto custa?” ou “Quanto é?”"
+    },
+    {
+        section: "ASKING ABOUT PRICES",
+        prompt: "Which sentence means “Quanto isso custa?”",
+        options: ["How much does it cost?", "Where do you live?", "What month is it?"],
+        answer: "How much does it cost?",
+        explanation: "How much does it cost? é outra forma de perguntar o preço de algo."
+    },
+    {
+        section: "ASKING ABOUT PRICES",
+        prompt: "You are pointing to a T-shirt. What should you ask?",
+        options: ["How much is this T-shirt?", "How old is this T-shirt?", "What color is this T-shirt?"],
+        answer: "How much is this T-shirt?",
+        explanation: "How much is this T-shirt? significa “Quanto custa esta camiseta?”"
+    },
+    {
+        section: "ANSWERS & PAYMENT",
+        prompt: "The price is $5. What can the seller say?",
+        options: ["It's five dollars.", "It's five months.", "It's Friday dollars."],
+        answer: "It's five dollars.",
+        audio: "It's five dollars.",
+        explanation: "It's five dollars. significa “São cinco dólares.”"
+    },
+    {
+        section: "ANSWERS & PAYMENT",
+        prompt: "Something costs one cent. Which answer is correct?",
+        options: ["It's just a penny.", "It's just a Monday.", "It's only a fish."],
+        answer: "It's just a penny.",
+        audio: "It's just a penny.",
+        explanation: "A penny é uma moeda de um centavo. It's just a penny = “É só um centavo.”"
+    },
+    {
+        section: "ANSWERS & PAYMENT",
+        prompt: "The price is $24. Choose the correct sentence.",
+        options: ["It is only twenty-four dollars.", "It is only twenty-four days.", "It is twenty-four months."],
+        answer: "It is only twenty-four dollars.",
+        audio: "It is only twenty-four dollars.",
+        explanation: "Twenty-four dollars significa vinte e quatro dólares. Use o hífen em twenty-four."
+    },
+    {
+        section: "ANSWERS & PAYMENT",
+        prompt: "The cashier asks how you want to pay. Which sentence is correct?",
+        options: [
+            "Would you like to pay by credit card or cash?",
+            "Would you like to pay by January or Monday?",
+            "Would you like to pay by fish or apple?"
+        ],
+        answer: "Would you like to pay by credit card or cash?",
+        audio: "Would you like to pay by credit card or cash?",
+        explanation: "O atendente está perguntando se você prefere pagar com cartão de crédito ou dinheiro."
+    },
+    {
+        section: "ANSWERS & PAYMENT",
+        prompt: "At checkout, the cashier asks: “Cash or card?” What does it mean?",
+        options: [
+            "Você vai pagar em dinheiro ou com cartão?",
+            "Você quer uma sacola ou uma camiseta?",
+            "Quanto custa este produto?"
+        ],
+        answer: "Você vai pagar em dinheiro ou com cartão?",
+        audio: "Cash or card?",
+        explanation: "Cash or card? é uma forma curta e comum de perguntar como o cliente deseja pagar."
+    },
+    {
+        section: "VIDEO • LISTENING",
+        prompt: "According to the conversation, how much are the apples?",
+        options: ["Three dollars a kilo.", "Two dollars a kilo.", "Three dollars each."],
+        answer: "Three dollars a kilo.",
+        explanation: "O atendente diz: “They're three dollars a kilo.” Portanto, as maçãs custam três dólares por quilo.",
+        video: true
+    }
+];
+
+const illustrations = {
+    penny: '<circle cx="120" cy="67" r="48" fill="#bd713c" stroke="#8f4c25" stroke-width="7"/><circle cx="120" cy="67" r="37" fill="none" stroke="#e9ad75" stroke-width="3"/><text x="120" y="82" text-anchor="middle" font-size="45" font-weight="900" fill="#71391e">1¢</text><path d="M48 118h144" stroke="#e7edf4" stroke-width="5" stroke-linecap="round"/>',
+    coin: '<circle cx="120" cy="67" r="48" fill="#d4dde6" stroke="#8999a9" stroke-width="7"/><circle cx="120" cy="67" r="37" fill="none" stroke="#f8fbff" stroke-width="3"/><text x="120" y="83" text-anchor="middle" font-size="52" font-weight="900" fill="#728397">¢</text><path d="M48 118h144" stroke="#e7edf4" stroke-width="5" stroke-linecap="round"/>',
+    money: '<rect x="34" y="39" width="134" height="68" rx="9" fill="#8fd49b" stroke="#318a55" stroke-width="5" transform="rotate(-8 34 39)"/><rect x="57" y="31" width="134" height="68" rx="9" fill="#b4e8b8" stroke="#318a55" stroke-width="5" transform="rotate(7 57 31)"/><circle cx="122" cy="65" r="21" fill="#f7fff5" stroke="#318a55" stroke-width="3"/><text x="122" y="74" text-anchor="middle" font-size="27" font-weight="900" fill="#318a55">$</text><circle cx="186" cy="101" r="24" fill="#d4dde6" stroke="#8999a9" stroke-width="4"/>',
+    cash: '<rect x="30" y="40" width="155" height="77" rx="9" fill="#7bc78b" stroke="#338a55" stroke-width="5"/><rect x="43" y="28" width="155" height="77" rx="9" fill="#a7dda8" stroke="#338a55" stroke-width="5"/><circle cx="120" cy="67" r="24" fill="#f4fff3" stroke="#338a55" stroke-width="3"/><text x="120" y="77" text-anchor="middle" font-size="32" font-weight="900" fill="#338a55">$</text><path d="M54 48h19M167 86h17" stroke="#338a55" stroke-width="5" stroke-linecap="round"/>',
+    cashout: '<rect x="72" y="14" width="96" height="110" rx="12" fill="#526b80" stroke="#33485b" stroke-width="5"/><rect x="89" y="28" width="62" height="35" rx="5" fill="#c9efff"/><path d="M103 45h34" stroke="#1689c6" stroke-width="5" stroke-linecap="round"/><rect x="91" y="76" width="58" height="10" rx="3" fill="#243748"/><rect x="102" y="94" width="36" height="17" rx="3" fill="#fff"/><path d="M120 95V77m-10 10 10-10 10 10" fill="none" stroke="#58cc02" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M168 104h34" stroke="#58cc02" stroke-width="6" stroke-linecap="round"/>',
+    credit: '<rect x="27" y="31" width="186" height="94" rx="13" fill="#267dc2" stroke="#185c91" stroke-width="5"/><rect x="28" y="51" width="184" height="18" fill="#183d65"/><rect x="48" y="82" width="34" height="24" rx="4" fill="#f4d47e" stroke="#b68c35" stroke-width="3"/><path d="M48 94h34M65 82v24" stroke="#b68c35" stroke-width="2"/><path d="M151 99h34" stroke="#d8edff" stroke-width="5" stroke-linecap="round"/>',
+    debit: '<rect x="27" y="31" width="186" height="94" rx="13" fill="#278b71" stroke="#17644f" stroke-width="5"/><rect x="28" y="51" width="184" height="18" fill="#154f46"/><rect x="48" y="82" width="34" height="24" rx="4" fill="#f4d47e" stroke="#b68c35" stroke-width="3"/><path d="M48 94h34M65 82v24" stroke="#b68c35" stroke-width="2"/><path d="M151 99h34" stroke="#d8fff1" stroke-width="5" stroke-linecap="round"/>',
+    gift: '<rect x="30" y="42" width="180" height="84" rx="12" fill="#f1788d" stroke="#c64a68" stroke-width="5"/><path d="M30 66h180" stroke="#ffe0e5" stroke-width="12"/><path d="M110 42v84" stroke="#ffe0e5" stroke-width="12"/><path d="M110 42c-34-4-45-34-23-35 18-1 25 19 23 35Zm0 0c34-4 45-34 23-35-18-1-25 19-23 35Z" fill="#ffd36e" stroke="#cb8f2e" stroke-width="4"/><path d="M83 91h55" stroke="#fff" stroke-width="6" stroke-linecap="round"/>',
+    voucher: '<path d="M39 29h162v27c-19 6-19 30 0 36v27H39V92c19-6 19-30 0-36Z" fill="#fff1c9" stroke="#d79a36" stroke-width="5"/><path d="M120 36v79" stroke="#d79a36" stroke-width="3" stroke-dasharray="7 7"/><text x="80" y="83" text-anchor="middle" font-size="34" font-weight="1000" fill="#b8751d">%</text><path d="M143 65h36M143 80h27" stroke="#b8751d" stroke-width="5" stroke-linecap="round"/>',
+    pay: '<path d="M48 37h89v70H48z" rx="8" fill="#526b80" stroke="#33485b" stroke-width="5"/><rect x="60" y="50" width="65" height="24" rx="4" fill="#c9efff"/><path d="M68 89h49" stroke="#fff" stroke-width="5" stroke-linecap="round"/><rect x="149" y="56" width="57" height="36" rx="6" fill="#267dc2" stroke="#185c91" stroke-width="4" transform="rotate(-16 149 56)"/><path d="M151 70l37-9" stroke="#d8edff" stroke-width="4"/><path d="M127 34q27-24 44 0" fill="none" stroke="#58cc02" stroke-width="5" stroke-linecap="round"/><path d="M164 23l7 11-13 1" fill="none" stroke="#58cc02" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>',
+    payment: '<path d="M65 16h94l17 18v93H65z" fill="#fff" stroke="#9aabba" stroke-width="5"/><path d="M159 16v20h17" fill="#dceaf4" stroke="#9aabba" stroke-width="4"/><path d="M85 57h69M85 72h54" stroke="#9aabba" stroke-width="5" stroke-linecap="round"/><circle cx="121" cy="99" r="18" fill="#e8f9df" stroke="#58a632" stroke-width="4"/><path d="m111 99 7 7 14-16" fill="none" stroke="#338a25" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>',
+    currency: '<circle cx="120" cy="67" r="51" fill="#eaf6ff" stroke="#5ba6d2" stroke-width="5"/><path d="M73 67h94M120 17c-19 18-19 82 0 100M120 17c19 18 19 82 0 100" fill="none" stroke="#78b7dc" stroke-width="3"/><circle cx="70" cy="34" r="19" fill="#f4d47e" stroke="#c29436" stroke-width="4"/><text x="70" y="42" text-anchor="middle" font-size="26" font-weight="900" fill="#8b641c">$</text><circle cx="179" cy="102" r="18" fill="#b7e5cb" stroke="#4d9a71" stroke-width="4"/><text x="179" y="109" text-anchor="middle" font-size="22" font-weight="900" fill="#27714b">€</text>'
+};
+
+let studentSession = null;
+let missionSettings = {
+    registered: false,
+    missionScore: null,
+    alreadyAttempted: false,
+    completed: false,
+    failed: false
+};
+let vocabularyIndex = 0;
+let assessmentIndex = 0;
+let correctAnswers = 0;
+let answeredQuestions = 0;
+let audioBusy = false;
+
+function shuffleArray(items) {
+    const shuffled = items.slice();
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+        const randomIndex = Math.floor(Math.random() * (index + 1));
+        const temporary = shuffled[index];
+        shuffled[index] = shuffled[randomIndex];
+        shuffled[randomIndex] = temporary;
+    }
+    return shuffled;
+}
+
+function updateProgress(label) {
+    const percent = Math.round((answeredQuestions / TOTAL_QUESTIONS) * 100);
+    setMissionProgress(label, answeredQuestions, TOTAL_QUESTIONS, percent);
+}
+
+function getRequiredScore() {
+    const configured = Number(missionSettings.missionScore);
+    return missionSettings.registered && Number.isFinite(configured) && configured > 0
+        ? configured
+        : DEFAULT_REQUIRED_SCORE;
+}
+
+function getMissionNotice() {
+    if (!missionSettings.registered) {
+        return '<div class="ej-info-strip ej-warning-strip"><span aria-hidden="true">ℹ️</span><span>Esta missão ainda não foi cadastrada na tabela <strong>missions</strong>. Você pode estudar e praticar, mas a conclusão só será registrada depois que “Prices” for adicionada ao banco de dados.</span></div>';
+    }
+    if (missionSettings.alreadyAttempted) {
+        return '<div class="ej-info-strip ej-warning-strip"><span aria-hidden="true">🔁</span><span>Você já tentou ou concluiu esta missão. Pode revisar o conteúdo, mas não receberá uma segunda recompensa.</span></div>';
+    }
+    return "";
+}
+
+function renderLoginScreen() {
+    setMissionProgress("LOGIN", 0, TOTAL_QUESTIONS, 0);
+    setArtie("Hi! Entre com seu usuário do EnglishJourney. Se você já fez login no site, eu reconhecerei sua sessão automaticamente.", "artie_waving_ClosedEyes_smiling.png");
+
+    setMissionContent(
+        '<span class="ej-kicker">WELCOME TO ENGLISHJOURNEY</span>' +
+        '<h1 class="ej-screen-title">Let’s learn English!</h1>' +
+        '<p class="ej-screen-copy">Entre com o mesmo usuário e senha que você utiliza no EnglishJourney para começar a missão <strong>Prices</strong>.</p>' +
+        '<form id="mission-login-form" class="ej-login-form">' +
+            '<label>Username<input id="mission-login-username" name="username" type="text" autocomplete="username" required></label>' +
+            '<label>Password<input id="mission-login-password" name="password" type="password" autocomplete="current-password" required></label>' +
+            '<p id="mission-login-feedback" class="ej-login-feedback" role="alert"></p>' +
+            '<button class="ej-primary-button" type="submit">Start mission <span aria-hidden="true">→</span></button>' +
+        '</form>'
+    );
+
+    const form = document.getElementById("mission-login-form");
+    form?.addEventListener("submit", async function(event) {
+        event.preventDefault();
+        const button = form.querySelector('button[type="submit"]');
+        const feedback = document.getElementById("mission-login-feedback");
+        const username = document.getElementById("mission-login-username")?.value;
+        const password = document.getElementById("mission-login-password")?.value;
+
+        if (button) {
+            button.disabled = true;
+            button.textContent = "Signing in...";
+        }
+        if (feedback) feedback.textContent = "";
+
+        const result = await loginMissionUser(username, password);
+        if (!result.session) {
+            if (feedback) feedback.textContent = result.error || "Não foi possível entrar.";
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = 'Start mission <span aria-hidden="true">→</span>';
+            }
+            return;
+        }
+        await startMission(result.session);
+    });
+}
+
+async function startMission(session) {
+    studentSession = session;
+    setMissionUser(session);
+    setArtie("Welcome! Hoje vamos aprender a falar sobre dinheiro, preços e formas de pagamento em inglês.", "artie_smiling_holding_chin.png");
+
+    try {
+        missionSettings = await loadMissionSettings(MISSION_NAME, session.username);
+    } catch (error) {
+        console.error("Não foi possível carregar a configuração da missão:", error);
+        missionSettings = {
+            registered: false,
+            missionScore: null,
+            alreadyAttempted: false,
+            completed: false,
+            failed: false
+        };
+    }
+
+    setMissionReward(
+        missionSettings.completed,
+        missionSettings.failed,
+        missionSettings.registered && Number(missionSettings.missionScore) > 0
+    );
+    renderVocabularyQuestion();
+}
+
+function bindAudioButtons() {
+    document.querySelectorAll("#mission-content [data-say]").forEach(function(button) {
+        button.addEventListener("click", async function() {
+            if (audioBusy || button.disabled) return;
+            audioBusy = true;
+            const audioButtons = Array.from(document.querySelectorAll("#mission-content [data-say]"));
+            audioButtons.forEach(function(audioButton) {
+                audioButton.disabled = true;
+                if (audioButton === button) {
+                    audioButton.classList.add("is-loading");
+                    audioButton.setAttribute("aria-busy", "true");
+                    audioButton.innerHTML = '<i class="fa fa-circle-o-notch fa-spin" aria-hidden="true"></i>';
+                }
+            });
+
+            try {
+                await playGoogleTTS(button.dataset.say);
+            } catch (error) {
+                console.error("Não foi possível reproduzir o áudio:", error);
+            } finally {
+                audioButtons.forEach(function(audioButton) {
+                    audioButton.disabled = false;
+                    if (audioButton === button) {
+                        audioButton.classList.remove("is-loading");
+                        audioButton.removeAttribute("aria-busy");
+                        audioButton.innerHTML = "🔊";
+                    }
+                });
+                audioBusy = false;
+            }
+        });
+    });
+}
+
+function renderIllustration(iconName) {
+    return '<svg viewBox="0 0 240 135" role="img" aria-label="Illustration for a money and shopping word" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect x="7" y="7" width="226" height="121" rx="15" fill="#f7fbff"/>' +
+        illustrations[iconName] +
+        '</svg>';
+}
+
+function renderVocabularyQuestion() {
+    const item = vocabulary[vocabularyIndex];
+    const choices = shuffleArray([item.term].concat(item.distractors));
+    const choiceButtons = choices.map(function(choice) {
+        return '<button class="ej-match-option" type="button" data-vocab-choice="' + choice + '">' + choice + '</button>';
+    }).join("");
+    const dots = vocabulary.map(function(_, index) {
+        const classes = index < vocabularyIndex ? "is-done" : index === vocabularyIndex ? "is-current" : "";
+        return '<span class="' + classes + '" aria-hidden="true"></span>';
+    }).join("");
+
+    updateProgress("LESSON 1 • MONEY WORDS");
+    setArtie("Observe a imagem e escolha a palavra correta. As outras opções são palavras que você já encontrou em missões anteriores.", "artie_smiling_pointing_right.png");
+
+    setMissionContent(
+        '<span class="ej-kicker">LESSON 1 • MONEY VOCABULARY</span>' +
+        '<h1 class="ej-screen-title">Money words</h1>' +
+        '<p class="ej-screen-copy">Vamos conhecer palavras usadas em compras e pagamentos. Veja cada ilustração e escolha o nome correto entre as três opções.</p>' +
+        getMissionNotice() +
+        '<div class="ej-price-word-progress" aria-label="Progresso do vocabulário">' + dots + '</div>' +
+        '<section class="ej-price-match-card">' +
+            '<p class="ej-question-number">WORD ' + (vocabularyIndex + 1) + ' / ' + vocabulary.length + '</p>' +
+            '<div class="ej-price-match-image">' + renderIllustration(item.icon) + '</div>' +
+            '<p class="ej-screen-copy">Which word matches the picture?</p>' +
+            '<div class="ej-price-match-options" id="vocabulary-options">' + choiceButtons + '</div>' +
+            '<p id="vocabulary-feedback" class="ej-price-feedback" aria-live="polite"></p>' +
+            '<div class="ej-button-row"><button id="vocabulary-next" class="ej-primary-button" type="button" hidden disabled>' +
+                (vocabularyIndex === vocabulary.length - 1 ? "Continue to lesson 2" : "Next word") +
+                ' <span aria-hidden="true">→</span></button></div>' +
+        '</section>'
+    );
+
+    document.querySelectorAll("[data-vocab-choice]").forEach(function(button) {
+        button.addEventListener("click", function() {
+            const allOptions = Array.from(document.querySelectorAll("[data-vocab-choice]"));
+            if (allOptions.some(function(option) { return option.disabled; })) return;
+
+            const correct = button.dataset.vocabChoice === item.term;
+            allOptions.forEach(function(option) {
+                option.disabled = true;
+                if (option.dataset.vocabChoice === item.term) option.classList.add("is-correct");
+            });
+            if (!correct) button.classList.add("is-wrong");
+
+            playAnswerSound(correct);
+            answeredQuestions += 1;
+            if (correct) {
+                correctAnswers += 1;
+                setArtie("Correct! " + item.term + ". " + item.meaning, "artie_smiling_happy_clenched_fists.png");
+            } else {
+                setArtie("A resposta correta é " + item.term + ". " + item.meaning, "artie_smiling_holding_chin.png");
+            }
+
+            const feedback = document.getElementById("vocabulary-feedback");
+            if (feedback) feedback.textContent = (correct ? "Correct! " : "The correct word is " + item.term + ". ") + item.meaning;
+            updateProgress("LESSON 1 • MONEY WORDS");
+
+            const next = document.getElementById("vocabulary-next");
+            if (next) {
+                next.hidden = false;
+                next.disabled = false;
+            }
+        });
+    });
+
+    bindAudioButtons();
+    document.getElementById("vocabulary-next")?.addEventListener("click", function() {
+        if (vocabularyIndex < vocabulary.length - 1) {
+            vocabularyIndex += 1;
+            renderVocabularyQuestion();
+        } else {
+            renderShoppingLesson();
+        }
+    });
+}
+
+function renderPhraseCard(phrase, translation) {
+    return '<div class="ej-price-phrase">' +
+        '<div><strong>' + phrase + '</strong><small>' + translation + '</small></div>' +
+        '<button class="ej-audio-button" type="button" data-say="' + phrase.replace(/"/g, "&quot;") + '" aria-label="Listen to ' + phrase.replace(/"/g, "&quot;") + '">🔊</button>' +
+    '</div>';
+}
+
+function renderShoppingLesson() {
+    updateProgress("LESSON 2 • SHOPPING");
+    setArtie("Agora que você conhece as palavras sobre dinheiro, vamos aprender a perguntar preços e responder no caixa.", "artie_smiling_holding_chin.png");
+
+    setMissionContent(
+        '<span class="ej-kicker">LESSON 2 • ASKING AND ANSWERING</span>' +
+        '<h1 class="ej-screen-title">How much is it?</h1>' +
+        '<p class="ej-screen-copy">Em uma loja ou supermercado, usamos estas perguntas para descobrir o preço de um produto. Toque no alto-falante para ouvir e repetir.</p>' +
+        '<div class="ej-phrase-group">' +
+            '<h2>Asking about prices</h2>' +
+            renderPhraseCard("How much is it?", "Quanto custa? / Quanto é?") +
+            renderPhraseCard("How much does it cost?", "Quanto isso custa?") +
+            renderPhraseCard("How much is this T-shirt?", "Quanto custa esta camiseta?") +
+        '</div>' +
+        '<div class="ej-info-strip"><span aria-hidden="true">💡</span><span><strong>How much</strong> é usado para perguntar o preço. Use <strong>this</strong> quando estiver apontando para algo perto de você: <em>this T-shirt</em>.</span></div>' +
+        '<div class="ej-phrase-group">' +
+            '<h2>Answering about prices</h2>' +
+            renderPhraseCard("It's five dollars.", "São cinco dólares.") +
+            renderPhraseCard("It's just a penny.", "É só um centavo.") +
+            renderPhraseCard("It is only twenty-four dollars.", "Custa apenas vinte e quatro dólares.") +
+        '</div>' +
+        '<div class="ej-phrase-group">' +
+            '<h2>At the checkout</h2>' +
+            renderPhraseCard("Would you like to pay by credit card or cash?", "Você gostaria de pagar com cartão de crédito ou dinheiro?") +
+            renderPhraseCard("Cash or card?", "Dinheiro ou cartão?") +
+        '</div>' +
+        '<div class="ej-price-example"><strong>Mini conversation</strong><p>Customer: How much is this T-shirt?<br>Seller: It's twenty-four dollars.<br>Customer: Can I pay by card?<br>Seller: Yes, of course!</p></div>' +
+        '<div class="ej-price-summary-grid">' +
+            '<div class="ej-price-summary-item"><strong>How much?</strong><span>ASK THE PRICE</span></div>' +
+            '<div class="ej-price-summary-item"><strong>It's...</strong><span>GIVE THE PRICE</span></div>' +
+            '<div class="ej-price-summary-item"><strong>Cash or card?</strong><span>CHOOSE PAYMENT</span></div>' +
+        '</div>' +
+        '<div class="ej-info-strip"><span aria-hidden="true">🎧</span><span>Depois da revisão, você vai praticar as frases e assistir a uma conversa curta em um supermercado.</span></div>' +
+        '<div class="ej-button-row"><button id="start-prices-assessment" class="ej-primary-button" type="button">Let’s practice! <span aria-hidden="true">→</span></button></div>'
+    );
+
+    bindAudioButtons();
+    document.getElementById("start-prices-assessment")?.addEventListener("click", function() {
+        assessmentIndex = 0;
+        renderAssessmentQuestion();
+    });
+}
+
+function renderAssessmentQuestion() {
+    const question = priceQuestions[assessmentIndex];
+    const options = question.options.map(function(option) {
+        return '<button class="ej-answer-option" type="button" data-answer="' + option.replace(/"/g, "&quot;") + '">' + option + '</button>';
+    }).join("");
+
+    updateProgress(question.section);
+    setArtie(
+        assessmentIndex < 3
+            ? "Escolha a pergunta que melhor combina com a situação."
+            : assessmentIndex < 8
+                ? "Leia a situação e escolha a resposta correta. Você está quase terminando!"
+                : "Assista ao vídeo com atenção e depois responda à pergunta sobre a conversa.",
+        "artie_standing_smiling.png"
+    );
+
+    const video = question.video
+        ? '<p class="ej-video-caption">Watch the supermarket conversation.</p>' +
+          '<div class="ej-price-video"><iframe src="https://www.youtube.com/embed/PSXltD4HoFY?rel=0" title="Supermarket conversation: asking about prices" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>'
+        : "";
+    const audio = question.audio
+        ? '<div class="ej-question-audio"><button class="ej-audio-button" type="button" data-say="' + question.audio.replace(/"/g, "&quot;") + '" aria-label="Listen to the phrase">🔊</button><span>Listen to the phrase</span></div>'
+        : "";
+
+    setMissionContent(
+        '<span class="ej-kicker">PRACTICE • ' + question.section + '</span>' +
+        '<h1 class="ej-screen-title">Let’s practice!</h1>' +
+        '<p class="ej-screen-copy">Escolha uma das três alternativas. Você receberá feedback depois de responder.</p>' +
+        '<section class="ej-quiz-card">' +
+            '<p class="ej-question-number">QUESTION ' + String(assessmentIndex + 13).padStart(2, "0") + ' / ' + TOTAL_QUESTIONS + '</p>' +
+            (question.video ? '<span class="ej-price-question-tag">🎬 Listening comprehension</span>' : '') +
+            video +
+            '<h2 class="ej-question-title">' + question.prompt + '</h2>' +
+            audio +
+            '<div class="ej-answer-list ej-price-quiz-options" id="question-answers">' + options + '</div>' +
+            '<p id="question-feedback" class="ej-answer-feedback" aria-live="polite"></p>' +
+            '<div class="ej-button-row"><button id="question-next" class="ej-primary-button" type="button" hidden disabled>' +
+                (assessmentIndex === priceQuestions.length - 1 ? "See my result" : "Continue") +
+                ' <span aria-hidden="true">→</span></button></div>' +
+        '</section>'
+    );
+
+    bindAudioButtons();
+    document.querySelectorAll("[data-answer]").forEach(function(button) {
+        button.addEventListener("click", function() {
+            const allOptions = Array.from(document.querySelectorAll("[data-answer]"));
+            if (allOptions.some(function(option) { return option.disabled; })) return;
+
+            const correct = button.dataset.answer === question.answer;
+            allOptions.forEach(function(option) {
+                option.disabled = true;
+                if (option.dataset.answer === question.answer) option.classList.add("is-correct");
+            });
+            if (!correct) button.classList.add("is-wrong");
+
+            playAnswerSound(correct);
+            answeredQuestions += 1;
+            if (correct) {
+                correctAnswers += 1;
+                setArtie("Excellent! Você escolheu a resposta correta.", "artie_smiling_happy_clenched_fists.png");
+            } else {
+                setArtie("Quase! Leia a explicação e continue praticando.", "artie_smiling_holding_chin.png");
+            }
+
+            const feedback = document.getElementById("question-feedback");
+            if (feedback) feedback.textContent = (correct ? "Correct! " : "Not quite. ") + question.explanation;
+            updateProgress(question.section);
+
+            const next = document.getElementById("question-next");
+            if (next) {
+                next.hidden = false;
+                next.disabled = false;
+            }
+        });
+    });
+
+    document.getElementById("question-next")?.addEventListener("click", function() {
+        if (assessmentIndex < priceQuestions.length - 1) {
+            assessmentIndex += 1;
+            renderAssessmentQuestion();
+        } else {
+            finishAssessment();
+        }
+    });
+}
+
+function resetMission() {
+    vocabularyIndex = 0;
+    assessmentIndex = 0;
+    correctAnswers = 0;
+    answeredQuestions = 0;
+    renderVocabularyQuestion();
+}
+
+function renderRetryScreen(score, target) {
+    updateProgress("REVIEW");
+    setArtie("Você está perto! Revise as palavras e frases e tente novamente. Cada tentativa ajuda você a aprender.", "artie_smiling_holding_chin.png");
+    setMissionContent(
+        '<span class="ej-kicker">KEEP PRACTICING</span>' +
+        '<h1 class="ej-screen-title">Good effort!</h1>' +
+        '<p class="ej-screen-copy">Você acertou <strong>' + correctAnswers + ' de ' + TOTAL_QUESTIONS + '</strong> questões e alcançou <strong>' + score + '%</strong>. A meta desta missão é <strong>' + target + '%</strong>.</p>' +
+        '<div class="ej-score-summary">' +
+            '<div class="ej-summary-item"><strong>' + correctAnswers + ' / ' + TOTAL_QUESTIONS + '</strong><span>Correct answers</span></div>' +
+            '<div class="ej-summary-item"><strong>' + score + '%</strong><span>Your score</span></div>' +
+            '<div class="ej-summary-item"><strong>' + target + '%</strong><span>Mission goal</span></div>' +
+        '</div>' +
+        '<div class="ej-info-strip"><span aria-hidden="true">💡</span><span>Revise as ilustrações de money vocabulary, as perguntas sobre preços e as respostas usadas no caixa. Depois, tente novamente.</span></div>' +
+        '<div class="ej-button-row"><button id="retry-mission" class="ej-primary-button" type="button">Review and try again <span aria-hidden="true">→</span></button></div>'
+    );
+    document.getElementById("retry-mission")?.addEventListener("click", resetMission);
+}
+
+async function finishAssessment() {
+    const score = Math.round((correctAnswers / TOTAL_QUESTIONS) * 100);
+    const target = getRequiredScore();
+    updateProgress("COMPLETED");
+
+    if (score < target) {
+        renderRetryScreen(score, target);
+        return;
+    }
+
+    setArtie("You did it! Você concluiu as atividades sobre preços e pagamentos. Vamos conferir o registro da sua missão.", "artie_smiling_happy_clenched_fists.png");
+
+    if (!missionSettings.registered) {
+        renderUnregisteredResult(score);
+        return;
+    }
+    if (missionSettings.alreadyAttempted) {
+        renderAlreadyAttemptedResult(score);
+        return;
+    }
+
+    let result = null;
+    let error = null;
+    try {
+        result = await recordMissionResult(MISSION_NAME, studentSession.username, "done");
+    } catch (caughtError) {
+        error = caughtError;
+        console.error("Erro ao registrar a conclusão da missão:", caughtError);
+    }
+
+    if (result && result.recorded) {
+        missionSettings.alreadyAttempted = true;
+        missionSettings.completed = true;
+        missionSettings.failed = false;
+        setMissionReward(true, false);
+        setMissionContent(
+            '<span class="ej-kicker">MISSION COMPLETED</span>' +
+            '<h1 class="ej-screen-title">Congratulations! 🎉</h1>' +
+            '<p class="ej-screen-copy">Você acertou <strong>' + correctAnswers + ' de ' + TOTAL_QUESTIONS + '</strong> questões, alcançou <strong>' + score + '%</strong> e recebeu <strong>+2 estrelas</strong> na sua conta!</p>' +
+            '<div class="ej-score-summary"><div class="ej-summary-item"><strong>' + correctAnswers + ' / ' + TOTAL_QUESTIONS + '</strong><span>Correct answers</span></div><div class="ej-summary-item"><strong>' + score + '%</strong><span>Final score</span></div><div class="ej-summary-item"><strong>+2 ⭐</strong><span>Reward</span></div></div>'
+        );
+        window.setTimeout(function() {
+            window.parent.postMessage({
+                type: "ENGLISHJOURNEY_MISSION_COMPLETED",
+                missionName: MISSION_NAME
+            }, window.location.origin);
+        }, 1600);
+        return;
+    }
+
+    let message = "Não foi possível registrar a conclusão. Tente novamente.";
+    if (error) {
+        message = error.message || message;
+    } else if (result && result.reason === "already-attempted") {
+        message = "Você já tentou ou concluiu esta missão. A recompensa de duas estrelas só pode ser recebida uma vez.";
+    } else if (result && result.reason === "user-ambiguous") {
+        message = "Encontramos mais de um cadastro com este usuário. Peça ao professor para corrigir o cadastro.";
+    } else if (result && result.reason === "mission-not-registered") {
+        message = "Esta missão ainda não foi cadastrada no banco de dados.";
+    } else if (result && result.recorded === false) {
+        message = "Não foi possível registrar a conclusão (" + (result.reason || "erro desconhecido") + ").";
+    }
+
+    showMissionDialog({
+        title: "Almost there!",
+        message: message + " Seu resultado foi " + score + "%. Você pode revisar as lições e tentar novamente.",
+        buttonText: "Review",
+        tone: "warning",
+        onAction: resetMission
+    });
+}
+
+function renderUnregisteredResult(score) {
+    setMissionContent(
+        '<span class="ej-kicker">PRACTICE COMPLETED</span>' +
+        '<h1 class="ej-screen-title">Well done! ⭐</h1>' +
+        '<p class="ej-screen-copy">Você acertou <strong>' + correctAnswers + ' de ' + TOTAL_QUESTIONS + '</strong> questões e alcançou <strong>' + score + '%</strong>. O conteúdo foi concluído, mas esta missão ainda não está cadastrada no banco de dados; por isso, as estrelas não puderam ser registradas.</p>' +
+        '<div class="ej-info-strip ej-warning-strip"><span aria-hidden="true">ℹ️</span><span>Quando “Prices” for adicionada à tabela <strong>missions</strong>, a conclusão poderá ser registrada normalmente.</span></div>' +
+        '<div class="ej-button-row"><button id="review-unregistered" class="ej-primary-button" type="button">Review lessons <span aria-hidden="true">→</span></button></div>'
+    );
+    document.getElementById("review-unregistered")?.addEventListener("click", resetMission);
+}
+
+function renderAlreadyAttemptedResult(score) {
+    setMissionContent(
+        '<span class="ej-kicker">PRACTICE COMPLETED</span>' +
+        '<h1 class="ej-screen-title">Great review! 🎉</h1>' +
+        '<p class="ej-screen-copy">Você alcançou ' + score + '% e revisou o conteúdo. A missão já foi tentada ou concluída anteriormente, então esta repetição não gera novas estrelas.</p>' +
+        '<div class="ej-score-summary"><div class="ej-summary-item"><strong>' + correctAnswers + ' / ' + TOTAL_QUESTIONS + '</strong><span>Correct answers</span></div><div class="ej-summary-item"><strong>' + score + '%</strong><span>Review score</span></div></div>' +
+        '<div class="ej-button-row"><button id="review-completed" class="ej-primary-button" type="button">Review lessons <span aria-hidden="true">→</span></button></div>'
+    );
+    document.getElementById("review-completed")?.addEventListener("click", resetMission);
+}
+
+mountMissionLayout({ missionNumber: MISSION_NUMBER });
+
+const cachedSession = getCachedMissionSession();
+if (cachedSession) {
+    startMission(cachedSession);
+} else {
+    renderLoginScreen();
+}
+    </script>
+</body>
+</html>
