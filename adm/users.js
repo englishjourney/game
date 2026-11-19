@@ -339,10 +339,10 @@ let pendingMissingStudentGrade = '';
 function normalizeStudentUsername(value) {
     return String(value || '')
         .normalize('NFD')
-        .replace(/[\\u0300-\\u036f]/g, '')
+        .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '.')
-        .replace(/^\\.+|\\.+$/g, '')
+        .replace(/^\.+|\.+$/g, '')
         .slice(0, 40);
 }
 
@@ -446,7 +446,7 @@ async function createMissingStudent(event) {
     const nameInput = document.getElementById('missing-student-name');
     const errorMessage = document.getElementById('missing-student-error');
     const submitButton = document.getElementById('missing-student-submit');
-    const name = String(nameInput?.value || '').trim().replace(/\\s+/g, ' ');
+    const name = String(nameInput?.value || '').trim().replace(/\s+/g, ' ');
     const grade = pendingMissingStudentGrade;
 
     if (name.length < 2) {
@@ -491,9 +491,9 @@ async function createMissingStudent(event) {
         document.getElementById('missing-student-dialog')?.close();
         await loadUsers();
         alert(
-            'Aluno adicionado à turma ' + grade + '.\\n\\n' +
-            'Nome: ' + (data?.name || name) + '\\n' +
-            'Username: ' + (data?.username || username) + '\\n' +
+            'Aluno adicionado à turma ' + grade + '.\n\n' +
+            'Nome: ' + (data?.name || name) + '\n' +
+            'Username: ' + (data?.username || username) + '\n' +
             'Senha inicial: Mudar@eco123'
         );
     } catch (error) {
