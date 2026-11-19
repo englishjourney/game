@@ -793,39 +793,67 @@ function openReminderFormModal(data = null) {
 export async function loadRemindersSection() {
     const container = document.getElementById('reminder-items-container');
     if (!container) return;
-    
+
     container.innerHTML = '<div style="color: #888; text-align: center; padding: 20px;">Carregando lembretes...</div>';
 
     try {
         const ownerId = getCurrentReminderOwnerId();
-        const { data: reminders, error } = await supabase
-            .from('reminders')
-            .select('*')
-            .eq('owner', ownerId)
-            .is('task_id', null)
-            .is('system_notice_key', null)
-            .order('date', { ascending: true });
+        const [
+            { data: reminders, error },
+            { data: systemReminders, error: systemError }
+        ] = await Promise.all([
+            supabase.from('reminders')
+                .select('*')
+                .eq('owner', ownerId)
+                .is('task_id', null)
+                .is('system_notice_key', null)
+                .order('date', { ascending: true }),
+            supabase.from('reminders')
+                .select('id, remindMeTo, date, time, system_notice_key')
+                .eq('owner', ownerId)
+                .not('system_notice_key', 'is', null)
+                .order('date', { ascending: true })
+        ]);
         if (error) throw error;
+        if (systemError) throw systemError;
 
-        if (!reminders || reminders.length === 0) {
+        const personalRows = reminders || [];
+        const systemRows = systemReminders || [];
+        if (!personalRows.length && !systemRows.length) {
             container.innerHTML = '<div style="color: #888; text-align: center; padding: 20px;">Nenhum lembrete agendado.</div>';
             return;
         }
 
+        const escapeReminderHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[char]));
+
         let html = '';
-        reminders.forEach(item => {
-            html += `
-                <article id="reminder-card-${item.id}" class="admin-reminder-card">
-                    <div class="admin-reminder-content">
-                        <strong style="color: #fff; display: block; margin-bottom: 4px; font-size: 1rem;">${item.remindMeTo}</strong>
-                        <small style="color: var(--primary, #38bdf8);"><i class="fa-regular fa-clock"></i> ${item.date} às ${item.time}</small>
-                    </div>
-                    <div class="admin-reminder-actions">
-                        <button class="btn-small btn-secondary" onclick="window.editReminder('${item.id}', '${encodeURIComponent(item.remindMeTo)}', '${item.date}', '${item.time}')">Adiar / Editar</button>
-                        <button class="btn-small btn-danger" onclick="window.deleteReminder('${item.id}')">Excluir</button>
-                    </div>
-                </article>
-            `;
+        systemRows.forEach(item => {
+            const textParts = String(item.remindMeTo || 'Aviso anual do sistema').split('\n');
+            const title = textParts.shift() || 'Aviso anual do sistema';
+            const message = textParts.join('\n');
+            html += '<article id="reminder-card-' + item.id + '" class="admin-reminder-card admin-system-notice-card">' +
+                '<div class="admin-reminder-content">' +
+                    '<strong style="color: #fff; display: block; margin-bottom: 4px; font-size: 1rem;">' + escapeReminderHtml(title) + '</strong>' +
+                    '<p style="color: #dbeafe; margin: 5px 0; white-space: pre-line;">' + escapeReminderHtml(message) + '</p>' +
+                    '<small style="color: var(--primary, #38bdf8);"><i class="fa-regular fa-clock"></i> ' + escapeReminderHtml(item.date) + ' às ' + escapeReminderHtml(item.time) + '</small>' +
+                '</div>' +
+                '<span class="system-notice-label">Aviso automático</span>' +
+            '</article>';
+        });
+
+        personalRows.forEach(item => {
+            html += '<article id="reminder-card-' + item.id + '" class="admin-reminder-card">' +
+                '<div class="admin-reminder-content">' +
+                    '<strong style="color: #fff; display: block; margin-bottom: 4px; font-size: 1rem;">' + escapeReminderHtml(item.remindMeTo) + '</strong>' +
+                    '<small style="color: var(--primary, #38bdf8);"><i class="fa-regular fa-clock"></i> ' + escapeReminderHtml(item.date) + ' às ' + escapeReminderHtml(item.time) + '</small>' +
+                '</div>' +
+                '<div class="admin-reminder-actions">' +
+                    '<button class="btn-small btn-secondary" onclick="window.editReminder(\'' + item.id + '\', \'' + encodeURIComponent(item.remindMeTo) + '\', \'' + item.date + '\', \'' + item.time + '\')">Adiar / Editar</button>' +
+                    '<button class="btn-small btn-danger" onclick="window.deleteReminder(\'' + item.id + '\')">Excluir</button>' +
+                '</div>' +
+            '</article>';
         });
 
         container.innerHTML = html;
