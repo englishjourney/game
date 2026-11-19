@@ -88,10 +88,14 @@ export function initNotifications() {
         // Timer único até o próximo aviso ou à confirmação da limpeza anual.
         // Em datas distantes, acorda no limite suportado pelo navegador e recalcula.
         const remaining = next.timestamp - now;
-        if (remaining > 30 * 24 * 60 * 60 * 1000) return;
         const delay = Math.min(Math.max(0, remaining), MAX_TIMEOUT);
         annualNoticeTimer = setTimeout(async () => {
             annualNoticeTimer = null;
+            if (next.timestamp - Date.now() > MAX_TIMEOUT) {
+                // Reagenda apenas o timer local; não consulta o Supabase antes do aviso.
+                scheduleNextAnnualNotice(notices);
+                return;
+            }
             await syncNotifications();
             if (!panel.classList.contains('hidden')) render();
         }, delay + (delay < MAX_TIMEOUT ? 100 : 0));
