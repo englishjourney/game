@@ -3772,3 +3772,19 @@ dialog .markdown-preview-label { color: #6c5b91; }
         padding: 18px;
     }
 }
+
+
+/* Destaque temporário ao localizar um aluno pela pesquisa */
+#users-section .users-table tbody tr.search-result-highlight > td {
+    background: #fff0a6 !important;
+    color: #30234a !important;
+    border-top-color: #dfb83f !important;
+    border-bottom-color: #dfb83f !important;
+    transition: background-color .2s ease, color .2s ease;
+}
+#users-section .users-table tbody tr.search-result-highlight > td:first-child {
+    border-left: 3px solid #d19b12 !important;
+}
+#users-section .users-table tbody tr.search-result-highlight > td:last-child {
+    border-right: 3px solid #d19b12 !important;
+}
