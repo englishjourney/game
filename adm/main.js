@@ -1,7 +1,7 @@
 import { initAuth, logout } from './auth.js';
 import { initEduPlanDashboard } from './eduplan-dashboard.js';
 import { initPlanner } from './planner.js?v=multi-copy-20261117';
-import { initUsers } from './users.js?v=student-grade-components-20261119';
+import { initUsers } from './users.js?v=missing-student-admin-20261119';
 import { initMissions } from './missions.js';
 import { initFlashcardsAdm } from './flashcardsAdm.js';
 import { initTasks } from './tasks.js';
