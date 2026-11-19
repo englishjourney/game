@@ -1,6 +1,6 @@
 # EnglishJourney — Trilha de missões
 
-Esta pasta reúne os documentos das novas missões. A sequência abaixo é o roteiro pedagógico de referência para a produção dos materiais; os registros antigos da tabela `missions` permanecem ativos até que os novos documentos sejam adicionados e a substituição seja feita.
+Esta pasta reúne os documentos das novas missões. A sequência abaixo é o roteiro pedagógico de referência para a produção dos materiais; os registros antigos da tabela \`missions\` permanecem ativos até que os novos documentos sejam adicionados e a substituição seja feita.
 
 ## Progressão proposta
 
@@ -11,31 +11,32 @@ Cada etapa combina um campo de vocabulário com um objetivo gramatical. A trilha
 | 01 | Days of the Week — dias da semana, sequência semanal e weekdays / weekend | Vocabulário básico de calendário e referência a dias |
 | 02 | Months of the Year — meses do ano, números de 1 a 12 e sequência do calendário | Ordem dos meses e associação entre mês e número |
 | 03 | Alphabet and Numbers — alfabeto, nomes e sons das letras, sílabas simples e números de 0 a 20 | Reconhecimento de sons iniciais, sílabas e formação de números com dezenas + unidades |
-| 04 | Places in town — lugares da cidade e serviços | There is / there are e preposições de lugar |
-| 05 | Food & meals — alimentos, bebidas e refeições | Countable / uncountable nouns, some / any |
-| 06 | People & descriptions — personalidade, aparência e características | Adjectives, equatives e comparatives |
-| 07 | Abilities & technology — habilidades, dispositivos e ações digitais | Can / can't e perguntas sobre habilidades |
-| 08 | Home & actions — cômodos, móveis e tarefas domésticas | Present continuous e contraste com simple present |
-| 09 | Travel & directions — transporte, lugares e deslocamento | Imperatives, prepositions of movement e instruções |
-| 10 | Past experiences — eventos, atividades e experiências | Simple past: verbos regulares e marcadores de tempo |
-| 11 | Stories & memories — acontecimentos, sentimentos e narrativa | Simple past: verbos irregulares, negativas e perguntas |
-| 12 | Media, opinions & plans — mídia, opiniões e planos | Future with *going to*, *should* e conectores de opinião |
+| 04 | Prices — money, penny, coin, cash, cards, voucher, currency e vocabulário de compras | Perguntar e responder preços, formas de pagamento e compreensão de uma conversa no supermercado |
+| 05 | Places in town — lugares da cidade e serviços | There is / there are e preposições de lugar |
+| 06 | Food & meals — alimentos, bebidas e refeições | Countable / uncountable nouns, some / any |
+| 07 | People & descriptions — personalidade, aparência e características | Adjectives, equatives e comparatives |
+| 08 | Abilities & technology — habilidades, dispositivos e ações digitais | Can / can't e perguntas sobre habilidades |
+| 09 | Home & actions — cômodos, móveis e tarefas domésticas | Present continuous e contraste com simple present |
+| 10 | Travel & directions — transporte, lugares e deslocamento | Imperatives, prepositions of movement e instruções |
+| 11 | Past experiences — eventos, atividades e experiências | Simple past: verbos regulares e marcadores de tempo |
+| 12 | Stories & memories — acontecimentos, sentimentos e narrativa | Simple past: verbos irregulares, negativas e perguntas |
+| 13 | Media, opinions & plans — mídia, opiniões e planos | Future with *going to*, *should* e conectores de opinião |
 
 ## Regras de progresso e recompensa
 
-- Apenas as missões desta trilha podem registrar resultados na tabela `missions`.
-- Os jogos de `otherGames/` são recreativos: podem manter pontuação local durante a partida, mas não registram missões nem alteram `users.score`.
-- Uma primeira conclusão válida de missão concede **+2 estrelas** em `users.stars`.
-- A recompensa é única por aluno e por missão. Uma conclusão ou tentativa já registrada em `done` ou `fail` não concede novamente as estrelas.
-- A coluna `mission_score` define apenas a meta de pontuação dentro do jogo da missão; ela não é somada a `users.score`.
+- Apenas as missões desta trilha podem registrar resultados na tabela \`missions\`.
+- Os jogos de \`otherGames/\` são recreativos: podem manter pontuação local durante a partida, mas não registram missões nem alteram \`users.score\`.
+- Uma primeira conclusão válida de missão concede **+2 estrelas** em \`users.stars\`.
+- A recompensa é única por aluno e por missão. Uma conclusão ou tentativa já registrada em \`done\` ou \`fail\` não concede novamente as estrelas.
+- A coluna \`mission_score\` define apenas a meta de pontuação dentro do jogo da missão; ela não é somada a \`users.score\`.
 - Na missão 02, o jogo da memória contém 24 cartas (12 números e 12 meses), concede 10 pontos por par e exige encontrar os 12 pares; o resultado final é 120 pontos e a meta cadastrada é 100.
-- As missões devem registrar o resultado usando `recordMissionResult()` de `components/config.js`, que chama a função transacional `record_mission_result` no Supabase.
+- As missões devem registrar o resultado usando \`recordMissionResult()\` de \`components/config.js\`, que chama a função transacional \`record_mission_result\` no Supabase.
 - A função transacional impede recompensas duplicadas por reenvio ou chamadas simultâneas. O fluxo atual, porém, ainda usa a sessão legada armazenada no navegador; para impedir também chamadas manuais forjadas, a conclusão deverá ser validada por autenticação Supabase/Edge Function no servidor.
 
 ## Padrão de efeitos sonoros de resposta
 
 - Toda questão, quiz ou desafio avaliativo de uma missão deve reproduzir um efeito sonoro ao responder.
-- A função compartilhada fica em `components/feedback.js`: importe `playAnswerSound` e chame `playAnswerSound(true)` quando a resposta for correta e `playAnswerSound(false)` quando for incorreta.
+- A função compartilhada fica em \`components/feedback.js\`: importe \`playAnswerSound\` e chame \`playAnswerSound(true)\` quando a resposta for correta e \`playAnswerSound(false)\` quando for incorreta.
 - A mesma regra vale para jogos dentro das missões, como combinações, memória e desafios de pontuação: reproduza o efeito somente quando o resultado da tentativa for confirmado.
 - O som é sintetizado localmente com Web Audio, sem depender de arquivos externos. A implementação deve ser reutilizada pelas próximas missões, sem criar efeitos isolados em cada página.
 
@@ -44,15 +45,23 @@ Cada etapa combina um campo de vocabulário com um objetivo gramatical. A trilha
 - Lição 1: alfabeto inglês (26 letras), diferença entre nome da letra e som inicial, e cinco sílabas simples com exemplos em áudio (MA, ME, MI, MO, MU).
 - Lição 2: números de 0 a 20, dezenas de 20 a 90 e formação de números compostos com hífen, como *twenty-one* e *fifty-six*.
 - Prática: nove questões com quatro alternativas cada — três sobre sons iniciais das letras, três sobre sílabas e três sobre identificação/formação de números.
-- O resultado é calculado em percentual; a meta usa `mission_score` da tabela `missions` (80% como padrão local enquanto a missão não estiver cadastrada). A conclusão registrada concede as duas estrelas uma única vez.
+- O resultado é calculado em percentual; a meta usa \`mission_score\` da tabela \`missions\` (80% como padrão local enquanto a missão não estiver cadastrada). A conclusão registrada concede as duas estrelas uma única vez.
+
+## Missão 04 — Prices
+
+- Lição 1: 12 termos de dinheiro e compras (penny, coin, money, cash, cash out, credit card, debit card, gift card, voucher, pay, payment e currency), apresentados por ilustrações e três opções por imagem. As opções incorretas usam vocabulário já visto nas missões anteriores.
+- Lição 2: perguntas para descobrir preços (*How much is it?*, *How much does it cost?*, *How much is this T-shirt?*), respostas com valores e expressões usadas no caixa.
+- Listening: vídeo incorporado do YouTube com uma conversa simples no supermercado e uma questão de compreensão sobre o preço das maçãs.
+- Prática: 21 questões no total — 12 associações imagem/palavra, três sobre perguntas de preço, cinco sobre respostas e pagamento e uma de compreensão do vídeo. A meta padrão local é 80% enquanto a missão não estiver cadastrada.
+- Observação de vocabulário: a forma verbal mais comum é *cash out*, escrita em duas palavras.
 
 ## Organização dos documentos
 
-- Um documento por missão, com numeração no início do nome: `01-days-of-a-week`, `02-months-of-the-year`, `03-alphabet-and-numbers` e assim por diante.
+- Um documento por missão, com numeração no início do nome: \`01-days-of-a-week\`, \`02-months-of-the-year\`, \`03-alphabet-and-numbers\`, \`04-prices\` e assim por diante.
 - Cada documento deve informar objetivo, vocabulário-alvo, explicação gramatical curta, exemplos contextualizados e atividade de aplicação.
 - A dificuldade deve crescer de forma gradual: reconhecer e compreender, praticar com apoio e, por fim, aplicar em contexto.
-- Os jogos de `otherGames/` ficam separados da trilha curricular e servem como atividades de diversão.
+- Os jogos de \`otherGames/\` ficam separados da trilha curricular e servem como atividades de diversão.
 
 ## Estado da migração
 
-A interface da aba Missões já pode usar o mapa para mostrar progresso, missão atual, missões anteriores e etapas bloqueadas. Os links e conteúdos antigos da tabela `missions` não foram apagados nem substituídos nesta etapa.
+A interface da aba Missões já pode usar o mapa para mostrar progresso, missão atual, missões anteriores e etapas bloqueadas. Os links e conteúdos antigos da tabela \`missions\` não foram apagados nem substituídos nesta etapa.
