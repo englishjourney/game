@@ -3634,3 +3634,141 @@ dialog .markdown-preview-label { color: #6c5b91; }
         flex-direction: column;
     }
 }
+
+
+/* Cadastro de aluno ausente por turma */
+#users-section .team-heading {
+    flex-wrap: wrap;
+}
+#users-section .team-add-student-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-left: 10px;
+    padding: 8px 12px;
+    border: 1px solid #d7c8f3;
+    border-radius: 10px;
+    background: #f5f0ff;
+    color: #52358d;
+    font: inherit;
+    font-size: .82rem;
+    font-weight: 750;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+#users-section .team-add-student-button:hover {
+    background: #ebe2ff;
+    border-color: #bca5e8;
+    transform: translateY(-1px);
+}
+#users-section .student-stat-cell {
+    text-align: center;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+}
+#adm-panel dialog.missing-student-dialog {
+    width: min(460px, calc(100vw - 28px));
+    max-width: 460px;
+    padding: 0;
+    border: 1px solid #e5dcf2;
+    border-radius: 18px;
+    background: #fff;
+    color: #211b42;
+    box-shadow: 0 24px 80px rgba(24, 15, 48, .24);
+}
+#adm-panel dialog.missing-student-dialog::backdrop {
+    background: rgba(19, 13, 38, .58);
+    backdrop-filter: blur(4px);
+}
+.missing-student-form {
+    display: grid;
+    gap: 12px;
+    padding: 22px;
+}
+.missing-student-header {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 34px;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+.missing-student-icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    background: #f0eaff;
+    color: #633da8;
+    font-size: 1.1rem;
+}
+.missing-student-header small {
+    color: #7c6b9d;
+    font-size: .68rem;
+    font-weight: 850;
+    letter-spacing: .09em;
+}
+.missing-student-header h3 {
+    margin: 3px 0;
+    color: #241a42;
+    font-size: 1.12rem;
+}
+.missing-student-header p {
+    margin: 0;
+    color: #73698a;
+    font-size: .84rem;
+    font-weight: 700;
+}
+.missing-student-close {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 9px;
+    background: #f4f0fa;
+    color: #49376c;
+    font-size: 1.35rem;
+    cursor: pointer;
+}
+.missing-student-form > label {
+    color: #3c3156;
+    font-size: .86rem;
+    font-weight: 800;
+}
+.missing-student-form > input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 13px;
+    border: 1px solid #dcd3e9;
+    border-radius: 10px;
+    background: #fff;
+    color: #241a42;
+    font: inherit;
+}
+.missing-student-form > input:focus {
+    outline: 3px solid rgba(126, 87, 194, .16);
+    border-color: #9274c5;
+}
+.missing-student-help {
+    margin: 0;
+    color: #756b87;
+    font-size: .8rem;
+    line-height: 1.5;
+}
+.missing-student-help strong {
+    color: #493275;
+}
+.missing-student-error {
+    margin: 0;
+    color: #b42318;
+    font-size: .82rem;
+}
+@media (max-width: 640px) {
+    #users-section .team-add-student-button {
+        width: 100%;
+        margin: 8px 0 0;
+    }
+    .missing-student-form {
+        padding: 18px;
+    }
+}
