@@ -684,6 +684,12 @@ let pendingReminderSound = false;
 let notificationCheckInProgress = false;
 let reminderBubbleTimeout = null;
 
+function getCurrentReminderOwnerId() {
+    const ownerId = window.currentTeacher?.id;
+    if (!ownerId) throw new Error('Sessão de professor não encontrada.');
+    return ownerId;
+}
+
 export function initReminders() {
     const btnReminders = document.getElementById('btn-reminders');
     const dropdown = document.getElementById('reminders-dropdown');
@@ -737,11 +743,21 @@ export function initReminders() {
             }
 
             try {
+                const ownerId = getCurrentReminderOwnerId();
                 if (id) {
-                    const { error } = await supabase.from('reminders').update({ remindMeTo, date, time }).eq('id', id);
+                    const { error } = await supabase
+                        .from('reminders')
+                        .update({ remindMeTo, date, time })
+                        .eq('id', id)
+                        .eq('owner', ownerId);
                     if (error) throw error;
                 } else {
-                    const { error } = await supabase.from('reminders').insert([{ remindMeTo, date, time }]);
+                    const { error } = await supabase.from('reminders').insert([{
+                        remindMeTo,
+                        date,
+                        time,
+                        owner: ownerId
+                    }]);
                     if (error) throw error;
                 }
                 modalForm.classList.add('hidden');
@@ -780,7 +796,12 @@ export async function loadRemindersSection() {
     container.innerHTML = '<div style="color: #888; text-align: center; padding: 20px;">Carregando lembretes...</div>';
 
     try {
-        const { data: reminders, error } = await supabase.from('reminders').select('*').order('date', { ascending: true });
+        const ownerId = getCurrentReminderOwnerId();
+        const { data: reminders, error } = await supabase
+            .from('reminders')
+            .select('*')
+            .eq('owner', ownerId)
+            .order('date', { ascending: true });
         if (error) throw error;
 
         if (!reminders || reminders.length === 0) {
@@ -817,7 +838,12 @@ export async function loadRemindersSection() {
 window.deleteReminder = async function(id) {
     if (!confirm('Deseja realmente excluir este lembrete?')) return;
     try {
-        const { error } = await supabase.from('reminders').delete().eq('id', id);
+        const ownerId = getCurrentReminderOwnerId();
+        const { error } = await supabase
+            .from('reminders')
+            .delete()
+            .eq('id', id)
+            .eq('owner', ownerId);
         if (error) throw error;
         await loadRemindersSection();
         await checkRemindersStatus();
@@ -967,7 +993,10 @@ async function checkRemindersStatus(options = {}) {
         const { data: authData, error: authError } = await supabase.auth.getUser();
         if (authError || !authData.user) throw new Error('Sessão de professor não encontrada.');
         const [remindersResult, tasksResult] = await Promise.all([
-            supabase.from('reminders').select('id, remindMeTo, date, time'),
+            supabase
+                .from('reminders')
+                .select('id, remindMeTo, date, time')
+                .eq('owner', authData.user.id),
             supabase.from('tasks').select('id, title, deadline').eq('owner', authData.user.id)
         ]);
         if (remindersResult.error) throw remindersResult.error;
