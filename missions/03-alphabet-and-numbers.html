@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#58cc02">
+    <meta name="description" content="Learn the English alphabet, basic letter sounds, syllables and numbers with Artie.">
+    <title>Alphabet and Numbers | EnglishJourney</title>
+    <link rel="stylesheet" href="./components/mission.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+/* Mission 03: elementos próprios, mantendo o tema compartilhado das missões. */
+.ej-alphabet-grid,
+.ej-number-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 9px;
+    margin: 18px 0 24px;
+}
+.ej-letter-card,
+.ej-number-card {
+    min-width: 0;
+    min-height: 83px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 8px 5px;
+    border: 2px solid #e2eaf2;
+    border-bottom-width: 4px;
+    border-radius: 14px;
+    background: #fff;
+    text-align: center;
+}
+.ej-letter-card strong {
+    color: #243044;
+    font-size: 1.65rem;
+    font-weight: 1000;
+    line-height: 1;
+}
+.ej-letter-card small,
+.ej-number-card small {
+    color: #718096;
+    font-size: .7rem;
+    font-weight: 800;
+}
+.ej-letter-card .ej-audio-button,
+.ej-number-card .ej-audio-button { margin-top: 3px; }
+.ej-sound-examples {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 16px 0 21px;
+}
+.ej-sound-example {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid #e4eaf1;
+    border-radius: 14px;
+    background: #fbfdff;
+}
+.ej-sound-example strong { display: block; color: #243044; font-size: 1rem; font-weight: 900; }
+.ej-sound-example small { display: block; color: #718096; font-size: .75rem; font-weight: 700; }
+.ej-phonics-grid,
+.ej-decade-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 9px;
+    margin: 16px 0 21px;
+}
+.ej-phonics-card,
+.ej-decade-card {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 12px 6px;
+    border: 2px solid #dceaf4;
+    border-bottom-width: 4px;
+    border-radius: 14px;
+    background: #f8fcff;
+    text-align: center;
+}
+.ej-phonics-card strong,
+.ej-decade-card strong { color: #1689c6; font-size: 1.25rem; font-weight: 1000; }
+.ej-phonics-card small,
+.ej-decade-card small { color: #718096; font-size: .72rem; font-weight: 800; }
+.ej-vowel-note { margin: 12px 0; color: #64748b; font-size: .82rem; line-height: 1.5; }
+.ej-number-card { min-height: 78px; }
+.ej-number-card strong { color: #243044; font-size: 1.05rem; font-weight: 1000; }
+.ej-number-card span { color: #1689c6; font-size: .79rem; font-weight: 900; }
+.ej-number-card.is-tens { background: #f5fff0; border-color: #ccebb9; }
+.ej-number-examples {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+    margin: 17px 0;
+}
+.ej-number-example {
+    padding: 13px 8px;
+    border: 1px solid #ccebb9;
+    border-radius: 14px;
+    background: #f5fff0;
+    text-align: center;
+}
+.ej-number-example strong { display: block; color: #287c0b; font-size: 1.2rem; font-weight: 1000; }
+.ej-number-example span { color: #526b49; font-size: .78rem; font-weight: 800; }
+.ej-four-options { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ej-question-audio {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0 5px;
+    padding: 12px 14px;
+    border: 1px solid #cceafa;
+    border-radius: 14px;
+    background: #f0faff;
+    color: #33627a;
+    font-size: .87rem;
+    font-weight: 800;
+}
+.ej-question-audio .ej-audio-button { flex: 0 0 38px; width: 38px; height: 38px; }
+.ej-section-label {
+    margin: 23px 0 8px;
+    color: #718096;
+    font-size: .72rem;
+    font-weight: 1000;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+.ej-score-summary .ej-summary-item { flex: 1; }
+@media (max-width: 850px) {
+    .ej-alphabet-grid,
+    .ej-number-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+@media (max-width: 650px) {
+    .ej-alphabet-grid,
+    .ej-number-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; }
+    .ej-letter-card { min-height: 76px; }
+    .ej-sound-examples { grid-template-columns: 1fr; }
+    .ej-phonics-grid { gap: 6px; }
+    .ej-phonics-card { padding: 10px 3px; }
+    .ej-number-examples { gap: 6px; }
+    .ej-number-example { padding: 10px 4px; }
+    .ej-number-example strong { font-size: 1rem; }
+    .ej-number-example span { font-size: .68rem; }
+    .ej-four-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 370px) {
+    .ej-alphabet-grid,
+    .ej-number-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+    </style>
+</head>
+<body>
+    <div id="mission-app"></div>
+    <script type="module">
+import {
+    getCachedMissionSession,
+    loginMissionUser,
+    loadMissionSettings,
+    recordMissionResult
+} from "./components/config.js";
+import {
+    mountMissionLayout,
+    setMissionUser,
+    setMissionReward,
+    setMissionProgress,
+    setArtie,
+    setMissionContent,
+    showMissionDialog
+} from "./components/layout.js";
+import { playGoogleTTS } from "./components/tts.js";
+import { playAnswerSound } from "./components/feedback.js";
+
+const MISSION_NAME = "Alphabet and Numbers";
+const MISSION_NUMBER = "03";
+const TOTAL_QUESTIONS = 9;
+const DEFAULT_REQUIRED_SCORE = 80;
+
+const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const numbers = [
+    { value: 0, word: "zero" }, { value: 1, word: "one" },
+    { value: 2, word: "two" }, { value: 3, word: "three" },
+    { value: 4, word: "four" }, { value: 5, word: "five" },
+    { value: 6, word: "six" }, { value: 7, word: "seven" },
+    { value: 8, word: "eight" }, { value: 9, word: "nine" },
+    { value: 10, word: "ten" }, { value: 11, word: "eleven" },
+    { value: 12, word: "twelve" }, { value: 13, word: "thirteen" },
+    { value: 14, word: "fourteen" }, { value: 15, word: "fifteen" },
+    { value: 16, word: "sixteen" }, { value: 17, word: "seventeen" },
+    { value: 18, word: "eighteen" }, { value: 19, word: "nineteen" },
+    { value: 20, word: "twenty" }
+];
+const tens = [
+    { value: 20, word: "twenty" }, { value: 30, word: "thirty" },
+    { value: 40, word: "forty" }, { value: 50, word: "fifty" },
+    { value: 60, word: "sixty" }, { value: 70, word: "seventy" },
+    { value: 80, word: "eighty" }, { value: 90, word: "ninety" }
+];
+const syllables = [
+    { value: "MA", example: "map", sound: "short A" },
+    { value: "ME", example: "met", sound: "short E" },
+    { value: "MI", example: "miss", sound: "short I" },
+    { value: "MO", example: "mop", sound: "short O" },
+    { value: "MU", example: "mud", sound: "short U" }
+];
+
+const questions = [
+    {
+        section: "LETTER SOUNDS",
+        prompt: "Listen to the word. Which letter represents its first sound?",
+        audio: "ball",
+        options: ["B", "D", "P", "T"],
+        answer: "B",
+        explanation: "Ball começa com o som /b/, representado pela letra B."
+    },
+    {
+        section: "LETTER SOUNDS",
+        prompt: "Listen to the word. Which letter represents its first sound?",
+        audio: "fish",
+        options: ["V", "F", "S", "H"],
+        answer: "F",
+        explanation: "Fish começa com o som /f/, representado pela letra F."
+    },
+    {
+        section: "LETTER SOUNDS",
+        prompt: "Listen to the word. Which letter represents its first sound?",
+        audio: "moon",
+        options: ["N", "W", "M", "L"],
+        answer: "M",
+        explanation: "Moon começa com o som /m/, representado pela letra M."
+    },
+    {
+        section: "SYLLABLE SOUNDS",
+        prompt: "Listen to the word. Which syllable do you hear at the beginning?",
+        audio: "map",
+        options: ["ME", "MA", "MI", "MO"],
+        answer: "MA",
+        explanation: "Map começa com MA. O A tem o som curto ouvido em map."
+    },
+    {
+        section: "SYLLABLE SOUNDS",
+        prompt: "Listen to the word. Which syllable do you hear at the beginning?",
+        audio: "met",
+        options: ["MI", "MU", "ME", "MA"],
+        answer: "ME",
+        explanation: "Met começa com ME. O E tem o som curto ouvido em met."
+    },
+    {
+        section: "SYLLABLE SOUNDS",
+        prompt: "Listen to the word. Which syllable do you hear at the beginning?",
+        audio: "mud",
+        options: ["MO", "MU", "MA", "MI"],
+        answer: "MU",
+        explanation: "Mud começa com MU. O U tem o som curto ouvido em mud."
+    },
+    {
+        section: "NUMBERS",
+        prompt: "Listen to the number. Which numeral did you hear?",
+        audio: "thirteen",
+        options: ["30", "13", "14", "3"],
+        answer: "13",
+        explanation: "Thirteen significa 13. Não confunda thirteen com thirty (30)."
+    },
+    {
+        section: "NUMBERS",
+        prompt: "Which word correctly names the number 15?",
+        options: ["Fifty", "Fifteen", "Five", "Fourteen"],
+        answer: "Fifteen",
+        explanation: "15 é fifteen. Fifty significa 50 e five significa 5."
+    },
+    {
+        section: "NUMBERS",
+        prompt: "Complete the number: fifty + six = ?",
+        options: ["Sixty-five", "Fifty-five", "Fifty-six", "Sixteen"],
+        answer: "Fifty-six",
+        explanation: "50 + 6 forma 56: fifty-six. Em inglês, usamos hífen entre a dezena e a unidade."
+    }
+];
+
+let studentSession = null;
+let missionSettings = {
+    registered: false,
+    missionScore: null,
+    alreadyAttempted: false,
+    completed: false,
+    failed: false
+};
+let questionIndex = 0;
+let correctAnswers = 0;
+let audioBusy = false;
+
+function updateProgress(label, completed = questionIndex) {
+    const percent = Math.round((completed / TOTAL_QUESTIONS) * 100);
+    setMissionProgress(label, completed, TOTAL_QUESTIONS, percent);
+}
+
+function getRequiredScore() {
+    const configured = Number(missionSettings.missionScore);
+    return missionSettings.registered && Number.isFinite(configured) && configured > 0
+        ? configured
+        : DEFAULT_REQUIRED_SCORE;
+}
+
+function renderLoginScreen() {
+    setMissionProgress("LOGIN", 0, TOTAL_QUESTIONS, 0);
+    setArtie("Hi! Entre com seu usuário do EnglishJourney. Se você já fez login no site, eu reconhecerei sua sessão automaticamente.", "artie_waving_ClosedEyes_smiling.png");
+
+    setMissionContent(
+        '<span class="ej-kicker">WELCOME TO ENGLISHJOURNEY</span>' +
+        '<h1 class="ej-screen-title">Let’s learn English!</h1>' +
+        '<p class="ej-screen-copy">Entre com o mesmo usuário e senha que você utiliza no EnglishJourney para começar a missão <strong>Alphabet and Numbers</strong>.</p>' +
+        '<form id="mission-login-form" class="ej-login-form">' +
+            '<label>Username<input id="mission-login-username" name="username" type="text" autocomplete="username" required></label>' +
+            '<label>Password<input id="mission-login-password" name="password" type="password" autocomplete="current-password" required></label>' +
+            '<p id="mission-login-feedback" class="ej-login-feedback" role="alert"></p>' +
+            '<button class="ej-primary-button" type="submit">Start mission <span aria-hidden="true">→</span></button>' +
+        '</form>'
+    );
+
+    const form = document.getElementById("mission-login-form");
+    form?.addEventListener("submit", async function(event) {
+        event.preventDefault();
+        const button = form.querySelector('button[type="submit"]');
+        const feedback = document.getElementById("mission-login-feedback");
+        const username = document.getElementById("mission-login-username")?.value;
+        const password = document.getElementById("mission-login-password")?.value;
+
+        if (button) {
+            button.disabled = true;
+            button.textContent = "Signing in...";
+        }
+        if (feedback) feedback.textContent = "";
+
+        const result = await loginMissionUser(username, password);
+        if (!result.session) {
+            if (feedback) feedback.textContent = result.error || "Não foi possível entrar.";
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = 'Start mission <span aria-hidden="true">→</span>';
+            }
+            return;
+        }
+        await startMission(result.session);
+    });
+}
+
+async function startMission(session) {
+    studentSession = session;
+    setMissionUser(session);
+    setArtie("Great! Vamos aprender o alfabeto, os sons das letras e os números em inglês.", "artie_smiling_holding_chin.png");
+
+    try {
+        missionSettings = await loadMissionSettings(MISSION_NAME, session.username);
+    } catch (error) {
+        console.error("Não foi possível carregar a configuração da missão:", error);
+        missionSettings = {
+            registered: false,
+            missionScore: null,
+            alreadyAttempted: false,
+            completed: false,
+            failed: false
+        };
+    }
+
+    setMissionReward(
+        missionSettings.completed,
+        missionSettings.failed,
+        missionSettings.registered && Number(missionSettings.missionScore) > 0
+    );
+    renderAlphabetLesson();
+}
+
+function getMissionNotice() {
+    if (!missionSettings.registered) {
+        return '<div class="ej-info-strip ej-warning-strip"><span aria-hidden="true">ℹ️</span><span>Esta missão ainda não foi cadastrada na tabela <strong>missions</strong>. Você pode estudar e praticar, mas a conclusão só será registrada depois que “Alphabet and Numbers” for adicionada ao banco de dados.</span></div>';
+    }
+    if (missionSettings.alreadyAttempted) {
+        return '<div class="ej-info-strip ej-warning-strip"><span aria-hidden="true">🔁</span><span>Você já tentou ou concluiu esta missão. Pode revisar e praticar novamente, mas a recompensa de duas estrelas só pode ser recebida uma vez.</span></div>';
+    }
+    return "";
+}
+
+function bindAudioButtons() {
+    document.querySelectorAll("#mission-content [data-say]").forEach(function(button) {
+        button.addEventListener("click", async function() {
+            if (audioBusy || button.disabled) return;
+            audioBusy = true;
+            const audioButtons = Array.from(document.querySelectorAll("#mission-content [data-say]"));
+            audioButtons.forEach(function(audioButton) {
+                audioButton.disabled = true;
+                if (audioButton === button) {
+                    audioButton.classList.add("is-loading");
+                    audioButton.setAttribute("aria-busy", "true");
+                    audioButton.innerHTML = '<i class="fa fa-circle-o-notch fa-spin" aria-hidden="true"></i>';
+                }
+            });
+
+            try {
+                await playGoogleTTS(button.dataset.say);
+            } catch (error) {
+                console.error("Não foi possível reproduzir o áudio:", error);
+            } finally {
+                audioButtons.forEach(function(audioButton) {
+                    audioButton.disabled = false;
+                    if (audioButton === button) {
+                        audioButton.classList.remove("is-loading");
+                        audioButton.removeAttribute("aria-busy");
+                        audioButton.innerHTML = "🔊";
+                    }
+                });
+                audioBusy = false;
+            }
+        });
+    });
+}
+
+function renderAlphabetLesson() {
+    updateProgress("LESSON 1/2", 0);
+    setArtie("Primeiro, conheça as 26 letras. Toque no alto-falante para ouvir o nome de cada letra.", "artie_smiling_holding_chin.png");
+
+    const letterCards = alphabet.map(function(letter) {
+        return '<article class="ej-letter-card">' +
+            '<strong>' + letter + '</strong>' +
+            '<small>LETTER</small>' +
+            '<button class="ej-audio-button" type="button" data-say="' + letter + '" aria-label="Ouvir a letra ' + letter + '">🔊</button>' +
+        '</article>';
+    }).join("");
+
+    const phonicsCards = syllables.map(function(item) {
+        return '<article class="ej-phonics-card">' +
+            '<strong>' + item.value + '</strong>' +
+            '<small>' + item.sound + '</small>' +
+            '<small>as in ' + item.example + '</small>' +
+            '<button class="ej-audio-button" type="button" data-say="' + item.example + '" aria-label="Ouvir ' + item.example + '">🔊</button>' +
+        '</article>';
+    }).join("");
+
+    setMissionContent(
+        '<span class="ej-kicker">LESSON 1 • ALPHABET & SOUNDS</span>' +
+        '<h1 class="ej-screen-title">The English Alphabet</h1>' +
+        '<p class="ej-screen-copy">O alfabeto inglês tem <strong>26 letras</strong>. Ouça o nome de cada letra e observe que o nome da letra pode ser diferente do som que ela representa dentro de uma palavra.</p>' +
+        getMissionNotice() +
+        '<div class="ej-alphabet-grid">' + letterCards + '</div>' +
+        '<div class="ej-info-strip"><span aria-hidden="true">💡</span><span><strong>Letter name × letter sound:</strong> B tem o nome “bee”, mas em <em>ball</em> representa o som /b/. F tem o nome “ef”, mas em <em>fish</em> representa /f/. O importante é ouvir o som inicial da palavra.</span></div>' +
+        '<p class="ej-section-label">Listen to the beginning sound</p>' +
+        '<div class="ej-sound-examples">' +
+            '<div class="ej-sound-example"><div><strong>B — ball</strong><small>Beginning sound: /b/</small></div><button class="ej-audio-button" type="button" data-say="ball" aria-label="Ouvir ball">🔊</button></div>' +
+            '<div class="ej-sound-example"><div><strong>F — fish</strong><small>Beginning sound: /f/</small></div><button class="ej-audio-button" type="button" data-say="fish" aria-label="Ouvir fish">🔊</button></div>' +
+            '<div class="ej-sound-example"><div><strong>M — moon</strong><small>Beginning sound: /m/</small></div><button class="ej-audio-button" type="button" data-say="moon" aria-label="Ouvir moon">🔊</button></div>' +
+        '</div>' +
+        '<p class="ej-section-label">Five simple syllable sounds</p>' +
+        '<p class="ej-screen-copy">Estas sílabas combinam a letra M com os sons curtos das vogais. Ouça a palavra de exemplo para perceber o som inicial.</p>' +
+        '<div class="ej-phonics-grid">' + phonicsCards + '</div>' +
+        '<div class="ej-info-strip"><span aria-hidden="true">📘</span><span>O som das vogais pode mudar em outras palavras. Aqui estamos praticando os sons curtos ouvidos em <strong>map, met, miss, mop</strong> e <strong>mud</strong>.</span></div>' +
+        '<div class="ej-button-row"><button id="start-letter-questions" class="ej-primary-button" type="button">Let’s practice! <span aria-hidden="true">→</span></button></div>'
+    );
+
+    bindAudioButtons();
+    document.getElementById("start-letter-questions")?.addEventListener("click", function() {
+        questionIndex = 0;
+        correctAnswers = 0;
+        renderQuestion();
+    });
+}
+
+function renderNumbersLesson() {
+    updateProgress("LESSON 2/2", 6);
+    setArtie("Agora vamos aos números! Ouça os números de zero a twenty e veja como formar números maiores.", "artie_smiling_holding_chin.png");
+
+    const numberCards = numbers.map(function(item) {
+        return '<article class="ej-number-card">' +
+            '<strong>' + item.value + '</strong>' +
+            '<span>' + item.word + '</span>' +
+            '<button class="ej-audio-button" type="button" data-say="' + item.word + '" aria-label="Ouvir ' + item.word + '">🔊</button>' +
+        '</article>';
+    }).join("");
+
+    const tensCards = tens.map(function(item) {
+        return '<article class="ej-decade-card">' +
+            '<strong>' + item.value + '</strong>' +
+            '<small>' + item.word + '</small>' +
+            '<button class="ej-audio-button" type="button" data-say="' + item.word + '" aria-label="Ouvir ' + item.word + '">🔊</button>' +
+        '</article>';
+    }).join("");
+
+    setMissionContent(
+        '<span class="ej-kicker">LESSON 2 • NUMBERS</span>' +
+        '<h1 class="ej-screen-title">Numbers 0–20</h1>' +
+        '<p class="ej-screen-copy">Aprenda os números de <strong>zero a twenty</strong>. Toque no alto-falante para ouvir cada um e repita em voz alta.</p>' +
+        '<p class="ej-section-label">From zero to twenty</p>' +
+        '<div class="ej-number-grid">' + numberCards + '</div>' +
+        '<p class="ej-section-label">The tens</p>' +
+        '<p class="ej-screen-copy">Depois de twenty, conheça também as dezenas. A forma <strong>forty</strong> é escrita sem a letra U.</p>' +
+        '<div class="ej-decade-grid">' + tensCards + '</div>' +
+        '<div class="ej-info-strip"><span aria-hidden="true">🧩</span><span><strong>The rule:</strong> para formar números entre 21 e 99 que não sejam dezenas exatas, junte a dezena e a unidade (de 1 a 9). Na escrita, usamos um hífen entre as duas partes.</span></div>' +
+        '<div class="ej-number-examples">' +
+            '<div class="ej-number-example"><strong>20 + 1</strong><span>twenty-one</span></div>' +
+            '<div class="ej-number-example"><strong>30 + 4</strong><span>thirty-four</span></div>' +
+            '<div class="ej-number-example"><strong>50 + 6</strong><span>fifty-six</span></div>' +
+        '</div>' +
+        '<div class="ej-info-strip"><span aria-hidden="true">✏️</span><span>Observe: <strong>fifty-six</strong> tem hífen. Escrevemos <strong>forty</strong> (40), <strong>fifty</strong> (50) e <strong>eighty</strong> (80).</span></div>' +
+        '<div class="ej-button-row"><button id="start-number-questions" class="ej-primary-button" type="button">I’m ready! <span aria-hidden="true">→</span></button></div>'
+    );
+
+    bindAudioButtons();
+    document.getElementById("start-number-questions")?.addEventListener("click", function() {
+        questionIndex = 6;
+        renderQuestion();
+    });
+}
+
+function renderQuestion() {
+    const question = questions[questionIndex];
+    updateProgress(question.section, questionIndex);
+    setArtie(
+        questionIndex < 3
+            ? "Ouça com atenção o começo da palavra e encontre a letra correspondente."
+            : questionIndex < 6
+                ? "Agora identifique o som da sílaba no início da palavra."
+                : "Leia e ouça com atenção. Você consegue reconhecer os números!",
+        "artie_standing_smiling.png"
+    );
+
+    const options = question.options.map(function(option) {
+        return '<button class="ej-answer-option" type="button" data-answer="' + option + '">' + option + '</button>';
+    }).join("");
+
+    const audioPrompt = question.audio
+        ? '<div class="ej-question-audio"><button class="ej-audio-button" type="button" data-say="' + question.audio + '" aria-label="Ouvir áudio da questão">🔊</button><span>Toque para ouvir: <strong>listen carefully</strong></span></div>'
+        : "";
+
+    setMissionContent(
+        '<span class="ej-kicker">PRACTICE • ' + question.section + '</span>' +
+        '<h1 class="ej-screen-title">Let’s practice!</h1>' +
+        '<p class="ej-screen-copy">Escolha uma das quatro alternativas. Você terá feedback logo depois de responder.</p>' +
+        '<section class="ej-quiz-card">' +
+            '<p class="ej-question-number">QUESTION 0' + (questionIndex + 1) + ' / 09</p>' +
+            '<h2 class="ej-question-title">' + question.prompt + '</h2>' +
+            audioPrompt +
+            '<div class="ej-answer-list ej-four-options" id="question-answers">' + options + '</div>' +
+            '<p id="question-feedback" class="ej-answer-feedback" aria-live="polite"></p>' +
+            '<div class="ej-button-row"><button id="question-next" class="ej-primary-button" type="button" hidden disabled>' +
+                (questionIndex === 5 ? "Go to lesson 2" : questionIndex === 8 ? "See my result" : "Continue") +
+                ' <span aria-hidden="true">→</span></button></div>' +
+        '</section>'
+    );
+
+    bindAudioButtons();
+    document.querySelectorAll("[data-answer]").forEach(function(button) {
+        button.addEventListener("click", function() {
+            const allOptions = Array.from(document.querySelectorAll("[data-answer]"));
+            if (allOptions.some(function(option) { return option.disabled; })) return;
+
+            allOptions.forEach(function(option) {
+                option.disabled = true;
+                if (option.dataset.answer === question.answer) option.classList.add("is-correct");
+            });
+
+            const correct = button.dataset.answer === question.answer;
+            playAnswerSound(correct);
+            if (correct) {
+                correctAnswers += 1;
+                setArtie("Excellent! Você encontrou a resposta!", "artie_smiling_happy_clenched_fists.png");
+            } else {
+                button.classList.add("is-wrong");
+                setArtie("Quase! Observe a alternativa correta e guarde esse som para a próxima.", "artie_sad.png");
+            }
+
+            updateProgress(question.section, questionIndex + 1);
+            const feedback = document.getElementById("question-feedback");
+            if (feedback) feedback.textContent = (correct ? "Correct! " : "Not quite. ") + question.explanation;
+
+            const next = document.getElementById("question-next");
+            if (next) {
+                next.hidden = false;
+                next.disabled = false;
+            }
+        });
+    });
+
+    document.getElementById("question-next")?.addEventListener("click", function() {
+        if (questionIndex === 5) {
+            renderNumbersLesson();
+            return;
+        }
+        if (questionIndex < TOTAL_QUESTIONS - 1) {
+            questionIndex += 1;
+            renderQuestion();
+            return;
+        }
+        finishAssessment();
+    });
+}
+
+function renderRetryScreen(score, target) {
+    updateProgress("REVIEW", TOTAL_QUESTIONS);
+    setArtie("Você está perto! Revise as duas lições e tente novamente. Cada tentativa é uma chance de aprender.", "artie_smiling_holding_chin.png");
+    setMissionContent(
+        '<span class="ej-kicker">KEEP PRACTICING</span>' +
+        '<h1 class="ej-screen-title">Good effort!</h1>' +
+        '<p class="ej-screen-copy">Você acertou <strong>' + correctAnswers + ' de ' + TOTAL_QUESTIONS + '</strong> questões e alcançou <strong>' + score + '%</strong>. A meta desta missão é <strong>' + target + '%</strong>.</p>' +
+        '<div class="ej-score-summary">' +
+            '<div class="ej-summary-item"><strong>' + correctAnswers + ' / ' + TOTAL_QUESTIONS + '</strong><span>Correct answers</span></div>' +
+            '<div class="ej-summary-item"><strong>' + score + '%</strong><span>Your score</span></div>' +
+            '<div class="ej-summary-item"><strong>' + target + '%</strong><span>Mission goal</span></div>' +
+        '</div>' +
+        '<div class="ej-info-strip"><span aria-hidden="true">💡</span><span>Volte ao alfabeto, às sílabas e aos números. Depois, refaça as nove questões para alcançar a meta.</span></div>' +
+        '<div class="ej-button-row"><button id="retry-mission" class="ej-primary-button" type="button">Review and try again <span aria-hidden="true">→</span></button></div>'
+    );
+
+    document.getElementById("retry-mission")?.addEventListener("click", function() {
+        questionIndex = 0;
+        correctAnswers = 0;
+        renderAlphabetLesson();
+    });
+}
+
+async function finishAssessment() {
+    const score = Math.round((correctAnswers / TOTAL_QUESTIONS) * 100);
+    const target = getRequiredScore();
+
+    updateProgress("COMPLETED", TOTAL_QUESTIONS);
+    if (score < target) {
+        renderRetryScreen(score, target);
+        return;
+    }
+
+    setArtie("You did it! Você concluiu as atividades. Vamos conferir o registro da sua missão.", "artie_smiling_happy_clenched_fists.png");
+
+    if (!missionSettings.registered) {
+        renderUnregisteredResult(score);
+        return;
+    }
+
+    if (missionSettings.alreadyAttempted) {
+        renderAlreadyAttemptedResult(score);
+        return;
+    }
+
+    let result = null;
+    let error = null;
+    try {
+        result = await recordMissionResult(MISSION_NAME, studentSession.username, "done");
+    } catch (caughtError) {
+        error = caughtError;
+        console.error("Erro ao registrar a conclusão da missão:", caughtError);
+    }
+
+    if (result && result.recorded) {
+        missionSettings.alreadyAttempted = true;
+        missionSettings.completed = true;
+        missionSettings.failed = false;
+        setMissionReward(true, false);
+        setMissionContent(
+            '<span class="ej-kicker">MISSION COMPLETED</span>' +
+            '<h1 class="ej-screen-title">Congratulations! 🎉</h1>' +
+            '<p class="ej-screen-copy">Você acertou <strong>' + correctAnswers + ' de ' + TOTAL_QUESTIONS + '</strong> questões, alcançou <strong>' + score + '%</strong> e recebeu <strong>+2 estrelas</strong> na sua conta!</p>' +
+            '<div class="ej-score-summary"><div class="ej-summary-item"><strong>' + correctAnswers + ' / ' + TOTAL_QUESTIONS + '</strong><span>Correct answers</span></div><div class="ej-summary-item"><strong>' + score + '%</strong><span>Final score</span></div><div class="ej-summary-item"><strong>+2 ⭐</strong><span>Reward</span></div></div>'
+        );
+        window.setTimeout(function() {
+            window.parent.postMessage({
+                type: "ENGLISHJOURNEY_MISSION_COMPLETED",
+                missionName: MISSION_NAME
+            }, window.location.origin);
+        }, 1600);
+        return;
+    }
+
+    let message = "Não foi possível registrar a conclusão. Tente novamente.";
+    if (error) {
+        message = error.message || message;
+    } else if (result && result.reason === "already-attempted") {
+        message = "Você já tentou ou concluiu esta missão. A recompensa de duas estrelas só pode ser recebida uma vez.";
+    } else if (result && result.reason === "user-ambiguous") {
+        message = "Encontramos mais de um cadastro com este usuário. Peça ao professor para corrigir o cadastro.";
+    } else if (result && result.reason === "mission-not-registered") {
+        message = "Esta missão ainda não foi cadastrada no banco de dados.";
+    } else if (result && result.recorded === false) {
+        message = "Não foi possível registrar a conclusão (" + (result.reason || "erro desconhecido") + ").";
+    }
+
+    showMissionDialog({
+        title: "Almost there!",
+        message: message + " Seu resultado foi " + score + "%. Você pode revisar as lições e tentar novamente.",
+        buttonText: "Review",
+        tone: "warning",
+        onAction: function() {
+            questionIndex = 0;
+            correctAnswers = 0;
+            renderAlphabetLesson();
+        }
+    });
+}
+
+function renderUnregisteredResult(score) {
+    setMissionContent(
+        '<span class="ej-kicker">PRACTICE COMPLETED</span>' +
+        '<h1 class="ej-screen-title">Well done! ⭐</h1>' +
+        '<p class="ej-screen-copy">Você acertou <strong>' + correctAnswers + ' de ' + TOTAL_QUESTIONS + '</strong> questões e alcançou <strong>' + score + '%</strong>. O conteúdo foi concluído, mas esta missão ainda não está cadastrada no banco de dados; por isso, as estrelas não puderam ser registradas.</p>' +
+        '<div class="ej-info-strip ej-warning-strip"><span aria-hidden="true">ℹ️</span><span>Quando “Alphabet and Numbers” for adicionada à tabela <strong>missions</strong>, a conclusão poderá ser registrada normalmente.</span></div>' +
+        '<div class="ej-button-row"><button id="review-unregistered" class="ej-primary-button" type="button">Review lessons <span aria-hidden="true">→</span></button></div>'
+    );
+    document.getElementById("review-unregistered")?.addEventListener("click", function() {
+        questionIndex = 0;
+        correctAnswers = 0;
+        renderAlphabetLesson();
+    });
+}
+
+function renderAlreadyAttemptedResult(score) {
+    setMissionContent(
+        '<span class="ej-kicker">PRACTICE COMPLETED</span>' +
+        '<h1 class="ej-screen-title">Great review! 🎉</h1>' +
+        '<p class="ej-screen-copy">Você alcançou ' + score + '% e revisou o conteúdo. A missão já foi tentada ou concluída anteriormente, então esta repetição não gera novas estrelas.</p>' +
+        '<div class="ej-score-summary"><div class="ej-summary-item"><strong>' + correctAnswers + ' / ' + TOTAL_QUESTIONS + '</strong><span>Correct answers</span></div><div class="ej-summary-item"><strong>' + score + '%</strong><span>Review score</span></div></div>' +
+        '<div class="ej-button-row"><button id="review-completed" class="ej-primary-button" type="button">Review lessons <span aria-hidden="true">→</span></button></div>'
+    );
+    document.getElementById("review-completed")?.addEventListener("click", function() {
+        questionIndex = 0;
+        correctAnswers = 0;
+        renderAlphabetLesson();
+    });
+}
+
+mountMissionLayout({ missionNumber: MISSION_NUMBER });
+
+const cachedSession = getCachedMissionSession();
+if (cachedSession) {
+    startMission(cachedSession);
+} else {
+    renderLoginScreen();
+}
+    </script>
+</body>
+</html>
