@@ -584,6 +584,9 @@ async function createMissingStudent(event) {
         errorMessage.textContent = '';
     }
 
+    document.getElementById('missing-student-dialog')?.close();
+    setUsersRefreshLoader(true, 'Cadastrando aluno...');
+
     try {
         const username = await makeUniqueStudentUsername(name);
         const { data, error } = await supabase
@@ -608,7 +611,6 @@ async function createMissingStudent(event) {
         document.getElementById('missing-student-dialog')?.close();
         await refreshUsersPreservingView({
             expandGrade: grade,
-            focusStudentId: data?.id,
             message: 'Cadastrando aluno e atualizando a turma...'
         });
         alert(
@@ -619,11 +621,15 @@ async function createMissingStudent(event) {
         );
     } catch (error) {
         console.error('Erro ao adicionar aluno ausente:', error);
+        setUsersRefreshLoader(false);
+        const missingDialog = document.getElementById('missing-student-dialog');
+        if (missingDialog && !missingDialog.open) missingDialog.showModal();
         if (errorMessage) {
             errorMessage.textContent = 'Não foi possível adicionar o aluno: ' + (error.message || 'erro inesperado');
             errorMessage.hidden = false;
         }
     } finally {
+        setUsersRefreshLoader(false);
         if (submitButton) {
             submitButton.disabled = false;
             submitButton.textContent = 'Adicionar aluno';
@@ -763,6 +769,8 @@ async function saveStudentGradeModal(event) {
     }
 
     const { studentId, quarter, subject } = activeGradeEditor;
+    document.getElementById('student-grade-modal')?.close();
+    setUsersRefreshLoader(true, 'Salvando nota...');
     if (saveButton) {
         saveButton.disabled = true;
         saveButton.textContent = 'Salvando...';
@@ -802,16 +810,19 @@ async function saveStudentGradeModal(event) {
 
         document.getElementById('student-grade-modal')?.close();
         await refreshUsersPreservingView({
-            focusStudentId: studentId,
             message: 'Salvando nota e atualizando a turma...'
         });
     } catch (error) {
         console.error('Erro ao salvar nota do aluno:', error);
+        setUsersRefreshLoader(false);
+        const gradeDialog = document.getElementById('student-grade-modal');
+        if (gradeDialog && !gradeDialog.open) gradeDialog.showModal();
         if (errorMessage) {
             errorMessage.textContent = 'Não foi possível salvar a nota: ' + (error.message || 'erro inesperado');
             errorMessage.hidden = false;
         }
     } finally {
+        setUsersRefreshLoader(false);
         if (saveButton) {
             saveButton.disabled = false;
             saveButton.textContent = 'Salvar nota';
