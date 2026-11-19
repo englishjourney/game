@@ -957,11 +957,14 @@ function scheduleNextReminderCheck(timestamp) {
 
     const delay = Math.max(0, timestamp - Date.now());
     const maxTimeout = 2147483647;
-    // Não mantém timers acordando repetidamente para eventos de muitos meses à frente.
-    if (delay > 30 * 24 * 60 * 60 * 1000) return;
 
     reminderNextCheckTimeout = setTimeout(() => {
         reminderNextCheckTimeout = null;
+        if (timestamp - Date.now() > maxTimeout) {
+            // Reagenda só o timer do navegador; consulta o banco apenas no horário previsto.
+            scheduleNextReminderCheck(timestamp);
+            return;
+        }
         checkRemindersStatus();
     }, Math.min(delay, maxTimeout));
 }
