@@ -1163,11 +1163,12 @@ async function checkRemindersStatus(options = {}) {
         } else {
             const nextFutureAutomatic = [...futureTaskRows, ...futureSystemRows]
                 .sort((a, b) => a.timestamp - b.timestamp)[0];
-            const nextTimestamp = Math.min(
-                nextFutureAutomatic?.timestamp ?? Infinity,
+            const scheduledTimes = [
+                nextFutureAutomatic?.timestamp,
                 getUpcomingAnnualResetRefresh(now)
-            );
-            scheduleNextReminderCheck(Number.isFinite(nextTimestamp) ? nextTimestamp : NaN);
+            ].filter(Number.isFinite);
+            const nextTimestamp = scheduledTimes.length ? Math.min(...scheduledTimes) : NaN;
+            scheduleNextReminderCheck(nextTimestamp);
         }
 
         const badge = document.getElementById('reminders-badge');
