@@ -1071,7 +1071,7 @@ async function checkRemindersStatus(options = {}) {
         }
 
         // Se houver mais avisos vencidos, exibe o próximo após o balão atual.
-        if (dueTaskRows.length > 1) {
+        if (dueTaskRows.length > 1 || (dueTaskRows.length > 0 && manualExpired.length > 0)) {
             scheduleNextReminderCheck(now + 2100);
         } else if (futureTaskRows.length) {
             scheduleNextReminderCheck(futureTaskRows[0].timestamp);
