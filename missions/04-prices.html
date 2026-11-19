@@ -588,7 +588,7 @@ function renderShoppingLesson() {
             renderPhraseCard("Would you like to pay by credit card or cash?", "Você gostaria de pagar com cartão de crédito ou dinheiro?") +
             renderPhraseCard("Cash or card?", "Dinheiro ou cartão?") +
         '</div>' +
-        '<div class="ej-price-example"><strong>Mini conversation</strong><p>Customer: How much is this T-shirt?<br>Seller: It&#39;s twenty-four dollars.<br>Customer: Can I pay by card?<br>Seller: Yes, of course!</p></div>' +
+        '<div class="ej-price-example"><strong>Mini conversation • Watch the video</strong><p>Assista à conversa no supermercado. Depois, responda à questão de compreensão no final da missão.</p><div class="ej-price-video"><iframe src="https://www.youtube.com/embed/PSXltD4HoFY?rel=0" title="Supermarket conversation: asking about prices" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div></div>' +
         '<div class="ej-price-summary-grid">' +
             '<div class="ej-price-summary-item"><strong>How much?</strong><span>ASK THE PRICE</span></div>' +
             '<div class="ej-price-summary-item"><strong>It&#39;s...</strong><span>GIVE THE PRICE</span></div>' +
@@ -622,8 +622,7 @@ function renderAssessmentQuestion() {
     );
 
     const video = question.video
-        ? '<p class="ej-video-caption">Watch the supermarket conversation.</p>' +
-          '<div class="ej-price-video"><iframe src="https://www.youtube.com/embed/PSXltD4HoFY?rel=0" title="Supermarket conversation: asking about prices" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>'
+        ? '<p class="ej-video-caption">Use the supermarket video from Lesson 2 to answer this listening question.</p>'
         : "";
     const audio = question.audio
         ? '<div class="ej-question-audio"><button class="ej-audio-button" type="button" data-say="' + question.audio.replace(/"/g, "&quot;") + '" aria-label="Listen to the phrase">🔊</button><span>Listen to the phrase</span></div>'
