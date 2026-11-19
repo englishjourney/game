@@ -803,6 +803,7 @@ export async function loadRemindersSection() {
             .select('*')
             .eq('owner', ownerId)
             .is('task_id', null)
+            .is('system_notice_key', null)
             .order('date', { ascending: true });
         if (error) throw error;
 
