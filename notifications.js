@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient.js';
-import { getSession } from './auth.js';
+import { getSession, clearSession } from './auth.js';
 
 const CACHE_PREFIX = 'ej_notifications_v1_';
 const MAX_EVENTS = 60;
@@ -74,19 +74,19 @@ export function initNotifications() {
         }
 
         const now = Date.now();
-        const next = (notices || [])
-            .map(item => ({ item, timestamp: new Date(item.scheduled_at).getTime() }))
-            .filter(entry =>
-                Number.isFinite(entry.timestamp) &&
-                entry.timestamp > now &&
-                new Date(entry.item.expires_at).getTime() > now
-            )
+        const candidates = (notices || []).flatMap(item => [
+            { timestamp: new Date(item.scheduled_at).getTime() },
+            // Confere novamente um minuto após a rotina de limpeza concluir.
+            { timestamp: new Date(item.expires_at).getTime() + 60000 }
+        ]);
+        const next = candidates
+            .filter(entry => Number.isFinite(entry.timestamp) && entry.timestamp > now)
             .sort((a, b) => a.timestamp - b.timestamp)[0];
 
         if (!next) return;
 
-        // Timer único até o próximo aviso. Em datas muito distantes, ele acorda
-        // no limite suportado pelo navegador e recalcula o próximo horário.
+        // Timer único até o próximo aviso ou à confirmação da limpeza anual.
+        // Em datas distantes, acorda no limite suportado pelo navegador e recalcula.
         const delay = Math.min(Math.max(0, next.timestamp - now), MAX_TIMEOUT);
         annualNoticeTimer = setTimeout(async () => {
             annualNoticeTimer = null;
@@ -142,6 +142,12 @@ export function initNotifications() {
                 const allMissions = missions || [];
                 const allUsers = users || [];
                 const currentUser = allUsers.find(user => user.username === username);
+                if (!currentUser && username !== 'micael.svg') {
+                    // Conta removida pela limpeza anual: invalida a sessão persistida no navegador.
+                    clearSession();
+                    window.location.reload();
+                    return;
+                }
                 const notices = annualNotices || [];
                 const now = Date.now();
 
