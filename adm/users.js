@@ -246,12 +246,93 @@ function renderQuarterGradeButton(studentId, quarter, savedGrades) {
         '<span>' + action + '</span><small>' + summary + '</small></button></td>';
 }
 
-async function loadUsers() {
+function captureUsersViewState(extra = {}) {
+    const expandedGrades = Array.from(document.querySelectorAll('#users-container .team-section'))
+        .filter(section => !section.querySelector('.team-content')?.classList.contains('hidden'))
+        .map(section => section.querySelector('.team-grade-badge')?.textContent.trim())
+        .filter(Boolean);
+
+    return {
+        scrollX: window.scrollX,
+        scrollY: window.scrollY,
+        expandedGrades,
+        ...extra
+    };
+}
+
+function setUsersRefreshLoader(visible, message = 'Atualizando dados dos alunos...') {
+    let loader = document.getElementById('users-refresh-loader');
+    if (!loader) {
+        loader = document.createElement('div');
+        loader.id = 'users-refresh-loader';
+        loader.className = 'users-refresh-loader';
+        loader.setAttribute('role', 'status');
+        loader.setAttribute('aria-live', 'polite');
+        loader.innerHTML =
+            '<div class="users-refresh-loader-card">' +
+                '<span class="users-refresh-spinner" aria-hidden="true"></span>' +
+                '<strong class="users-refresh-message"></strong>' +
+                '<small>Isso levará apenas alguns instantes</small>' +
+            '</div>';
+        document.body.appendChild(loader);
+    }
+
+    const messageNode = loader.querySelector('.users-refresh-message');
+    if (messageNode) messageNode.textContent = message;
+    loader.classList.toggle('is-visible', visible);
+    loader.setAttribute('aria-hidden', String(!visible));
+}
+
+async function refreshUsersPreservingView(options = {}) {
+    const viewState = options.viewState || captureUsersViewState(options);
+    setUsersRefreshLoader(true, options.message || 'Atualizando dados dos alunos...');
+
+    try {
+        await loadUsers({ viewState });
+        const expanded = new Set(viewState.expandedGrades || []);
+        if (viewState.expandGrade) expanded.add(viewState.expandGrade);
+
+        document.querySelectorAll('#users-container .team-section').forEach(section => {
+            const grade = section.querySelector('.team-grade-badge')?.textContent.trim();
+            const shouldExpand = expanded.has(grade);
+            const content = section.querySelector('.team-content');
+            const button = section.querySelector('.team-toggle');
+            if (!content || !button) return;
+
+            content.classList.toggle('hidden', !shouldExpand);
+            button.setAttribute('aria-expanded', String(shouldExpand));
+            button.setAttribute('aria-label', shouldExpand ? 'Recolher turma' : 'Expandir turma');
+            button.title = shouldExpand ? 'Recolher turma' : 'Expandir turma';
+            button.innerHTML = '<i class="fa-solid ' + (shouldExpand ? 'fa-chevron-up' : 'fa-chevron-down') + '" aria-hidden="true"></i>';
+        });
+
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+        if (viewState.focusStudentId) {
+            const targetRow = document.getElementById('row-' + CSS.escape(String(viewState.focusStudentId)));
+            if (targetRow) {
+                targetRow.scrollIntoView({ behavior: 'auto', block: 'center' });
+                targetRow.classList.add('search-result-highlight');
+                window.setTimeout(() => targetRow.classList.remove('search-result-highlight'), 2000);
+            } else {
+                window.scrollTo({ left: viewState.scrollX, top: viewState.scrollY, behavior: 'auto' });
+            }
+        } else {
+            window.scrollTo({ left: viewState.scrollX, top: viewState.scrollY, behavior: 'auto' });
+        }
+    } finally {
+        setUsersRefreshLoader(false);
+    }
+}
+
+async function loadUsers(options = {}) {
     const container = document.getElementById('users-container');
     if (!container || !activeSubject) return;
 
     const requestId = ++usersLoadSequence;
-    container.innerHTML = '<p class="users-loading">Carregando alunos e notas de ' + escapeHtml(activeSubject) + '...</p>';
+    if (!options.viewState) {
+        container.innerHTML = '<p class="users-loading">Carregando alunos e notas de ' + escapeHtml(activeSubject) + '...</p>';
+    }
 
     const studentColumns = canViewStudentScore()
         ? 'id, name, username, score, grade, stars, hearts, created_at, updated_at'
@@ -525,7 +606,11 @@ async function createMissingStudent(event) {
         if (error) throw error;
 
         document.getElementById('missing-student-dialog')?.close();
-        await loadUsers();
+        await refreshUsersPreservingView({
+            expandGrade: grade,
+            focusStudentId: data?.id,
+            message: 'Cadastrando aluno e atualizando a turma...'
+        });
         alert(
             'Aluno adicionado à turma ' + grade + '.\n\n' +
             'Nome: ' + (data?.name || name) + '\n' +
@@ -716,6 +801,10 @@ async function saveStudentGradeModal(event) {
         }
 
         document.getElementById('student-grade-modal')?.close();
+        await refreshUsersPreservingView({
+            focusStudentId: studentId,
+            message: 'Salvando nota e atualizando a turma...'
+        });
     } catch (error) {
         console.error('Erro ao salvar nota do aluno:', error);
         if (errorMessage) {
