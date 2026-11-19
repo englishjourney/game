@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#58cc02">
+    <meta name="description" content="Learn continents, countries and nationalities in English with Artie.">
+    <title>Countries and Nationalities | EnglishJourney</title>
+    <link rel="stylesheet" href="./components/mission.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+.ej-world-continent-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 9px;
+    margin: 17px 0 23px;
+}
+.ej-world-continent {
+    min-width: 0;
+    padding: 13px 8px;
+    border: 2px solid #dceaf4;
+    border-bottom-width: 4px;
+    border-radius: 14px;
+    background: #f8fcff;
+    text-align: center;
+}
+.ej-world-continent strong {
+    display: block;
+    color: #1689c6;
+    font-size: .92rem;
+    font-weight: 1000;
+}
+.ej-world-continent span {
+    display: block;
+    margin-top: 4px;
+    color: #718096;
+    font-size: .7rem;
+    font-weight: 800;
+}
+.ej-country-section { margin: 22px 0; }
+.ej-country-section h2 {
+    margin: 0 0 10px;
+    color: #243044;
+    font-size: 1rem;
+    font-weight: 1000;
+}
+.ej-country-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+}
+.ej-country-card {
+    min-width: 0;
+    padding: 12px 9px;
+    border: 1px solid #e1eaf2;
+    border-bottom: 3px solid #d4e1eb;
+    border-radius: 14px;
+    background: #fff;
+    text-align: center;
+}
+.ej-country-flag {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 1.9rem;
+    line-height: 1.3;
+}
+.ej-country-card strong {
+    display: block;
+    color: #243044;
+    font-size: .92rem;
+    font-weight: 950;
+}
+.ej-country-card .ej-nationality {
+    display: block;
+    margin-top: 3px;
+    color: #1689c6;
+    font-size: .82rem;
+    font-weight: 900;
+}
+.ej-country-card small {
+    display: block;
+    margin-top: 4px;
+    color: #718096;
+    font-size: .68rem;
+    font-weight: 800;
+}
+.ej-country-card .ej-audio-button {
+    margin-top: 8px;
+    width: 32px;
+    height: 32px;
+}
+.ej-world-rule {
+    margin: 15px 0;
+    padding: 13px 14px;
+    border: 1px solid #cceafa;
+    border-radius: 14px;
+    background: #f0faff;
+    color: #385b70;
+    font-size: .85rem;
+    line-height: 1.5;
+}
+.ej-world-rule strong { color: #176f9f; }
+.ej-country-example {
+    margin: 14px 0;
+    padding: 14px;
+    border: 1px solid #ccebb9;
+    border-radius: 14px;
+    background: #f5fff0;
+    color: #526b49;
+    font-size: .86rem;
+    line-height: 1.55;
+}
+.ej-country-example strong { color: #287c0b; }
+.ej-world-audio-note {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 14px 0;
+    padding: 11px 13px;
+    border: 1px solid #e1eaf2;
+    border-radius: 13px;
+    background: #fbfdff;
+    color: #617286;
+    font-size: .8rem;
+    font-weight: 800;
+}
+.ej-world-quiz-options { grid-template-columns: 1fr; }
+.ej-world-quiz-options .ej-answer-option { text-align: left; }
+.ej-world-category {
+    display: inline-flex;
+    margin-bottom: 8px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #eef8ff;
+    color: #2477a7;
+    font-size: .68rem;
+    font-weight: 1000;
+    letter-spacing: .07em;
+}
+.ej-world-score-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+    margin: 17px 0;
+}
+.ej-world-score-item {
+    padding: 12px 8px;
+    border: 1px solid #e4eaf1;
+    border-radius: 14px;
+    background: #fbfdff;
+    text-align: center;
+}
+.ej-world-score-item strong {
+    display: block;
+    color: #1689c6;
+    font-size: 1.05rem;
+    font-weight: 1000;
+}
+.ej-world-score-item span {
+    display: block;
+    margin-top: 3px;
+    color: #718096;
+    font-size: .7rem;
+    font-weight: 850;
+}
+@media (max-width: 850px) {
+    .ej-world-continent-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 650px) {
+    .ej-world-continent-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+    .ej-world-continent { padding: 11px 6px; }
+    .ej-country-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+    .ej-country-card { padding: 10px 6px; }
+    .ej-country-card strong { font-size: .85rem; }
+    .ej-country-card .ej-nationality { font-size: .76rem; }
+    .ej-world-score-grid { gap: 6px; }
+    .ej-world-score-item { padding: 10px 4px; }
+    .ej-world-score-item strong { font-size: .95rem; }
+    .ej-world-score-item span { font-size: .64rem; }
+}
+    </style>
+</head>
+<body>
+    <div id="mission-app"></div>
+    <script type="module">
+import {
+    getCachedMissionSession,
+    loginMissionUser,
+    loadMissionSettings,
+    recordMissionResult
+} from "./components/config.js";
+import {
+    mountMissionLayout,
+    setMissionUser,
+    setMissionReward,
+    setMissionProgress,
+    setArtie,
+    setMissionContent,
+    showMissionDialog
+} from "./components/layout.js";
+import { playGoogleTTS } from "./components/tts.js";
+import { playAnswerSound } from "./components/feedback.js";
+
+const MISSION_NAME = "Countries and Nationalities";
+const MISSION_NUMBER = "05";
+const TOTAL_QUESTIONS = 15;
+const DEFAULT_REQUIRED_SCORE = 80;
+
+const continents = [
+    { name: "Africa", detail: "Egypt • Nigeria" },
+    { name: "Antarctica", detail: "No countries" },
+    { name: "Asia", detail: "China • Japan • India" },
+    { name: "Europe", detail: "France • Germany • Portugal" },
+    { name: "North America", detail: "Canada • Mexico • USA" },
+    { name: "South America", detail: "Brazil • Argentina" },
+    { name: "Oceania", detail: "Australia • New Zealand" }
+];
+
+const countryGroups = [
+    {
+        continent: "South America",
+        countries: [
+            { flag: "🇧🇷", country: "Brazil", nationality: "Brazilian" },
+            { flag: "🇦🇷", country: "Argentina", nationality: "Argentinian" }
+        ]
+    },
+    {
+        continent: "North America",
+        countries: [
+            { flag: "🇺🇸", country: "The United States", nationality: "American" },
+            { flag: "🇨🇦", country: "Canada", nationality: "Canadian" },
+            { flag: "🇲🇽", country: "Mexico", nationality: "Mexican" }
+        ]
+    },
+    {
+        continent: "Europe",
+        countries: [
+            { flag: "🇫🇷", country: "France", nationality: "French" },
+            { flag: "🇩🇪", country: "Germany", nationality: "German" },
+            { flag: "🇵🇹", country: "Portugal", nationality: "Portuguese" }
+        ]
+    },
+    {
+        continent: "Africa",
+        countries: [
+            { flag: "🇪🇬", country: "Egypt", nationality: "Egyptian" },
+            { flag: "🇳🇬", country: "Nigeria", nationality: "Nigerian" }
+        ]
+    },
+    {
+        continent: "Asia",
+        countries: [
+            { flag: "🇨🇳", country: "China", nationality: "Chinese" },
+            { flag: "🇯🇵", country: "Japan", nationality: "Japanese" },
+            { flag: "🇮🇳", country: "India", nationality: "Indian" }
+        ]
+    },
+    {
+        continent: "Oceania",
+        countries: [
+            { flag: "🇦🇺", country: "Australia", nationality: "Australian" },
+            { flag: "🇳🇿", country: "New Zealand", nationality: "New Zealander" }
+        ]
+    }
+];
+
+const questions = [
+    {
+        category: "CONTINENTS",
+        prompt: "Brazil is in which continent?",
+        options: ["South America", "Europe", "Africa"],
+        answer: "South America",
+        explanation: "Brazil is a country in South America."
+    },
+    {
+        category: "CONTINENTS",
+        prompt: "France is in which continent?",
+        options: ["Asia", "Europe", "Oceania"],
+        answer: "Europe",
+        explanation: "France is a country in Europe."
+    },
+    {
+        category: "CONTINENTS",
+        prompt: "Egypt is in which continent?",
+        options: ["Africa", "North America", "Europe"],
+        answer: "Africa",
+        explanation: "Egypt is in Africa."
+    },
+    {
+        category: "CONTINENTS",
+        prompt: "Japan is in which continent?",
+        options: ["South America", "Asia", "Africa"],
+        answer: "Asia",
+        explanation: "Japan is an island country in Asia."
+    },
+    {
+        category: "CONTINENTS",
+        prompt: "Canada is in which continent?",
+        options: ["Europe", "North America", "Oceania"],
+        answer: "North America",
+        explanation: "Canada is in North America."
+    },
+    {
+        category: "CONTINENTS",
+        prompt: "Australia and New Zealand are part of which region?",
+        options: ["Oceania", "Antarctica", "South America"],
+        answer: "Oceania",
+        explanation: "Australia and New Zealand are countries in Oceania."
+    },
+    {
+        category: "CONTINENTS",
+        prompt: "Which sentence about Antarctica is correct?",
+        options: [
+            "It has no countries.",
+            "It is a country in Europe.",
+            "It is the same as Africa."
+        ],
+        answer: "It has no countries.",
+        explanation: "Antarctica is a continent. It has no countries or permanent population."
+    },
+    {
+        category: "NATIONALITIES",
+        prompt: "A person from Brazil is...",
+        options: ["Brazilian", "Brazilish", "Brazilese"],
+        answer: "Brazilian",
+        explanation: "Brazil is the country; Brazilian is the nationality."
+    },
+    {
+        category: "NATIONALITIES",
+        prompt: "A person from Japan is...",
+        options: ["Japanian", "Japanese", "Japanish"],
+        answer: "Japanese",
+        explanation: "Japan is the country; Japanese is the nationality."
+    },
+    {
+        category: "NATIONALITIES",
+        prompt: "Which nationality matches Germany?",
+        options: ["German", "Germanyan", "Germanish"],
+        answer: "German",
+        explanation: "Germany is the country; German is the nationality."
+    },
+    {
+        category: "NATIONALITIES",
+        prompt: "Which country has the nationality French?",
+        options: ["France", "French", "Frenchland"],
+        answer: "France",
+        explanation: "France is the country; French is the nationality."
+    },
+    {
+        category: "NATIONALITIES",
+        prompt: "A person from Egypt is...",
+        options: ["Egyptian", "Egyptish", "Egyptese"],
+        answer: "Egyptian",
+        explanation: "Egypt is the country; Egyptian is the nationality."
+    },
+    {
+        category: "NATIONALITIES",
+        prompt: "Which nationality matches Mexico?",
+        options: ["Mexican", "Mexicish", "Mexinese"],
+        answer: "Mexican",
+        explanation: "Mexico is the country; Mexican is the nationality."
+    },
+    {
+        category: "NATIONALITIES",
+        prompt: "A person from New Zealand is...",
+        options: ["New Zealandish", "New Zealander", "New Zealandese"],
+        answer: "New Zealander",
+        explanation: "New Zealand is the country; New Zealander is the nationality."
+    },
+    {
+        category: "NATIONALITIES",
+        prompt: "A person from Canada is...",
+        options: ["Canadian", "Canadese", "Canadish"],
+        answer: "Canadian",
+        explanation: "Canada is the country; Canadian is the nationality."
+    }
+];
+
+let studentSession = null;
+let missionSettings = {
+    registered: false,
+    missionScore: null,
+    alreadyAttempted: false,
+    completed: false,
+    failed: false
+};
+let questionIndex = 0;
+let correctAnswers = 0;
+let answeredQuestions = 0;
+let audioBusy = false;
+
+function shuffleArray(items) {
+    const shuffled = items.slice();
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+        const randomIndex = Math.floor(Math.random() * (index + 1));
+        const temporary = shuffled[index];
+        shuffled[index] = shuffled[randomIndex];
+        shuffled[randomIndex] = temporary;
+    }
+    return shuffled;
+}
+
+function updateProgress(label) {
+    const percent = Math.round((answeredQuestions / TOTAL_QUESTIONS) * 100);
+    setMissionProgress(label, answeredQuestions, TOTAL_QUESTIONS, percent);
+}
+
+function getRequiredScore() {
+    const configured = Number(missionSettings.missionScore);
+    return missionSettings.registered && Number.isFinite(configured) && configured > 0
+        ? configured
+        : DEFAULT_REQUIRED_SCORE;
+}
+
+function getMissionNotice() {
+    if (!missionSettings.registered) {
+        return '<div class="ej-info-strip ej-warning-strip"><span aria-hidden="true">ℹ️</span><span>Esta missão ainda não foi cadastrada na tabela <strong>missions</strong>. Você pode estudar e praticar, mas a conclusão só será registrada depois que “Countries and Nationalities” for adicionada ao banco de dados.</span></div>';
+    }
+    if (missionSettings.alreadyAttempted) {
+        return '<div class="ej-info-strip ej-warning-strip"><span aria-hidden="true">🔁</span><span>Você já tentou ou concluiu esta missão. Pode revisar e praticar novamente, mas a recompensa de duas estrelas só pode ser recebida uma vez.</span></div>';
+    }
+    return "";
+}
+
+function renderLoginScreen() {
+    setMissionProgress("LOGIN", 0, TOTAL_QUESTIONS, 0);
+    setArtie("Hi! Entre com seu usuário do EnglishJourney. Se você já fez login no site, eu reconhecerei sua sessão automaticamente.", "artie_waving_ClosedEyes_smiling.png");
+
+    setMissionContent(
+        '<span class="ej-kicker">WELCOME TO ENGLISHJOURNEY</span>' +
+        '<h1 class="ej-screen-title">Let’s learn English!</h1>' +
+        '<p class="ej-screen-copy">Entre com o mesmo usuário e senha que você utiliza no EnglishJourney para começar a missão <strong>Countries and Nationalities</strong>.</p>' +
+        '<form id="mission-login-form" class="ej-login-form">' +
+            '<label>Username<input id="mission-login-username" name="username" type="text" autocomplete="username" required></label>' +
+            '<label>Password<input id="mission-login-password" name="password" type="password" autocomplete="current-password" required></label>' +
+            '<p id="mission-login-feedback" class="ej-login-feedback" role="alert"></p>' +
+            '<button class="ej-primary-button" type="submit">Start mission <span aria-hidden="true">→</span></button>' +
+        '</form>'
+    );
+
+    const form = document.getElementById("mission-login-form");
+    form?.addEventListener("submit", async function(event) {
+        event.preventDefault();
+        const button = form.querySelector('button[type="submit"]');
+        const feedback = document.getElementById("mission-login-feedback");
+        const username = document.getElementById("mission-login-username")?.value;
+        const password = document.getElementById("mission-login-password")?.value;
+
+        if (button) {
+            button.disabled = true;
+            button.textContent = "Signing in...";
+        }
+        if (feedback) feedback.textContent = "";
+
+        const result = await loginMissionUser(username, password);
+        if (!result.session) {
+            if (feedback) feedback.textContent = result.error || "Não foi possível entrar.";
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = 'Start mission <span aria-hidden="true">→</span>';
+            }
+            return;
+        }
+        await startMission(result.session);
+    });
+}
+
+async function startMission(session) {
+    studentSession = session;
+    setMissionUser(session);
+    setArtie("Welcome! Vamos conhecer os continentes, alguns países e as nacionalidades em inglês.", "artie_smiling_holding_chin.png");
+
+    try {
+        missionSettings = await loadMissionSettings(MISSION_NAME, session.username);
+    } catch (error) {
+        console.error("Não foi possível carregar a configuração da missão:", error);
+        missionSettings = {
+            registered: false,
+            missionScore: null,
+            alreadyAttempted: false,
+            completed: false,
+            failed: false
+        };
+    }
+
+    setMissionReward(
+        missionSettings.completed,
+        missionSettings.failed,
+        missionSettings.registered && Number(missionSettings.missionScore) > 0
+    );
+    renderLesson();
+}
+
+function bindAudioButtons() {
+    document.querySelectorAll("#mission-content [data-say]").forEach(function(button) {
+        button.addEventListener("click", async function() {
+            if (audioBusy || button.disabled) return;
+            audioBusy = true;
+            const audioButtons = Array.from(document.querySelectorAll("#mission-content [data-say]"));
+            audioButtons.forEach(function(audioButton) {
+                audioButton.disabled = true;
+                if (audioButton === button) {
+                    audioButton.classList.add("is-loading");
+                    audioButton.setAttribute("aria-busy", "true");
+                    audioButton.innerHTML = '<i class="fa fa-circle-o-notch fa-spin" aria-hidden="true"></i>';
+                }
+            });
+            try {
+                await playGoogleTTS(button.dataset.say);
+            } catch (error) {
+                console.error("Não foi possível reproduzir o áudio:", error);
+            } finally {
+                audioButtons.forEach(function(audioButton) {
+                    audioButton.disabled = false;
+                    if (audioButton === button) {
+                        audioButton.classList.remove("is-loading");
+                        audioButton.removeAttribute("aria-busy");
+                        audioButton.innerHTML = "🔊";
+                    }
+                });
+                audioBusy = false;
+            }
+        });
+    });
+}
+
+function renderCountryCard(country) {
+    return '<article class="ej-country-card">' +
+        '<span class="ej-country-flag" aria-hidden="true">' + country.flag + '</span>' +
+        '<strong>' + country.country + '</strong>' +
+        '<span class="ej-nationality">' + country.nationality + '</span>' +
+        '<small>COUNTRY → NATIONALITY</small>' +
+        '<button class="ej-audio-button" type="button" data-say="' + country.country + '. ' + country.nationality + '" aria-label="Listen to ' + country.country + ' and ' + country.nationality + '">🔊</button>' +
+    '</article>';
+}
+
+function renderLesson() {
+    const continentCards = continents.map(function(continent) {
+        return '<article class="ej-world-continent"><strong>' + continent.name + '</strong><span>' + continent.detail + '</span></article>';
+    }).join("");
+
+    const groups = countryGroups.map(function(group) {
+        return '<section class="ej-country-section"><h2>' + group.continent + '</h2><div class="ej-country-grid">' +
+            group.countries.map(renderCountryCard).join("") +
+            '</div></section>';
+    }).join("");
+
+    updateProgress("LESSON • COUNTRIES & NATIONALITIES");
+    setArtie("First, learn the names of the continents. Then, discover how to say the countries and nationalities in English.", "artie_smiling_pointing_right.png");
+
+    setMissionContent(
+        '<span class="ej-kicker">LESSON • COUNTRIES & NATIONALITIES</span>' +
+        '<h1 class="ej-screen-title">Around the world!</h1>' +
+        '<p class="ej-screen-copy">O mundo tem diferentes continentes, países e povos. Vamos aprender como dizer esses nomes em inglês. Toque no alto-falante para ouvir.</p>' +
+        getMissionNotice() +
+        '<p class="ej-section-label">The continents</p>' +
+        '<div class="ej-world-continent-grid">' + continentCards + '</div>' +
+        '<div class="ej-world-rule"><strong>Remember:</strong> Nesta lição usamos o modelo de sete continentes. <strong>Oceania</strong> é a região que inclui países como Australia e New Zealand. Antarctica é um continente, mas não possui países.</div>' +
+        '<p class="ej-section-label">Countries and nationalities</p>' +
+        '<p class="ej-screen-copy">A primeira palavra indica o <strong>país (country)</strong>. A segunda indica a <strong>nacionalidade (nationality)</strong>. Em inglês, os dois nomes começam com letra maiúscula.</p>' +
+        groups +
+        '<div class="ej-country-example"><strong>How to use:</strong><br>I am from Brazil. I am Brazilian.<br>She is from Japan. She is Japanese.<br>They are from Canada. They are Canadian.</div>' +
+        '<div class="ej-world-rule"><strong>Pay attention:</strong> Não existe uma única regra para formar nacionalidades. Algumas terminam em <em>-an</em> (Mexican), outras em <em>-ian</em> (Brazilian), <em>-ese</em> (Japanese), <em>-ish</em> (English) ou têm formas próprias (French, German).</div>' +
+        '<div class="ej-world-audio-note"><span aria-hidden="true">🔊</span><span>Ouça os nomes de países e nacionalidades nos cartões. Repita em voz alta para praticar a pronúncia.</span></div>' +
+        '<div class="ej-button-row"><button id="start-world-quiz" class="ej-primary-button" type="button">Let’s practice! <span aria-hidden="true">→</span></button></div>'
+    );
+
+    bindAudioButtons();
+    document.getElementById("start-world-quiz")?.addEventListener("click", function() {
+        questionIndex = 0;
+        correctAnswers = 0;
+        answeredQuestions = 0;
+        renderQuestion();
+    });
+}
+
+function renderQuestion() {
+    const question = questions[questionIndex];
+    const options = shuffleArray(question.options).map(function(option) {
+        return '<button class="ej-answer-option" type="button" data-answer="' + option.replace(/"/g, "&quot;") + '">' + option + '</button>';
+    }).join("");
+
+    updateProgress("PRACTICE • " + question.category);
+    setArtie(
+        questionIndex < 7
+            ? "Think about the map. Which continent is the country in?"
+            : "Country or nationality? Leia com atenção e escolha a opção correta.",
+        "artie_standing_smiling.png"
+    );
+
+    setMissionContent(
+        '<span class="ej-kicker">PRACTICE • ' + question.category + '</span>' +
+        '<h1 class="ej-screen-title">Test your knowledge!</h1>' +
+        '<p class="ej-screen-copy">Escolha uma das três alternativas. Você receberá feedback depois de responder.</p>' +
+        '<section class="ej-quiz-card">' +
+            '<p class="ej-question-number">QUESTION ' + String(questionIndex + 1).padStart(2, "0") + ' / ' + TOTAL_QUESTIONS + '</p>' +
+            '<span class="ej-world-category">' + question.category + '</span>' +
+            '<h2 class="ej-question-title">' + question.prompt + '</h2>' +
+            '<div class="ej-answer-list ej-world-quiz-options" id="question-answers">' + options + '</div>' +
+            '<p id="question-feedback" class="ej-answer-feedback" aria-live="polite"></p>' +
+            '<div class="ej-button-row"><button id="question-next" class="ej-primary-button" type="button" hidden disabled>' +
+                (questionIndex === TOTAL_QUESTIONS - 1 ? "See my result" : "Continue") +
+                ' <span aria-hidden="true">→</span></button></div>' +
+        '</section>'
+    );
+
+    document.querySelectorAll("[data-answer]").forEach(function(button) {
+        button.addEventListener("click", function() {
+            const allOptions = Array.from(document.querySelectorAll("[data-answer]"));
+            if (allOptions.some(function(option) { return option.disabled; })) return;
+
+            const correct = button.dataset.answer === question.answer;
+            allOptions.forEach(function(option) {
+                option.disabled = true;
+                if (option.dataset.answer === question.answer) option.classList.add("is-correct");
+            });
+            if (!correct) button.classList.add("is-wrong");
+
+            playAnswerSound(correct);
+            answeredQuestions += 1;
+            if (correct) {
+                correctAnswers += 1;
+                setArtie("Excellent! Você encontrou a resposta correta.", "artie_smiling_happy_clenched_fists.png");
+            } else {
+                setArtie("Almost! Leia a explicação e lembre-se da relação entre país, continente e nacionalidade.", "artie_smiling_holding_chin.png");
+            }
+
+            const feedback = document.getElementById("question-feedback");
+            if (feedback) feedback.textContent = (correct ? "Correct! " : "Not quite. ") + question.explanation;
+            updateProgress("PRACTICE • " + question.category);
+
+            const next = document.getElementById("question-next");
+            if (next) {
+                next.hidden = false;
+                next.disabled = false;
+            }
+        });
+    });
+
+    document.getElementById("question-next")?.addEventListener("click", function() {
+        if (questionIndex < TOTAL_QUESTIONS - 1) {
+            questionIndex += 1;
+            renderQuestion();
+        } else {
+            finishAssessment();
+        }
+    });
+}
+
+function resetMission() {
+    questionIndex = 0;
+    correctAnswers = 0;
+    answeredQuestions = 0;
+    renderLesson();
+}
+
+function renderRetryScreen(score, target) {
+    updateProgress("REVIEW");
+    setArtie("Você está perto! Revise os continentes, os países e as nacionalidades e tente mais uma vez.", "artie_smiling_holding_chin.png");
+    setMissionContent(
+        '<span class="ej-kicker">KEEP PRACTICING</span>' +
+        '<h1 class="ej-screen-title">Good effort!</h1>' +
+        '<p class="ej-screen-copy">Você acertou <strong>' + correctAnswers + ' de ' + TOTAL_QUESTIONS + '</strong> questões e alcançou <strong>' + score + '%</strong>. A meta desta missão é <strong>' + target + '%</strong>.</p>' +
+        '<div class="ej-score-summary">' +
+            '<div class="ej-summary-item"><strong>' + correctAnswers + ' / ' + TOTAL_QUESTIONS + '</strong><span>Correct answers</span></div>' +
+            '<div class="ej-summary-item"><strong>' + score + '%</strong><span>Your score</span></div>' +
+            '<div class="ej-summary-item"><strong>' + target + '%</strong><span>Mission goal</span></div>' +
+        '</div>' +
+        '<div class="ej-info-strip"><span aria-hidden="true">💡</span><span>Revise os sete continentes e os cartões com country → nationality. Depois, tente novamente.</span></div>' +
+        '<div class="ej-button-row"><button id="retry-mission" class="ej-primary-button" type="button">Review and try again <span aria-hidden="true">→</span></button></div>'
+    );
+    document.getElementById("retry-mission")?.addEventListener("click", resetMission);
+}
+
+async function finishAssessment() {
+    const score = Math.round((correctAnswers / TOTAL_QUESTIONS) * 100);
+    const target = getRequiredScore();
+    updateProgress("COMPLETED");
+
+    if (score < target) {
+        renderRetryScreen(score, target);
+        return;
+    }
+
+    setArtie("You did it! Você concluiu as atividades sobre continentes, países e nacionalidades. Vamos conferir o registro da missão.", "artie_smiling_happy_clenched_fists.png");
+
+    if (!missionSettings.registered) {
+        renderUnregisteredResult(score);
+        return;
+    }
+    if (missionSettings.alreadyAttempted) {
+        renderAlreadyAttemptedResult(score);
+        return;
+    }
+
+    let result = null;
+    let error = null;
+    try {
+        result = await recordMissionResult(MISSION_NAME, studentSession.username, "done");
+    } catch (caughtError) {
+        error = caughtError;
+        console.error("Erro ao registrar a conclusão da missão:", caughtError);
+    }
+
+    if (result && result.recorded) {
+        missionSettings.alreadyAttempted = true;
+        missionSettings.completed = true;
+        missionSettings.failed = false;
+        setMissionReward(true, false);
+        setMissionContent(
+            '<span class="ej-kicker">MISSION COMPLETED</span>' +
+            '<h1 class="ej-screen-title">Congratulations! 🎉</h1>' +
+            '<p class="ej-screen-copy">Você acertou <strong>' + correctAnswers + ' de ' + TOTAL_QUESTIONS + '</strong> questões, alcançou <strong>' + score + '%</strong> e recebeu <strong>+2 estrelas</strong> na sua conta!</p>' +
+            '<div class="ej-score-summary"><div class="ej-summary-item"><strong>' + correctAnswers + ' / ' + TOTAL_QUESTIONS + '</strong><span>Correct answers</span></div><div class="ej-summary-item"><strong>' + score + '%</strong><span>Final score</span></div><div class="ej-summary-item"><strong>+2 ⭐</strong><span>Reward</span></div></div>'
+        );
+        window.setTimeout(function() {
+            window.parent.postMessage({
+                type: "ENGLISHJOURNEY_MISSION_COMPLETED",
+                missionName: MISSION_NAME
+            }, window.location.origin);
+        }, 1600);
+        return;
+    }
+
+    let message = "Não foi possível registrar a conclusão. Tente novamente.";
+    if (error) {
+        message = error.message || message;
+    } else if (result && result.reason === "already-attempted") {
+        message = "Você já tentou ou concluiu esta missão. A recompensa de duas estrelas só pode ser recebida uma vez.";
+    } else if (result && result.reason === "user-ambiguous") {
+        message = "Encontramos mais de um cadastro com este usuário. Peça ao professor para corrigir o cadastro.";
+    } else if (result && result.reason === "mission-not-registered") {
+        message = "Esta missão ainda não foi cadastrada na tabela missions.";
+    } else if (result && result.recorded === false) {
+        message = "Não foi possível registrar a conclusão (" + (result.reason || "erro desconhecido") + ").";
+    }
+
+    showMissionDialog({
+        title: "Almost there!",
+        message: message + " Seu resultado foi " + score + "%. Você pode revisar a lição e tentar novamente.",
+        buttonText: "Review",
+        tone: "warning",
+        onAction: resetMission
+    });
+}
+
+function renderUnregisteredResult(score) {
+    setMissionContent(
+        '<span class="ej-kicker">PRACTICE COMPLETED</span>' +
+        '<h1 class="ej-screen-title">Well done! ⭐</h1>' +
+        '<p class="ej-screen-copy">Você acertou <strong>' + correctAnswers + ' de ' + TOTAL_QUESTIONS + '</strong> questões e alcançou <strong>' + score + '%</strong>. O conteúdo foi concluído, mas esta missão ainda não está cadastrada no banco de dados; por isso, as estrelas não puderam ser registradas.</p>' +
+        '<div class="ej-info-strip ej-warning-strip"><span aria-hidden="true">ℹ️</span><span>Quando “Countries and Nationalities” for adicionada à tabela missions, a conclusão poderá ser registrada normalmente.</span></div>' +
+        '<div class="ej-button-row"><button id="review-unregistered" class="ej-primary-button" type="button">Review lessons <span aria-hidden="true">→</span></button></div>'
+    );
+    document.getElementById("review-unregistered")?.addEventListener("click", resetMission);
+}
+
+function renderAlreadyAttemptedResult(score) {
+    setMissionContent(
+        '<span class="ej-kicker">PRACTICE COMPLETED</span>' +
+        '<h1 class="ej-screen-title">Great review! 🎉</h1>' +
+        '<p class="ej-screen-copy">Você alcançou ' + score + '% e revisou o conteúdo. A missão já foi tentada ou concluída anteriormente, então esta repetição não gera novas estrelas.</p>' +
+        '<div class="ej-score-summary"><div class="ej-summary-item"><strong>' + correctAnswers + ' / ' + TOTAL_QUESTIONS + '</strong><span>Correct answers</span></div><div class="ej-summary-item"><strong>' + score + '%</strong><span>Review score</span></div></div>' +
+        '<div class="ej-button-row"><button id="review-completed" class="ej-primary-button" type="button">Review lessons <span aria-hidden="true">→</span></button></div>'
+    );
+    document.getElementById("review-completed")?.addEventListener("click", resetMission);
+}
+
+mountMissionLayout({ missionNumber: MISSION_NUMBER });
+
+const cachedSession = getCachedMissionSession();
+if (cachedSession) {
+    startMission(cachedSession);
+} else {
+    renderLoginScreen();
+}
+    </script>
+</body>
+</html>
