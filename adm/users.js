@@ -109,6 +109,14 @@ function renderSubjectControl() {
     }
 }
 
+function normalizeStudentSearch(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLocaleLowerCase('pt-BR')
+        .trim();
+}
+
 function setupStudentSearch() {
     const searchInput = document.getElementById('users-search');
     const resultsContainer = document.getElementById('users-search-results');
@@ -116,7 +124,7 @@ function setupStudentSearch() {
     searchInput.dataset.initialized = 'true';
 
     searchInput.addEventListener('input', event => {
-        const query = event.target.value.trim().toLocaleLowerCase('pt-BR');
+        const query = normalizeStudentSearch(event.target.value);
         resultsContainer.innerHTML = '';
         if (query.length < 2) {
             resultsContainer.classList.add('hidden');
@@ -127,7 +135,7 @@ function setupStudentSearch() {
         document.querySelectorAll('.users-table tbody tr').forEach(row => {
             const teamSection = row.closest('.team-section');
             const grade = teamSection?.querySelector('.team-grade-badge')?.textContent.trim() || '';
-            const searchableText = (row.innerText + ' ' + grade).toLocaleLowerCase('pt-BR');
+            const searchableText = normalizeStudentSearch(row.innerText + ' ' + grade);
 
             if (!searchableText.includes(query)) return;
             found = true;
@@ -137,10 +145,19 @@ function setupStudentSearch() {
             result.type = 'button';
             result.className = 'search-item search-result-item users-search-result';
             result.innerText = grade ? name + ' — Turma ' + grade : name;
+
             result.addEventListener('click', () => {
                 const navButton = document.querySelector('.nav-btn[data-target="users-section"]');
-                if (navButton) navButton.click();
+                const usersSection = document.getElementById('users-section');
 
+                // Abre a aba de alunos antes de tentar rolar até a turma.
+                if (navButton && !navButton.classList.contains('active')) {
+                    navButton.click();
+                }
+
+                if (usersSection) usersSection.classList.remove('hidden');
+
+                // Expande a turma escolhida, sem depender do estado anterior do acordeão.
                 const teamContent = teamSection?.querySelector('.team-content');
                 const toggleButton = teamSection?.querySelector('.team-header .team-toggle');
                 if (teamContent) teamContent.classList.remove('hidden');
@@ -151,12 +168,31 @@ function setupStudentSearch() {
                     toggleButton.innerHTML = '<i class="fa-solid fa-chevron-up" aria-hidden="true"></i>';
                 }
 
-                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                row.classList.add('search-result-highlight');
-                window.setTimeout(() => row.classList.remove('search-result-highlight'), 3000);
                 resultsContainer.classList.add('hidden');
                 searchInput.value = '';
+
+                // Primeiro posiciona a turma na tela; depois centraliza a linha do aluno.
+                teamSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                window.setTimeout(() => {
+                    if (!row.isConnected) return;
+
+                    if (row._searchHighlightTimeout) {
+                        window.clearTimeout(row._searchHighlightTimeout);
+                    }
+
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    row.classList.remove('search-result-highlight');
+                    void row.offsetWidth;
+                    row.classList.add('search-result-highlight');
+
+                    row._searchHighlightTimeout = window.setTimeout(() => {
+                        row.classList.remove('search-result-highlight');
+                        row._searchHighlightTimeout = null;
+                    }, 2000);
+                }, 350);
             });
+
             resultsContainer.appendChild(result);
         });
 
