@@ -87,7 +87,9 @@ export function initNotifications() {
 
         // Timer único até o próximo aviso ou à confirmação da limpeza anual.
         // Em datas distantes, acorda no limite suportado pelo navegador e recalcula.
-        const delay = Math.min(Math.max(0, next.timestamp - now), MAX_TIMEOUT);
+        const remaining = next.timestamp - now;
+        if (remaining > 30 * 24 * 60 * 60 * 1000) return;
+        const delay = Math.min(Math.max(0, remaining), MAX_TIMEOUT);
         annualNoticeTimer = setTimeout(async () => {
             annualNoticeTimer = null;
             await syncNotifications();
@@ -144,6 +146,7 @@ export function initNotifications() {
                 const currentUser = allUsers.find(user => user.username === username);
                 if (!currentUser && username !== 'micael.svg') {
                     // Conta removida pela limpeza anual: invalida a sessão persistida no navegador.
+                    localStorage.removeItem(cacheKey);
                     clearSession();
                     window.location.reload();
                     return;
