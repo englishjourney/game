@@ -2,7 +2,12 @@ import { supabase } from '../supabaseClient.js';
 
 let currentTeacherId = null;
 let currentTeacherSubjects = [];
+let currentTeacherIsPrimary = false;
 let activeSubject = '';
+let studentsById = new Map();
+let studentGradesById = new Map();
+let activeGradeEditor = null;
+const GRADE_COMPONENTS = ['Assiduidade', 'Material didático', 'Trabalhos', 'Prova', 'Extra'];
 let usersLoadSequence = 0;
 let usersInitializationPromise = null;
 
@@ -36,7 +41,7 @@ async function initializeUsers() {
 
     const { data: teacher, error: teacherError } = await supabase
         .from('teachers')
-        .select('id, subjects')
+        .select('id, subjects, is_primary')
         .eq('id', authData.user.id)
         .maybeSingle();
 
@@ -47,6 +52,7 @@ async function initializeUsers() {
     }
 
     currentTeacherId = teacher.id;
+    currentTeacherIsPrimary = Boolean(teacher.is_primary);
     currentTeacherSubjects = [...new Set((Array.isArray(teacher.subjects) ? teacher.subjects : [])
         .map(subject => String(subject || '').trim())
         .filter(Boolean))];
@@ -59,6 +65,7 @@ async function initializeUsers() {
     activeSubject = currentTeacherSubjects[0];
     renderSubjectControl();
     setupStudentSearch();
+    setupStudentGradeModal(container);
     await loadUsers();
 }
 
@@ -162,6 +169,46 @@ function setupStudentSearch() {
     });
 }
 
+function isEnglishSubject(subject) {
+    return String(subject || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase() === 'ingles';
+}
+
+function canViewStudentScore() {
+    return currentTeacherIsPrimary && currentTeacherSubjects.some(isEnglishSubject);
+}
+
+function getGradeComponentValues(value) {
+    let values = value;
+    if (typeof value === 'string' && /^\s*\{.*\}\s*$/.test(value)) {
+        values = value.trim().slice(1, -1).split(',').map(item => item === '' ? null : item);
+    }
+    if (!Array.isArray(values)) return [null, null, null, null, null];
+    return Array.from({ length: 5 }, (_, index) => {
+        const item = values[index];
+        if (item === null || item === undefined || item === '') return null;
+        const number = Number(item);
+        return Number.isFinite(number) ? number : null;
+    });
+}
+
+function getGradeFilledCount(values) {
+    return getGradeComponentValues(values).filter(value => value !== null).length;
+}
+
+function renderQuarterGradeButton(studentId, quarter, savedGrades) {
+    const values = getGradeComponentValues(savedGrades['nota' + quarter]);
+    const filledCount = getGradeFilledCount(values);
+    const action = filledCount ? 'Editar nota' : 'Preencher';
+    const summary = filledCount ? filledCount + '/5 itens' : 'Não preenchida';
+    return '<td class="grade-entry-cell"><button type="button" class="grade-entry-button" ' +
+        'data-edit-quarter="' + quarter + '" data-student-id="' + escapeHtml(studentId) + '">' +
+        '<span>' + action + '</span><small>' + summary + '</small></button></td>';
+}
+
 async function loadUsers() {
     const container = document.getElementById('users-container');
     if (!container || !activeSubject) return;
@@ -169,17 +216,22 @@ async function loadUsers() {
     const requestId = ++usersLoadSequence;
     container.innerHTML = '<p class="users-loading">Carregando alunos e notas de ' + escapeHtml(activeSubject) + '...</p>';
 
+    const studentColumns = canViewStudentScore()
+        ? 'id, name, username, score, grade, stars, hearts'
+        : 'id, name, username, grade, stars, hearts';
+
     const [studentsResult, gradesResult] = await Promise.all([
         supabase
             .from('users')
-            .select('id, name, username, score, class, rank, grade, stars, hearts')
+            .select(studentColumns)
             .neq('username', 'micael.svg')
             .order('grade', { ascending: true })
             .order('name', { ascending: true }),
         supabase
             .from('student_subject_grades')
-            .select('student_id, subject, nota1, nota2, nota3, nota4')
+            .select('student_id, subject, nota1, nota2, nota3, nota4, updated_by')
             .eq('subject', activeSubject)
+            .eq('updated_by', currentTeacherId)
     ]);
 
     if (requestId !== usersLoadSequence) return;
@@ -196,9 +248,11 @@ async function loadUsers() {
         return;
     }
 
-    const gradesByStudent = new Map(
+    studentsById = new Map((studentsResult.data || []).map(student => [String(student.id), student]));
+    studentGradesById = new Map(
         (gradesResult.data || []).map(record => [String(record.student_id), record])
     );
+
     const teams = {};
     (studentsResult.data || []).forEach(student => {
         const grade = student.grade ? String(student.grade).trim().toUpperCase() : 'Sem Turma';
@@ -211,6 +265,7 @@ async function loadUsers() {
         return;
     }
 
+    const showScore = canViewStudentScore();
     let html = '';
     for (const [team, students] of Object.entries(teams)) {
         html +=
@@ -230,30 +285,29 @@ async function loadUsers() {
                     '<div class="users-table-scroll">' +
                         '<table class="users-table">' +
                             '<thead><tr>' +
-                                '<th>Nome</th><th>Username</th><th>Class/Rank</th><th>Score</th>' +
-                                '<th>Stars</th><th>Hearts</th><th>1º Bimestre</th><th>2º Bimestre</th>' +
-                                '<th>3º Bimestre</th><th>4º Bimestre</th><th>Ação</th>' +
+                                '<th>Nome</th><th>Username</th>' +
+                                (showScore ? '<th>Score</th>' : '') +
+                                '<th>Stars</th><th>Hearts</th><th>1º Bimestre</th>' +
+                                '<th>2º Bimestre</th><th>3º Bimestre</th><th>4º Bimestre</th><th>Ação</th>' +
                             '</tr></thead><tbody>' +
                             students.map(student => {
                                 const id = String(student.id);
-                                const savedGrades = gradesByStudent.get(id) || {};
-                                const gradeInput = (quarter, value) =>
-                                    '<td><input type="number" step="0.01" inputmode="decimal" class="editable-input student-quarter-grade" ' +
-                                    'id="n' + quarter + '-' + id + '" value="' + (value == null ? '' : escapeHtml(value)) + '" ' +
-                                    'aria-label="' + escapeHtml('Nota do ' + quarter + 'º bimestre de ' + (student.name || student.username || 'aluno')) + '"></td>';
+                                const savedGrades = studentGradesById.get(id) || {};
+                                const scoreCell = showScore
+                                    ? '<td>' + escapeHtml(student.score ?? 0) + '</td>'
+                                    : '';
 
                                 return '<tr id="row-' + id + '">' +
                                     '<td>' + escapeHtml(student.name || 'Sem nome') + '</td>' +
                                     '<td>' + escapeHtml(student.username || '-') + '</td>' +
-                                    '<td>' + escapeHtml(student.class || '-') + '<br><small>' + escapeHtml(student.rank || '-') + '</small></td>' +
-                                    '<td>' + escapeHtml(student.score ?? 0) + '</td>' +
+                                    scoreCell +
                                     '<td><input type="number" step="1" class="editable-input" id="stars-' + id + '" value="' + escapeHtml(student.stars ?? 0) + '" aria-label="Stars de ' + escapeHtml(student.name || 'aluno') + '"></td>' +
                                     '<td><input type="number" step="1" class="editable-input" id="hearts-' + id + '" value="' + escapeHtml(student.hearts ?? 0) + '" aria-label="Hearts de ' + escapeHtml(student.name || 'aluno') + '"></td>' +
-                                    gradeInput(1, savedGrades.nota1) +
-                                    gradeInput(2, savedGrades.nota2) +
-                                    gradeInput(3, savedGrades.nota3) +
-                                    gradeInput(4, savedGrades.nota4) +
-                                    '<td><button type="button" class="btn-small btn-primary" onclick="window.saveUser(\'' + id + '\')">Salvar</button></td>' +
+                                    renderQuarterGradeButton(id, 1, savedGrades) +
+                                    renderQuarterGradeButton(id, 2, savedGrades) +
+                                    renderQuarterGradeButton(id, 3, savedGrades) +
+                                    renderQuarterGradeButton(id, 4, savedGrades) +
+                                    '<td><button type="button" class="btn-small btn-primary" data-save-stats="' + id + '">Salvar dados</button></td>' +
                                 '</tr>';
                             }).join('') +
                             '</tbody></table>' +
@@ -276,44 +330,193 @@ async function loadUsers() {
     });
 }
 
-function readGradeInput(studentId, quarter) {
-    const input = document.getElementById('n' + quarter + '-' + studentId);
-    if (!input) throw new Error('Não foi possível localizar o campo do ' + quarter + 'º bimestre.');
+function setupStudentGradeModal(container) {
+    if (!container || container.dataset.gradeModalEvents === 'true') return;
+    container.dataset.gradeModalEvents = 'true';
 
-    const raw = input.value.trim().replace(',', '.');
-    if (!raw) return null;
-
-    const value = Number(raw);
-    if (!Number.isFinite(value)) {
-        input.focus();
-        throw new Error('Informe uma nota válida no ' + quarter + 'º bimestre.');
+    let dialog = document.getElementById('student-grade-modal');
+    if (!dialog) {
+        dialog = document.createElement('dialog');
+        dialog.id = 'student-grade-modal';
+        dialog.className = 'student-grade-dialog';
+        dialog.innerHTML =
+            '<form id="student-grade-form" class="student-grade-form">' +
+                '<div class="student-grade-modal-header">' +
+                    '<div><span class="student-grade-eyebrow">Registro de avaliação</span>' +
+                    '<h3 id="student-grade-title">Nota do bimestre</h3>' +
+                    '<p id="student-grade-description"></p></div>' +
+                    '<button type="button" class="student-grade-close" data-close-grade-modal aria-label="Fechar">&times;</button>' +
+                '</div>' +
+                '<div id="student-grade-fields" class="student-grade-fields">' +
+                    GRADE_COMPONENTS.map((label, index) =>
+                        '<label class="student-grade-field"><span>' + escapeHtml(label) + '</span>' +
+                        '<input type="number" step="0.01" inputmode="decimal" id="student-grade-component-' + index + '" placeholder="0,00">' +
+                        '</label>'
+                    ).join('') +
+                '</div>' +
+                '<p id="student-grade-error" class="student-grade-error" role="alert" hidden></p>' +
+                '<div class="modal-actions student-grade-modal-actions">' +
+                    '<button type="button" class="btn-secondary" data-close-grade-modal>Cancelar</button>' +
+                    '<button type="submit" class="btn-primary" id="student-grade-save">Salvar nota</button>' +
+                '</div>' +
+            '</form>';
+        (document.getElementById('adm-panel') || document.body).appendChild(dialog);
     }
-    return value;
+
+    const form = dialog.querySelector('#student-grade-form');
+    if (form && form.dataset.initialized !== 'true') {
+        form.dataset.initialized = 'true';
+        form.addEventListener('submit', saveStudentGradeModal);
+    }
+
+    dialog.addEventListener('click', event => {
+        if (event.target === dialog || event.target.closest('[data-close-grade-modal]')) {
+            dialog.close();
+        }
+    });
+
+    container.addEventListener('click', async event => {
+        const quarterButton = event.target.closest('[data-edit-quarter]');
+        if (quarterButton) {
+            openStudentGradeModal(
+                quarterButton.dataset.studentId,
+                Number(quarterButton.dataset.editQuarter)
+            );
+            return;
+        }
+
+        const statsButton = event.target.closest('[data-save-stats]');
+        if (statsButton) {
+            await saveStudentStats(statsButton.dataset.saveStats, statsButton);
+        }
+    });
 }
 
-window.saveUser = async id => {
-    const studentId = Number(id);
-    if (!Number.isSafeInteger(studentId) || studentId <= 0 || !currentTeacherId || !activeSubject) {
-        alert('Não foi possível identificar o aluno, professor ou disciplina selecionada.');
-        return;
+function openStudentGradeModal(studentId, quarter) {
+    const student = studentsById.get(String(studentId));
+    if (!student || ![1, 2, 3, 4].includes(quarter)) return;
+
+    const dialog = document.getElementById('student-grade-modal');
+    if (!dialog) return;
+
+    activeGradeEditor = {
+        studentId: String(studentId),
+        quarter,
+        subject: activeSubject
+    };
+
+    const saved = studentGradesById.get(String(studentId)) || {};
+    const values = getGradeComponentValues(saved['nota' + quarter]);
+
+    const title = document.getElementById('student-grade-title');
+    const description = document.getElementById('student-grade-description');
+    const error = document.getElementById('student-grade-error');
+    if (title) title.textContent = 'Nota do ' + quarter + 'º bimestre';
+    if (description) description.textContent =
+        (student.name || student.username || 'Aluno') + ' · ' + activeSubject;
+    if (error) {
+        error.hidden = true;
+        error.textContent = '';
     }
 
-    const row = document.getElementById('row-' + id);
-    const button = row?.querySelector('button');
-    if (button?.disabled) return;
+    values.forEach((value, index) => {
+        const input = document.getElementById('student-grade-component-' + index);
+        if (input) input.value = value === null ? '' : String(value);
+    });
 
-    let notes;
+    const saveButton = document.getElementById('student-grade-save');
+    if (saveButton) {
+        saveButton.disabled = false;
+        saveButton.textContent = 'Salvar nota';
+    }
+
+    if (!dialog.open) dialog.showModal();
+}
+
+async function saveStudentGradeModal(event) {
+    event.preventDefault();
+    if (!activeGradeEditor || !currentTeacherId) return;
+
+    const saveButton = document.getElementById('student-grade-save');
+    const errorMessage = document.getElementById('student-grade-error');
+    const values = [];
+
+    for (let index = 0; index < GRADE_COMPONENTS.length; index++) {
+        const input = document.getElementById('student-grade-component-' + index);
+        const raw = String(input?.value || '').trim().replace(',', '.');
+        if (!raw) {
+            values.push(null);
+            continue;
+        }
+
+        const number = Number(raw);
+        if (!Number.isFinite(number)) {
+            if (errorMessage) {
+                errorMessage.textContent = 'Confira o valor informado em ' + GRADE_COMPONENTS[index] + '.';
+                errorMessage.hidden = false;
+            }
+            input?.focus();
+            return;
+        }
+        values.push(number);
+    }
+
+    const { studentId, quarter, subject } = activeGradeEditor;
+    if (saveButton) {
+        saveButton.disabled = true;
+        saveButton.textContent = 'Salvando...';
+    }
+    if (errorMessage) {
+        errorMessage.hidden = true;
+        errorMessage.textContent = '';
+    }
+
     try {
-        notes = {
-            nota1: readGradeInput(id, 1),
-            nota2: readGradeInput(id, 2),
-            nota3: readGradeInput(id, 3),
-            nota4: readGradeInput(id, 4)
+        const payload = {
+            student_id: Number(studentId),
+            subject,
+            updated_by: currentTeacherId,
+            ['nota' + quarter]: values
         };
+
+        const { data, error } = await supabase
+            .from('student_subject_grades')
+            .upsert(payload, {
+                onConflict: 'student_id,subject,updated_by'
+            })
+            .select('student_id, subject, nota1, nota2, nota3, nota4, updated_by, updated_at')
+            .single();
+
+        if (error) throw error;
+
+        studentGradesById.set(studentId, data);
+        const gradeButton = document.querySelector(
+            '#row-' + CSS.escape(studentId) + ' [data-edit-quarter="' + quarter + '"]'
+        );
+        if (gradeButton) {
+            const filledCount = getGradeFilledCount(values);
+            gradeButton.querySelector('span').textContent = filledCount ? 'Editar nota' : 'Preencher';
+            gradeButton.querySelector('small').textContent = filledCount ? filledCount + '/5 itens' : 'Não preenchida';
+        }
+
+        document.getElementById('student-grade-modal')?.close();
     } catch (error) {
-        alert(error.message);
-        return;
+        console.error('Erro ao salvar nota do aluno:', error);
+        if (errorMessage) {
+            errorMessage.textContent = 'Não foi possível salvar a nota: ' + (error.message || 'erro inesperado');
+            errorMessage.hidden = false;
+        }
+    } finally {
+        if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.textContent = 'Salvar nota';
+        }
     }
+}
+
+async function saveStudentStats(id, button) {
+    const studentId = Number(id);
+    if (!Number.isSafeInteger(studentId) || studentId <= 0) return;
 
     const starsInput = document.getElementById('stars-' + id);
     const heartsInput = document.getElementById('hearts-' + id);
@@ -324,31 +527,25 @@ window.saveUser = async id => {
         alert('Confira os valores de Stars e Hearts antes de salvar.');
         return;
     }
+    if (button?.disabled) return;
 
-    const originalText = button?.textContent || 'Salvar';
+    const originalText = button?.textContent || 'Salvar dados';
     if (button) {
         button.disabled = true;
         button.textContent = 'Salvando...';
     }
 
     try {
-        const { error: gradesError } = await supabase
-            .from('student_subject_grades')
-            .upsert({
-                student_id: studentId,
-                subject: activeSubject,
-                ...notes
-            }, { onConflict: 'student_id,subject' });
-
-        if (gradesError) throw gradesError;
-
-        const { error: studentError } = await supabase
+        const { error } = await supabase
             .from('users')
             .update({ stars, hearts })
             .eq('id', studentId);
+        if (error) throw error;
 
-        if (studentError) {
-            throw new Error('As notas foram salvas, mas não foi possível atualizar Stars/Hearts: ' + studentError.message);
+        const student = studentsById.get(String(id));
+        if (student) {
+            student.stars = String(stars);
+            student.hearts = String(hearts);
         }
 
         if (button) {
@@ -360,10 +557,12 @@ window.saveUser = async id => {
             }, 1800);
         }
     } catch (error) {
-        console.error('Erro ao salvar notas do aluno:', error);
-        alert('Não foi possível salvar as notas de ' + activeSubject + ': ' + (error.message || 'erro inesperado'));
+        console.error('Erro ao salvar os dados do aluno:', error);
+        alert('Não foi possível salvar Stars/Hearts: ' + (error.message || 'erro inesperado'));
         if (button) button.textContent = originalText;
     } finally {
         if (button) button.disabled = false;
     }
-};
+}
+
+window.saveUser = async id => saveStudentStats(id, document.querySelector('[data-save-stats="' + CSS.escape(String(id)) + '"]'));
