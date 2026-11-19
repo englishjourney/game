@@ -10,7 +10,7 @@ Cada etapa combina um campo de vocabulário com um objetivo gramatical. A trilha
 |---|---|---|
 | 01 | Days of the Week — dias da semana, sequência semanal e weekdays / weekend | Vocabulário básico de calendário e referência a dias |
 | 02 | Months of the Year — meses do ano, números de 1 a 12 e sequência do calendário | Ordem dos meses e associação entre mês e número |
-| 03 | Free time & hobbies — lazer, esportes e interesses | Simple present: perguntas, respostas curtas e frequência |
+| 03 | Alphabet and Numbers — alfabeto, nomes e sons das letras, sílabas simples e números de 0 a 20 | Reconhecimento de sons iniciais, sílabas e formação de números com dezenas + unidades |
 | 04 | Places in town — lugares da cidade e serviços | There is / there are e preposições de lugar |
 | 05 | Food & meals — alimentos, bebidas e refeições | Countable / uncountable nouns, some / any |
 | 06 | People & descriptions — personalidade, aparência e características | Adjectives, equatives e comparatives |
@@ -39,9 +39,16 @@ Cada etapa combina um campo de vocabulário com um objetivo gramatical. A trilha
 - A mesma regra vale para jogos dentro das missões, como combinações, memória e desafios de pontuação: reproduza o efeito somente quando o resultado da tentativa for confirmado.
 - O som é sintetizado localmente com Web Audio, sem depender de arquivos externos. A implementação deve ser reutilizada pelas próximas missões, sem criar efeitos isolados em cada página.
 
+## Missão 03 — Alphabet and Numbers
+
+- Lição 1: alfabeto inglês (26 letras), diferença entre nome da letra e som inicial, e cinco sílabas simples com exemplos em áudio (MA, ME, MI, MO, MU).
+- Lição 2: números de 0 a 20, dezenas de 20 a 90 e formação de números compostos com hífen, como *twenty-one* e *fifty-six*.
+- Prática: nove questões com quatro alternativas cada — três sobre sons iniciais das letras, três sobre sílabas e três sobre identificação/formação de números.
+- O resultado é calculado em percentual; a meta usa `mission_score` da tabela `missions` (80% como padrão local enquanto a missão não estiver cadastrada). A conclusão registrada concede as duas estrelas uma única vez.
+
 ## Organização dos documentos
 
-- Um documento por missão, com numeração no início do nome: `01-days-of-a-week`, `02-months-of-the-year` e assim por diante.
+- Um documento por missão, com numeração no início do nome: `01-days-of-a-week`, `02-months-of-the-year`, `03-alphabet-and-numbers` e assim por diante.
 - Cada documento deve informar objetivo, vocabulário-alvo, explicação gramatical curta, exemplos contextualizados e atividade de aplicação.
 - A dificuldade deve crescer de forma gradual: reconhecer e compreender, praticar com apoio e, por fim, aplicar em contexto.
 - Os jogos de `otherGames/` ficam separados da trilha curricular e servem como atividades de diversão.
