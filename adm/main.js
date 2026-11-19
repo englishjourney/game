@@ -683,6 +683,7 @@ let reminderAudioContext = null;
 let pendingReminderSound = false;
 let notificationCheckInProgress = false;
 let reminderBubbleTimeout = null;
+let reminderNextCheckTimeout = null;
 
 function getCurrentReminderOwnerId() {
     const ownerId = window.currentTeacher?.id;
@@ -801,6 +802,7 @@ export async function loadRemindersSection() {
             .from('reminders')
             .select('*')
             .eq('owner', ownerId)
+            .is('task_id', null)
             .order('date', { ascending: true });
         if (error) throw error;
 
@@ -917,6 +919,22 @@ async function playReminderNotificationSound() {
     }
 }
 
+function scheduleNextReminderCheck(timestamp) {
+    if (reminderNextCheckTimeout) {
+        clearTimeout(reminderNextCheckTimeout);
+        reminderNextCheckTimeout = null;
+    }
+    if (!Number.isFinite(timestamp)) return;
+
+    // Usa um único timer para o próximo horário real de aviso, sem polling.
+    const delay = Math.max(0, timestamp - Date.now());
+    const maxTimeout = 2147483647;
+    reminderNextCheckTimeout = setTimeout(() => {
+        reminderNextCheckTimeout = null;
+        checkRemindersStatus();
+    }, Math.min(delay, maxTimeout));
+}
+
 function renderExpiredNotification(notification) {
     const bubble = document.getElementById('reminder-chat-bubble');
     if (!bubble) return;
@@ -928,9 +946,12 @@ function renderExpiredNotification(notification) {
     }
     bubble.classList.remove('hidden');
 
+    const isTaskNotification = notification.type === 'task';
     const heading = document.createElement('span');
     heading.className = 'reminder-chat-label';
-    heading.textContent = notification.type === 'task' ? 'Prazo expirado' : 'Lembrete expirado';
+    heading.textContent = isTaskNotification
+        ? (notification.notificationType === 'day_before' ? 'Prazo amanhã' : 'Prazo hoje')
+        : 'Lembrete expirado';
 
     const title = document.createElement('strong');
     title.className = 'reminder-chat-title';
@@ -938,21 +959,24 @@ function renderExpiredNotification(notification) {
 
     const meta = document.createElement('small');
     meta.className = 'reminder-chat-meta';
-    meta.textContent = 'Vencido em ' + new Date(notification.timestamp).toLocaleString('pt-BR', {
-        dateStyle: 'short', timeStyle: 'short'
-    });
+    meta.textContent = (isTaskNotification ? 'Aviso programado para ' : 'Vencido em ') +
+        new Date(notification.timestamp).toLocaleString('pt-BR', {
+            dateStyle: 'short', timeStyle: 'short'
+        });
 
     const actions = document.createElement('div');
     actions.className = 'reminder-chat-actions';
 
-    const snoozeButton = document.createElement('button');
-    snoozeButton.type = 'button';
-    snoozeButton.className = 'reminder-chat-snooze';
-    snoozeButton.textContent = 'Adiar';
-    snoozeButton.addEventListener('click', () => {
+    const primaryButton = document.createElement('button');
+    primaryButton.type = 'button';
+    primaryButton.className = 'reminder-chat-snooze';
+    primaryButton.textContent = isTaskNotification ? 'Abrir trabalho' : 'Adiar';
+    primaryButton.addEventListener('click', () => {
         bubble.classList.add('hidden');
-        if (notification.type === 'task') {
-            if (typeof window.editTask === 'function') window.editTask(String(notification.id));
+        if (isTaskNotification) {
+            if (typeof window.editTask === 'function') {
+                window.editTask(String(notification.taskId));
+            }
         } else {
             openReminderFormModal({
                 id: notification.id,
@@ -963,22 +987,18 @@ function renderExpiredNotification(notification) {
         }
     });
 
-    const deleteButton = document.createElement('button');
-    deleteButton.type = 'button';
-    deleteButton.className = 'reminder-chat-delete';
-    deleteButton.textContent = 'Excluir';
-    deleteButton.addEventListener('click', async () => {
-        if (notification.type === 'task') {
-            if (typeof window.deleteTask === 'function') await window.deleteTask(String(notification.id));
-        } else {
-            await window.deleteReminder(notification.id);
-        }
+    const dismissButton = document.createElement('button');
+    dismissButton.type = 'button';
+    dismissButton.className = 'reminder-chat-delete';
+    dismissButton.textContent = isTaskNotification ? 'Dispensar' : 'Excluir';
+    dismissButton.addEventListener('click', async () => {
+        await window.deleteReminder(isTaskNotification ? notification.reminderId : notification.id);
     });
 
-    actions.append(snoozeButton, deleteButton);
+    actions.append(primaryButton, dismissButton);
     bubble.append(heading, title, meta, actions);
 
-    // O balão fica visível por apenas 2 segundos; a bolinha continua indicando pendências.
+    // O balão fica visível por apenas 2 segundos.
     reminderBubbleTimeout = setTimeout(() => {
         bubble.classList.add('hidden');
         reminderBubbleTimeout = null;
@@ -992,46 +1012,78 @@ async function checkRemindersStatus(options = {}) {
         const now = Date.now();
         const { data: authData, error: authError } = await supabase.auth.getUser();
         if (authError || !authData.user) throw new Error('Sessão de professor não encontrada.');
-        const [remindersResult, tasksResult] = await Promise.all([
-            supabase
+
+        const { data: reminders, error } = await supabase
+            .from('reminders')
+            .select('id, remindMeTo, date, time, task_id, notification_type, notified_at')
+            .eq('owner', authData.user.id);
+        if (error) throw error;
+
+        const rows = reminders || [];
+        const scheduledTaskRows = rows.filter(item => item.task_id !== null && item.task_id !== undefined);
+        const pendingTaskRows = scheduledTaskRows
+            .filter(item => !item.notified_at)
+            .map(item => ({ item, timestamp: parseReminderTimestamp(item.date, item.time) }))
+            .filter(entry => Number.isFinite(entry.timestamp))
+            .sort((a, b) => a.timestamp - b.timestamp);
+
+        const dueTaskRows = pendingTaskRows.filter(entry => entry.timestamp <= now);
+        const futureTaskRows = pendingTaskRows.filter(entry => entry.timestamp > now);
+
+        const manualExpired = rows
+            .filter(item => item.task_id === null || item.task_id === undefined)
+            .map(item => ({ item, timestamp: parseReminderTimestamp(item.date, item.time) }))
+            .filter(entry => Number.isFinite(entry.timestamp) && entry.timestamp <= now)
+            .sort((a, b) => a.timestamp - b.timestamp);
+
+        let notification = null;
+        if (dueTaskRows.length) {
+            const entry = dueTaskRows[0];
+            notification = {
+                type: 'task',
+                taskId: entry.item.task_id,
+                reminderId: entry.item.id,
+                notificationType: entry.item.notification_type,
+                title: entry.item.remindMeTo || 'Trabalho com prazo próximo',
+                date: entry.item.date,
+                time: entry.item.time,
+                timestamp: entry.timestamp
+            };
+
+            // Marca como apresentado para que o aviso não reapareça em toda atualização.
+            const { error: markError } = await supabase
                 .from('reminders')
-                .select('id, remindMeTo, date, time')
-                .eq('owner', authData.user.id),
-            supabase.from('tasks').select('id, title, deadline').eq('owner', authData.user.id)
-        ]);
-        if (remindersResult.error) throw remindersResult.error;
-        if (tasksResult.error) console.warn('Não foi possível consultar os prazos dos trabalhos:', tasksResult.error);
+                .update({ notified_at: new Date().toISOString() })
+                .eq('id', entry.item.id)
+                .eq('owner', authData.user.id)
+                .is('notified_at', null);
+            if (markError) throw markError;
+        } else if (manualExpired.length) {
+            const entry = manualExpired[0];
+            notification = {
+                type: 'reminder',
+                id: entry.item.id,
+                title: entry.item.remindMeTo || 'Lembrete sem título',
+                date: entry.item.date,
+                time: entry.item.time,
+                timestamp: entry.timestamp
+            };
+        }
 
-        const expired = [];
-        (remindersResult.data || []).forEach(reminder => {
-            const timestamp = parseReminderTimestamp(reminder.date, reminder.time);
-            if (Number.isFinite(timestamp) && timestamp <= now) {
-                expired.push({
-                    type: 'reminder', id: reminder.id,
-                    title: reminder.remindMeTo || 'Lembrete sem título',
-                    date: reminder.date, time: reminder.time, timestamp
-                });
-            }
-        });
-        (tasksResult.data || []).forEach(task => {
-            const timestamp = new Date(task.deadline).getTime();
-            if (Number.isFinite(timestamp) && timestamp <= now) {
-                expired.push({
-                    type: 'task', id: task.id,
-                    title: task.title || 'Trabalho sem título',
-                    timestamp
-                });
-            }
-        });
+        // Se houver mais avisos vencidos, exibe o próximo após o balão atual.
+        if (dueTaskRows.length > 1) {
+            scheduleNextReminderCheck(now + 2100);
+        } else if (futureTaskRows.length) {
+            scheduleNextReminderCheck(futureTaskRows[0].timestamp);
+        } else {
+            scheduleNextReminderCheck(NaN);
+        }
 
-        // A notificação mais antiga é a que está vencida há mais tempo.
-        expired.sort((a, b) => a.timestamp - b.timestamp);
-        const oldestExpired = expired[0] || null;
         const badge = document.getElementById('reminders-badge');
-        if (badge) badge.classList.toggle('hidden', !oldestExpired);
-        renderExpiredNotification(oldestExpired);
+        if (badge) badge.classList.toggle('hidden', !notification);
+        renderExpiredNotification(notification);
 
-        if (oldestExpired && options.playSound) await playReminderNotificationSound();
+        if (notification && options.playSound) await playReminderNotificationSound();
     } catch (err) {
         console.error('Erro ao verificar notificações expiradas:', err);
     } finally {
