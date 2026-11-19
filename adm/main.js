@@ -947,19 +947,29 @@ function renderExpiredNotification(notification) {
     bubble.classList.remove('hidden');
 
     const isTaskNotification = notification.type === 'task';
+    const isSystemNotification = notification.type === 'system';
     const heading = document.createElement('span');
     heading.className = 'reminder-chat-label';
-    heading.textContent = isTaskNotification
-        ? (notification.notificationType === 'day_before' ? 'Prazo amanhã' : 'Prazo hoje')
-        : 'Lembrete expirado';
+    heading.textContent = isSystemNotification
+        ? 'Aviso do sistema'
+        : (isTaskNotification
+            ? (notification.notificationType === 'day_before' ? 'Prazo amanhã' : 'Prazo hoje')
+            : 'Lembrete expirado');
 
+    const rawTitle = String(notification.title || (isTaskNotification ? 'Trabalho com prazo próximo' : 'Lembrete sem título'));
+    const titleParts = rawTitle.split('\n');
     const title = document.createElement('strong');
     title.className = 'reminder-chat-title';
-    title.textContent = notification.title;
+    title.textContent = titleParts.shift() || rawTitle;
+
+    const details = titleParts.join('\n').trim();
+    const description = document.createElement('p');
+    description.className = 'reminder-chat-meta';
+    description.textContent = details;
 
     const meta = document.createElement('small');
     meta.className = 'reminder-chat-meta';
-    meta.textContent = (isTaskNotification ? 'Aviso programado para ' : 'Vencido em ') +
+    meta.textContent = (isTaskNotification || isSystemNotification ? 'Aviso programado para ' : 'Vencido em ') +
         new Date(notification.timestamp).toLocaleString('pt-BR', {
             dateStyle: 'short', timeStyle: 'short'
         });
@@ -970,14 +980,14 @@ function renderExpiredNotification(notification) {
     const primaryButton = document.createElement('button');
     primaryButton.type = 'button';
     primaryButton.className = 'reminder-chat-snooze';
-    primaryButton.textContent = isTaskNotification ? 'Abrir trabalho' : 'Adiar';
+    primaryButton.textContent = isSystemNotification ? 'Entendi' : (isTaskNotification ? 'Abrir trabalho' : 'Adiar');
     primaryButton.addEventListener('click', () => {
         bubble.classList.add('hidden');
         if (isTaskNotification) {
             if (typeof window.editTask === 'function') {
                 window.editTask(String(notification.taskId));
             }
-        } else {
+        } else if (!isSystemNotification) {
             openReminderFormModal({
                 id: notification.id,
                 remindMeTo: notification.title,
@@ -987,16 +997,22 @@ function renderExpiredNotification(notification) {
         }
     });
 
-    const dismissButton = document.createElement('button');
-    dismissButton.type = 'button';
-    dismissButton.className = 'reminder-chat-delete';
-    dismissButton.textContent = isTaskNotification ? 'Dispensar' : 'Excluir';
-    dismissButton.addEventListener('click', async () => {
-        await window.deleteReminder(isTaskNotification ? notification.reminderId : notification.id);
-    });
+    actions.append(primaryButton);
 
-    actions.append(primaryButton, dismissButton);
-    bubble.append(heading, title, meta, actions);
+    if (!isSystemNotification) {
+        const dismissButton = document.createElement('button');
+        dismissButton.type = 'button';
+        dismissButton.className = 'reminder-chat-delete';
+        dismissButton.textContent = isTaskNotification ? 'Dispensar' : 'Excluir';
+        dismissButton.addEventListener('click', async () => {
+            await window.deleteReminder(isTaskNotification ? notification.reminderId : notification.id);
+        });
+        actions.append(dismissButton);
+    }
+
+    bubble.append(heading, title);
+    if (details) bubble.append(description);
+    bubble.append(meta, actions);
 
     // O balão fica visível por apenas 2 segundos.
     reminderBubbleTimeout = setTimeout(() => {
@@ -1015,7 +1031,7 @@ async function checkRemindersStatus(options = {}) {
 
         const { data: reminders, error } = await supabase
             .from('reminders')
-            .select('id, remindMeTo, date, time, task_id, notification_type, notified_at')
+            .select('id, remindMeTo, date, time, task_id, notification_type, notified_at, system_notice_key')
             .eq('owner', authData.user.id);
         if (error) throw error;
 
@@ -1030,8 +1046,20 @@ async function checkRemindersStatus(options = {}) {
         const dueTaskRows = pendingTaskRows.filter(entry => entry.timestamp <= now);
         const futureTaskRows = pendingTaskRows.filter(entry => entry.timestamp > now);
 
+        const pendingSystemRows = rows
+            .filter(item => item.system_notice_key && !item.notified_at)
+            .map(item => ({ item, timestamp: parseReminderTimestamp(item.date, item.time) }))
+            .filter(entry => Number.isFinite(entry.timestamp))
+            .sort((a, b) => a.timestamp - b.timestamp);
+
+        const dueSystemRows = pendingSystemRows.filter(entry => entry.timestamp <= now);
+        const futureSystemRows = pendingSystemRows.filter(entry => entry.timestamp > now);
+
         const manualExpired = rows
-            .filter(item => item.task_id === null || item.task_id === undefined)
+            .filter(item =>
+                (item.task_id === null || item.task_id === undefined) &&
+                !item.system_notice_key
+            )
             .map(item => ({ item, timestamp: parseReminderTimestamp(item.date, item.time) }))
             .filter(entry => Number.isFinite(entry.timestamp) && entry.timestamp <= now)
             .sort((a, b) => a.timestamp - b.timestamp);
@@ -1050,7 +1078,25 @@ async function checkRemindersStatus(options = {}) {
                 timestamp: entry.timestamp
             };
 
-            // Marca como apresentado para que o aviso não reapareça em toda atualização.
+            const { error: markError } = await supabase
+                .from('reminders')
+                .update({ notified_at: new Date().toISOString() })
+                .eq('id', entry.item.id)
+                .eq('owner', authData.user.id)
+                .is('notified_at', null);
+            if (markError) throw markError;
+        } else if (dueSystemRows.length) {
+            const entry = dueSystemRows[0];
+            notification = {
+                type: 'system',
+                id: entry.item.id,
+                title: entry.item.remindMeTo || 'Aviso anual do sistema',
+                date: entry.item.date,
+                time: entry.item.time,
+                timestamp: entry.timestamp
+            };
+
+            // Marca como apresentado para não repetir o mesmo aviso a cada abertura do painel.
             const { error: markError } = await supabase
                 .from('reminders')
                 .update({ notified_at: new Date().toISOString() })
@@ -1070,13 +1116,13 @@ async function checkRemindersStatus(options = {}) {
             };
         }
 
-        // Se houver mais avisos vencidos, exibe o próximo após o balão atual.
-        if (dueTaskRows.length > 1 || (dueTaskRows.length > 0 && manualExpired.length > 0)) {
+        const dueAutomaticCount = dueTaskRows.length + dueSystemRows.length;
+        if (dueAutomaticCount > 1 || (dueAutomaticCount > 0 && manualExpired.length > 0)) {
             scheduleNextReminderCheck(now + 2100);
-        } else if (futureTaskRows.length) {
-            scheduleNextReminderCheck(futureTaskRows[0].timestamp);
         } else {
-            scheduleNextReminderCheck(NaN);
+            const nextFutureAutomatic = [...futureTaskRows, ...futureSystemRows]
+                .sort((a, b) => a.timestamp - b.timestamp)[0];
+            scheduleNextReminderCheck(nextFutureAutomatic?.timestamp ?? NaN);
         }
 
         const badge = document.getElementById('reminders-badge');
