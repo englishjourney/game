@@ -12,15 +12,16 @@ Cada etapa combina um campo de vocabulário com um objetivo gramatical. A trilha
 | 02 | Months of the Year — meses do ano, números de 1 a 12 e sequência do calendário | Ordem dos meses e associação entre mês e número |
 | 03 | Alphabet and Numbers — alfabeto, nomes e sons das letras, sílabas simples e números de 0 a 20 | Reconhecimento de sons iniciais, sílabas e formação de números com dezenas + unidades |
 | 04 | Prices — money, penny, coin, cash, cards, voucher, currency e vocabulário de compras | Perguntar e responder preços, formas de pagamento e compreensão de uma conversa no supermercado |
-| 05 | Places in town — lugares da cidade e serviços | There is / there are e preposições de lugar |
-| 06 | Food & meals — alimentos, bebidas e refeições | Countable / uncountable nouns, some / any |
-| 07 | People & descriptions — personalidade, aparência e características | Adjectives, equatives e comparatives |
-| 08 | Abilities & technology — habilidades, dispositivos e ações digitais | Can / can't e perguntas sobre habilidades |
-| 09 | Home & actions — cômodos, móveis e tarefas domésticas | Present continuous e contraste com simple present |
-| 10 | Travel & directions — transporte, lugares e deslocamento | Imperatives, prepositions of movement e instruções |
-| 11 | Past experiences — eventos, atividades e experiências | Simple past: verbos regulares e marcadores de tempo |
-| 12 | Stories & memories — acontecimentos, sentimentos e narrativa | Simple past: verbos irregulares, negativas e perguntas |
-| 13 | Media, opinions & plans — mídia, opiniões e planos | Future with *going to*, *should* e conectores de opinião |
+| 05 | Countries and Nationalities — continentes, países e gentílicos em inglês | Reconhecer continentes, associar países às nacionalidades e usar *from* para indicar origem |
+| 06 | Places in town — lugares da cidade e serviços | There is / there are e preposições de lugar |
+| 07 | Food & meals — alimentos, bebidas e refeições | Countable / uncountable nouns, some / any |
+| 08 | People & descriptions — personalidade, aparência e características | Adjectives, equatives e comparatives |
+| 09 | Abilities & technology — habilidades, dispositivos e ações digitais | Can / can't e perguntas sobre habilidades |
+| 10 | Home & actions — cômodos, móveis e tarefas domésticas | Present continuous e contraste com simple present |
+| 11 | Travel & directions — transporte, lugares e deslocamento | Imperatives, prepositions of movement e instruções |
+| 12 | Past experiences — eventos, atividades e experiências | Simple past: verbos regulares e marcadores de tempo |
+| 13 | Stories & memories — acontecimentos, sentimentos e narrativa | Simple past: verbos irregulares, negativas e perguntas |
+| 14 | Media, opinions & plans — mídia, opiniões e planos | Future with *going to*, *should* e conectores de opinião |
 
 ## Regras de progresso e recompensa
 
@@ -54,6 +55,13 @@ Cada etapa combina um campo de vocabulário com um objetivo gramatical. A trilha
 - Listening: vídeo incorporado do YouTube com uma conversa simples no supermercado e uma questão de compreensão sobre o preço das maçãs.
 - Prática: 21 questões no total — 12 associações imagem/palavra, três sobre perguntas de preço, cinco sobre respostas e pagamento e uma de compreensão do vídeo. A meta padrão local é 80% enquanto a missão não estiver cadastrada.
 - Observação de vocabulário: a forma verbal mais comum é *cash out*, escrita em duas palavras.
+
+## Missão 05 — Countries and Nationalities
+
+- Lição: sete continentes em inglês (Africa, Antarctica, Asia, Europe, North America, South America e Oceania), com explicação de que Antarctica não possui países.
+- Vocabulário: 15 países e seus gentílicos/nacionalidades — Brazil/Brazilian, Argentina/Argentinian, the United States/American, Canada/Canadian, Mexico/Mexican, France/French, Germany/German, Portugal/Portuguese, Egypt/Egyptian, Nigeria/Nigerian, China/Chinese, Japan/Japanese, India/Indian, Australia/Australian e New Zealand/New Zealander.
+- Uso em contexto: *I am from Brazil. I am Brazilian.*; *She is from Japan. She is Japanese.*
+- Exercício: 15 questões de múltipla escolha, com três opções cada, sobre continentes, países e nacionalidades. A meta usa `mission_score` da tabela `missions` (80% como padrão local enquanto a missão não estiver cadastrada). A conclusão registrada concede as duas estrelas uma única vez.
 
 ## Organização dos documentos
 
