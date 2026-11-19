@@ -955,13 +955,25 @@ function scheduleNextReminderCheck(timestamp) {
     }
     if (!Number.isFinite(timestamp)) return;
 
-    // Usa um único timer para o próximo horário real de aviso, sem polling.
     const delay = Math.max(0, timestamp - Date.now());
     const maxTimeout = 2147483647;
+    // Não mantém timers acordando repetidamente para eventos de muitos meses à frente.
+    if (delay > 30 * 24 * 60 * 60 * 1000) return;
+
     reminderNextCheckTimeout = setTimeout(() => {
         reminderNextCheckTimeout = null;
         checkRemindersStatus();
     }, Math.min(delay, maxTimeout));
+}
+
+function getUpcomingAnnualResetRefresh(now = Date.now()) {
+    const current = new Date(now);
+    let resetAt = new Date(current.getFullYear(), 0, 1, 3, 6, 0, 0).getTime();
+    if (resetAt <= now) {
+        resetAt = new Date(current.getFullYear() + 1, 0, 1, 3, 6, 0, 0).getTime();
+    }
+    const remaining = resetAt - now;
+    return remaining > 0 && remaining <= 8 * 24 * 60 * 60 * 1000 ? resetAt : NaN;
 }
 
 function renderExpiredNotification(notification) {
@@ -1151,7 +1163,11 @@ async function checkRemindersStatus(options = {}) {
         } else {
             const nextFutureAutomatic = [...futureTaskRows, ...futureSystemRows]
                 .sort((a, b) => a.timestamp - b.timestamp)[0];
-            scheduleNextReminderCheck(nextFutureAutomatic?.timestamp ?? NaN);
+            const nextTimestamp = Math.min(
+                nextFutureAutomatic?.timestamp ?? Infinity,
+                getUpcomingAnnualResetRefresh(now)
+            );
+            scheduleNextReminderCheck(Number.isFinite(nextTimestamp) ? nextTimestamp : NaN);
         }
 
         const badge = document.getElementById('reminders-badge');
