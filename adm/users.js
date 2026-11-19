@@ -66,6 +66,7 @@ async function initializeUsers() {
     renderSubjectControl();
     setupStudentSearch();
     setupStudentGradeModal(container);
+    setupMissingStudentFeature(container);
     await loadUsers();
 }
 
@@ -217,8 +218,8 @@ async function loadUsers() {
     container.innerHTML = '<p class="users-loading">Carregando alunos e notas de ' + escapeHtml(activeSubject) + '...</p>';
 
     const studentColumns = canViewStudentScore()
-        ? 'id, name, username, score, grade, stars, hearts'
-        : 'id, name, username, grade, stars, hearts';
+        ? 'id, name, username, score, grade, stars, hearts, created_at, updated_at'
+        : 'id, name, username, grade, stars, hearts, created_at, updated_at';
 
     const [studentsResult, gradesResult] = await Promise.all([
         supabase
@@ -276,6 +277,9 @@ async function loadUsers() {
                         '<strong class="team-grade-badge">' + escapeHtml(team) + '</strong>' +
                         '<span class="team-student-count">' + students.length + ' ' +
                             (students.length === 1 ? 'aluno' : 'alunos') + '</span>' +
+                        (currentTeacherIsPrimary && team !== 'Sem Turma'
+                            ? '<button type="button" class="team-add-student-button" data-add-missing-student="' + escapeHtml(team) + '"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Adicionar aluno ausente</button>'
+                            : '') +
                     '</div>' +
                     '<button type="button" class="minimize-btn team-toggle" aria-label="Expandir turma" title="Expandir turma" aria-expanded="false">' +
                         '<i class="fa-solid fa-chevron-down" aria-hidden="true"></i>' +
@@ -288,7 +292,7 @@ async function loadUsers() {
                                 '<th>Nome</th><th>Username</th>' +
                                 (showScore ? '<th>Score</th>' : '') +
                                 '<th>Stars</th><th>Hearts</th><th>1º Bimestre</th>' +
-                                '<th>2º Bimestre</th><th>3º Bimestre</th><th>4º Bimestre</th><th>Ação</th>' +
+                                '<th>2º Bimestre</th><th>3º Bimestre</th><th>4º Bimestre</th>' +
                             '</tr></thead><tbody>' +
                             students.map(student => {
                                 const id = String(student.id);
@@ -301,13 +305,12 @@ async function loadUsers() {
                                     '<td>' + escapeHtml(student.name || 'Sem nome') + '</td>' +
                                     '<td>' + escapeHtml(student.username || '-') + '</td>' +
                                     scoreCell +
-                                    '<td><input type="number" step="1" class="editable-input" id="stars-' + id + '" value="' + escapeHtml(student.stars ?? 0) + '" aria-label="Stars de ' + escapeHtml(student.name || 'aluno') + '"></td>' +
-                                    '<td><input type="number" step="1" class="editable-input" id="hearts-' + id + '" value="' + escapeHtml(student.hearts ?? 0) + '" aria-label="Hearts de ' + escapeHtml(student.name || 'aluno') + '"></td>' +
+                                    '<td class="student-stat-cell">' + escapeHtml(student.stars ?? 0) + '</td>' +
+                                    '<td class="student-stat-cell">' + escapeHtml(student.hearts ?? 0) + '</td>' +
                                     renderQuarterGradeButton(id, 1, savedGrades) +
                                     renderQuarterGradeButton(id, 2, savedGrades) +
                                     renderQuarterGradeButton(id, 3, savedGrades) +
                                     renderQuarterGradeButton(id, 4, savedGrades) +
-                                    '<td><button type="button" class="btn-small btn-primary" data-save-stats="' + id + '">Salvar dados</button></td>' +
                                 '</tr>';
                             }).join('') +
                             '</tbody></table>' +
@@ -328,6 +331,183 @@ async function loadUsers() {
             button.innerHTML = '<i class="fa-solid ' + (collapsed ? 'fa-chevron-down' : 'fa-chevron-up') + '" aria-hidden="true"></i>';
         });
     });
+}
+
+
+let pendingMissingStudentGrade = '';
+
+function normalizeStudentUsername(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/[\\u0300-\\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '.')
+        .replace(/^\\.+|\\.+$/g, '')
+        .slice(0, 40);
+}
+
+async function makeUniqueStudentUsername(name) {
+    const base = normalizeStudentUsername(name) || 'aluno';
+    let candidate = base;
+    let suffix = 2;
+
+    while (true) {
+        const { data, error } = await supabase
+            .from('users')
+            .select('id')
+            .eq('username', candidate)
+            .limit(1)
+            .maybeSingle();
+
+        if (error) throw error;
+        if (!data) return candidate;
+
+        const suffixText = '.' + suffix;
+        candidate = base.slice(0, Math.max(1, 40 - suffixText.length)) + suffixText;
+        suffix += 1;
+    }
+}
+
+function setupMissingStudentFeature(container) {
+    if (!container || container.dataset.missingStudentEvents === 'true') return;
+    container.dataset.missingStudentEvents = 'true';
+
+    let dialog = document.getElementById('missing-student-dialog');
+    if (!dialog) {
+        dialog = document.createElement('dialog');
+        dialog.id = 'missing-student-dialog';
+        dialog.className = 'missing-student-dialog';
+        dialog.innerHTML =
+            '<form id="missing-student-form" class="missing-student-form">' +
+                '<header class="missing-student-header">' +
+                    '<span class="missing-student-icon"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></span>' +
+                    '<div><small>NOVO CADASTRO</small><h3>Adicionar aluno ausente</h3>' +
+                    '<p id="missing-student-grade-label"></p></div>' +
+                    '<button type="button" class="missing-student-close" data-close-missing-student aria-label="Fechar">×</button>' +
+                '</header>' +
+                '<label for="missing-student-name">Nome completo</label>' +
+                '<input type="text" id="missing-student-name" minlength="2" maxlength="120" autocomplete="name" required placeholder="Digite o nome do aluno">' +
+                '<p class="missing-student-help">O username será criado automaticamente. A senha inicial será <strong>Mudar@eco123</strong>.</p>' +
+                '<p id="missing-student-error" class="missing-student-error" role="alert" hidden></p>' +
+                '<div class="modal-actions">' +
+                    '<button type="button" class="btn-secondary" data-close-missing-student>Cancelar</button>' +
+                    '<button type="submit" class="btn-primary" id="missing-student-submit">Adicionar aluno</button>' +
+                '</div>' +
+            '</form>';
+        (document.getElementById('adm-panel') || document.body).appendChild(dialog);
+    }
+
+    const form = dialog.querySelector('#missing-student-form');
+    if (form && form.dataset.initialized !== 'true') {
+        form.dataset.initialized = 'true';
+        form.addEventListener('submit', createMissingStudent);
+    }
+
+    dialog.addEventListener('click', event => {
+        if (event.target === dialog || event.target.closest('[data-close-missing-student]')) {
+            dialog.close();
+        }
+    });
+
+    container.addEventListener('click', event => {
+        const addButton = event.target.closest('[data-add-missing-student]');
+        if (!addButton) return;
+        if (!currentTeacherIsPrimary) {
+            alert('Somente o professor administrador pode adicionar alunos.');
+            return;
+        }
+
+        pendingMissingStudentGrade = String(addButton.dataset.addMissingStudent || '').trim().toUpperCase();
+        if (!pendingMissingStudentGrade || pendingMissingStudentGrade === 'SEM TURMA') return;
+
+        const label = document.getElementById('missing-student-grade-label');
+        const nameInput = document.getElementById('missing-student-name');
+        const error = document.getElementById('missing-student-error');
+        const submit = document.getElementById('missing-student-submit');
+        if (label) label.textContent = 'Turma ' + pendingMissingStudentGrade;
+        if (nameInput) nameInput.value = '';
+        if (error) {
+            error.hidden = true;
+            error.textContent = '';
+        }
+        if (submit) {
+            submit.disabled = false;
+            submit.textContent = 'Adicionar aluno';
+        }
+        dialog.showModal();
+        nameInput?.focus();
+    });
+}
+
+async function createMissingStudent(event) {
+    event.preventDefault();
+    if (!currentTeacherIsPrimary || !pendingMissingStudentGrade) return;
+
+    const nameInput = document.getElementById('missing-student-name');
+    const errorMessage = document.getElementById('missing-student-error');
+    const submitButton = document.getElementById('missing-student-submit');
+    const name = String(nameInput?.value || '').trim().replace(/\\s+/g, ' ');
+    const grade = pendingMissingStudentGrade;
+
+    if (name.length < 2) {
+        if (errorMessage) {
+            errorMessage.textContent = 'Informe o nome completo do aluno.';
+            errorMessage.hidden = false;
+        }
+        nameInput?.focus();
+        return;
+    }
+
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Adicionando...';
+    }
+    if (errorMessage) {
+        errorMessage.hidden = true;
+        errorMessage.textContent = '';
+    }
+
+    try {
+        const username = await makeUniqueStudentUsername(name);
+        const { data, error } = await supabase
+            .from('users')
+            .insert([{
+                name,
+                username,
+                psswd: 'Mudar@eco123',
+                grade,
+                score: 0,
+                stars: '0',
+                hearts: '3',
+                class: null,
+                rank: 'Dirt',
+                avatar_url: 'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcS-55RgG38bJTopB10KrZknHMZMf94R5cEbUh8ZqWe8wiBmCyJE'
+            }])
+            .select('id, name, username, grade, created_at, updated_at')
+            .single();
+
+        if (error) throw error;
+
+        document.getElementById('missing-student-dialog')?.close();
+        await loadUsers();
+        alert(
+            'Aluno adicionado à turma ' + grade + '.\\n\\n' +
+            'Nome: ' + (data?.name || name) + '\\n' +
+            'Username: ' + (data?.username || username) + '\\n' +
+            'Senha inicial: Mudar@eco123'
+        );
+    } catch (error) {
+        console.error('Erro ao adicionar aluno ausente:', error);
+        if (errorMessage) {
+            errorMessage.textContent = 'Não foi possível adicionar o aluno: ' + (error.message || 'erro inesperado');
+            errorMessage.hidden = false;
+        }
+    } finally {
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Adicionar aluno';
+        }
+    }
 }
 
 function setupStudentGradeModal(container) {
