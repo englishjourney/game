@@ -3599,3 +3599,38 @@ dialog .markdown-preview-label { color: #6c5b91; }
     .student-grade-modal-actions { flex-direction: column-reverse; }
     .student-grade-modal-actions button { width: 100%; }
 }
+
+
+/* Avisos anuais: visíveis para consulta, mas sem ações de edição/exclusão. */
+.admin-reminder-card.admin-system-notice-card {
+    align-items: flex-start;
+    border: 1px solid rgba(96, 165, 250, .38);
+    border-left: 4px solid #60a5fa;
+    background: linear-gradient(145deg, rgba(23, 43, 76, .96), rgba(18, 31, 57, .98));
+}
+.admin-system-notice-card .admin-reminder-content {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+.admin-system-notice-card .admin-reminder-content p {
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+.system-notice-label {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    padding: 5px 8px;
+    border: 1px solid rgba(147, 197, 253, .3);
+    border-radius: 999px;
+    background: rgba(59, 130, 246, .14);
+    color: #bfdbfe;
+    font-size: .7rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+@media (max-width: 560px) {
+    .admin-reminder-card.admin-system-notice-card {
+        flex-direction: column;
+    }
+}
