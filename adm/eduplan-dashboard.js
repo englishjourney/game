@@ -511,7 +511,7 @@ function renderSummary(plans) {
             : '<small>' + escapeHtml(card.foot) + '</small>';
         return '<article class="dashboard-summary-card">' +
             '<span class="dashboard-summary-icon tone-' + card.tone + '"><i class="fa-solid ' + card.icon + '" aria-hidden="true"></i></span>' +
-            '<div class="dashboard-summary-copy"><span>' + escapeHtml(card.label) + '</span><strong>' + escapeHtml(card.value) + '</strong>' + footer + '</div>';
+            '<div class="dashboard-summary-copy"><span>' + escapeHtml(card.label) + '</span><strong>' + escapeHtml(card.value) + '</strong>' + footer + '</div></article>';
     }).join('') + '</div>';
 
     container.querySelectorAll('[data-dashboard-action]').forEach(button => {
