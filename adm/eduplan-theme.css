@@ -3882,3 +3882,61 @@ dialog .markdown-preview-label { color: #6c5b91; }
 .dashboard-summary-card { min-width: 0; }
 .dashboard-summary-copy { flex: 1 1 auto; min-width: 0; }
 .dashboard-summary-action { max-width: 100%; overflow-wrap: anywhere; }
+
+
+/* Dashboard actions are plain text, not underlined or bold. */
+#adm-panel .dashboard-summary-action {
+    color: #5326a5 !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+}
+#adm-panel .dashboard-summary-action:hover {
+    color: #2f167d !important;
+    text-decoration: none !important;
+}
+
+/* Global search is the single search surface for every administrative section. */
+#adm-panel .admin-global-search { position: relative; z-index: 5100; }
+#adm-panel .admin-global-search #search-results {
+    z-index: 9999 !important;
+    border: 1px solid #d9cfea !important;
+    background: #ffffff !important;
+    color: #211744 !important;
+}
+#adm-panel .admin-global-search #search-results .search-group-label {
+    color: #5a339f !important;
+    background: #ffffff !important;
+}
+#adm-panel .admin-global-search #search-results .search-result-item {
+    width: 100% !important;
+    border: 0 !important;
+    background: #ffffff !important;
+    color: #251b42 !important;
+    text-align: left !important;
+    opacity: 1 !important;
+}
+#adm-panel .admin-global-search #search-results .search-result-item strong {
+    color: #211344 !important;
+    font-weight: 750 !important;
+}
+#adm-panel .admin-global-search #search-results .search-result-item span {
+    color: #665b7d !important;
+}
+#adm-panel .admin-global-search #search-results .search-result-item:hover,
+#adm-panel .admin-global-search #search-results .search-result-item:focus-visible {
+    background: #f0eafb !important;
+    color: #211344 !important;
+}
+#adm-panel .admin-global-search #search-results .search-empty {
+    padding: 14px !important;
+    background: #ffffff !important;
+    color: #5f5475 !important;
+}
+#adm-panel .admin-global-search input {
+    color: #211744 !important;
+    -webkit-text-fill-color: #211744 !important;
+}
+#adm-panel .admin-global-search input::placeholder {
+    color: #716786 !important;
+    -webkit-text-fill-color: #716786 !important;
+}
