@@ -3876,3 +3876,9 @@ dialog .markdown-preview-label { color: #6c5b91; }
 .team-section.weekly-active-highlight .team-header{background:linear-gradient(100deg,#e5d8ff,#f1eaff)!important}
 .team-section.weekly-active-highlight .team-grade-badge{border-color:#8255d5!important;background:#fff!important;color:#4a229f!important}
 @media(max-width:600px){.dashboard-today-dialog{width:calc(100vw - 18px)}.dashboard-today-dialog-header{padding:16px}.dashboard-today-slide-area{min-height:220px;padding:13px}.dashboard-today-slide{min-height:190px;padding:17px}.dashboard-today-slide h4{font-size:1.15rem}.dashboard-today-slider-controls{padding:0 14px 16px}}
+
+
+/* Evita que um cartão do resumo force o tamanho das colunas da grade. */
+.dashboard-summary-card { min-width: 0; }
+.dashboard-summary-copy { flex: 1 1 auto; min-width: 0; }
+.dashboard-summary-action { max-width: 100%; overflow-wrap: anywhere; }
