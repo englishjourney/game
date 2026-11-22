@@ -286,57 +286,244 @@ function renderSchedule(data) {
     scheduleAutomaticDayAdvance(data, visibleDays, preferredOpenDayId, now);
 }
 
+function isSchoolDay(date) {
+    const day = date instanceof Date ? date.getDay() : new Date(date).getDay();
+    return day >= 1 && day <= 5;
+}
+
+function dashboardPlanTitle(plan) {
+    const lines = String(plan && plan.activities || '').replace(/\r/g, '').split('\n');
+    const firstLine = lines.find(line => line.trim()) || '';
+    let title = firstLine.replace(/^#{1,6}\s*/, '');
+    title = title.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/~~(.*?)~~/g, '$1').trim();
+    if (title) return title.length > 100 ? title.slice(0, 97) + '…' : title;
+    if (plan && plan.special == 2) return 'Folga';
+    if (plan && plan.special == 3) return 'Prova';
+    if (plan && plan.special == 4) return 'Aula adaptada';
+    return 'Aula planejada';
+}
+
+function dashboardPlanDescription(plan) {
+    const lines = String(plan && plan.activities || '').replace(/\r/g, '').split('\n');
+    const firstContentIndex = lines.findIndex(line => line.trim());
+    const description = lines.slice(firstContentIndex >= 0 ? firstContentIndex + 1 : 0).join(' ')
+        .replace(/[#*_~>-]/g, '').replace(/\s+/g, ' ').trim();
+    if (description) return description.length > 220 ? description.slice(0, 217) + '…' : description;
+    return plan && plan.duration ? 'Duração: ' + String(plan.duration) : 'Confira os detalhes no planejamento.';
+}
+
+let dashboardTodaySlides = [];
+let dashboardTodaySlideIndex = 0;
+let weeklyClassHighlightTimer = null;
+let highlightedWeeklyClassSections = [];
+
+function ensureTodayLessonsDialog() {
+    let dialog = document.getElementById('dashboard-today-dialog');
+    if (dialog) return dialog;
+    dialog = document.createElement('dialog');
+    dialog.id = 'dashboard-today-dialog';
+    dialog.className = 'dashboard-today-dialog';
+    dialog.setAttribute('aria-labelledby', 'dashboard-today-dialog-title');
+    dialog.innerHTML =
+        '<div class="dashboard-today-dialog-card">' +
+            '<header class="dashboard-today-dialog-header">' +
+                '<div><span class="dashboard-today-eyebrow">Seu cronograma</span><h3 id="dashboard-today-dialog-title">Aulas de hoje</h3></div>' +
+                '<button type="button" class="dashboard-today-close" data-today-dialog-close aria-label="Fechar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>' +
+            '</header>' +
+            '<div class="dashboard-today-slide-area" data-today-slide-content></div>' +
+            '<footer class="dashboard-today-slider-controls">' +
+                '<button type="button" class="dashboard-today-slider-arrow" data-today-slide-action="previous" aria-label="Aula anterior"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>' +
+                '<span data-today-slide-counter>0 de 0</span>' +
+                '<button type="button" class="dashboard-today-slider-arrow" data-today-slide-action="next" aria-label="Próxima aula"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>' +
+            '</footer>' +
+        '</div>';
+    dialog.addEventListener('click', event => {
+        if (event.target === dialog || event.target.closest('[data-today-dialog-close]')) {
+            dialog.close();
+            return;
+        }
+        const actionButton = event.target.closest('[data-today-slide-action]');
+        if (!actionButton || !dashboardTodaySlides.length) return;
+        dashboardTodaySlideIndex = actionButton.dataset.todaySlideAction === 'previous'
+            ? (dashboardTodaySlideIndex - 1 + dashboardTodaySlides.length) % dashboardTodaySlides.length
+            : (dashboardTodaySlideIndex + 1) % dashboardTodaySlides.length;
+        renderTodayLessonSlide();
+    });
+    document.body.appendChild(dialog);
+    return dialog;
+}
+
+function renderTodayLessonSlide() {
+    const dialog = document.getElementById('dashboard-today-dialog');
+    if (!dialog) return;
+    const content = dialog.querySelector('[data-today-slide-content]');
+    const counter = dialog.querySelector('[data-today-slide-counter]');
+    const previous = dialog.querySelector('[data-today-slide-action="previous"]');
+    const next = dialog.querySelector('[data-today-slide-action="next"]');
+    if (!dashboardTodaySlides.length) {
+        content.innerHTML = '<div class="dashboard-today-empty">' +
+            '<span class="dashboard-today-empty-icon"><i class="fa-regular fa-calendar-xmark" aria-hidden="true"></i></span>' +
+            '<strong>Nenhuma aula para hoje</strong><p>Não há aulas planejadas para este dia.</p></div>';
+        counter.textContent = '0 de 0';
+        previous.disabled = true;
+        next.disabled = true;
+        return;
+    }
+    const plan = dashboardTodaySlides[dashboardTodaySlideIndex];
+    const dateLabel = plan.parsedDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+    const grade = String(plan.grade || '').trim().toUpperCase();
+    const time = String(plan.time || '').slice(0, 5) || 'Horário não informado';
+    content.innerHTML = '<article class="dashboard-today-slide">' +
+        '<span class="dashboard-today-slide-number">AULA ' + String(dashboardTodaySlideIndex + 1).padStart(2, '0') + '</span>' +
+        '<h4>' + escapeHtml(dashboardPlanTitle(plan)) + '</h4>' +
+        '<div class="dashboard-today-slide-meta">' +
+            '<span><i class="fa-solid fa-users" aria-hidden="true"></i> ' + escapeHtml(grade ? 'Turma ' + grade : 'Turma não informada') + '</span>' +
+            '<span><i class="fa-regular fa-clock" aria-hidden="true"></i> ' + escapeHtml(time) + '</span>' +
+            '<span><i class="fa-regular fa-calendar" aria-hidden="true"></i> ' + escapeHtml(dateLabel) + '</span>' +
+            (plan.duration ? '<span><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> ' + escapeHtml(plan.duration) + '</span>' : '') +
+        '</div><p class="dashboard-today-slide-description">' + escapeHtml(dashboardPlanDescription(plan)) + '</p></article>';
+    counter.textContent = (dashboardTodaySlideIndex + 1) + ' de ' + dashboardTodaySlides.length;
+    previous.disabled = dashboardTodaySlides.length < 2;
+    next.disabled = dashboardTodaySlides.length < 2;
+}
+
+function openTodayLessonsSlider(plans) {
+    dashboardTodaySlides = [...plans].sort((a, b) => String(a.time || '').localeCompare(String(b.time || '')));
+    dashboardTodaySlideIndex = 0;
+    const dialog = ensureTodayLessonsDialog();
+    renderTodayLessonSlide();
+    if (!dialog.open) dialog.showModal();
+}
+
+function normalizeDashboardGrade(value) {
+    return String(value || '').replace(/\s+/g, '').toUpperCase();
+}
+
+async function showWeeklyClassGroups(grades) {
+    const wantedGrades = new Set((grades || []).map(normalizeDashboardGrade).filter(Boolean));
+    const navButton = document.querySelector('.nav-btn[data-target="users-section"]');
+    if (navButton && !navButton.classList.contains('active')) navButton.click();
+
+    let matchingSections = [];
+    for (let attempt = 0; attempt < 20; attempt++) {
+        const sections = Array.from(document.querySelectorAll('#users-container .team-section'));
+        matchingSections = sections.filter(section => wantedGrades.has(
+            normalizeDashboardGrade(section.querySelector('.team-grade-badge')?.textContent)
+        ));
+        if (matchingSections.length || !wantedGrades.size) break;
+        await new Promise(resolve => window.setTimeout(resolve, 150));
+    }
+    if (!matchingSections.length) return;
+
+    if (weeklyClassHighlightTimer) window.clearTimeout(weeklyClassHighlightTimer);
+    highlightedWeeklyClassSections.forEach(section => section.classList.remove('weekly-active-highlight'));
+    highlightedWeeklyClassSections = matchingSections;
+    matchingSections.forEach(section => {
+        const content = section.querySelector('.team-content');
+        const toggle = section.querySelector('.team-toggle');
+        if (content) content.classList.remove('hidden');
+        if (toggle) {
+            toggle.setAttribute('aria-expanded', 'true');
+            toggle.setAttribute('aria-label', 'Recolher turma');
+            toggle.title = 'Recolher turma';
+            toggle.innerHTML = '<i class="fa-solid fa-chevron-up" aria-hidden="true"></i>';
+        }
+        section.classList.add('weekly-active-highlight');
+    });
+    matchingSections[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    weeklyClassHighlightTimer = window.setTimeout(() => {
+        highlightedWeeklyClassSections.forEach(section => section.classList.remove('weekly-active-highlight'));
+        highlightedWeeklyClassSections = [];
+        weeklyClassHighlightTimer = null;
+    }, 10000);
+}
+
+function openAdminDashboardSection(sectionId) {
+    const navButton = document.querySelector('.nav-btn[data-target="' + sectionId + '"]');
+    if (navButton) {
+        if (!navButton.classList.contains('active')) navButton.click();
+        return;
+    }
+    document.querySelectorAll('.content-section').forEach(section => section.classList.add('hidden'));
+    document.getElementById(sectionId)?.classList.remove('hidden');
+}
+
+function formatUpcomingLessonValue(lessonDate, now) {
+    if (localDateKey(lessonDate) === localDateKey(now)) {
+        return lessonDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+    const difference = Math.max(0, lessonDate.getTime() - now.getTime());
+    const totalMinutes = Math.floor(difference / 60000);
+    const days = Math.floor(totalMinutes / (24 * 60));
+    const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+    const minutes = totalMinutes % 60;
+    const parts = [];
+    if (days) parts.push(days + (days === 1 ? ' dia' : ' dias'));
+    if (hours) parts.push(hours + (hours === 1 ? ' hora' : ' horas'));
+    if ((!days && !hours) || (days && !hours)) {
+        if (minutes) parts.push(minutes + ' min');
+    }
+    return parts.length ? 'Em ' + parts.join(' e ') : 'Em instantes';
+}
+
 function renderSummary(plans) {
     const container = document.getElementById('today-plans-container');
     if (!container) return;
-
     const today = new Date();
     const todayKey = localDateKey(today);
+    const schoolDayToday = isSchoolDay(today);
     const week = getWeekDates();
     const weekStart = week[0].date;
     const weekEnd = new Date(week[4].date);
     weekEnd.setDate(weekEnd.getDate() + 1);
 
     const dated = plans.map(plan => ({ ...plan, parsedDate: parsePlannerDate(plan.date) })).filter(plan => plan.parsedDate);
-    const todayPlans = dated.filter(plan => localDateKey(plan.parsedDate) === todayKey);
-    const weekPlans = dated.filter(plan => plan.parsedDate >= weekStart && plan.parsedDate < weekEnd);
-
-    const activeClasses = new Set(weekPlans.map(plan => {
-        const grade = String(plan.grade || '').trim().toUpperCase();
-        return grade || null;
-    }).filter(Boolean));
+    const todayPlans = schoolDayToday
+        ? dated.filter(plan => localDateKey(plan.parsedDate) === todayKey && isSchoolDay(plan.parsedDate))
+        : [];
+    const weekPlans = dated.filter(plan =>
+        isSchoolDay(plan.parsedDate) && plan.parsedDate >= weekStart && plan.parsedDate < weekEnd
+    );
+    const activeClasses = new Set(weekPlans.map(plan => String(plan.grade || '').trim().toUpperCase()).filter(Boolean));
+    const weeklyGrades = Array.from(activeClasses);
 
     const now = new Date();
     const upcoming = dated.map(plan => {
         const lessonDate = new Date(plan.parsedDate);
-        const [hours, minutes] = String(plan.time || '00:00').split(':').map(Number);
-        lessonDate.setHours(hours || 0, minutes || 0, 0, 0);
+        const timeMatch = String(plan.time || '00:00').match(/^(\d{1,2}):(\d{2})/);
+        if (timeMatch) lessonDate.setHours(Number(timeMatch[1]), Number(timeMatch[2]), 0, 0);
         return { ...plan, lessonDate };
-    }).filter(plan => plan.lessonDate >= now)
+    }).filter(plan => isSchoolDay(plan.parsedDate) && plan.lessonDate >= now)
       .sort((a, b) => a.lessonDate - b.lessonDate)[0];
 
-    const upcomingTime = upcoming
-        ? upcoming.lessonDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-        : '—';
-    const upcomingClass = upcoming
-        ? String(upcoming.grade || '').trim().toUpperCase() || 'Aula planejada'
-        : 'Nenhuma aula futura';
-
+    const upcomingValue = upcoming ? formatUpcomingLessonValue(upcoming.lessonDate, now) : '—';
+    const upcomingClass = upcoming ? String(upcoming.grade || '').trim().toUpperCase() || 'Aula planejada' : 'Nenhuma aula futura';
     const cards = [
-        { icon: 'fa-calendar-check', tone: 'purple', label: 'Aulas hoje', value: todayPlans.length, foot: 'Ver seu cronograma' },
-        { icon: 'fa-users', tone: 'green', label: 'Turmas ativas', value: activeClasses.size, foot: 'Turmas nesta semana' },
-        { icon: 'fa-check', tone: 'orange', label: 'Planejamentos da semana', value: weekPlans.length, foot: 'Aulas planejadas' },
-        { icon: 'fa-clock', tone: 'blue', label: 'Próxima aula', value: upcomingTime, foot: upcomingClass }
+        { icon: 'fa-calendar-check', tone: 'purple', label: 'Aulas hoje', value: todayPlans.length, foot: 'Ver seu cronograma', action: 'today-lessons' },
+        { icon: 'fa-users', tone: 'green', label: 'Turmas ativas', value: activeClasses.size, foot: 'Turmas nesta semana', action: 'weekly-classes' },
+        { icon: 'fa-check', tone: 'orange', label: 'Planejamentos da semana', value: weekPlans.length, foot: 'Aulas planejadas', action: 'weekly-plans' },
+        { icon: 'fa-clock', tone: 'blue', label: 'Próxima aula', value: upcomingValue, foot: upcomingClass }
     ];
 
-    container.innerHTML = '<div class="dashboard-summary-grid">' + cards.map(card =>
-        '<article class="dashboard-summary-card">' +
+    container.innerHTML = '<div class="dashboard-summary-grid">' + cards.map(card => {
+        const footer = card.action
+            ? '<button type="button" class="dashboard-summary-action" data-dashboard-action="' + card.action + '">' + escapeHtml(card.foot) + '</button>'
+            : '<small>' + escapeHtml(card.foot) + '</small>';
+        return '<article class="dashboard-summary-card">' +
             '<span class="dashboard-summary-icon tone-' + card.tone + '"><i class="fa-solid ' + card.icon + '" aria-hidden="true"></i></span>' +
-            '<div class="dashboard-summary-copy"><span>' + card.label + '</span><strong>' + escapeHtml(card.value) + '</strong><small>' + escapeHtml(card.foot) + '</small></div>' +
-        '</article>'
-    ).join('') + '</div>';
-}
+            '<div class="dashboard-summary-copy"><span>' + escapeHtml(card.label) + '</span><strong>' + escapeHtml(card.value) + '</strong>' + footer + '</div>';
+    }).join('') + '</div>';
 
+    container.querySelectorAll('[data-dashboard-action]').forEach(button => {
+        button.addEventListener('click', () => {
+            switch (button.dataset.dashboardAction) {
+                case 'today-lessons': openTodayLessonsSlider(todayPlans); break;
+                case 'weekly-classes': void showWeeklyClassGroups(weeklyGrades); break;
+                case 'weekly-plans': openAdminDashboardSection('planner-section'); break;
+            }
+        });
+    });
+}
 function renderScheduleEditor(data) {
     const container = document.getElementById('schedule-editor-fields');
     if (!container) return;
@@ -376,7 +563,7 @@ async function loadDashboard() {
     }
 
     const [plannerResult, scheduleResult] = await Promise.all([
-        supabase.from('planner').select('date,time,grade,completed_at').eq('owner', authData.user.id).is('completed_at', null),
+        supabase.from('planner').select('*').eq('owner', authData.user.id).is('completed_at', null),
         supabase.from('schedule').select('*').eq('owner', authData.user.id).maybeSingle()
     ]);
 
