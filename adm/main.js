@@ -818,7 +818,15 @@ export async function loadRemindersSection() {
         if (systemError) throw systemError;
 
         const personalRows = reminders || [];
-        const systemRows = systemReminders || [];
+        const systemRows = (systemReminders || []).filter(item => {
+            const noticeKey = String(item.system_notice_key || '').toLowerCase();
+            const isAnnualCleanupNotice = /annual|cleanup|yearly[_-]?reset|annual[_-]?reset/.test(noticeKey);
+            if (!isAnnualCleanupNotice) return true;
+
+            // Avisos da limpeza anual ficam fora da lista até a data/hora programada.
+            const expiresAt = parseReminderTimestamp(item.date, item.time);
+            return Number.isFinite(expiresAt) && expiresAt <= Date.now();
+        });
         if (!personalRows.length && !systemRows.length) {
             container.innerHTML = '<div style="color: #888; text-align: center; padding: 20px;">Nenhum lembrete agendado.</div>';
             return;
