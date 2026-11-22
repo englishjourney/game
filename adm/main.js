@@ -1,5 +1,5 @@
 import { initAuth, logout } from './auth.js';
-import { initEduPlanDashboard } from './eduplan-dashboard.js?v=dashboard-actions-20261122';
+import { initEduPlanDashboard } from './eduplan-dashboard.js?v=dashboard-layout-fix-20261122';
 import { initPlanner } from './planner.js?v=multi-copy-20261117';
 import { initUsers } from './users.js?v=users-refresh-anchor2-20261119';
 import { initMissions } from './missions.js';
