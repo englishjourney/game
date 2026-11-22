@@ -3844,3 +3844,35 @@ dialog .markdown-preview-label { color: #6c5b91; }
 @keyframes users-refresh-spin {
     to { transform: rotate(360deg); }
 }
+
+
+/* Ações e slider do resumo do dashboard */
+.dashboard-summary-action{display:inline-flex;align-items:center;width:fit-content;margin:3px 0 0;padding:2px 0;border:0;background:transparent;color:#5326c7;font:inherit;font-size:.75rem;font-weight:750;line-height:1.35;text-align:left;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.dashboard-summary-action:hover{color:#2f1590}
+.dashboard-summary-action:focus-visible,.dashboard-today-close:focus-visible,.dashboard-today-slider-arrow:focus-visible{outline:3px solid #8b68ea;outline-offset:3px}
+.dashboard-today-dialog{width:min(560px,calc(100vw - 24px));max-width:560px;max-height:min(82vh,680px);padding:0;overflow:visible;border:0;border-radius:24px;background:transparent;color:#241744;box-shadow:none}
+.dashboard-today-dialog::backdrop{background:rgba(20,12,42,.62);backdrop-filter:blur(5px)}
+.dashboard-today-dialog-card{overflow:hidden;border:1px solid rgba(255,255,255,.85);border-radius:24px;background:#fff;box-shadow:0 22px 65px rgba(16,8,40,.28)}
+.dashboard-today-dialog-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 22px;background:linear-gradient(115deg,#f1eaff,#f7f3ff 58%,#eaf5ff)}
+.dashboard-today-eyebrow{display:block;margin-bottom:3px;color:#6841bd;font-size:.7rem;font-weight:850;letter-spacing:.1em;text-transform:uppercase}
+.dashboard-today-dialog-header h3{margin:0;color:#281653;font-size:1.25rem;font-weight:850}
+.dashboard-today-close{display:grid;flex:0 0 38px;width:38px;height:38px;place-items:center;border:0;border-radius:12px;background:rgba(255,255,255,.8);color:#51368d;font-size:1.15rem;cursor:pointer}
+.dashboard-today-slide-area{min-height:250px;padding:22px}
+.dashboard-today-slide{min-height:205px;padding:23px;border:1px solid #e9e2f6;border-radius:19px;background:linear-gradient(145deg,#fff,#faf8ff)}
+.dashboard-today-slide-number{display:inline-flex;margin-bottom:12px;padding:6px 10px;border-radius:999px;background:#eee7ff;color:#6438c1;font-size:.68rem;font-weight:850;letter-spacing:.08em}
+.dashboard-today-slide h4{margin:0 0 16px;color:#24134e;font-size:1.35rem;line-height:1.25;overflow-wrap:anywhere}
+.dashboard-today-slide-meta{display:flex;flex-wrap:wrap;gap:8px}
+.dashboard-today-slide-meta span{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:10px;background:#f0edfa;color:#4a367e;font-size:.78rem;font-weight:700}
+.dashboard-today-slide-meta i{color:#7652c5}
+.dashboard-today-slide-description{margin:17px 0 0;color:#5d5570;font-size:.9rem;line-height:1.55}
+.dashboard-today-empty{display:flex;min-height:205px;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:25px;border:1px dashed #d9d0ed;border-radius:18px;background:#fbfaff;text-align:center}
+.dashboard-today-empty-icon{display:grid;width:55px;height:55px;place-items:center;border-radius:17px;background:#eee8fa;color:#7652c5;font-size:1.4rem}
+.dashboard-today-empty strong{color:#302052;font-size:1rem}
+.dashboard-today-empty p{margin:0;color:#716881;font-size:.85rem}
+.dashboard-today-slider-controls{display:flex;align-items:center;justify-content:center;gap:22px;padding:0 22px 20px;color:#665a80;font-size:.8rem;font-weight:800}
+.dashboard-today-slider-arrow{display:grid;width:40px;height:40px;place-items:center;border:1px solid #e3dcf0;border-radius:13px;background:#f8f5ff;color:#5835a6;cursor:pointer}
+.dashboard-today-slider-arrow:disabled{opacity:.35;cursor:default}
+.team-section.weekly-active-highlight{position:relative;border:2px solid #8156d8!important;border-radius:17px;background:#f2ebff!important;box-shadow:0 0 0 4px rgba(129,86,216,.15),0 12px 28px rgba(86,49,160,.18)!important;transition:background .2s ease,box-shadow .2s ease,border-color .2s ease}
+.team-section.weekly-active-highlight .team-header{background:linear-gradient(100deg,#e5d8ff,#f1eaff)!important}
+.team-section.weekly-active-highlight .team-grade-badge{border-color:#8255d5!important;background:#fff!important;color:#4a229f!important}
+@media(max-width:600px){.dashboard-today-dialog{width:calc(100vw - 18px)}.dashboard-today-dialog-header{padding:16px}.dashboard-today-slide-area{min-height:220px;padding:13px}.dashboard-today-slide{min-height:190px;padding:17px}.dashboard-today-slide h4{font-size:1.15rem}.dashboard-today-slider-controls{padding:0 14px 16px}}
