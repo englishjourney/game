@@ -419,15 +419,7 @@ async function showWeeklyClassGroups(grades) {
     highlightedWeeklyClassSections.forEach(section => section.classList.remove('weekly-active-highlight'));
     highlightedWeeklyClassSections = matchingSections;
     matchingSections.forEach(section => {
-        const content = section.querySelector('.team-content');
-        const toggle = section.querySelector('.team-toggle');
-        if (content) content.classList.remove('hidden');
-        if (toggle) {
-            toggle.setAttribute('aria-expanded', 'true');
-            toggle.setAttribute('aria-label', 'Recolher turma');
-            toggle.title = 'Recolher turma';
-            toggle.innerHTML = '<i class="fa-solid fa-chevron-up" aria-hidden="true"></i>';
-        }
+        // O destaque não altera o estado do acordeão da turma.
         section.classList.add('weekly-active-highlight');
     });
     matchingSections[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -497,18 +489,17 @@ function renderSummary(plans) {
       .sort((a, b) => a.lessonDate - b.lessonDate)[0];
 
     const upcomingValue = upcoming ? formatUpcomingLessonValue(upcoming.lessonDate, now) : '—';
-    const upcomingClass = upcoming ? String(upcoming.grade || '').trim().toUpperCase() || 'Aula planejada' : 'Nenhuma aula futura';
     const cards = [
         { icon: 'fa-calendar-check', tone: 'purple', label: 'Aulas hoje', value: todayPlans.length, foot: 'Ver seu cronograma', action: 'today-lessons' },
         { icon: 'fa-users', tone: 'green', label: 'Turmas ativas', value: activeClasses.size, foot: 'Turmas nesta semana', action: 'weekly-classes' },
         { icon: 'fa-check', tone: 'orange', label: 'Planejamentos da semana', value: weekPlans.length, foot: 'Aulas planejadas', action: 'weekly-plans' },
-        { icon: 'fa-clock', tone: 'blue', label: 'Próxima aula', value: upcomingValue, foot: upcomingClass }
+        { icon: 'fa-clock', tone: 'blue', label: 'Próxima aula', value: upcomingValue }
     ];
 
     container.innerHTML = '<div class="dashboard-summary-grid">' + cards.map(card => {
         const footer = card.action
             ? '<button type="button" class="dashboard-summary-action" data-dashboard-action="' + card.action + '">' + escapeHtml(card.foot) + '</button>'
-            : '<small>' + escapeHtml(card.foot) + '</small>';
+            : (card.foot ? '<small>' + escapeHtml(card.foot) + '</small>' : '');
         return '<article class="dashboard-summary-card">' +
             '<span class="dashboard-summary-icon tone-' + card.tone + '"><i class="fa-solid ' + card.icon + '" aria-hidden="true"></i></span>' +
             '<div class="dashboard-summary-copy"><span>' + escapeHtml(card.label) + '</span><strong>' + escapeHtml(card.value) + '</strong>' + footer + '</div></article>';
@@ -597,15 +588,34 @@ function setupGlobalSearch() {
     const appendResultGroup = (label, items, idField, section, formatLabel) => {
         if (!items.length) return '';
         return '<div class="search-result-group">' +
-            '<div class="search-group-label">' + label + '</div>' +
-            items.map(item =>
-                '<button type="button" class="search-item search-result-item" role="option" data-search-result ' +
-                    'data-search-section="' + escapeHtml(typeof section === 'function' ? section(item) : section) + '" data-search-id="' + escapeHtml(item[idField]) + '">' +
+            '<div class="search-group-label">' + escapeHtml(label) + '</div>' +
+            items.map(item => {
+                const targetId = typeof idField === 'function' ? idField(item) : item[idField];
+                return '<button type="button" class="search-item search-result-item" role="option" data-search-result ' +
+                    'data-search-section="' + escapeHtml(typeof section === 'function' ? section(item) : section) + '" data-search-id="' + escapeHtml(targetId) + '">' +
                     formatLabel(item) +
-                '</button>'
-            ).join('') +
+                '</button>';
+            }).join('') +
         '</div>';
     };
+
+    async function fetchAllPlannerRows(ownerId) {
+        const pageSize = 500;
+        const rows = [];
+        for (let offset = 0; ; offset += pageSize) {
+            const { data, error } = await supabase
+                .from('planner')
+                .select('id,date,day,time,grade,activities,skills,completed_at,tag,special,duration')
+                .eq('owner', ownerId)
+                .order('id', { ascending: false })
+                .range(offset, offset + pageSize - 1);
+            if (error) throw error;
+            const page = data || [];
+            rows.push(...page);
+            if (page.length < pageSize) break;
+        }
+        return { data: rows, error: null };
+    }
 
     const revealTargetAncestors = target => {
         let ancestor = target.parentElement;
@@ -670,17 +680,25 @@ function setupGlobalSearch() {
         }
     };
 
-    const highlightTarget = targetId => {
+    const highlightTarget = (targetId, duration = 3000) => {
         const target = document.getElementById(targetId);
         if (!target) return false;
         revealTargetAncestors(target);
         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.classList.remove('search-result-highlight');
+        void target.offsetWidth;
         target.classList.add('search-result-highlight');
         if (target.id.startsWith('schedule-slot-')) {
             const dayId = target.id.split('-')[2];
             if (dayId) scheduleManualExpandedState.set(dayId, true);
         }
-        window.setTimeout(() => target.classList.remove('search-result-highlight'), 3000);
+        if (target._globalSearchHighlightTimer) {
+            window.clearTimeout(target._globalSearchHighlightTimer);
+        }
+        target._globalSearchHighlightTimer = window.setTimeout(() => {
+            target.classList.remove('search-result-highlight');
+            target._globalSearchHighlightTimer = null;
+        }, duration);
         return true;
     };
 
@@ -702,14 +720,6 @@ function setupGlobalSearch() {
             return;
         }
 
-        if (sectionId === 'planner-section') {
-            const plannerSearch = document.getElementById('planner-search');
-            if (plannerSearch) {
-                plannerSearch.value = '';
-                plannerSearch.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        }
-
         if (sectionId === 'dashboard-section') {
             Promise.resolve(window.refreshEduPlanDashboard?.()).finally(() => {
                 window.setTimeout(() => highlightTarget(targetId), 90);
@@ -717,7 +727,7 @@ function setupGlobalSearch() {
             return;
         }
 
-        window.setTimeout(() => highlightTarget(targetId), 140);
+        window.setTimeout(() => highlightTarget(targetId, sectionId === 'users-section' ? 2000 : 3000), 180);
     };
 
     resultsContainer.addEventListener('click', event => {
@@ -762,7 +772,7 @@ function setupGlobalSearch() {
                 supabase.from('users').select('id,name,username,grade').neq('username', 'micael.svg').ilike('name', pattern).limit(4),
                 supabase.from('users').select('id,name,username,grade').neq('username', 'micael.svg').ilike('username', pattern).limit(4),
                 supabase.from('users').select('id,name,username,grade').neq('username', 'micael.svg').ilike('grade', pattern).limit(4),
-                supabase.from('planner').select('id,date,day,time,grade,activities,skills,completed_at,tag,special').eq('owner', authData.user.id).order('id', { ascending: false }).range(0, 999),
+                fetchAllPlannerRows(authData.user.id),
                 supabase.from('tasks').select('id,title,description,grade,grades,deadline').eq('owner', authData.user.id).order('id', { ascending: false }).range(0, 999),
                 supabase.from('schedule').select('*').eq('owner', authData.user.id).maybeSingle(),
                 supabase.from('missions').select('id,mission_name,mission_score,mission_link').ilike('mission_name', pattern).limit(4),
@@ -788,13 +798,15 @@ function setupGlobalSearch() {
             };
             const users = combineUnique([usersName, usersLogin, usersGrade]);
             const normalizedQuery = query.toLocaleLowerCase('pt-BR');
-            const plans = (plannerRowsResult.data || []).filter(plan =>
-                [plan.day, plan.date, plan.time, plan.grade, plan.activities, plan.skills, plan.tag, plan.special]
+            const matchingPlans = (plannerRowsResult.data || []).filter(plan =>
+                [plan.day, plan.date, plan.time, plan.grade, plan.activities, plan.skills, plan.tag, plan.special, plan.duration]
                     .some(value => String(value ?? '').toLocaleLowerCase('pt-BR').includes(normalizedQuery))
-            ).slice(0, 5).map(plan => ({
+            ).map(plan => ({
                 ...plan,
                 section: plan.completed_at ? 'completed-planner-section' : 'planner-section'
             }));
+            const activePlans = matchingPlans.filter(plan => !plan.completed_at);
+            const completedPlans = matchingPlans.filter(plan => Boolean(plan.completed_at));
             const tasks = (taskRowsResult.data || []).filter(task =>
                 [task.title, task.description, task.grade, (task.grades || []).join(' ')]
                     .some(value => String(value ?? '').toLocaleLowerCase('pt-BR').includes(normalizedQuery))
@@ -837,27 +849,31 @@ function setupGlobalSearch() {
                 '<strong>' + escapeHtml(lesson.label) + '</strong>' +
                 '<span>' + escapeHtml(lesson.value) + '</span>'
             ));
-            pieces.push(appendResultGroup('Trabalhos', tasks, 'id', 'tasks-section', task =>
+            pieces.push(appendResultGroup('Trabalhos', tasks, task => 'task-card-' + task.id, 'tasks-section', task =>
                 '<strong>' + escapeHtml(task.title || 'Trabalho sem título') + '</strong>' +
                 '<span>' + escapeHtml((task.grades || []).join(', ') || task.grade || 'Todas as turmas') + '</span>'
             ));
-            pieces.push(appendResultGroup('Planejamentos', plans, 'id', plan => plan.section, plan =>
+            pieces.push(appendResultGroup('Planejamentos', activePlans.slice(0, 5), plan => 'plan-card-' + plan.id, 'planner-section', plan =>
                 '<strong>' + escapeHtml(plan.grade || 'Aula') + '</strong>' +
                 '<span>' + escapeHtml([plan.date, plan.time, String(plan.activities || '').replace(/<[^>]*>/g, ' ').slice(0, 70)].filter(Boolean).join(' • ')) + '</span>'
             ));
-            pieces.push(appendResultGroup('Missões', missions, 'id', 'missions-section', mission =>
+            pieces.push(appendResultGroup('Aulas passadas', completedPlans.slice(0, 5), plan => 'plan-card-' + plan.id, 'completed-planner-section', plan => 
+                '<strong>' + escapeHtml(plan.grade || 'Aula') + '</strong>' +
+                '<span>' + escapeHtml([plan.date, plan.time, String(plan.activities || '').replace(/<[^>]*>/g, ' ').slice(0, 70)].filter(Boolean).join(' • ')) + '</span>'
+            ));
+            pieces.push(appendResultGroup('Missões', missions, mission => 'mission-card-' + mission.id, 'missions-section', mission =>
                 '<strong>' + escapeHtml(mission.mission_name || 'Missão') + '</strong>' +
                 '<span>' + escapeHtml('Pontuação: ' + (mission.mission_score ?? 0)) + '</span>'
             ));
-            pieces.push(appendResultGroup('Alunos', users, 'id', 'users-section', user =>
+            pieces.push(appendResultGroup('Alunos', users, user => 'row-' + user.id, 'users-section', user =>
                 '<strong>' + escapeHtml(user.name || user.username) + '</strong>' +
                 '<span>' + escapeHtml((user.username || '') + (user.grade ? ' • Turma ' + user.grade : '')) + '</span>'
             ));
-            pieces.push(appendResultGroup('Flashcards', flashcards, 'id', 'flashcards-section', card =>
+            pieces.push(appendResultGroup('Flashcards', flashcards, card => 'flashcard-card-' + card.id, 'flashcards-section', card =>
                 '<strong>' + escapeHtml(card.word || 'Flashcard') + '</strong>' +
                 '<span>' + escapeHtml([card.translation, card.stack].filter(Boolean).join(' • ')) + '</span>'
             ));
-            pieces.push(appendResultGroup('Lembretes', reminders, 'id', 'reminders-section', reminder =>
+            pieces.push(appendResultGroup('Lembretes', reminders, reminder => 'reminder-card-' + reminder.id, 'reminders-section', reminder =>
                 '<strong>' + escapeHtml(reminder.remindMeTo || 'Lembrete') + '</strong>' +
                 '<span>' + escapeHtml([reminder.date, reminder.time].filter(Boolean).join(' • ')) + '</span>'
             ));
