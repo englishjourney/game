@@ -7,7 +7,7 @@
     <title>EduPlan | Painel do Professor</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="eduplan-theme.css?v=dashboard-layout-fix-20261122">
+    <link rel="stylesheet" href="eduplan-theme.css?v=single-global-search-20261122">
 </head>
 <body>
     <!-- Acesso do professor: senha geral, login e cadastro -->
@@ -122,7 +122,7 @@
                 <button type="button" id="sidebar-toggle" class="mobile-menu-toggle sidebar-toggle" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="adm-navigation"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
                 <div class="admin-global-search">
                     <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                    <input type="text" id="global-search" placeholder="Buscar trabalhos, aulas, alunos, missões..." aria-label="Buscar trabalhos, aulas, planejamentos, missões, alunos, flashcards e lembretes">
+                    <input type="text" id="global-search" placeholder="Buscar alunos, planejamentos, aulas passadas, trabalhos..." aria-label="Pesquisar em todas as guias do EduPlan">
                     <span id="global-search-loader" class="global-search-loader hidden" aria-hidden="true"><i></i><i></i><i></i></span>
                     <div id="search-results" class="hidden" role="listbox"></div>
                 </div>
@@ -241,10 +241,6 @@
                         <p>Organize e visualize suas aulas por dia.</p>
                     </div>
                     <div class="planner-header-controls">
-                        <div class="search-bar planner-search-wrap">
-                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                            <input type="text" id="planner-search" placeholder="Pesquisar por data, hora, turma ou atividade..." aria-label="Pesquisar planejamentos">
-                        </div>
                         <div class="planner-bulk-actions">
                             <button type="button" id="btn-toggle-plan-selection" class="btn-secondary">
                                 <i class="fa-regular fa-square-check" aria-hidden="true"></i> Selecionar
@@ -301,12 +297,8 @@
 
             <!-- USERS SECTION -->
             <section id="users-section" class="content-section hidden">
-                <div class="section-header" style="flex-wrap: wrap; gap: 15px;">
+                <div class="section-header">
                     <h2>Gerenciamento de Alunos</h2>
-                    <div class="search-bar" style="margin-bottom: 0; flex: 1; min-width: 250px; position: relative;">
-                        <input type="text" id="users-search" placeholder="Pesquisar aluno ou turma (grade)..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-dark); color: white;">
-                        <div id="users-search-results" class="hidden" style="position: absolute; top: 100%; left: 0; width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; margin-top: 5px; max-height: 300px; overflow-y: auto; z-index: 20;"></div>
-                    </div>
                 </div>
                 <div id="users-subject-control" class="users-subject-control" aria-live="polite"></div>
                 <div id="users-container"></div>
@@ -747,7 +739,7 @@
     </dialog>
 
     <!-- Ponto de entrada do JS -->
-    <script type="module" src="main.js?v=dashboard-layout-fix-20261122"></script>
+    <script type="module" src="main.js?v=single-global-search-20261122"></script>
     <script>
         document.getElementById('btn-cancel-schedule-editor-footer')?.addEventListener('click', () => {
             document.getElementById('schedule-editor-modal')?.close();
